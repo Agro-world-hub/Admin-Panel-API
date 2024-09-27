@@ -1608,3 +1608,50 @@ exports.deleteUserTask = async(req, res) => {
         return res.status(500).json({ error: "An error occurred while deleting User task" });
     }
 };
+
+
+
+exports.editUserTaskStatus = async(req, res) => {
+    try {
+        const fullUrl = `${req.protocol}://${req.get('host')}${req.originalUrl}`;
+        console.log('Request URL:', fullUrl);
+
+        // Validate the `id` parameter
+        const { id } = await ValidateSchema.editMarketPriceStatusSchema.validateAsync(req.params);
+
+        // Fetch the current status of the market price
+        const result = await adminDao.getUserTaskStatusById(id);
+
+        if (result.length === 0) {
+            return res.status(404).json({ error: 'Task not found' });
+        }
+
+        const currentStatus = result[0].status;
+        let newStatus;
+
+        // Toggle between 'Draft' and 'Published'
+        if (currentStatus === 'Pending') {
+            newStatus = 'Completed';
+        } else if (currentStatus === 'Completed') {
+            newStatus = 'Pending';
+        } else {
+            return res.status(400).json({ error: 'Invalid current status' });
+        }
+
+        // Update the status using the DAO
+        await adminDao.updateUserTaskStatusById(id, newStatus);
+
+        console.log('Status updated successfully');
+        return res.status(200).json({ message: 'Status updated successfully' });
+    } catch (err) {
+        if (err.isJoi) {
+            // Validation error
+            return res.status(400).json({ error: err.details[0].message });
+        }
+
+        console.error('Error updating Task status:', err);
+        return res.status(500).json({
+            error: 'An error occurred while updating the Task status',
+        });
+    }
+};

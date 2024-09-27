@@ -265,4 +265,11 @@ router.delete(
     AdminEp.deleteUserTask
 );
 
+
+router.post(
+    "/edit-user-task-status/:id",
+    authMiddleware,
+    AdminEp.editUserTaskStatus
+);
+
 module.exports = router;

@@ -1197,3 +1197,28 @@ exports.deleteUserTasks = (id) => {
         });
     });
 };
+
+
+exports.getUserTaskStatusById = (id) => {
+    return new Promise((resolve, reject) => {
+        const sql = "SELECT status FROM slavecropcalendardays WHERE id = ?";
+        db.query(sql, [id], (err, results) => {
+            if (err) {
+                return reject(err);
+            }
+            resolve(results);
+        });
+    });
+};
+
+exports.updateUserTaskStatusById = (id, newStatus) => {
+    return new Promise((resolve, reject) => {
+        const sql = "UPDATE slavecropcalendardays SET status = ? WHERE id = ?";
+        db.query(sql, [newStatus, id], (err, results) => {
+            if (err) {
+                return reject(err);
+            }
+            resolve(results);
+        });
+    });
+};
