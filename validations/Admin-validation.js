@@ -26,12 +26,18 @@ exports.getAllUsersSchema = Joi.object({
 
 exports.createCropCalenderSchema = Joi.object({
     cropName: Joi.string().required(),
+    sinhalaCropName: Joi.string().required(),
+    tamilCropName: Joi.string().required(),
     variety: Joi.string().required(),
+    sinhalaVariety: Joi.string().required(),
+    tamilVariety: Joi.string().required(),
     cultivationMethod: Joi.string().required(),
     natureOfCultivation: Joi.string().required(),
-    cropDuration: Joi.string().required(),
+    cropDuration: Joi.number().integer().min(1),
     cropCategory: Joi.string().required(),
     specialNotes: Joi.string().required(),
+    sinhalaSpecialNotes: Joi.string().required(),
+    tamilSpecialNotes: Joi.string().required(),
     suitableAreas: Joi.string().required(),
     cropColor: Joi.string().required()
 });

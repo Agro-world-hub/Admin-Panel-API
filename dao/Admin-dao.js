@@ -1,6 +1,7 @@
 const db = require("../startup/database");
 const { S3Client, PutObjectCommand } = require("@aws-sdk/client-s3");
 const path = require("path");
+const { Upload } = require("@aws-sdk/lib-storage");
 
 const s3Client = new S3Client({
     region: process.env.AWS_REGION,
@@ -100,31 +101,43 @@ exports.getAllUsers = (limit, offset, searchNIC) => {
 
 
 exports.createCropCallender = async (
-    cropName,
-    variety,
-    cultivationMethod,
-    natureOfCultivation,
-    cropDuration,
-    cropCategory,
-    specialNotes,
-    suitableAreas,
-    cropColor,
-    imagePath
-) => {
-    return new Promise((resolve, reject) => {
-        const sql =
-            "INSERT INTO cropCalender (cropName, variety, cultivationMethod, natureOfCultivation, cropDuration,Category, specialNotes, suitableAreas,cropColor,image) VALUES (?, ?, ?, ?, ?, ?, ?,?,?,?)";
-        const values = [
             cropName,
+            sinhalaCropName,
+            tamilCropName,
             variety,
+            sinhalaVariety,
+            tamilVariety,
             cultivationMethod,
             natureOfCultivation,
             cropDuration,
             cropCategory,
             specialNotes,
+            sinhalaSpecialNotes,
+            tamilSpecialNotes,
             suitableAreas,
             cropColor,
-            imagePath,
+            imagePath
+) => {
+    return new Promise((resolve, reject) => {
+        const sql =
+            "INSERT INTO cropCalender (cropName, sinhalaCropName, tamilCropName, variety, sinhalaVariety, tamilVariety, cultivationMethod, natureOfCultivation, cropDuration,Category, specialNotes, sinhalaSpecialNotes, tamilSpecialNotes, suitableAreas,cropColor,image) VALUES (?, ?, ?, ?, ?, ?, ?,?,?,?,?,?,?,?,?,?)";
+        const values = [
+            cropName,
+            sinhalaCropName,
+            tamilCropName,
+            variety,
+            sinhalaVariety,
+            tamilVariety,
+            cultivationMethod,
+            natureOfCultivation,
+            cropDuration,
+            cropCategory,
+            specialNotes,
+            sinhalaSpecialNotes,
+            tamilSpecialNotes,
+            suitableAreas,
+            cropColor,
+            imagePath
         ];
 
         db.query(sql, values, (err, results) => {
@@ -1160,14 +1173,12 @@ exports.getAllUserTaskByCropId = (cropId, userId) => {
             SELECT 
     slavecropcalendardays.id AS slavecropcalendardaysId,
     slavecropcalendardays.cropCalendarId,
-    cropcalendardays.taskIndex, 
-    cropcalendardays.days, 
-    cropcalendardays.taskEnglish,
+    slavecropcalendardays.taskIndex, 
+    slavecropcalendardays.days, 
+    slavecropcalendardays.taskEnglish,
     slavecropcalendardays.status
 FROM 
-    slavecropcalendardays 
-JOIN 
-    cropcalendardays ON slavecropcalendardays.cropCalendarDaysId = cropcalendardays.id -- Ensure this is correct
+    slavecropcalendardays
 WHERE 
     slavecropcalendardays.cropCalendarId = ? 
     AND slavecropcalendardays.userId = ?;
@@ -1219,6 +1230,28 @@ exports.updateUserTaskStatusById = (id, newStatus) => {
                 return reject(err);
             }
             resolve(results);
+        });
+    });
+};
+
+
+
+exports.getSlaveCropCalendarDayById = (id) => {
+    return new Promise((resolve, reject) => {
+        const sql = "SELECT * FROM slavecropcalendardays WHERE id = ?";
+        const values = [id];
+
+        db.query(sql, values, (err, results) => {
+            if (err) {
+                return reject(err); // Reject promise if an error occurs
+            }
+
+            // Return null if no record is found
+            if (results.length === 0) {
+                return resolve(null);
+            }
+
+            resolve(results[0]); // Resolve the promise with the first result
         });
     });
 };

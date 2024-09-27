@@ -4,11 +4,15 @@ const AdminEp = require("../end-point/Admin-ep");
 const bodyParser = require("body-parser");
 const authMiddleware = require("../middlewares/authMiddleware");
 const multer = require("multer");
-const upload = require("../middlewares/uploadMiddleware");
+// const upload = require("../middlewares/uploadMiddleware");
+const upload = multer({ storage: multer.memoryStorage() });
 // const uploadfile = multer({ dest: 'uploads/' });
 const path = require("path");
+const fs = require('fs');
+const xlsx = require('xlsx');
 
 const router = express.Router();
+
 
 const storage = multer.diskStorage({
     destination: function(req, file, cb) {
@@ -270,6 +274,12 @@ router.post(
     "/edit-user-task-status/:id",
     authMiddleware,
     AdminEp.editUserTaskStatus
+);
+
+router.get(
+    "/get-slave-crop-task/:id",
+    authMiddleware,
+    AdminEp.getSlaveCropCalendarDayById
 );
 
 module.exports = router;

@@ -147,17 +147,24 @@ exports.createCropCallender = async(req, res) => {
         const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
         console.log(fullUrl);
         // Validate the request body
+        
         const {
             cropName,
+            sinhalaCropName,
+            tamilCropName,
             variety,
+            sinhalaVariety,
+            tamilVariety,
             cultivationMethod,
             natureOfCultivation,
             cropDuration,
             cropCategory,
             specialNotes,
+            sinhalaSpecialNotes,
+            tamilSpecialNotes,
             suitableAreas,
             cropColor,
-        } = await ValidateSchema.createCropCalenderSchema.validateAsync(req.body);
+        } = req.body;
 
         if (!req.file) {
             return res.status(400).json({ error: "No file uploaded" });
@@ -182,12 +189,18 @@ exports.createCropCallender = async(req, res) => {
 
         const cropId = await adminDao.createCropCallender(
             cropName,
+            sinhalaCropName,
+            tamilCropName,
             variety,
+            sinhalaVariety,
+            tamilVariety,
             cultivationMethod,
             natureOfCultivation,
             cropDuration,
             cropCategory,
             specialNotes,
+            sinhalaSpecialNotes,
+            tamilSpecialNotes,
             suitableAreas,
             cropColor,
             imagePath
@@ -209,11 +222,8 @@ exports.createCropCallender = async(req, res) => {
 };
 
 
-exports.uploadXLSX = async(req, res) => {
+exports.uploadXLSX = async (req, res) => {
     try {
-        const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
-        console.log(fullUrl);
-
         const { id } = req.params;
 
         // Validate the ID parameter
@@ -224,24 +234,54 @@ exports.uploadXLSX = async(req, res) => {
             return res.status(400).json({ error: "No file uploaded." });
         }
 
-        // Upload the file to AWS S3
-        const fileContent = req.file.buffer;
-        const fileName = `xlsxUploads/${Date.now()}_${path.basename(req.file.originalname)}`;
-        const uploadParams = {
-            Bucket: process.env.AWS_S3_BUCKET_NAME,
-            Key: fileName,
-            Body: fileContent,
-            ContentType: req.file.mimetype,
-        };
+        console.log('File details:', {
+            fieldname: req.file.fieldname,
+            originalname: req.file.originalname,
+            encoding: req.file.encoding,
+            mimetype: req.file.mimetype,
+            size: req.file.size,
+            path: req.file.path, // Log the path if it exists
+            buffer: req.file.buffer ? 'Buffer exists' : 'Buffer is undefined'
+        });
 
-        const command = new PutObjectCommand(uploadParams);
-        await s3Client.send(command);
+        // Validate file type
+        const allowedExtensions = ['.xlsx', '.xls'];
+        const fileExtension = path.extname(req.file.originalname).toLowerCase();
+        if (!allowedExtensions.includes(fileExtension)) {
+            return res.status(400).json({ error: "Invalid file type. Only XLSX and XLS files are allowed." });
+        }
 
-        // Read the XLSX file from buffer
-        const workbook = xlsx.read(fileContent, { type: "buffer" });
+        // Read the XLSX file
+        let workbook;
+        try {
+            if (req.file.buffer) {
+                // If buffer exists, read from buffer
+                workbook = xlsx.read(req.file.buffer, { type: "buffer" });
+            } else if (req.file.path) {
+                // If path exists, read from file
+                workbook = xlsx.readFile(req.file.path);
+            } else {
+                throw new Error("Neither file buffer nor path is available");
+            }
+        } catch (error) {
+            console.error("Error reading XLSX file:", error);
+            return res.status(400).json({ error: "Unable to read the uploaded file. Please ensure it's a valid XLSX or XLS file." });
+        }
+
+        if (!workbook || !workbook.SheetNames || workbook.SheetNames.length === 0) {
+            return res.status(400).json({ error: "The uploaded file is empty or invalid." });
+        }
+
         const sheetName = workbook.SheetNames[0];
         const worksheet = workbook.Sheets[sheetName];
         const data = xlsx.utils.sheet_to_json(worksheet);
+
+        // Validate data structure
+        if (data.length === 0) {
+            return res.status(400).json({ error: "The uploaded file contains no valid data." });
+        }
+
+        console.log('First row of data:', data[0]);
 
         // Insert data into the database via DAO
         const rowsAffected = await adminDao.insertXLSXData(id, data);
@@ -259,6 +299,9 @@ exports.uploadXLSX = async(req, res) => {
         return res.status(500).json({ error: "An error occurred while processing the XLSX file." });
     }
 };
+
+
+
 
 exports.getAllCropCalender = async(req, res) => {
     try {
@@ -1653,5 +1696,34 @@ exports.editUserTaskStatus = async(req, res) => {
         return res.status(500).json({
             error: 'An error occurred while updating the Task status',
         });
+    }
+};
+
+
+exports.getSlaveCropCalendarDayById = async (req, res) => {
+    const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
+    console.log("Request URL:", fullUrl);
+
+    try {
+        // Validate request parameters (id)
+        const validatedParams = await ValidateSchema.getCropCalendarDayByIdSchema.validateAsync(req.params);
+
+        // Fetch the data from the DAO
+        const result = await adminDao.getSlaveCropCalendarDayById(validatedParams.id);
+
+        if (!result) {
+            return res.status(404).json({ message: "No record found with the given ID" });
+        }
+
+        console.log("Successfully retrieved task by ID");
+        res.status(200).json(result);
+    } catch (error) {
+        if (error.isJoi) {
+            // Handle validation error
+            return res.status(400).json({ error: error.details[0].message });
+        }
+
+        console.error("Error fetching crop task:", error);
+        return res.status(500).json({ error: "An error occurred while fetching the crop task" });
     }
 };

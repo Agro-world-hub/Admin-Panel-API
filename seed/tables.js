@@ -555,16 +555,26 @@ const createSlaveCropCalenderDaysTable = () => {
       id INT AUTO_INCREMENT PRIMARY KEY,
       userId INT(11) NULL,
       cropCalendarId INT(11) NULL,
-      cropCalendarDaysId INT(11) NULL,
+      taskIndex INT(255) NULL,
+      days INT(11) NULL,
+      taskTypeEnglish TEXT COLLATE latin1_swedish_ci NULL,
+      taskTypeSinhala TEXT COLLATE utf8_unicode_ci NULL,
+      taskTypeTamil TEXT COLLATE utf8_unicode_ci NULL,
+      taskCategoryEnglish TEXT COLLATE latin1_swedish_ci NULL,
+      taskCategorySinhala TEXT COLLATE utf8_unicode_ci NULL,
+      taskCategoryTamil TEXT COLLATE utf8_unicode_ci NULL,
+      taskEnglish TEXT COLLATE latin1_swedish_ci NULL,
+      taskSinhala TEXT COLLATE utf8_unicode_ci NULL,
+      taskTamil TEXT COLLATE utf8_unicode_ci NULL,
+      taskDescriptionEnglish TEXT COLLATE latin1_swedish_ci NULL,
+      taskDescriptionSinhala TEXT COLLATE utf8_unicode_ci NULL,
+      taskDescriptionTamil TEXT COLLATE utf8_unicode_ci NULL,
       status VARCHAR(20), 
       createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (userId) REFERENCES users(id)
           ON DELETE CASCADE
           ON UPDATE CASCADE,
       FOREIGN KEY (cropCalendarId) REFERENCES cropCalender(id)
-        ON DELETE CASCADE
-        ON UPDATE CASCADE,
-      FOREIGN KEY (cropCalendarDaysId) REFERENCES cropcalendardays(id)
         ON DELETE CASCADE
         ON UPDATE CASCADE
   );
