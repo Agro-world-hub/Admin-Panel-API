@@ -1183,3 +1183,17 @@ WHERE
         });
     });
 };
+
+exports.deleteUserTasks = (id) => {
+    const sql = "DELETE FROM slavecropcalendardays WHERE id = ?";
+    
+    return new Promise((resolve, reject) => {
+        db.query(sql, [id], (err, results) => {
+            if (err) {
+                reject("Error executing delete query: " + err);
+            } else {
+                resolve(results);
+            }
+        });
+    });
+};

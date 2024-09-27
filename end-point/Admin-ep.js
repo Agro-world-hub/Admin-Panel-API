@@ -1579,3 +1579,32 @@ exports.getAllUsersTaskByCropId = async(req, res) => {
         return res.status(500).json({ error: "An error occurred while fetching tasks for the crop ID" });
     }
 };
+
+
+exports.deleteUserTask = async(req, res) => {
+    const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
+    console.log("Request URL:", fullUrl);
+
+    try {
+        // Validate the request parameters (id)
+        const { id } = req.params;
+
+        // Delete admin user by id from DAO
+        const results = await adminDao.deleteUserTasks(id);
+
+        if (results.affectedRows === 0) {
+            return res.status(404).json({ message: "User task not found" });
+        }
+
+        console.log("User task deleted successfully");
+        return res.status(200).json({ message: "User task deleted successfully" });
+    } catch (err) {
+        if (err.isJoi) {
+            // Validation error
+            return res.status(400).json({ error: err.details[0].message });
+        }
+
+        console.error("Error deleting User task:", err);
+        return res.status(500).json({ error: "An error occurred while deleting User task" });
+    }
+};

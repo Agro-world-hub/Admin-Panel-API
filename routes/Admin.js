@@ -259,4 +259,10 @@ router.get(
     AdminEp.getAllUsersTaskByCropId
 );
 
+router.delete(
+    "/delete-user-task/:id",
+    authMiddleware,
+    AdminEp.deleteUserTask
+);
+
 module.exports = router;
