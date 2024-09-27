@@ -374,3 +374,11 @@ exports.editTaskSchema = Joi.object({
         'any.required': 'Task Category Tamil is required',
     }),
 });
+
+exports.slaveUserId = Joi.object({
+    userId: Joi.number().integer().required().label('Ongoing Cultivation ID')
+});
+
+exports.slaveCropId = Joi.object({
+    cropId: Joi.number().integer().required().label('Ongoing Cultivation ID')
+});

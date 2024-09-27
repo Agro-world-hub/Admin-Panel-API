@@ -623,6 +623,7 @@ exports.getAllOngoingCultivations = (searchNIC, limit, offset) => {
         let dataSql = `
             SELECT 
                 ongoingCultivations.id AS cultivationId, 
+                users.id,
                 users.firstName, 
                 users.lastName, 
                 users.NICnumber 
@@ -690,6 +691,7 @@ exports.getOngoingCultivationsById = (id) => {
         SELECT 
             ongoingcultivationscrops.id AS ongoingcultivationscropsid, 
             ongoingCultivationId,
+            cropCalendar,
             cropcalender.cropName,
             cropcalender.variety,
             cropcalender.CultivationMethod,
@@ -1152,3 +1154,32 @@ exports.editTask = (taskEnglish, taskSinhala, taskTamil, taskTypeEnglish, taskTy
     });
 };
 
+exports.getAllUserTaskByCropId = (cropId, userId) => {
+    return new Promise((resolve, reject) => {
+        const sql = `
+            SELECT 
+    slavecropcalendardays.id AS slavecropcalendardaysId,
+    slavecropcalendardays.cropCalendarId,
+    cropcalendardays.taskIndex, 
+    cropcalendardays.days, 
+    cropcalendardays.taskEnglish,
+    slavecropcalendardays.status
+FROM 
+    slavecropcalendardays 
+JOIN 
+    cropcalendardays ON slavecropcalendardays.cropCalendarDaysId = cropcalendardays.id -- Ensure this is correct
+WHERE 
+    slavecropcalendardays.cropCalendarId = ? 
+    AND slavecropcalendardays.userId = ?;
+
+        `;
+        const values = [cropId, userId];
+
+        db.query(sql, values, (err, results) => {
+            if (err) {
+                return reject(err); // Reject promise if an error occurs
+            }
+            resolve(results); // Resolve the promise with the query results
+        });
+    });
+};

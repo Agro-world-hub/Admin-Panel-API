@@ -252,4 +252,11 @@ router.get(
     AdminEp.getCropCalendarDayById
 );
 
+
+router.get(
+    "/get-all-users-crop-task/:cropId/:userId",
+    authMiddleware,
+    AdminEp.getAllUsersTaskByCropId
+);
+
 module.exports = router;
