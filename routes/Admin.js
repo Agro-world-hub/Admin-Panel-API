@@ -12,25 +12,27 @@ const router = express.Router();
 
 const storage = multer.diskStorage({
     destination: function(req, file, cb) {
-        cb(null, 'uploads/')
+        cb(null, "uploads/");
     },
     filename: function(req, file, cb) {
-        cb(null, file.fieldname + '-' + Date.now() + path.extname(file.originalname))
-    }
+        cb(
+            null,
+            file.fieldname + "-" + Date.now() + path.extname(file.originalname)
+        );
+    },
 });
 const uploadfile = multer({
     storage: storage,
     fileFilter: function(req, file, callback) {
         var ext = path.extname(file.originalname);
-        if (ext !== '.xlsx' && ext !== '.xls') {
-            return callback(new Error('Only Excel files are allowed'))
+        if (ext !== ".xlsx" && ext !== ".xls") {
+            return callback(new Error("Only Excel files are allowed"));
         }
-        callback(null, true)
-    }
+        callback(null, true);
+    },
 });
 
-router.post('/login',
-    AdminEp.loginAdmin);
+router.post("/login", AdminEp.loginAdmin);
 
 router.get("/get-all-admin-users", authMiddleware, AdminEp.getAllAdminUsers);
 
@@ -155,7 +157,12 @@ router.get(
     AdminEp.getMarketPriceById
 );
 
-router.put("/edit-market-price/:id", authMiddleware, upload.single('image'), AdminEp.editMarketPrice);
+router.put(
+    "/edit-market-price/:id",
+    authMiddleware,
+    upload.single("image"),
+    AdminEp.editMarketPrice
+);
 
 router.get(
     "/get-all-ongoing-culivations",
@@ -169,12 +176,12 @@ router.get(
     AdminEp.getOngoingCultivationsById
 );
 
-router.put('/update-plant-care-user/:id',
+router.put(
+    "/update-plant-care-user/:id",
     authMiddleware,
     upload.single("image"),
     AdminEp.updatePlantCareUser
 );
-
 
 router.post(
     "/create-plantcare-user",
@@ -183,35 +190,29 @@ router.post(
     AdminEp.createPlantCareUser
 );
 
-
-
-
-
-
-router.get('/get-fixed-assets/:id/:category',
+router.get(
+    "/get-fixed-assets/:id/:category",
     authMiddleware,
     AdminEp.getFixedAssetsByCategory
 );
 
-router.get('/get-current-assets-view/:id/:category',
+router.get(
+    "/get-current-assets-view/:id/:category",
     authMiddleware,
     AdminEp.getCurrentAssetsByCategory
 );
-
 
 // router.get('/get-total-fixed-assets-by-id/:id',
 //     authMiddleware,
 //     AdminEp.getTotalFixedAssetValue
 // );
 
-router.post('/upload-xlsx/:id',
+router.post(
+    "/upload-xlsx/:id",
     authMiddleware,
-    uploadfile.single('file'),
+    uploadfile.single("file"),
     AdminEp.uploadXLSX
 );
-
-
-
 
 // editAdminUserPassword
 
@@ -228,7 +229,11 @@ router.get(
     AdminEp.getCurrentAssertGroup
 );
 
-router.get("/get-current-asset-report/:id", authMiddleware, AdminEp.getCurrentAssetRecordById);
+router.get(
+    "/get-current-asset-report/:id",
+    authMiddleware,
+    AdminEp.getCurrentAssetRecordById
+);
 
 //get all task of crop
 router.get(
@@ -238,11 +243,7 @@ router.get(
 );
 
 //crop task delete function
-router.delete(
-    "/delete-crop-task/:id",
-    authMiddleware,
-    AdminEp.deleteCropTask
-);
+router.delete("/delete-crop-task/:id", authMiddleware, AdminEp.deleteCropTask);
 
 router.post("/edit-crop-task/:id", authMiddleware, AdminEp.editTask);
 
@@ -250,6 +251,12 @@ router.get(
     "/get-crop-task/:id",
     authMiddleware,
     AdminEp.getCropCalendarDayById
+);
+
+router.get(
+    "/get-post-by-id/:id",
+    authMiddleware,
+    AdminEp.getAllByPosty
 );
 
 module.exports = router;
