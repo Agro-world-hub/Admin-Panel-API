@@ -1255,3 +1255,40 @@ exports.getSlaveCropCalendarDayById = (id) => {
         });
     });
 };
+
+
+//post reply
+exports.getAllPostReplyDao = (postid) => {
+    return new Promise((resolve, reject) => {
+        const sql = "SELECT p.id, p.replyMessage, p.createdAt, u.firstName, u.lastName FROM publicforumreplies p ,users u WHERE p.replyId=u.id AND chatId = ?";
+        const values = [postid];
+
+        db.query(sql, values, (err, results) => {
+            if (err) {
+                return reject(err); 
+            }
+
+            
+            if (results.length === 0) {
+                return resolve(null);
+            }
+
+            resolve(results); 
+        });
+    });
+};
+
+
+exports.deleteReply = (id) => {
+    const sql = "DELETE FROM publicforumreplies WHERE id = ?";
+    
+    return new Promise((resolve, reject) => {
+        db.query(sql, [id], (err, results) => {
+            if (err) {
+                reject("Error executing delete query: " + err);
+            } else {
+                resolve(results);
+            }
+        });
+    });
+};

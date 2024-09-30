@@ -282,4 +282,17 @@ router.get(
     AdminEp.getSlaveCropCalendarDayById
 );
 
+//get each post reply
+router.get(
+    "/get-all-reply/:postId",
+    // authMiddleware,
+    AdminEp.getAllReplyByPost
+);
+
+router.delete(
+    "/delete-reply/:postId",
+    // authMiddleware,
+    AdminEp.DeleteReply
+);
+
 module.exports = router;
