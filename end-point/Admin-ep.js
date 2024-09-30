@@ -1677,8 +1677,7 @@ exports.getAllPostyById = async(req, res) => {
     console.log("Request URL:", fullUrl);
 
     try {
-        const postId = req.params.id;
-        const results = await adminDao.getAllPost(postId);
+        const results = await adminDao.getAllPost();
         console.log(results);
 
         if (!results || results.length === 0) {

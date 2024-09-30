@@ -254,8 +254,8 @@ router.get(
 );
 
 router.get(
-    "/get-post-by-id/:id",
-    authMiddleware,
+    "/get-post",
+    // authMiddleware,
     AdminEp.getAllPostyById
 );
 

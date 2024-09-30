@@ -1167,12 +1167,11 @@ exports.editTask = (
     });
 };
 
-exports.getAllPost = (postId) => {
+exports.getAllPost = () => {
     return new Promise((resolve, reject) => {
-        const sql = `SELECT * FROM publicforumposts WHERE id=?`;
-        const values = [postId];
+        const sql = `SELECT * FROM publicforumposts `;
 
-        db.query(sql, values, (err, results) => {
+        db.query(sql, (err, results) => {
             if (err) {
                 return reject(err);
             }
