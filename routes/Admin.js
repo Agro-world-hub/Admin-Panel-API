@@ -256,7 +256,7 @@ router.get(
 router.get(
     "/get-post-by-id/:id",
     authMiddleware,
-    AdminEp.getAllByPosty
+    AdminEp.getAllPostyById
 );
 
 module.exports = router;
