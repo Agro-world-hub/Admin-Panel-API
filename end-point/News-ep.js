@@ -1,4 +1,4 @@
-const bcrypt = require('bcrypt');
+
 const jwt = require("jsonwebtoken");
 const db = require('../startup/database');
 const bodyParser = require('body-parser');

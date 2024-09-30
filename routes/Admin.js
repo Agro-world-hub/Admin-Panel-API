@@ -4,8 +4,8 @@ const AdminEp = require("../end-point/Admin-ep");
 const bodyParser = require("body-parser");
 const authMiddleware = require("../middlewares/authMiddleware");
 const multer = require("multer");
-// const upload = require("../middlewares/uploadMiddleware");
-const upload = multer({ storage: multer.memoryStorage() });
+const upload = require("../middlewares/uploadMiddleware");
+// const upload = multer({ storage: multer.memoryStorage() });
 // const uploadfile = multer({ dest: 'uploads/' });
 const path = require("path");
 const fs = require('fs');
@@ -281,5 +281,11 @@ router.get(
     authMiddleware,
     AdminEp.getSlaveCropCalendarDayById
 );
+
+router.post(
+    "/edit-user-crop-task/:id",
+     authMiddleware, 
+     AdminEp.editUserTask
+    );
 
 module.exports = router;

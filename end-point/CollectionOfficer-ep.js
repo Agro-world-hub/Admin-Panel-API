@@ -1,5 +1,4 @@
 const jwt = require("jsonwebtoken");
-const bcrypt = require("bcrypt");
 const db = require("../startup/database");
 const bodyParser = require("body-parser");
 const { S3Client, PutObjectCommand } = require("@aws-sdk/client-s3");

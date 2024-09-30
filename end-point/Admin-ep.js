@@ -1,5 +1,4 @@
 const jwt = require("jsonwebtoken");
-const bcrypt = require("bcrypt");
 const db = require("../startup/database");
 const bodyParser = require("body-parser");
 const { S3Client, PutObjectCommand } = require("@aws-sdk/client-s3");
@@ -1725,5 +1724,48 @@ exports.getSlaveCropCalendarDayById = async (req, res) => {
 
         console.error("Error fetching crop task:", error);
         return res.status(500).json({ error: "An error occurred while fetching the crop task" });
+    }
+};
+
+
+exports.editUserTask = async (req, res) => {
+    const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
+    console.log("Request URL:", fullUrl);
+    console.log("Update task", req.body);
+    
+    const id = req.params.id;
+    console.log(id);
+
+    try {
+        const validatedParams = req.body;
+
+        // Call DAO to update task
+        const result = await adminDao.editUserTask(
+            validatedParams.taskEnglish,
+            validatedParams.taskSinhala,
+            validatedParams.taskTamil,
+            validatedParams.taskTypeEnglish,
+            validatedParams.taskTypeSinhala,
+            validatedParams.taskTypeTamil,
+            validatedParams.taskCategoryEnglish,
+            validatedParams.taskCategorySinhala,
+            validatedParams.taskCategoryTamil,
+            validatedParams.id
+        );
+
+        if (result.affectedRows === 0) {
+            return res.status(404).json({ message: "Task not found" });
+        }
+
+        console.log("Task updated successfully");
+        res.status(200).json({ message: "Task updated successfully" });
+    } catch (error) {
+        if (error.isJoi) {
+            // Handle validation error
+            return res.status(400).json({ error: error.details[0].message });
+        }
+
+        console.error("Error updating task:", error);
+        return res.status(500).json({ error: "An error occurred while updating task" });
     }
 };

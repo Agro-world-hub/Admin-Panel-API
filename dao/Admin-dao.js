@@ -1255,3 +1255,35 @@ exports.getSlaveCropCalendarDayById = (id) => {
         });
     });
 };
+
+
+exports.editUserTask = (taskEnglish, taskSinhala, taskTamil, taskTypeEnglish, taskTypeSinhala, taskTypeTamil, taskCategoryEnglish, taskCategorySinhala, taskCategoryTamil, id) => {
+    return new Promise((resolve, reject) => {
+        const sql = `
+            UPDATE slavecropcalendardays 
+            SET taskEnglish=?, taskSinhala=?, taskTamil=?, taskTypeEnglish=?, taskTypeSinhala=?, taskTypeTamil=?, 
+                taskCategoryEnglish=?, taskCategorySinhala=?, taskCategoryTamil=? 
+            WHERE id = ?
+        `;
+        const values = [
+            taskEnglish,
+            taskSinhala,
+            taskTamil,
+            taskTypeEnglish,
+            taskTypeSinhala,
+            taskTypeTamil,
+            taskCategoryEnglish,
+            taskCategorySinhala,
+            taskCategoryTamil,
+            id
+        ];
+
+        db.query(sql, values, (err, results) => {
+            if (err) {
+                return reject(err); // Reject the promise on error
+            }
+
+            resolve(results); // Resolve the promise with the results
+        });
+    });
+};
