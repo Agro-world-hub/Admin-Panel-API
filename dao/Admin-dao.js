@@ -13,7 +13,7 @@ const s3Client = new S3Client({
 
 exports.loginAdmin = (email) => {
     return new Promise((resolve, reject) => {
-        const sql = "SELECT * FROM adminUsers WHERE mail = ?";
+        const sql = "SELECT * FROM adminusers WHERE mail = ?";
         db.query(sql, [email], (err, results) => {
             if (err) {
                 reject(err);
@@ -26,8 +26,8 @@ exports.loginAdmin = (email) => {
 
 exports.getAllAdminUsers = (limit, offset) => {
     return new Promise((resolve, reject) => {
-        const countSql = "SELECT COUNT(*) as total FROM adminUsers";
-        const dataSql = "SELECT * FROM adminUsers ORDER BY created_at DESC LIMIT ? OFFSET ?";
+        const countSql = "SELECT COUNT(*) as total FROM adminusers";
+        const dataSql = "SELECT * FROM adminusers ORDER BY created_at DESC LIMIT ? OFFSET ?";
 
         db.query(countSql, (countErr, countResults) => {
             if (countErr) {
@@ -120,7 +120,7 @@ exports.createCropCallender = async (
 ) => {
     return new Promise((resolve, reject) => {
         const sql =
-            "INSERT INTO cropCalender (cropName, sinhalaCropName, tamilCropName, variety, sinhalaVariety, tamilVariety, cultivationMethod, natureOfCultivation, cropDuration,Category, specialNotes, sinhalaSpecialNotes, tamilSpecialNotes, suitableAreas,cropColor,image) VALUES (?, ?, ?, ?, ?, ?, ?,?,?,?,?,?,?,?,?,?)";
+            "INSERT INTO cropcalender (cropName, sinhalaCropName, tamilCropName, variety, sinhalaVariety, tamilVariety, cultivationMethod, natureOfCultivation, cropDuration,Category, specialNotes, sinhalaSpecialNotes, tamilSpecialNotes, suitableAreas,cropColor,image) VALUES (?, ?, ?, ?, ?, ?, ?,?,?,?,?,?,?,?,?,?)";
         const values = [
             cropName,
             sinhalaCropName,
@@ -190,7 +190,7 @@ exports.insertXLSXData = (cropId, data) => {
 
 exports.getAllCropCalendars = (limit, offset) => {
     return new Promise((resolve, reject) => {
-        const countSql = "SELECT COUNT(*) as total FROM cropCalender";
+        const countSql = "SELECT COUNT(*) as total FROM cropcalender";
         const dataSql = "SELECT * FROM cropCalender ORDER BY createdAt DESC LIMIT ? OFFSET ?";
 
         db.query(countSql, (countErr, countResults) => {
@@ -214,7 +214,7 @@ exports.getAllCropCalendars = (limit, offset) => {
 
 exports.createOngoingCultivations = (userId, cropCalenderId) => {
     return new Promise((resolve, reject) => {
-        const sql = "INSERT INTO ongoingCultivations (`userId`, `cropCalenderId`) VALUES (?)";
+        const sql = "INSERT INTO ongoingcultivations (`userId`, `cropCalenderId`) VALUES (?)";
         const values = [userId, cropCalenderId];
 
         db.query(sql, [values], (err, results) => {
@@ -641,7 +641,7 @@ exports.getAllOngoingCultivations = (searchNIC, limit, offset) => {
                 users.lastName, 
                 users.NICnumber 
             FROM 
-                ongoingCultivations 
+                ongoingcultivations 
             JOIN 
                 users ON ongoingCultivations.userId = users.id
         `;
@@ -682,7 +682,7 @@ exports.getOngoingCultivationsWithUserDetails = () => {
             users.firstName, 
             users.lastName 
         FROM 
-            ongoingCultivations 
+            ongoingcultivations 
         JOIN 
             users ON ongoingCultivations.userId = users.id;
     `;
@@ -1086,7 +1086,7 @@ exports.getAllTaskByCropId = (cropId) => {
     return new Promise((resolve, reject) => {
         const sql = `
             SELECT * 
-            FROM cropCalender cc 
+            FROM cropcalender cc 
             JOIN cropcalendardays cd ON cc.id = cd.cropId 
             WHERE cc.id = ?
         `;
