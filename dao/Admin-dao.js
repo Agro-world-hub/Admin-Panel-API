@@ -1345,15 +1345,15 @@ exports.getAllPostReplyDao = (postid) => {
 
         db.query(sql, values, (err, results) => {
             if (err) {
-                return reject(err); 
+                return reject(err);
             }
 
-            
+
             if (results.length === 0) {
                 return resolve(null);
             }
 
-            resolve(results); 
+            resolve(results);
         });
     });
 };
@@ -1361,7 +1361,7 @@ exports.getAllPostReplyDao = (postid) => {
 
 exports.deleteReply = (id) => {
     const sql = "DELETE FROM publicforumreplies WHERE id = ?";
-    
+
     return new Promise((resolve, reject) => {
         db.query(sql, [id], (err, results) => {
             if (err) {

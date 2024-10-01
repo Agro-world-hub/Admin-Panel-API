@@ -7,6 +7,7 @@ const xlsx = require("xlsx");
 const { log } = require("console");
 const adminDao = require("../dao/Admin-dao");
 const ValidateSchema = require("../validations/Admin-validation");
+const { type } = require("os");
 
 
 
@@ -209,7 +210,6 @@ exports.createCropCallender = async(req, res) => {
     }
 };
 
-
 exports.uploadXLSX = async(req, res) => {
     try {
         const { id } = req.params;
@@ -222,23 +222,23 @@ exports.uploadXLSX = async(req, res) => {
             return res.status(400).json({ error: "No file uploaded." });
         }
 
-        console.log('File details:', {
+        console.log("File details:", {
             fieldname: req.file.fieldname,
             originalname: req.file.originalname,
             encoding: req.file.encoding,
             mimetype: req.file.mimetype,
             size: req.file.size,
             path: req.file.path, // Log the path if it exists
-            buffer: req.file.buffer ? 'Buffer exists' : 'Buffer is undefined'
+            buffer: req.file.buffer ? "Buffer exists" : "Buffer is undefined",
         });
 
         // Validate file type
-        const allowedExtensions = ['.xlsx', '.xls'];
-        const fileExtension = path.extname(
-            req.file.originalname
-        ).toLowerCase();
+        const allowedExtensions = [".xlsx", ".xls"];
+        const fileExtension = path.extname(req.file.originalname).toLowerCase();
         if (!allowedExtensions.includes(fileExtension)) {
-            return res.status(400).json({ error: "Invalid file type. Only XLSX and XLS files are allowed." });
+            return res.status(400).json({
+                error: "Invalid file type. Only XLSX and XLS files are allowed.",
+            });
         }
 
         // Read the XLSX file
@@ -255,11 +255,15 @@ exports.uploadXLSX = async(req, res) => {
             }
         } catch (error) {
             console.error("Error reading XLSX file:", error);
-            return res.status(400).json({ error: "Unable to read the uploaded file. Please ensure it's a valid XLSX or XLS file." });
+            return res.status(400).json({
+                error: "Unable to read the uploaded file. Please ensure it's a valid XLSX or XLS file.",
+            });
         }
 
         if (!workbook || !workbook.SheetNames || workbook.SheetNames.length === 0) {
-            return res.status(400).json({ error: "The uploaded file is empty or invalid." });
+            return res
+                .status(400)
+                .json({ error: "The uploaded file is empty or invalid." });
         }
 
         const sheetName = workbook.SheetNames[0];
@@ -268,10 +272,12 @@ exports.uploadXLSX = async(req, res) => {
 
         // Validate data structure
         if (data.length === 0) {
-            return res.status(400).json({ error: "The uploaded file contains no valid data." });
+            return res
+                .status(400)
+                .json({ error: "The uploaded file contains no valid data." });
         }
 
-        console.log('First row of data:', data[0]);
+        console.log("First row of data:", data[0]);
 
         // Insert data into the database via DAO
         const rowsAffected = await adminDao.insertXLSXData(id, data);
@@ -291,9 +297,6 @@ exports.uploadXLSX = async(req, res) => {
             .json({ error: "An error occurred while processing the XLSX file." });
     }
 };
-
-
-
 
 exports.getAllCropCalender = async(req, res) => {
     try {
@@ -1628,7 +1631,6 @@ exports.editTask = async(req, res) => {
     }
 };
 
-
 exports.getAllUsersTaskByCropId = async(req, res) => {
     const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
     console.log("Request URL:", fullUrl);
@@ -1642,7 +1644,6 @@ exports.getAllUsersTaskByCropId = async(req, res) => {
         console.log(userId);
         const results = await adminDao.getAllUserTaskByCropId(cropId, userId);
 
-
         res.json(results);
     } catch (error) {
         if (error.isJoi) {
@@ -1651,10 +1652,11 @@ exports.getAllUsersTaskByCropId = async(req, res) => {
         }
 
         console.error("Error fetching tasks for crop ID:", error);
-        return res.status(500).json({ error: "An error occurred while fetching tasks for the crop ID" });
+        return res.status(500).json({
+            error: "An error occurred while fetching tasks for the crop ID",
+        });
     }
 };
-
 
 exports.deleteUserTask = async(req, res) => {
     const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
@@ -1680,57 +1682,59 @@ exports.deleteUserTask = async(req, res) => {
         }
 
         console.error("Error deleting User task:", err);
-        return res.status(500).json({ error: "An error occurred while deleting User task" });
+        return res
+            .status(500)
+            .json({ error: "An error occurred while deleting User task" });
     }
 };
 
-
-
 exports.editUserTaskStatus = async(req, res) => {
     try {
-        const fullUrl = `${req.protocol}://${req.get('host')}${req.originalUrl}`;
-        console.log('Request URL:', fullUrl);
+        const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
+        console.log("Request URL:", fullUrl);
 
         // Validate the `id` parameter
-        const { id } = await ValidateSchema.editMarketPriceStatusSchema.validateAsync(req.params);
+        const { id } =
+        await ValidateSchema.editMarketPriceStatusSchema.validateAsync(
+            req.params
+        );
 
         // Fetch the current status of the market price
         const result = await adminDao.getUserTaskStatusById(id);
 
         if (result.length === 0) {
-            return res.status(404).json({ error: 'Task not found' });
+            return res.status(404).json({ error: "Task not found" });
         }
 
         const currentStatus = result[0].status;
         let newStatus;
 
         // Toggle between 'Draft' and 'Published'
-        if (currentStatus === 'Pending') {
-            newStatus = 'Completed';
-        } else if (currentStatus === 'Completed') {
-            newStatus = 'Pending';
+        if (currentStatus === "Pending") {
+            newStatus = "Completed";
+        } else if (currentStatus === "Completed") {
+            newStatus = "Pending";
         } else {
-            return res.status(400).json({ error: 'Invalid current status' });
+            return res.status(400).json({ error: "Invalid current status" });
         }
 
         // Update the status using the DAO
         await adminDao.updateUserTaskStatusById(id, newStatus);
 
-        console.log('Status updated successfully');
-        return res.status(200).json({ message: 'Status updated successfully' });
+        console.log("Status updated successfully");
+        return res.status(200).json({ message: "Status updated successfully" });
     } catch (err) {
         if (err.isJoi) {
             // Validation error
             return res.status(400).json({ error: err.details[0].message });
         }
 
-        console.error('Error updating Task status:', err);
+        console.error("Error updating Task status:", err);
         return res.status(500).json({
-            error: 'An error occurred while updating the Task status',
+            error: "An error occurred while updating the Task status",
         });
     }
 };
-
 
 exports.getSlaveCropCalendarDayById = async(req, res) => {
     const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
@@ -1738,13 +1742,20 @@ exports.getSlaveCropCalendarDayById = async(req, res) => {
 
     try {
         // Validate request parameters (id)
-        const validatedParams = await ValidateSchema.getCropCalendarDayByIdSchema.validateAsync(req.params);
+        const validatedParams =
+            await ValidateSchema.getCropCalendarDayByIdSchema.validateAsync(
+                req.params
+            );
 
         // Fetch the data from the DAO
-        const result = await adminDao.getSlaveCropCalendarDayById(validatedParams.id);
+        const result = await adminDao.getSlaveCropCalendarDayById(
+            validatedParams.id
+        );
 
         if (!result) {
-            return res.status(404).json({ message: "No record found with the given ID" });
+            return res
+                .status(404)
+                .json({ message: "No record found with the given ID" });
         }
 
         console.log("Successfully retrieved task by ID");
@@ -1756,10 +1767,11 @@ exports.getSlaveCropCalendarDayById = async(req, res) => {
         }
 
         console.error("Error fetching crop task:", error);
-        return res.status(500).json({ error: "An error occurred while fetching the crop task" });
+        return res
+            .status(500)
+            .json({ error: "An error occurred while fetching the crop task" });
     }
 };
-
 
 //get each post reply
 exports.getAllReplyByPost = async(req, res) => {
@@ -1770,7 +1782,7 @@ exports.getAllReplyByPost = async(req, res) => {
         const postId = req.params.postId;
 
         const results = await adminDao.getAllPostReplyDao(postId);
- 
+
         res.json(results);
     } catch (error) {
         if (error.isJoi) {
@@ -1779,11 +1791,11 @@ exports.getAllReplyByPost = async(req, res) => {
         }
 
         console.error("Error fetching tasks for crop ID:", error);
-        return res.status(500).json({ error: "An error occurred while fetching tasks for the crop ID" });
+        return res.status(500).json({
+            error: "An error occurred while fetching tasks for the crop ID",
+        });
     }
 };
-
-
 
 exports.DeleteReply = async(req, res) => {
     const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
@@ -1793,15 +1805,12 @@ exports.DeleteReply = async(req, res) => {
         const postId = req.params.postId;
 
         const results = await adminDao.deleteReply(postId);
-        if(results.affectedRows=== 1){
+        if (results.affectedRows === 1) {
             console.log("Delete");
-            res.json({status:true})
-            
+            res.json({ status: true });
+        } else {
+            res.json({ status: false });
         }
-        else{
-            res.json({status:false})   
-        }
-        
     } catch (error) {
         if (error.isJoi) {
             // Handle validation error
@@ -1809,10 +1818,11 @@ exports.DeleteReply = async(req, res) => {
         }
 
         console.error("Error fetching tasks for crop ID:", error);
-        return res.status(500).json({ error: "An error occurred while fetching tasks for the crop ID" });
+        return res.status(500).json({
+            error: "An error occurred while fetching tasks for the crop ID",
+        });
     }
 };
-
 
 exports.editUserTask = async(req, res) => {
     const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
@@ -1852,7 +1862,9 @@ exports.editUserTask = async(req, res) => {
         }
 
         console.error("Error updating task:", error);
-        return res.status(500).json({ error: "An error occurred while updating task" });
+        return res
+            .status(500)
+            .json({ error: "An error occurred while updating task" });
     }
 };
 exports.getAllPostyById = async(req, res) => {
@@ -1866,16 +1878,25 @@ exports.getAllPostyById = async(req, res) => {
         if (!results || results.length === 0) {
             return res.status(404).json({ error: "No post found." });
         }
+
+        // Modify the results to convert images to base64
+
+        if (results[0].postimage) {
+            const base64Image = Buffer.from(results[0].postimage).toString('base64');
+            const mimeType = 'image/png';
+            results[0].postimage = `data:${mimeType};base64,${base64Image}`;
+            ෆ
+        }
+
+
         res.json(results);
     } catch (error) {
         if (error.isJoi) {
             return res.status(400).json({ error: error.details[0].message });
         }
-        console.error("Error fetching replies for post ID:", error);
-        return res
-            .status(500)
-            .json({
-                error: "An error occurred while fetching replies for the post.",
-            });
+        console.error("Error fetching posts:", error);
+        return res.status(500).json({
+            error: "An error occurred while fetching posts.",
+        });
     }
 };
