@@ -39,7 +39,7 @@ exports.getAllAdminUsers = (limit, offset) => {
                     } else {
                         resolve({
                             total: countResults[0].total,
-                            items: dataResults
+                            items: dataResults,
                         });
                     }
                 });
@@ -50,7 +50,8 @@ exports.getAllAdminUsers = (limit, offset) => {
 
 exports.adminCreateUser = (firstName, lastName, phoneNumber, NICnumber) => {
     return new Promise((resolve, reject) => {
-        const sql = "INSERT INTO users (`firstName`, `lastName`, `phoneNumber`, `NICnumber`) VALUES (?)";
+        const sql =
+            "INSERT INTO users (`firstName`, `lastName`, `phoneNumber`, `NICnumber`) VALUES (?)";
         const values = [firstName, lastName, phoneNumber, NICnumber];
 
         db.query(sql, [values], (err, results) => {
@@ -90,7 +91,7 @@ exports.getAllUsers = (limit, offset, searchNIC) => {
                     } else {
                         resolve({
                             total: total,
-                            items: dataResults
+                            items: dataResults,
                         });
                     }
                 });
@@ -100,23 +101,23 @@ exports.getAllUsers = (limit, offset, searchNIC) => {
 };
 
 
-exports.createCropCallender = async (
-            cropName,
-            sinhalaCropName,
-            tamilCropName,
-            variety,
-            sinhalaVariety,
-            tamilVariety,
-            cultivationMethod,
-            natureOfCultivation,
-            cropDuration,
-            cropCategory,
-            specialNotes,
-            sinhalaSpecialNotes,
-            tamilSpecialNotes,
-            suitableAreas,
-            cropColor,
-            imagePath
+exports.createCropCallender = async(
+    cropName,
+    sinhalaCropName,
+    tamilCropName,
+    variety,
+    sinhalaVariety,
+    tamilVariety,
+    cultivationMethod,
+    natureOfCultivation,
+    cropDuration,
+    cropCategory,
+    specialNotes,
+    sinhalaSpecialNotes,
+    tamilSpecialNotes,
+    suitableAreas,
+    cropColor,
+    imagePath
 ) => {
     return new Promise((resolve, reject) => {
         const sql =
@@ -203,7 +204,7 @@ exports.getAllCropCalendars = (limit, offset) => {
                     } else {
                         resolve({
                             total: countResults[0].total,
-                            items: dataResults
+                            items: dataResults,
                         });
                     }
                 });
@@ -227,7 +228,7 @@ exports.createOngoingCultivations = (userId, cropCalenderId) => {
     });
 };
 
-exports.createNews = async (
+exports.createNews = async(
     titleEnglish,
     titleSinhala,
     titleTamil,
@@ -239,7 +240,8 @@ exports.createNews = async (
     createdBy
 ) => {
     return new Promise((resolve, reject) => {
-        const sql = "INSERT INTO content (titleEnglish, titleSinhala, titleTamil, descriptionEnglish, descriptionSinhala, descriptionTamil, image, status, createdBy) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        const sql =
+            "INSERT INTO content (titleEnglish, titleSinhala, titleTamil, descriptionEnglish, descriptionSinhala, descriptionTamil, image, status, createdBy) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
         const values = [
             titleEnglish,
             titleSinhala,
@@ -249,7 +251,7 @@ exports.createNews = async (
             descriptionTamil,
             imagePath,
             status,
-            createdBy
+            createdBy,
         ];
 
         db.query(sql, values, (err, results) => {
@@ -262,8 +264,7 @@ exports.createNews = async (
     });
 };
 
-
-exports.getAllNews = async (status, createdAt, limit, offset) => {
+exports.getAllNews = async(status, createdAt, limit, offset) => {
     return new Promise((resolve, reject) => {
         let countsSql = "SELECT COUNT(*) as total FROM content";
         let dataSql = "SELECT * FROM content";
@@ -290,37 +291,47 @@ exports.getAllNews = async (status, createdAt, limit, offset) => {
         dataSql += " LIMIT ? OFFSET ?";
         queryParams.push(limit, offset);
 
-        console.log('Executing count query:', countsSql, 'with params:', queryParams.slice(0, -2));
+        console.log(
+            "Executing count query:",
+            countsSql,
+            "with params:",
+            queryParams.slice(0, -2)
+        );
         db.query(countsSql, queryParams.slice(0, -2), (countErr, countResults) => {
             if (countErr) {
-                console.error('Error in count query:', countErr);
+                console.error("Error in count query:", countErr);
                 reject(countErr);
                 return;
             }
 
             const total = countResults[0].total;
-            console.log('Total count:', total);
+            console.log("Total count:", total);
 
             if (total === 0) {
                 resolve({ items: [], total: 0 });
                 return;
             }
 
-            console.log('Executing data query:', dataSql, 'with params:', queryParams);
+            console.log(
+                "Executing data query:",
+                dataSql,
+                "with params:",
+                queryParams
+            );
             db.query(dataSql, queryParams, (dataErr, dataResults) => {
                 if (dataErr) {
-                    console.error('Error in data query:', dataErr);
+                    console.error("Error in data query:", dataErr);
                     reject(dataErr);
                     return;
                 }
-                console.log('Data query results:', dataResults.length);
+                console.log("Data query results:", dataResults.length);
                 resolve({ items: dataResults, total: total });
             });
         });
     });
 };
 
-exports.deleteCropCalender = async (id) => {
+exports.deleteCropCalender = async(id) => {
     return new Promise((resolve, reject) => {
         const sql = "DELETE FROM cropcalender WHERE id = ?";
         db.query(sql, [id], (err, results) => {
@@ -333,7 +344,7 @@ exports.deleteCropCalender = async (id) => {
     });
 };
 
-exports.editCropCalender = async (id, updateData, imagePath) => {
+exports.editCropCalender = async(id, updateData, imagePath) => {
     return new Promise((resolve, reject) => {
         let sql = `
             UPDATE cropcalender 
@@ -356,7 +367,7 @@ exports.editCropCalender = async (id, updateData, imagePath) => {
             updateData.CropDuration,
             updateData.SpecialNotes,
             updateData.SuitableAreas,
-            updateData.cropColor
+            updateData.cropColor,
         ];
 
         if (imagePath) {
@@ -377,7 +388,7 @@ exports.editCropCalender = async (id, updateData, imagePath) => {
     });
 };
 
-exports.createCropCalenderTasks = async (cropId, tasks) => {
+exports.createCropCalenderTasks = async(cropId, tasks) => {
     return new Promise((resolve, reject) => {
         const sql =
             "INSERT INTO cropcalenderdays (cropId, task, description, daysnum) VALUES ?";
@@ -451,7 +462,6 @@ exports.updateNewsStatusById = (id, status) => {
     });
 };
 
-
 exports.createMarketPrice = (
     titleEnglish,
     titleSinhala,
@@ -489,7 +499,6 @@ exports.createMarketPrice = (
         });
     });
 };
-
 
 exports.getAllMarketPrice = (status, createdAt, limit, offset) => {
     return new Promise((resolve, reject) => {
@@ -547,7 +556,6 @@ exports.deleteMarketPriceById = (id) => {
         });
     });
 };
-
 
 exports.getMarketPriceStatusById = (id) => {
     return new Promise((resolve, reject) => {
@@ -625,7 +633,6 @@ exports.editMarketPrice = (id, data) => {
     });
 };
 
-
 exports.getAllOngoingCultivations = (searchNIC, limit, offset) => {
     return new Promise((resolve, reject) => {
         let countSql = `
@@ -698,7 +705,6 @@ exports.getOngoingCultivationsWithUserDetails = () => {
     });
 };
 
-
 exports.getOngoingCultivationsById = (id) => {
     const sql = `
         SELECT 
@@ -730,7 +736,7 @@ exports.getOngoingCultivationsById = (id) => {
 
 exports.getFixedAssetsByCategory = (userId, category) => {
     const validCategories = {
-        'Building and Infrastructures': `
+        "Building and Infrastructures": `
             SELECT 
                 fixedasset.id AS fixedassetId,
                 fixedasset.category AS fixedassetcategory,
@@ -746,7 +752,7 @@ exports.getFixedAssetsByCategory = (userId, category) => {
             WHERE 
                 fixedasset.userId = ?;
         `,
-        'Land': `
+        Land: `
             SELECT 
                 fixedasset.id AS fixedassetId,
                 fixedasset.category AS fixedassetcategory,
@@ -763,7 +769,7 @@ exports.getFixedAssetsByCategory = (userId, category) => {
             WHERE 
                 fixedasset.userId = ?;
         `,
-        'Machinery and Vehicles': `
+        "Machinery and Vehicles": `
             SELECT
                 fixedasset.id AS fixedassetId,
                 fixedasset.category AS fixedassetcategory,
@@ -784,7 +790,7 @@ exports.getFixedAssetsByCategory = (userId, category) => {
             WHERE 
                 fixedasset.userId = ?;
         `,
-        'Tools and Equipments': `
+        "Tools and Equipments": `
             SELECT
                 fixedasset.id AS fixedassetId,
                 fixedasset.category AS fixedassetcategory,
@@ -804,7 +810,7 @@ exports.getFixedAssetsByCategory = (userId, category) => {
                 machtoolsfixedassetwarranty ON machtoolsfixedasset.id = machtoolsfixedassetwarranty.machToolsId
             WHERE 
                 fixedasset.userId = ?;
-        `
+        `,
     };
 
     const sql = validCategories[category];
@@ -824,7 +830,6 @@ exports.getFixedAssetsByCategory = (userId, category) => {
     });
 };
 
-
 exports.getCurrentAssetsByCategory = (userId, category) => {
     const sql = `SELECT * FROM currentasset WHERE userId = ? AND category = ?`;
     const values = [userId, category];
@@ -842,7 +847,7 @@ exports.getCurrentAssetsByCategory = (userId, category) => {
 
 exports.deleteAdminUserById = (id) => {
     const sql = "DELETE FROM adminusers WHERE id = ?";
-    
+
     return new Promise((resolve, reject) => {
         db.query(sql, [id], (err, results) => {
             if (err) {
@@ -874,7 +879,6 @@ exports.updateAdminUserById = (id, mail, userName, role) => {
     });
 };
 
-
 exports.updateAdminUser = (id, mail, userName, role) => {
     return new Promise((resolve, reject) => {
         const sql = `
@@ -897,7 +901,6 @@ exports.updateAdminUser = (id, mail, userName, role) => {
         });
     });
 };
-
 
 exports.getAdminUserById = (id) => {
     return new Promise((resolve, reject) => {
@@ -953,8 +956,6 @@ exports.deletePlantCareUserById = (id) => {
     });
 };
 
-
-
 exports.updatePlantCareUserById = (userData, id) => {
     return new Promise((resolve, reject) => {
         const { firstName, lastName, phoneNumber, NICnumber, imagePath } = userData;
@@ -987,7 +988,6 @@ exports.updatePlantCareUserById = (userData, id) => {
     });
 };
 
-
 exports.createPlantCareUser = (userData) => {
     return new Promise((resolve, reject) => {
         const { firstName, lastName, phoneNumber, NICnumber, imagePath } = userData;
@@ -1014,7 +1014,7 @@ exports.getUserById = (userId) => {
         db.query(sql, [userId], (err, results) => {
             if (err) {
                 return reject(err);
-            } 
+            }
             if (results.length === 0) {
                 return resolve(null); // No user found
             }
@@ -1029,7 +1029,12 @@ exports.createAdmin = (adminData) => {
             INSERT INTO adminusers (mail, role, userName, password) 
             VALUES (?, ?, ?, ?)
         `;
-        const values = [adminData.mail, adminData.role, adminData.userName, adminData.password];
+        const values = [
+            adminData.mail,
+            adminData.role,
+            adminData.userName,
+            adminData.password,
+        ];
 
         db.query(sql, values, (err, results) => {
             if (err) {
@@ -1059,7 +1064,6 @@ exports.getCurrentAssetGroup = (userId) => {
     });
 };
 
-
 exports.getCurrentAssetRecordById = (currentAssetId) => {
     return new Promise((resolve, reject) => {
         const sql = `
@@ -1080,7 +1084,6 @@ exports.getCurrentAssetRecordById = (currentAssetId) => {
         });
     });
 };
-
 
 exports.getAllTaskByCropId = (cropId) => {
     return new Promise((resolve, reject) => {
@@ -1135,8 +1138,18 @@ exports.getCropCalendarDayById = (taskId) => {
     });
 };
 
-
-exports.editTask = (taskEnglish, taskSinhala, taskTamil, taskTypeEnglish, taskTypeSinhala, taskTypeTamil, taskCategoryEnglish, taskCategorySinhala, taskCategoryTamil, id) => {
+exports.editTask = (
+    taskEnglish,
+    taskSinhala,
+    taskTamil,
+    taskTypeEnglish,
+    taskTypeSinhala,
+    taskTypeTamil,
+    taskCategoryEnglish,
+    taskCategorySinhala,
+    taskCategoryTamil,
+    id
+) => {
     return new Promise((resolve, reject) => {
         const sql = `
             UPDATE cropcalendardays 
@@ -1154,7 +1167,7 @@ exports.editTask = (taskEnglish, taskSinhala, taskTamil, taskTypeEnglish, taskTy
             taskCategoryEnglish,
             taskCategorySinhala,
             taskCategoryTamil,
-            id
+            id,
         ];
 
         db.query(sql, values, (err, results) => {
@@ -1167,6 +1180,21 @@ exports.editTask = (taskEnglish, taskSinhala, taskTamil, taskTypeEnglish, taskTy
     });
 };
 
+exports.getAllPost = () => {
+    return new Promise((resolve, reject) => {
+        const sql = `SELECT * FROM publicforumposts `;
+
+        db.query(sql, (err, results) => {
+            if (err) {
+                return reject(err);
+            }
+            if (results.length === 0) {
+                return resolve(null);
+            }
+            resolve(results);
+        });
+    });
+};
 exports.getAllUserTaskByCropId = (cropId, userId) => {
     return new Promise((resolve, reject) => {
         const sql = `
@@ -1197,7 +1225,7 @@ WHERE
 
 exports.deleteUserTasks = (id) => {
     const sql = "DELETE FROM slavecropcalendardays WHERE id = ?";
-    
+
     return new Promise((resolve, reject) => {
         db.query(sql, [id], (err, results) => {
             if (err) {
