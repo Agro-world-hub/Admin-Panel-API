@@ -176,22 +176,11 @@ exports.createCropCallender = async(req, res) => {
             return res.status(400).json({ error: "No file uploaded" });
         }
 
-        const fileContent = req.file.buffer;
-        const fileName = `cropCalender/${Date.now()}_${path.basename(
-      req.file.originalname
-    )}`;
+        const fileBuffer = req.file.buffer;
 
-        const uploadParams = {
-            Bucket: process.env.AWS_S3_BUCKET_NAME,
-            Key: fileName,
-            Body: fileContent,
-            ContentType: req.file.mimetype,
-        };
+       
 
-        const command = new PutObjectCommand(uploadParams);
-        await s3Client.send(command);
 
-        const imagePath = `https://${process.env.AWS_S3_BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/${fileName}`;
 
         const cropId = await adminDao.createCropCallender(
             cropName,
@@ -209,7 +198,7 @@ exports.createCropCallender = async(req, res) => {
             tamilSpecialNotes,
             suitableAreas,
             cropColor,
-            imagePath
+            fileBuffer
         );
 
         console.log("Crop Calendar creation success");
@@ -501,49 +490,40 @@ const uploadFileToS3 = async(file) => {
 };
 
 // Controller method (endpoint handler)
-exports.editCropCalender = async(req, res) => {
+exports.editCropCalender = async (req, res) => {
     const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
     console.log("Request URL:", fullUrl);
 
     try {
         // Validate the request body
-        const updateData =
-            await ValidateSchema.editCropCalenderSchema.validateAsync(req.body);
+        const updateData = req.body;
         const { id } = req.params;
 
         // Handle file upload if present
-        let imagePath = null;
+        let imageData = null;
         if (req.file) {
-            imagePath = await uploadFileToS3(req.file);
+            imageData = req.file.buffer; // Store the binary image data from req.file
         }
 
         // Update the crop calendar
-        const affectedRows = await adminDao.editCropCalender(
-            id,
-            updateData,
-            imagePath
-        );
+        const affectedRows = await adminDao.updateCropCalender(id, updateData, imageData);
 
         if (affectedRows === 0) {
             return res.status(404).json({ message: "Crop Calendar not found" });
         } else {
             console.log("Crop Calendar updated successfully");
-            return res
-                .status(200)
-                .json({ message: "Crop Calendar updated successfully" });
+            return res.status(200).json({ message: "Crop Calendar updated successfully" });
         }
     } catch (err) {
         if (err.isJoi) {
-            // Validation error
             return res.status(400).json({ error: err.details[0].message });
         }
 
         console.error("Error updating crop calendar:", err);
-        return res
-            .status(500)
-            .json({ error: "An error occurred while updating crop calendar" });
+        return res.status(500).json({ error: "An error occurred while updating the crop calendar" });
     }
 };
+
 
 exports.createCropCalenderAddTask = async(req, res) => {
     try {
@@ -626,6 +606,12 @@ exports.getCropCalenderById = async(req, res) => {
 
         if (cropCalender.length === 0) {
             return res.status(404).json({ message: "Crop Calendar not found" });
+        }
+
+        if (cropCalender[0].image) {
+            const base64Image = Buffer.from(cropCalender[0].image).toString('base64');
+            const mimeType = 'image/png'; // Adjust MIME type if necessary, depending on the image type
+            cropCalender[0].image = `data:${mimeType};base64,${base64Image}`;
         }
 
         console.log("Successfully fetched the crop calendar data");
@@ -712,25 +698,12 @@ exports.createMarketPrice = async(req, res) => {
             return res.status(400).json({ error: "No file uploaded" });
         }
 
-        // Prepare the file for upload
-        const fileContent = req.file.buffer;
-        const fileName = `marketPrice/${Date.now()}_${path.basename(
-      req.file.originalname
-    )}`;
+        const fileBuffer = req.file.buffer;
 
-        const uploadParams = {
-            Bucket: process.env.AWS_S3_BUCKET_NAME,
-            Key: fileName,
-            Body: fileContent,
-            ContentType: req.file.mimetype,
-        };
 
-        // Upload the file to AWS S3
-        const command = new PutObjectCommand(uploadParams);
-        await s3Client.send(command);
+        
 
-        // Construct the S3 URL for the uploaded image
-        const imagePath = `https://${process.env.AWS_S3_BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/${fileName}`;
+
 
         // Call the DAO to create the market price entry
         const insertId = await adminDao.createMarketPrice(
@@ -740,7 +713,7 @@ exports.createMarketPrice = async(req, res) => {
             descriptionEnglish,
             descriptionSinhala,
             descriptionTamil,
-            imagePath,
+            fileBuffer,
             status,
             price,
             createdBy
@@ -903,8 +876,15 @@ exports.getMarketPriceById = async(req, res) => {
         // Fetch market price data by ID
         const result = await adminDao.getMarketPriceById(id);
 
+       
+
         if (result.length === 0) {
             return res.status(404).json({ error: "Market price not found" });
+        }
+        if (result[0].image) {
+            const base64Image = Buffer.from(result[0].image).toString('base64');
+            const mimeType = 'image/png'; // Adjust MIME type if necessary, depending on the image type
+            result[0].image = `data:${mimeType};base64,${base64Image}`;
         }
 
         console.log("Successfully fetched market price");
@@ -934,32 +914,16 @@ exports.editMarketPrice = async(req, res) => {
             id,
         });
 
-        let imagePath = null;
-
-        // Handle image upload to S3 if file is provided
+        let imageData = null;
         if (req.file) {
-            const fileContent = req.file.buffer;
-            const fileName = `marketPrice/${Date.now()}_${path.basename(
-        req.file.originalname
-      )}`;
-
-            const uploadParams = {
-                Bucket: process.env.AWS_S3_BUCKET_NAME,
-                Key: fileName,
-                Body: fileContent,
-                ContentType: req.file.mimetype,
-            };
-
-            const command = new PutObjectCommand(uploadParams);
-            await s3Client.send(command);
-
-            imagePath = `https://${process.env.AWS_S3_BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/${fileName}`;
-        }
+            imageData = req.file.buffer; // Store the binary image data from req.file
+        };
+        
 
         // Call DAO to update the market price
         const updateData = {
             ...body,
-            imagePath,
+            imageData,
         };
 
         await adminDao.editMarketPrice(id, updateData);

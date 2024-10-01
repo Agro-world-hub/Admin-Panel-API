@@ -80,6 +80,7 @@ exports.deleteCropCalenderSchema = Joi.object({
 
 exports.editCropCalenderSchema = Joi.object({
     cropName: Joi.string().required(),
+    sinhalaCropName: Joi.string().required(),
     variety: Joi.string().required(),
     CultivationMethod: Joi.string().required(),
     NatureOfCultivation: Joi.string().required(),

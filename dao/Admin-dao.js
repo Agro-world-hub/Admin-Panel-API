@@ -117,7 +117,7 @@ exports.createCropCallender = async(
     tamilSpecialNotes,
     suitableAreas,
     cropColor,
-    imagePath
+    imageBuffer
 ) => {
     return new Promise((resolve, reject) => {
         const sql =
@@ -138,7 +138,7 @@ exports.createCropCallender = async(
             tamilSpecialNotes,
             suitableAreas,
             cropColor,
-            imagePath
+            imageBuffer
         ];
 
         db.query(sql, values, (err, results) => {
@@ -356,40 +356,56 @@ exports.deleteCropCalender = async (id) => {
     });
 };
 
-exports.editCropCalender = async(id, updateData, imagePath) => {
+exports.updateCropCalender = async (id, updateData, imageData) => {
     return new Promise((resolve, reject) => {
         let sql = `
             UPDATE cropcalender 
             SET 
-                cropName = ?, 
+                cropName = ?,
+                sinhalaCropName = ?, 
+                tamilCropName = ?,
                 variety = ?, 
+                sinhalaVariety = ?,
+                tamilVariety = ?,
                 CultivationMethod = ?, 
                 NatureOfCultivation = ?, 
                 CropDuration = ?, 
-                SpecialNotes = ?,
-                SuitableAreas = ?,
+                SpecialNotes = ?, 
+                sinhalaSpecialNotes = ?,
+                tamilSpecialNotes = ?,
+                SuitableAreas = ?, 
                 cropColor = ?
         `;
 
+        // Update the values based on the provided data
         let values = [
             updateData.cropName,
+            updateData.sinhalaCropName,
+            updateData.tamilCropName,
             updateData.variety,
+            updateData.sinhalaVariety,
+            updateData.tamilVariety,
             updateData.CultivationMethod,
             updateData.NatureOfCultivation,
             updateData.CropDuration,
             updateData.SpecialNotes,
-            updateData.SuitableAreas,
+            updateData.sinhalaSpecialNotes,
+            updateData.SpecialNotes,
+            updateData.tamilSpecialNotes,
             updateData.cropColor,
         ];
 
-        if (imagePath) {
+        // Append the image data if available
+        if (imageData) {
             sql += `, image = ?`;
-            values.push(imagePath);
+            values.push(imageData);
         }
 
+        // Complete the SQL query with the WHERE clause
         sql += ` WHERE id = ?`;
         values.push(id);
 
+        // Execute the query
         db.query(sql, values, (err, results) => {
             if (err) {
                 reject(err);
@@ -400,27 +416,6 @@ exports.editCropCalender = async(id, updateData, imagePath) => {
     });
 };
 
-exports.createCropCalenderTasks = async(cropId, tasks) => {
-    return new Promise((resolve, reject) => {
-        const sql =
-            "INSERT INTO cropcalenderdays (cropId, task, description, daysnum) VALUES ?";
-
-        const values = tasks.map((task) => [
-            cropId,
-            task.title, // Adjust as needed based on task object structure
-            task.description,
-            task.daysnum,
-        ]);
-
-        db.query(sql, [values], (err, results) => {
-            if (err) {
-                reject(err);
-            } else {
-                resolve(results);
-            }
-        });
-    });
-};
 
 exports.getNewsById = (id) => {
     return new Promise((resolve, reject) => {
@@ -481,7 +476,7 @@ exports.createMarketPrice = (
     descriptionEnglish,
     descriptionSinhala,
     descriptionTamil,
-    imagePath,
+    imageBuffer,
     status,
     price,
     createdBy
@@ -496,7 +491,7 @@ exports.createMarketPrice = (
             descriptionEnglish,
             descriptionSinhala,
             descriptionTamil,
-            imagePath,
+            imageBuffer,
             status,
             price,
             createdBy,
@@ -628,9 +623,9 @@ exports.editMarketPrice = (id, data) => {
             data.price,
         ];
 
-        if (data.imagePath) {
+        if (data.imageData) {
             sql += `, image = ?`;
-            values.push(data.imagePath);
+            values.push(data.imageData);
         }
 
         sql += ` WHERE id = ?`;
