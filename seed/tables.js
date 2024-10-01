@@ -590,53 +590,54 @@ const createSlaveCropCalenderDaysTable = () => {
     });
 };
 
-const createChatHeadTable = () => {
+const createpublicforumposts = () => {
     const sql = `
-      CREATE TABLE IF NOT EXISTS chathead (
-      id INT AUTO_INCREMENT PRIMARY KEY,
-      userId INT(11) NULL,
-      chatTitle VARCHAR(20) NOT NULL,
-      chatDescription TEXT NOT NULL,
-      image VARCHAR(150) NOT NULL,
-      createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-      FOREIGN KEY (userId) REFERENCES users(id)
-          ON DELETE CASCADE
-          ON UPDATE CASCADE
+      CREATE TABLE IF NOT EXISTS publicforumposts (
+            id int AUTO_INCREMENT PRIMARY KEY,
+            userId int NOT NULL,
+            heading varchar(255) NOT NULL,
+            message text NOT NULL,
+            createdAt timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            postimage longblob,
+            FOREIGN KEY (userId) REFERENCES users(id)
+                ON DELETE CASCADE
+                ON UPDATE CASCADE
   );
     `;
     return new Promise((resolve, reject) => {
         db.query(sql, (err, result) => {
             if (err) {
-                reject('Error chat head table: ' + err);
+                reject('Error publicforumposts table: ' + err);
             } else {
-                resolve('chat head table created successfully.');
+                resolve('publicforumposts table created successfully.');
             }
         });
     });
 };
 
-const createReplyChat = () => {
+const createpublicforumreplies  = () => {
     const sql = `
-      CREATE TABLE IF NOT EXISTS replychat (
-      id INT AUTO_INCREMENT PRIMARY KEY,
-      userId INT(11) NULL,
-      chatHeadId INT(11) NULL,
-      chatDescription TEXT NOT NULL,
-      createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-      FOREIGN KEY (userId) REFERENCES users(id)
-          ON DELETE CASCADE
-          ON UPDATE CASCADE,
-      FOREIGN KEY (chatHeadId) REFERENCES chathead(id)
-          ON DELETE CASCADE
-          ON UPDATE CASCADE
+      CREATE TABLE IF NOT EXISTS publicforumreplies (
+        id int AUTO_INCREMENT PRIMARY KEY,
+        chatId int NOT NULL,
+        replyId int NOT NULL,
+        replyMessage text NOT NULL,
+        createdAt timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (replyId) REFERENCES users(id)
+            ON DELETE CASCADE
+            ON UPDATE CASCADE,
+        FOREIGN KEY (chatId) REFERENCES publicforumposts(id)
+            ON DELETE CASCADE
+            ON UPDATE CASCADE
+
   );
     `;
     return new Promise((resolve, reject) => {
         db.query(sql, (err, result) => {
             if (err) {
-                reject('Error reply chat table: ' + err);
+                reject('Error publicforumreplies table: ' + err);
             } else {
-                resolve('reply chat table created successfully.');
+                resolve('publicforumreplies table created successfully.');
             }
         });
     });
@@ -807,8 +808,8 @@ module.exports = {
     createMarketPriceTable,
     createOngoingCultivationsCropsTable,
     createCurrentAssetTable,
-    createChatHeadTable,
-    createReplyChat,
+    createpublicforumposts,
+    createpublicforumreplies,
 
     createFixedAsset,                    //1
     createBuldingFixedAsset,             //2

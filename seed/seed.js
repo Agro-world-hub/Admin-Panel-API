@@ -7,8 +7,8 @@ const { createCropCalenderDaysTable } = require('./tables');
 const { createOngoingCultivationsTable } = require('./tables');
 const { createMarketPriceTable } = require('./tables');
 const { createOngoingCultivationsCropsTable } = require('./tables');
-const { createChatHeadTable } = require('./tables');
-const { createReplyChat } = require('./tables');
+const { createpublicforumposts } = require('./tables');
+const { createpublicforumreplies } = require('./tables');
 
 const { createFixedAsset } = require('./tables');
 const { createBuldingFixedAsset } = require('./tables');
@@ -60,9 +60,9 @@ const runSeeds = async () => {
     const messageCurrentAsset = await createCurrentAssetTable();
     console.log(messageCurrentAsset);
 
-    const messageCreateChatHeadTable = await createChatHeadTable();
+    const messageCreateChatHeadTable = await createpublicforumposts();
     console.log(messageCreateChatHeadTable);
-    const messageCreateReplyChat = await createReplyChat();
+    const messageCreateReplyChat = await createpublicforumreplies();
     console.log(messageCreateReplyChat);
 
     
