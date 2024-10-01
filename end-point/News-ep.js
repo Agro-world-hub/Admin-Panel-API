@@ -5,20 +5,10 @@ const bodyParser = require('body-parser');
 const path = require("path");
 const newsDao = require("../dao/News-dao");
 const newsValidate = require('../validations/News-validation');
-
-
-
-const { S3Client, PutObjectCommand } = require("@aws-sdk/client-s3");
 const fs = require("fs");
 const xlsx = require("xlsx");
 
-const s3Client = new S3Client({
-    region: process.env.AWS_REGION,
-    credentials: {
-        accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-        secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
-    },
-});
+
 
 exports.deleteNews = async (req, res) => {
     const fullUrl = `${req.protocol}://${req.get('host')}${req.originalUrl}`;

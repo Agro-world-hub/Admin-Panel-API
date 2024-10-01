@@ -1,7 +1,6 @@
 const jwt = require("jsonwebtoken");
 const db = require("../startup/database");
 const bodyParser = require("body-parser");
-const { S3Client, PutObjectCommand } = require("@aws-sdk/client-s3");
 const fs = require("fs");
 const path = require("path");
 const xlsx = require("xlsx");
@@ -9,13 +8,7 @@ const { log } = require("console");
 const adminDao = require("../dao/Admin-dao");
 const ValidateSchema = require("../validations/Admin-validation");
 
-const s3Client = new S3Client({
-    region: process.env.AWS_REGION,
-    credentials: {
-        accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-        secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
-    },
-});
+
 
 exports.loginAdmin = async(req, res) => {
     const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
@@ -474,20 +467,6 @@ exports.deleteCropCalender = async(req, res) => {
     }
 };
 
-const uploadFileToS3 = async(file) => {
-    const fileName = `news/${Date.now()}_${path.basename(file.originalname)}`;
-    const uploadParams = {
-        Bucket: process.env.AWS_S3_BUCKET_NAME,
-        Key: fileName,
-        Body: file.buffer,
-        ContentType: file.mimetype,
-    };
-
-    const command = new PutObjectCommand(uploadParams);
-    await s3Client.send(command);
-
-    return `https://${process.env.AWS_S3_BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/${fileName}`;
-};
 
 // Controller method (endpoint handler)
 exports.editCropCalender = async (req, res) => {
@@ -1301,26 +1280,14 @@ exports.updatePlantCareUser = async(req, res) => {
         const { firstName, lastName, phoneNumber, NICnumber } = validatedBody;
 
         // Handle image upload if file is provided
-        let imagePath = null;
+      
+        
+        let imageData = null;
         if (req.file) {
-            const fileContent = req.file.buffer;
-            const fileName = `plantcareUser/${Date.now()}_${path.basename(
-        req.file.originalname
-      )}`;
-
-            const uploadParams = {
-                Bucket: process.env.AWS_S3_BUCKET_NAME,
-                Key: fileName,
-                Body: fileContent,
-                ContentType: req.file.mimetype,
-            };
-
-            const command = new PutObjectCommand(uploadParams);
-            await s3Client.send(command);
-            imagePath = `https://${process.env.AWS_S3_BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/${fileName}`;
+            imageData = req.file.buffer; // Store the binary image data from req.file
         }
 
-        const userData = { firstName, lastName, phoneNumber, NICnumber, imagePath };
+        const userData = { firstName, lastName, phoneNumber, NICnumber, imageData };
 
         // Call DAO to update the user
         const result = await adminDao.updatePlantCareUserById(userData, id);
@@ -1357,26 +1324,11 @@ exports.createPlantCareUser = async(req, res) => {
             return res.status(400).json({ error: "No file uploaded" });
         }
 
-        // Handle image upload to S3
-        const fileContent = req.file.buffer;
-        const fileName = `plantcareUser/${Date.now()}_${path.basename(
-      req.file.originalname
-    )}`;
+        const fileBuffer = req.file.buffer;
 
-        const uploadParams = {
-            Bucket: process.env.AWS_S3_BUCKET_NAME,
-            Key: fileName,
-            Body: fileContent,
-            ContentType: req.file.mimetype,
-        };
+      
 
-        const command = new PutObjectCommand(uploadParams);
-        await s3Client.send(command);
-
-        // Construct the S3 URL
-        const imagePath = `https://${process.env.AWS_S3_BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/${fileName}`;
-
-        const userData = { firstName, lastName, phoneNumber, NICnumber, imagePath };
+        const userData = { firstName, lastName, phoneNumber, NICnumber, fileBuffer };
 
         // Call DAO to create the user
         const userId = await adminDao.createPlantCareUser(userData);

@@ -1,7 +1,6 @@
 const jwt = require("jsonwebtoken");
 const db = require("../startup/database");
 const bodyParser = require("body-parser");
-const { S3Client, PutObjectCommand } = require("@aws-sdk/client-s3");
 const fs = require("fs");
 const path = require("path");
 const xlsx = require("xlsx");

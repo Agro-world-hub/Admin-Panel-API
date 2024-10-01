@@ -1,15 +1,7 @@
 const db = require("../startup/database");
-const { S3Client, PutObjectCommand } = require("@aws-sdk/client-s3");
 const path = require("path");
 const { Upload } = require("@aws-sdk/lib-storage");
 
-const s3Client = new S3Client({
-    region: process.env.AWS_REGION,
-    credentials: {
-        accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-        secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
-    },
-});
 
 exports.loginAdmin = (email) => {
     return new Promise((resolve, reject) => {
@@ -67,38 +59,54 @@ exports.adminCreateUser = (firstName, lastName, phoneNumber, NICnumber) => {
 exports.getAllUsers = (limit, offset, searchNIC) => {
     return new Promise((resolve, reject) => {
         let countSql = "SELECT COUNT(*) as total FROM users";
-        let dataSql = `SELECT * FROM users`;
+        let dataSql = "SELECT * FROM users";
         const params = [];
 
+        // Add search condition for NICnumber if provided
         if (searchNIC) {
             countSql += " WHERE users.NICnumber LIKE ?";
             dataSql += " WHERE users.NICnumber LIKE ?";
             params.push(`%${searchNIC}%`);
         }
-        dataSql += " ORDER BY created_at DESC";
-        dataSql += " LIMIT ? OFFSET ?";
+
+        // Add order, limit, and offset clauses
+        dataSql += " ORDER BY created_at DESC LIMIT ? OFFSET ?";
         params.push(limit, offset);
 
+        // Execute the count query
         db.query(countSql, params, (countErr, countResults) => {
             if (countErr) {
-                reject(countErr);
-            } else {
-                const total = countResults[0].total;
-
-                db.query(dataSql, params, (dataErr, dataResults) => {
-                    if (dataErr) {
-                        reject(dataErr);
-                    } else {
-                        resolve({
-                            total: total,
-                            items: dataResults,
-                        });
-                    }
-                });
+                return reject(countErr);
             }
+
+            const total = countResults[0].total;
+
+            // Execute the data query
+            db.query(dataSql, params, (dataErr, dataResults) => {
+                if (dataErr) {
+                    return reject(dataErr);
+                }
+
+                // Process each user's image
+                const processedDataResults = dataResults.map((user) => {
+                    if (user.profileImage) {
+                        const base64Image = Buffer.from(user.profileImage).toString('base64');
+                        const mimeType = 'image/png'; // Adjust the MIME type if needed
+                        user.profileImage = `data:${mimeType};base64,${base64Image}`;
+                    }
+                    return user;
+                });
+
+                // Resolve with total count and the processed results
+                resolve({
+                    total: total,
+                    items: processedDataResults,
+                });
+            });
         });
     });
 };
+
 
 
 exports.createCropCallender = async(
@@ -965,7 +973,7 @@ exports.deletePlantCareUserById = (id) => {
 
 exports.updatePlantCareUserById = (userData, id) => {
     return new Promise((resolve, reject) => {
-        const { firstName, lastName, phoneNumber, NICnumber, imagePath } = userData;
+        const { firstName, lastName, phoneNumber, NICnumber, imageData } = userData;
 
         let sql = `
             UPDATE users 
@@ -977,9 +985,9 @@ exports.updatePlantCareUserById = (userData, id) => {
         `;
         let values = [firstName, lastName, phoneNumber, NICnumber];
 
-        if (imagePath) {
+        if (imageData) {
             sql += `, profileImage = ?`;
-            values.push(imagePath);
+            values.push(imageData);
         }
 
         sql += ` WHERE id = ?`;
@@ -997,13 +1005,13 @@ exports.updatePlantCareUserById = (userData, id) => {
 
 exports.createPlantCareUser = (userData) => {
     return new Promise((resolve, reject) => {
-        const { firstName, lastName, phoneNumber, NICnumber, imagePath } = userData;
+        const { firstName, lastName, phoneNumber, NICnumber, fileBuffer } = userData;
 
         const sql = `
             INSERT INTO users (firstName, lastName, phoneNumber, NICnumber, profileImage) 
             VALUES (?, ?, ?, ?, ?)
         `;
-        const values = [firstName, lastName, phoneNumber, NICnumber, imagePath];
+        const values = [firstName, lastName, phoneNumber, NICnumber, fileBuffer];
 
         db.query(sql, values, (err, results) => {
             if (err) {
@@ -1025,6 +1033,11 @@ exports.getUserById = (userId) => {
             if (results.length === 0) {
                 return resolve(null); // No user found
             }
+            if (results[0].profileImage) {
+                const base64Image = Buffer.from(results[0].profileImage).toString('base64');
+                const mimeType = 'image/png'; // Adjust MIME type if necessary, depending on the image type
+                results[0].profileImage = `data:${mimeType};base64,${base64Image}`;
+            }
             resolve(results[0]); // Return the first result
         });
     });
