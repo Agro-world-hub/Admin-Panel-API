@@ -68,7 +68,7 @@ exports.getMe = (req, res) => {
     const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
     console.log(fullUrl);
     const userId = req.user.userId;
-    const sql = "SELECT id, mail, userName, role FROM adminUsers WHERE id = ?";
+    const sql = "SELECT id, mail, userName, role FROM adminusers WHERE id = ?";
     db.query(sql, [userId], (err, results) => {
         if (err) {
             console.error("Error executing query:", err);
