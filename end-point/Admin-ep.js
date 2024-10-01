@@ -172,7 +172,7 @@ exports.createCropCallender = async(req, res) => {
 
         const fileBuffer = req.file.buffer;
 
-       
+
 
 
 
@@ -383,7 +383,7 @@ exports.createNews = async(req, res) => {
             descriptionEnglish,
             descriptionSinhala,
             descriptionTamil,
-            fileBuffer,  // pass the file buffer
+            fileBuffer, // pass the file buffer
             status,
             createdBy
         );
@@ -472,7 +472,7 @@ exports.deleteCropCalender = async(req, res) => {
 
 
 // Controller method (endpoint handler)
-exports.editCropCalender = async (req, res) => {
+exports.editCropCalender = async(req, res) => {
     const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
     console.log("Request URL:", fullUrl);
 
@@ -683,7 +683,7 @@ exports.createMarketPrice = async(req, res) => {
         const fileBuffer = req.file.buffer;
 
 
-        
+
 
 
 
@@ -858,7 +858,7 @@ exports.getMarketPriceById = async(req, res) => {
         // Fetch market price data by ID
         const result = await adminDao.getMarketPriceById(id);
 
-       
+
 
         if (result.length === 0) {
             return res.status(404).json({ error: "Market price not found" });
@@ -900,7 +900,7 @@ exports.editMarketPrice = async(req, res) => {
         if (req.file) {
             imageData = req.file.buffer; // Store the binary image data from req.file
         };
-        
+
 
         // Call DAO to update the market price
         const updateData = {
@@ -1283,8 +1283,8 @@ exports.updatePlantCareUser = async(req, res) => {
         const { firstName, lastName, phoneNumber, NICnumber } = validatedBody;
 
         // Handle image upload if file is provided
-      
-        
+
+
         let imageData = null;
         if (req.file) {
             imageData = req.file.buffer; // Store the binary image data from req.file
@@ -1329,7 +1329,7 @@ exports.createPlantCareUser = async(req, res) => {
 
         const fileBuffer = req.file.buffer;
 
-      
+
 
         const userData = { firstName, lastName, phoneNumber, NICnumber, fileBuffer };
 
@@ -1885,7 +1885,6 @@ exports.getAllPostyById = async(req, res) => {
             const base64Image = Buffer.from(results[0].postimage).toString('base64');
             const mimeType = 'image/png';
             results[0].postimage = `data:${mimeType};base64,${base64Image}`;
-            ෆ
         }
 
 
