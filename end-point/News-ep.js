@@ -64,25 +64,12 @@ exports.editNews = async (req, res) => {
         // Validate request body
         await newsValidate.editNewsSchema.validateAsync(req.body);
 
-        let imagePath = null;
+        let imageData = null;
         if (req.file) {
-            const fileContent = req.file.buffer;
-            const fileName = `news/${Date.now()}_${path.basename(req.file.originalname)}`;
-
-            const uploadParams = {
-                Bucket: process.env.AWS_S3_BUCKET_NAME,
-                Key: fileName,
-                Body: fileContent,
-                ContentType: req.file.mimetype,
-            };
-
-            const command = new PutObjectCommand(uploadParams);
-            await s3Client.send(command);
-            imagePath = `https://${process.env.AWS_S3_BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/${fileName}`;
+            imageData = req.file.buffer; // Store the binary image data from req.file
         }
-
         // Call DAO to update the news
-        const results = await newsDao.updateNews({ titleEnglish, titleSinhala, titleTamil, descriptionEnglish, descriptionSinhala, descriptionTamil, imagePath }, id);
+        const results = await newsDao.updateNews({ titleEnglish, titleSinhala, titleTamil, descriptionEnglish, descriptionSinhala, descriptionTamil, image: imageData }, id);
 
         if (results.affectedRows === 0) {
             return res.status(404).json({ message: 'News not found' });

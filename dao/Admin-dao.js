@@ -234,12 +234,24 @@ exports.createNews = async (
     descriptionEnglish,
     descriptionSinhala,
     descriptionTamil,
-    imagePath,
+    imageBuffer,  // accept the image buffer
     status,
     createdBy
 ) => {
     return new Promise((resolve, reject) => {
-        const sql = "INSERT INTO content (titleEnglish, titleSinhala, titleTamil, descriptionEnglish, descriptionSinhala, descriptionTamil, image, status, createdBy) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        const sql = `
+            INSERT INTO content (
+                titleEnglish, 
+                titleSinhala, 
+                titleTamil, 
+                descriptionEnglish, 
+                descriptionSinhala, 
+                descriptionTamil, 
+                image, 
+                status, 
+                createdBy
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+
         const values = [
             titleEnglish,
             titleSinhala,
@@ -247,7 +259,7 @@ exports.createNews = async (
             descriptionEnglish,
             descriptionSinhala,
             descriptionTamil,
-            imagePath,
+            imageBuffer,  // pass the buffer as image
             status,
             createdBy
         ];
@@ -261,6 +273,7 @@ exports.createNews = async (
         });
     });
 };
+
 
 
 exports.getAllNews = async (status, createdAt, limit, offset) => {
@@ -313,12 +326,23 @@ exports.getAllNews = async (status, createdAt, limit, offset) => {
                     reject(dataErr);
                     return;
                 }
-                console.log('Data query results:', dataResults.length);
-                resolve({ items: dataResults, total: total });
+
+                // Convert the image blob to base64 and include in the response
+                const newsItems = dataResults.map(news => {
+                    if (news.image) {
+                        // Convert the image (stored as longblob) to a base64 string
+                        news.image = `data:image/jpeg;base64,${news.image.toString('base64')}`;
+                    }
+                    return news;
+                });
+
+                console.log('Data query results:', newsItems.length);
+                resolve({ items: newsItems, total: total });
             });
         });
     });
 };
+
 
 exports.deleteCropCalender = async (id) => {
     return new Promise((resolve, reject) => {

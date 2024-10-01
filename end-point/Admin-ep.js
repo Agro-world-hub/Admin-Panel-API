@@ -372,23 +372,10 @@ exports.createNews = async(req, res) => {
             return res.status(400).json({ error: "No file uploaded" });
         }
 
-        const fileContent = req.file.buffer;
-        const fileName = `news/${Date.now()}_${path.basename(
-            req.file.originalname
-        )}`;
+        // Get file buffer (binary data)
+        const fileBuffer = req.file.buffer;
 
-        const uploadParams = {
-            Bucket: process.env.AWS_S3_BUCKET_NAME,
-            Key: fileName,
-            Body: fileContent,
-            ContentType: req.file.mimetype,
-        };
-
-        const command = new PutObjectCommand(uploadParams);
-        await s3Client.send(command);
-
-        const imagePath = `https://${process.env.AWS_S3_BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/${fileName}`;
-
+        // Call DAO to save news and the image file as longblob
         const newsId = await adminDao.createNews(
             titleEnglish,
             titleSinhala,
@@ -396,7 +383,7 @@ exports.createNews = async(req, res) => {
             descriptionEnglish,
             descriptionSinhala,
             descriptionTamil,
-            imagePath,
+            fileBuffer,  // pass the file buffer
             status,
             createdBy
         );
@@ -415,6 +402,7 @@ exports.createNews = async(req, res) => {
             .json({ error: "An error occurred while creating News" });
     }
 };
+
 
 exports.getAllNews = async(req, res) => {
     try {
@@ -444,6 +432,7 @@ exports.getAllNews = async(req, res) => {
         res.status(500).json({ error: "An error occurred while fetching news" });
     }
 };
+
 
 exports.deleteCropCalender = async(req, res) => {
     try {
@@ -569,6 +558,13 @@ exports.getNewsById = async(req, res) => {
             return res.status(404).json({ message: "News not found" });
         }
 
+        // Convert image buffer to base64 string if image exists
+        if (news[0].image) {
+            const base64Image = Buffer.from(news[0].image).toString('base64');
+            const mimeType = 'image/png'; // Adjust MIME type if necessary, depending on the image type
+            news[0].image = `data:${mimeType};base64,${base64Image}`;
+        }
+
         console.log("Successfully fetched the news content");
         return res.status(200).json(news);
     } catch (err) {
@@ -583,6 +579,7 @@ exports.getNewsById = async(req, res) => {
             .json({ error: "An error occurred while fetching the news content" });
     }
 };
+
 
 exports.getCropCalenderById = async(req, res) => {
     try {

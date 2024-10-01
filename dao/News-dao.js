@@ -14,7 +14,7 @@ exports.deleteNews = (id) => {
 
 exports.updateNews = (newsData, id) => {
     return new Promise((resolve, reject) => {
-        const { titleEnglish, titleSinhala, titleTamil, descriptionEnglish, descriptionSinhala, descriptionTamil, imagePath } = newsData;
+        const { titleEnglish, titleSinhala, titleTamil, descriptionEnglish, descriptionSinhala, descriptionTamil, image } = newsData;
         
         let sql = `
             UPDATE content 
@@ -36,9 +36,9 @@ exports.updateNews = (newsData, id) => {
             descriptionTamil,
         ];
 
-        if (imagePath) {
-            sql += `, image = ?`;
-            values.push(imagePath);
+        if (image) {
+            sql += `, image = ?`;  // Update the image field with binary data
+            values.push(image);
         }
 
         sql += ` WHERE id = ?`;
