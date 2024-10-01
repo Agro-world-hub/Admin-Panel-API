@@ -1848,6 +1848,59 @@ exports.getSlaveCropCalendarDayById = async(req, res) => {
 };
 
 
+//get each post reply
+exports.getAllReplyByPost = async(req, res) => {
+    const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
+    console.log("Request URL:", fullUrl);
+
+    try {
+        const postId = req.params.postId;
+
+        const results = await adminDao.getAllPostReplyDao(postId);
+ 
+        res.json(results);
+    } catch (error) {
+        if (error.isJoi) {
+            // Handle validation error
+            return res.status(400).json({ error: error.details[0].message });
+        }
+
+        console.error("Error fetching tasks for crop ID:", error);
+        return res.status(500).json({ error: "An error occurred while fetching tasks for the crop ID" });
+    }
+};
+
+
+
+exports.DeleteReply = async(req, res) => {
+    const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
+    console.log("Request URL:", fullUrl);
+
+    try {
+        const postId = req.params.postId;
+
+        const results = await adminDao.deleteReply(postId);
+        if(results.affectedRows=== 1){
+            console.log("Delete");
+            res.json({status:true})
+            
+        }
+        else{
+            res.json({status:false})   
+        }
+        
+    } catch (error) {
+        if (error.isJoi) {
+            // Handle validation error
+            return res.status(400).json({ error: error.details[0].message });
+        }
+
+        console.error("Error fetching tasks for crop ID:", error);
+        return res.status(500).json({ error: "An error occurred while fetching tasks for the crop ID" });
+    }
+};
+
+
 exports.editUserTask = async(req, res) => {
     const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
     console.log("Request URL:", fullUrl);
