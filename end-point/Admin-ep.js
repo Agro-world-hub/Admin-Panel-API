@@ -17,7 +17,7 @@ const s3Client = new S3Client({
     },
 });
 
-exports.loginAdmin = async(req, res) => {
+exports.loginAdmin = async (req, res) => {
     const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
     console.log(fullUrl);
 
@@ -47,10 +47,10 @@ exports.loginAdmin = async(req, res) => {
     }
 };
 
-exports.getAllAdminUsers = async(req, res) => {
+exports.getAllAdminUsers = async (req, res) => {
     try {
         const { page, limit } =
-        await ValidateSchema.getAllAdminUsersSchema.validateAsync(req.query);
+            await ValidateSchema.getAllAdminUsersSchema.validateAsync(req.query);
         const offset = (page - 1) * limit;
 
         const { total, items } = await adminDao.getAllAdminUsers(limit, offset);
@@ -98,11 +98,11 @@ exports.getMe = (req, res) => {
     });
 };
 
-exports.adminCreateUser = async(req, res) => {
+exports.adminCreateUser = async (req, res) => {
     try {
         // Validate the request body
         const { firstName, lastName, phoneNumber, NICnumber } =
-        await ValidateSchema.adminCreateUserSchema.validateAsync(req.body);
+            await ValidateSchema.adminCreateUserSchema.validateAsync(req.body);
 
         const results = await adminDao.adminCreateUser(
             firstName,
@@ -125,10 +125,10 @@ exports.adminCreateUser = async(req, res) => {
     }
 };
 
-exports.getAllUsers = async(req, res) => {
+exports.getAllUsers = async (req, res) => {
     try {
         const { page, limit, nic } =
-        await ValidateSchema.getAllUsersSchema.validateAsync(req.query);
+            await ValidateSchema.getAllUsersSchema.validateAsync(req.query);
         const offset = (page - 1) * limit;
 
         const { total, items } = await adminDao.getAllUsers(limit, offset, nic);
@@ -148,7 +148,7 @@ exports.getAllUsers = async(req, res) => {
     }
 };
 
-exports.createCropCallender = async(req, res) => {
+exports.createCropCallender = async (req, res) => {
     try {
         const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
         console.log(fullUrl);
@@ -178,8 +178,8 @@ exports.createCropCallender = async(req, res) => {
 
         const fileContent = req.file.buffer;
         const fileName = `cropCalender/${Date.now()}_${path.basename(
-      req.file.originalname
-    )}`;
+            req.file.originalname
+        )}`;
 
         const uploadParams = {
             Bucket: process.env.AWS_S3_BUCKET_NAME,
@@ -228,7 +228,7 @@ exports.createCropCallender = async(req, res) => {
 };
 
 
-exports.uploadXLSX = async(req, res) => {
+exports.uploadXLSX = async (req, res) => {
     try {
         const { id } = req.params;
 
@@ -313,12 +313,12 @@ exports.uploadXLSX = async(req, res) => {
 
 
 
-exports.getAllCropCalender = async(req, res) => {
+exports.getAllCropCalender = async (req, res) => {
     try {
         const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
         console.log(fullUrl);
         const { page, limit } =
-        await ValidateSchema.getAllCropCalendarSchema.validateAsync(req.query);
+            await ValidateSchema.getAllCropCalendarSchema.validateAsync(req.query);
         const offset = (page - 1) * limit;
 
         const { total, items } = await adminDao.getAllCropCalendars(limit, offset);
@@ -339,13 +339,13 @@ exports.getAllCropCalender = async(req, res) => {
     }
 };
 
-exports.createOngoingCultivations = async(req, res) => {
+exports.createOngoingCultivations = async (req, res) => {
     try {
         // Validate the request body
         const { userId, cropCalenderId } =
-        await ValidateSchema.createOngoingCultivationsSchema.validateAsync(
-            req.body
-        );
+            await ValidateSchema.createOngoingCultivationsSchema.validateAsync(
+                req.body
+            );
 
         const results = await adminDao.createOngoingCultivations(
             userId,
@@ -366,7 +366,7 @@ exports.createOngoingCultivations = async(req, res) => {
     }
 };
 
-exports.createNews = async(req, res) => {
+exports.createNews = async (req, res) => {
     try {
         const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
         console.log("Request URL:", fullUrl);
@@ -389,8 +389,8 @@ exports.createNews = async(req, res) => {
 
         const fileContent = req.file.buffer;
         const fileName = `news/${Date.now()}_${path.basename(
-      req.file.originalname
-    )}`;
+            req.file.originalname
+        )}`;
 
         const uploadParams = {
             Bucket: process.env.AWS_S3_BUCKET_NAME,
@@ -433,13 +433,13 @@ exports.createNews = async(req, res) => {
     }
 };
 
-exports.getAllNews = async(req, res) => {
+exports.getAllNews = async (req, res) => {
     try {
         console.log("Received request with query:", req.query);
 
         // Validate query parameters
         const { page, limit, status, createdAt } =
-        await ValidateSchema.getAllNewsSchema.validateAsync(req.query);
+            await ValidateSchema.getAllNewsSchema.validateAsync(req.query);
 
         const offset = (page - 1) * limit;
 
@@ -465,7 +465,7 @@ exports.getAllNews = async(req, res) => {
     }
 };
 
-exports.deleteCropCalender = async(req, res) => {
+exports.deleteCropCalender = async (req, res) => {
     try {
         const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
         console.log("Request URL:", fullUrl);
@@ -496,7 +496,7 @@ exports.deleteCropCalender = async(req, res) => {
     }
 };
 
-const uploadFileToS3 = async(file) => {
+const uploadFileToS3 = async (file) => {
     const fileName = `news/${Date.now()}_${path.basename(file.originalname)}`;
     const uploadParams = {
         Bucket: process.env.AWS_S3_BUCKET_NAME,
@@ -512,7 +512,7 @@ const uploadFileToS3 = async(file) => {
 };
 
 // Controller method (endpoint handler)
-exports.editCropCalender = async(req, res) => {
+exports.editCropCalender = async (req, res) => {
     const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
     console.log("Request URL:", fullUrl);
 
@@ -556,14 +556,14 @@ exports.editCropCalender = async(req, res) => {
     }
 };
 
-exports.createCropCalenderAddTask = async(req, res) => {
+exports.createCropCalenderAddTask = async (req, res) => {
     try {
         const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
         console.log(fullUrl);
 
         // Validate request body
         const { cropId, tasks } =
-        await ValidateSchema.createCropCalenderTaskSchema.validateAsync(req.body);
+            await ValidateSchema.createCropCalenderTaskSchema.validateAsync(req.body);
 
         // Call DAO to insert the tasks
         const result = await adminDao.createCropCalenderTasks(cropId, tasks);
@@ -582,7 +582,7 @@ exports.createCropCalenderAddTask = async(req, res) => {
     }
 };
 
-exports.getNewsById = async(req, res) => {
+exports.getNewsById = async (req, res) => {
     try {
         const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
         console.log(fullUrl);
@@ -614,7 +614,7 @@ exports.getNewsById = async(req, res) => {
     }
 };
 
-exports.getCropCalenderById = async(req, res) => {
+exports.getCropCalenderById = async (req, res) => {
     try {
         const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
         console.log(fullUrl);
@@ -646,7 +646,7 @@ exports.getCropCalenderById = async(req, res) => {
     }
 };
 
-exports.editNewsStatus = async(req, res) => {
+exports.editNewsStatus = async (req, res) => {
     try {
         const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
         console.log("Request URL:", fullUrl);
@@ -692,7 +692,7 @@ exports.editNewsStatus = async(req, res) => {
     }
 };
 
-exports.createMarketPrice = async(req, res) => {
+exports.createMarketPrice = async (req, res) => {
     try {
         const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
         console.log("Request URL:", fullUrl);
@@ -718,8 +718,8 @@ exports.createMarketPrice = async(req, res) => {
         // Prepare the file for upload
         const fileContent = req.file.buffer;
         const fileName = `marketPrice/${Date.now()}_${path.basename(
-      req.file.originalname
-    )}`;
+            req.file.originalname
+        )}`;
 
         const uploadParams = {
             Bucket: process.env.AWS_S3_BUCKET_NAME,
@@ -767,7 +767,7 @@ exports.createMarketPrice = async(req, res) => {
     }
 };
 
-exports.getAllMarketPrice = async(req, res) => {
+exports.getAllMarketPrice = async (req, res) => {
     try {
         const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
         console.log("Request URL:", fullUrl);
@@ -775,9 +775,9 @@ exports.getAllMarketPrice = async(req, res) => {
         // Validate query parameters
         const {
             page = 1,
-                limit = 10,
-                status,
-                createdAt,
+            limit = 10,
+            status,
+            createdAt,
         } = await ValidateSchema.getAllMarketPriceSchema.validateAsync(req.query);
 
         // Calculate offset
@@ -811,7 +811,7 @@ exports.getAllMarketPrice = async(req, res) => {
     }
 };
 
-exports.deleteMarketPrice = async(req, res) => {
+exports.deleteMarketPrice = async (req, res) => {
     try {
         const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
         console.log("Request URL:", fullUrl);
@@ -845,16 +845,16 @@ exports.deleteMarketPrice = async(req, res) => {
     }
 };
 
-exports.editMarketPriceStatus = async(req, res) => {
+exports.editMarketPriceStatus = async (req, res) => {
     try {
         const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
         console.log("Request URL:", fullUrl);
 
         // Validate the `id` parameter
         const { id } =
-        await ValidateSchema.editMarketPriceStatusSchema.validateAsync(
-            req.params
-        );
+            await ValidateSchema.editMarketPriceStatusSchema.validateAsync(
+                req.params
+            );
 
         // Fetch the current status of the market price
         const result = await adminDao.getMarketPriceStatusById(id);
@@ -893,7 +893,7 @@ exports.editMarketPriceStatus = async(req, res) => {
     }
 };
 
-exports.getMarketPriceById = async(req, res) => {
+exports.getMarketPriceById = async (req, res) => {
     try {
         const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
         console.log("Request URL:", fullUrl);
@@ -925,7 +925,7 @@ exports.getMarketPriceById = async(req, res) => {
     }
 };
 
-exports.editMarketPrice = async(req, res) => {
+exports.editMarketPrice = async (req, res) => {
     try {
         const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
         console.log("Request URL:", fullUrl);
@@ -943,8 +943,8 @@ exports.editMarketPrice = async(req, res) => {
         if (req.file) {
             const fileContent = req.file.buffer;
             const fileName = `marketPrice/${Date.now()}_${path.basename(
-        req.file.originalname
-      )}`;
+                req.file.originalname
+            )}`;
 
             const uploadParams = {
                 Bucket: process.env.AWS_S3_BUCKET_NAME,
@@ -984,7 +984,7 @@ exports.editMarketPrice = async(req, res) => {
     }
 };
 
-exports.getAllOngoingCultivations = async(req, res) => {
+exports.getAllOngoingCultivations = async (req, res) => {
     try {
         // Validate query parameters
         const queryParams =
@@ -1020,7 +1020,7 @@ exports.getAllOngoingCultivations = async(req, res) => {
     }
 };
 
-exports.getOngoingCultivationsWithUserDetails = async(req, res) => {
+exports.getOngoingCultivationsWithUserDetails = async (req, res) => {
     try {
         // Validate the request
         await ValidateSchema.getOngoingCultivationsWithUserDetailsSchema.validateAsync(
@@ -1045,16 +1045,16 @@ exports.getOngoingCultivationsWithUserDetails = async(req, res) => {
     }
 };
 
-exports.getOngoingCultivationsById = async(req, res) => {
+exports.getOngoingCultivationsById = async (req, res) => {
     const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
     console.log("Request URL:", fullUrl);
 
     try {
         // Validate the request params (ID)
         const { id } =
-        await ValidateSchema.getOngoingCultivationsByIdSchema.validateAsync(
-            req.params
-        );
+            await ValidateSchema.getOngoingCultivationsByIdSchema.validateAsync(
+                req.params
+            );
 
         // Fetch cultivation crops data from DAO
         const results = await adminDao.getOngoingCultivationsById(id);
@@ -1072,16 +1072,16 @@ exports.getOngoingCultivationsById = async(req, res) => {
     }
 };
 
-exports.getFixedAssetsByCategory = async(req, res) => {
+exports.getFixedAssetsByCategory = async (req, res) => {
     const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
     console.log("Request URL:", fullUrl);
 
     try {
         // Validate the request params (id and category)
         const { id, category } =
-        await ValidateSchema.getFixedAssetsByCategorySchema.validateAsync(
-            req.params
-        );
+            await ValidateSchema.getFixedAssetsByCategorySchema.validateAsync(
+                req.params
+            );
 
         // Fetch assets by category from DAO
         const results = await adminDao.getFixedAssetsByCategory(id, category);
@@ -1101,16 +1101,16 @@ exports.getFixedAssetsByCategory = async(req, res) => {
     }
 };
 
-exports.getCurrentAssetsByCategory = async(req, res) => {
+exports.getCurrentAssetsByCategory = async (req, res) => {
     const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
     console.log("Request URL:", fullUrl);
 
     try {
         // Validate the request params (id and category)
         const { id, category } =
-        await ValidateSchema.getCurrentAssetsByCategorySchema.validateAsync(
-            req.params
-        );
+            await ValidateSchema.getCurrentAssetsByCategorySchema.validateAsync(
+                req.params
+            );
 
         // Fetch current assets by category from DAO
         const results = await adminDao.getCurrentAssetsByCategory(id, category);
@@ -1128,7 +1128,7 @@ exports.getCurrentAssetsByCategory = async(req, res) => {
     }
 };
 
-exports.deleteAdminUser = async(req, res) => {
+exports.deleteAdminUser = async (req, res) => {
     const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
     console.log("Request URL:", fullUrl);
 
@@ -1160,7 +1160,7 @@ exports.deleteAdminUser = async(req, res) => {
     }
 };
 
-exports.editAdminUser = async(req, res) => {
+exports.editAdminUser = async (req, res) => {
     const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
     console.log("Request URL:", fullUrl);
 
@@ -1196,14 +1196,14 @@ exports.editAdminUser = async(req, res) => {
     }
 };
 
-exports.editAdminUserWithoutId = async(req, res) => {
+exports.editAdminUserWithoutId = async (req, res) => {
     const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
     console.log("Request URL:", fullUrl);
 
     try {
         // Validate the request body
         const { id, mail, userName, role } =
-        await ValidateSchema.editAdminUserWithoutIdSchema.validateAsync(req.body);
+            await ValidateSchema.editAdminUserWithoutIdSchema.validateAsync(req.body);
 
         // Call DAO to update the user
         const results = await adminDao.updateAdminUser(id, mail, userName, role);
@@ -1229,7 +1229,7 @@ exports.editAdminUserWithoutId = async(req, res) => {
     }
 };
 
-exports.getAdminById = async(req, res) => {
+exports.getAdminById = async (req, res) => {
     const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
     console.log(fullUrl);
 
@@ -1263,11 +1263,11 @@ exports.getAdminById = async(req, res) => {
     }
 };
 
-exports.editAdminUserPassword = async(req, res) => {
+exports.editAdminUserPassword = async (req, res) => {
     try {
         // Validate the request body
         const { id, currentPassword, newPassword } =
-        await ValidateSchema.editAdminUserPasswordSchema.validateAsync(req.body);
+            await ValidateSchema.editAdminUserPasswordSchema.validateAsync(req.body);
 
         // Retrieve the current password from the DAO
         const passwordResults = await adminDao.getAdminPasswordById(id);
@@ -1301,7 +1301,7 @@ exports.editAdminUserPassword = async(req, res) => {
     }
 };
 
-exports.deletePlantCareUser = async(req, res) => {
+exports.deletePlantCareUser = async (req, res) => {
     try {
         const { id } = await ValidateSchema.deletePlantCareUserSchema.validateAsync(
             req.params
@@ -1330,7 +1330,7 @@ exports.deletePlantCareUser = async(req, res) => {
     }
 };
 
-exports.updatePlantCareUser = async(req, res) => {
+exports.updatePlantCareUser = async (req, res) => {
     const { id } = req.params;
 
     try {
@@ -1344,8 +1344,8 @@ exports.updatePlantCareUser = async(req, res) => {
         if (req.file) {
             const fileContent = req.file.buffer;
             const fileName = `plantcareUser/${Date.now()}_${path.basename(
-        req.file.originalname
-      )}`;
+                req.file.originalname
+            )}`;
 
             const uploadParams = {
                 Bucket: process.env.AWS_S3_BUCKET_NAME,
@@ -1385,7 +1385,7 @@ exports.updatePlantCareUser = async(req, res) => {
     }
 };
 
-exports.createPlantCareUser = async(req, res) => {
+exports.createPlantCareUser = async (req, res) => {
     try {
         // Validate input data
         const validatedBody = req.body;
@@ -1399,8 +1399,8 @@ exports.createPlantCareUser = async(req, res) => {
         // Handle image upload to S3
         const fileContent = req.file.buffer;
         const fileName = `plantcareUser/${Date.now()}_${path.basename(
-      req.file.originalname
-    )}`;
+            req.file.originalname
+        )}`;
 
         const uploadParams = {
             Bucket: process.env.AWS_S3_BUCKET_NAME,
@@ -1438,7 +1438,7 @@ exports.createPlantCareUser = async(req, res) => {
     }
 };
 
-exports.getUserById = async(req, res) => {
+exports.getUserById = async (req, res) => {
     try {
         // Validate the request params
         const validatedParams =
@@ -1467,7 +1467,7 @@ exports.getUserById = async(req, res) => {
     }
 };
 
-exports.createAdmin = async(req, res) => {
+exports.createAdmin = async (req, res) => {
     try {
         // Validate the request body
         const validatedBody = req.body;
@@ -1513,7 +1513,7 @@ exports.createAdmin = async(req, res) => {
 // };
 
 //Report current assert --- get-assert-using-catogort-userid
-exports.getCurrentAssertGroup = async(req, res) => {
+exports.getCurrentAssertGroup = async (req, res) => {
     const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
     console.log("Request URL:", fullUrl);
 
@@ -1542,7 +1542,7 @@ exports.getCurrentAssertGroup = async(req, res) => {
     }
 };
 
-exports.getCurrentAssetRecordById = async(req, res) => {
+exports.getCurrentAssetRecordById = async (req, res) => {
     const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
     console.log("Request URL:", fullUrl);
 
@@ -1574,7 +1574,7 @@ exports.getCurrentAssetRecordById = async(req, res) => {
 };
 
 //get all task of crop
-exports.getAllTaskByCropId = async(req, res) => {
+exports.getAllTaskByCropId = async (req, res) => {
     const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
     console.log("Request URL:", fullUrl);
 
@@ -1605,7 +1605,7 @@ exports.getAllTaskByCropId = async(req, res) => {
 };
 
 //delete crop task
-exports.deleteCropTask = async(req, res) => {
+exports.deleteCropTask = async (req, res) => {
     const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
     console.log("Request URL:", fullUrl);
 
@@ -1636,7 +1636,7 @@ exports.deleteCropTask = async(req, res) => {
     }
 };
 
-exports.getCropCalendarDayById = async(req, res) => {
+exports.getCropCalendarDayById = async (req, res) => {
     const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
     console.log("Request URL:", fullUrl);
 
@@ -1671,7 +1671,7 @@ exports.getCropCalendarDayById = async(req, res) => {
     }
 };
 
-exports.editTask = async(req, res) => {
+exports.editTask = async (req, res) => {
     const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
     console.log("Request URL:", fullUrl);
     console.log("Update task", req.body);
@@ -1716,7 +1716,7 @@ exports.editTask = async(req, res) => {
 };
 
 
-exports.getAllUsersTaskByCropId = async(req, res) => {
+exports.getAllUsersTaskByCropId = async (req, res) => {
     const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
     console.log("Request URL:", fullUrl);
 
@@ -1743,7 +1743,7 @@ exports.getAllUsersTaskByCropId = async(req, res) => {
 };
 
 
-exports.deleteUserTask = async(req, res) => {
+exports.deleteUserTask = async (req, res) => {
     const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
     console.log("Request URL:", fullUrl);
 
@@ -1773,7 +1773,7 @@ exports.deleteUserTask = async(req, res) => {
 
 
 
-exports.editUserTaskStatus = async(req, res) => {
+exports.editUserTaskStatus = async (req, res) => {
     try {
         const fullUrl = `${req.protocol}://${req.get('host')}${req.originalUrl}`;
         console.log('Request URL:', fullUrl);
@@ -1819,7 +1819,7 @@ exports.editUserTaskStatus = async(req, res) => {
 };
 
 
-exports.getSlaveCropCalendarDayById = async(req, res) => {
+exports.getSlaveCropCalendarDayById = async (req, res) => {
     const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
     console.log("Request URL:", fullUrl);
 
@@ -1849,7 +1849,7 @@ exports.getSlaveCropCalendarDayById = async(req, res) => {
 
 
 //get each post reply
-exports.getAllReplyByPost = async(req, res) => {
+exports.getAllReplyByPost = async (req, res) => {
     const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
     console.log("Request URL:", fullUrl);
 
@@ -1857,7 +1857,7 @@ exports.getAllReplyByPost = async(req, res) => {
         const postId = req.params.postId;
 
         const results = await adminDao.getAllPostReplyDao(postId);
- 
+
         res.json(results);
     } catch (error) {
         if (error.isJoi) {
@@ -1872,7 +1872,7 @@ exports.getAllReplyByPost = async(req, res) => {
 
 
 
-exports.DeleteReply = async(req, res) => {
+exports.DeleteReply = async (req, res) => {
     const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
     console.log("Request URL:", fullUrl);
 
@@ -1880,15 +1880,15 @@ exports.DeleteReply = async(req, res) => {
         const postId = req.params.postId;
 
         const results = await adminDao.deleteReply(postId);
-        if(results.affectedRows=== 1){
+        if (results.affectedRows === 1) {
             console.log("Delete");
-            res.json({status:true})
-            
+            res.json({ status: true })
+
         }
-        else{
-            res.json({status:false})   
+        else {
+            res.json({ status: false })
         }
-        
+
     } catch (error) {
         if (error.isJoi) {
             // Handle validation error
@@ -1901,7 +1901,7 @@ exports.DeleteReply = async(req, res) => {
 };
 
 
-exports.editUserTask = async(req, res) => {
+exports.editUserTask = async (req, res) => {
     const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
     console.log("Request URL:", fullUrl);
     console.log("Update task", req.body);
@@ -1942,7 +1942,7 @@ exports.editUserTask = async(req, res) => {
         return res.status(500).json({ error: "An error occurred while updating task" });
     }
 };
-exports.getAllPostyById = async(req, res) => {
+exports.getAllPostyById = async (req, res) => {
     const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
     console.log("Request URL:", fullUrl);
 
@@ -1966,3 +1966,47 @@ exports.getAllPostyById = async(req, res) => {
             });
     }
 };
+
+
+//add new task
+exports.addNewTask = async (req, res) => {
+    const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
+    console.log("Request URL:", fullUrl);
+    console.log("Add new task data:", req.body);
+
+    const cropId = req.params.cropId;
+    const indexId = parseInt(req.params.indexId); 
+
+    try {
+        const task = req.body;
+        console.log(req.params);
+        
+
+        const taskIdArr = await adminDao.getAllTaskIdDao(cropId);
+        console.log("Task array:", taskIdArr);
+
+        for (let i = 0; i < taskIdArr.length; i++) {
+            const existingTask = taskIdArr[i];
+
+            if (existingTask.taskIndex > indexId) {
+                console.log(`Updating task ${existingTask.id}, current taskIndex: ${existingTask.taskIndex}`);
+                await adminDao.shiftUpTaskIndexDao(existingTask.id, existingTask.taskIndex + 1);
+            }
+        }
+
+        const addedTaskResult = await adminDao.addNewTaskDao(task, (indexId+1), cropId);
+        
+
+        if(addedTaskResult.insertId >0 ){
+            res.status(201).json({status: true, message:"Succcesfull Task Added!"})
+        }else{
+            res.status(500).json({status: false, message:"Issue Occor in Task Adding!"})
+        }
+
+    } catch (error) {
+        console.error("Error adding task:", error);
+        return res.status(500).json({ error: "An error occurred while adding the task" });
+    }
+};
+
+

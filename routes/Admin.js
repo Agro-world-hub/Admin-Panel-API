@@ -242,7 +242,7 @@ router.get(
 //get all task of crop
 router.get(
     "/get-all-crop-task/:id",
-    authMiddleware,
+    // authMiddleware,
     AdminEp.getAllTaskByCropId
 );
 
@@ -298,14 +298,21 @@ router.get(
 //get each post reply
 router.get(
     "/get-all-reply/:postId",
-    // authMiddleware,
+    authMiddleware,
     AdminEp.getAllReplyByPost
 );
 
 router.delete(
     "/delete-reply/:postId",
-    // authMiddleware,
+    authMiddleware,
     AdminEp.DeleteReply
 );
+
+//add new task
+router.post(
+    "/add-new-task/:cropId/:indexId",
+    // authMiddleware,
+    AdminEp.addNewTask
+)
 
 module.exports = router;
