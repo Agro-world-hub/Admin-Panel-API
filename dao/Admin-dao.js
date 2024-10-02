@@ -1112,6 +1112,8 @@ exports.getAllTaskByCropId = (cropId) => {
             FROM cropcalender cc 
             JOIN cropcalendardays cd ON cc.id = cd.cropId 
             WHERE cc.id = ?
+             ORDER BY cd.taskIndex
+
         `;
         const values = [cropId];
 
@@ -1366,6 +1368,62 @@ exports.deleteReply = (id) => {
         db.query(sql, [id], (err, results) => {
             if (err) {
                 reject("Error executing delete query: " + err);
+            } else {
+                resolve(results);
+            }
+        });
+    });
+};
+
+
+
+exports.shiftUpTaskIndexDao = (taskId, indexId) => {
+    return new Promise((resolve, reject) => {
+        const sql = "UPDATE  cropcalendardays SET taskIndex = ? WHERE id = ?";
+        const values = [indexId, taskId];
+
+        db.query(sql, values, (err, results) => {
+            if (err) {
+                return reject(err); // Reject promise if an error occurs
+            }
+
+            resolve(results[0]); // Resolve the promise with the first result
+        });
+    });
+};
+
+
+exports.getAllTaskIdDao = (cropId) => {
+    return new Promise((resolve, reject) => {
+        const sql = "SELECT id, taskIndex FROM cropcalendardays WHERE cropId = ?";
+        const values = [cropId];
+
+        db.query(sql, values, (err, results) => {
+            if (err) {
+                return reject(err); // Reject promise if an error occurs
+            }
+
+            resolve(results); // No need to wrap in arrays, return results directly
+        });
+    });
+};
+
+exports.addNewTaskDao = (task, indexId,cropId) => {
+    console.log("Dao Task: ",task);
+    
+    return new Promise((resolve, reject) => {
+        const sql = "INSERT INTO cropcalendardays (cropId, taskIndex, days, taskTypeEnglish, taskTypeSinhala, taskTypeTamil, taskCategoryEnglish, taskCategorySinhala, taskCategoryTamil, taskEnglish, taskSinhala, taskTamil, taskDescriptionEnglish, taskDescriptionSinhala, taskDescriptionTamil) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)" ;
+
+        const values = [ cropId, indexId,  task.days, task.taskTypeEnglish, task.taskTypeSinhala, task.taskTypeTamil, task.taskCategoryEnglish, task.taskCategorySinhala, task.taskCategoryTamil, task.taskEnglish, task.taskSinhala, task.taskTamil, task.taskDescriptionEnglish, task.taskDescriptionSinhala, task.taskDescriptionTamil ];
+
+        // Ensure that the values array length matches the expected column count
+        if (values.length !== 15) {
+            return reject(new Error("Mismatch between column count and value count."));
+        }
+
+        db.query(sql, values, (err, results) => {
+            if (err) {
+                reject(err);
             } else {
                 resolve(results);
             }

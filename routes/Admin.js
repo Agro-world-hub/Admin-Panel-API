@@ -308,4 +308,12 @@ router.delete(
     AdminEp.DeleteReply
 );
 
+//Pasan tsk
+router.post(
+    "/add-new-task/:cropId/:indexId",
+    authMiddleware,
+    AdminEp.addNewTask
+)
+
+
 module.exports = router;
