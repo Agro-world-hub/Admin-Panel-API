@@ -1905,18 +1905,18 @@ exports.getAllPostyById = async(req, res) => {
 
 
 
-exports.addNewTask = async (req, res) => {
+exports.addNewTask = async(req, res) => {
     const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
     console.log("Request URL:", fullUrl);
     console.log("Add new task data:", req.body);
 
     const cropId = req.params.cropId;
-    const indexId = parseInt(req.params.indexId); 
+    const indexId = parseInt(req.params.indexId);
 
     try {
         const task = req.body;
         console.log(req.params);
-        
+
 
         const taskIdArr = await adminDao.getAllTaskIdDao(cropId);
         console.log("Task array:", taskIdArr);
@@ -1930,13 +1930,13 @@ exports.addNewTask = async (req, res) => {
             }
         }
 
-        const addedTaskResult = await adminDao.addNewTaskDao(task, (indexId+1), cropId);
-        
+        const addedTaskResult = await adminDao.addNewTaskDao(task, (indexId + 1), cropId);
 
-        if(addedTaskResult.insertId >0 ){
-            res.status(201).json({status: true, message:"Succcesfull Task Added!"})
-        }else{
-            res.status(500).json({status: false, message:"Issue Occor in Task Adding!"})
+
+        if (addedTaskResult.insertId > 0) {
+            res.status(201).json({ status: true, message: "Succcesfull Task Added!" })
+        } else {
+            res.status(500).json({ status: false, message: "Issue Occor in Task Adding!" })
         }
 
     } catch (error) {

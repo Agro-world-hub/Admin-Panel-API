@@ -617,7 +617,7 @@ const createpublicforumposts = () => {
     });
 };
 
-const createpublicforumreplies  = () => {
+const createpublicforumreplies = () => {
     const sql = `
       CREATE TABLE IF NOT EXISTS publicforumreplies (
         id int AUTO_INCREMENT PRIMARY KEY,
@@ -813,15 +813,15 @@ module.exports = {
     createpublicforumposts,
     createpublicforumreplies,
 
-    createFixedAsset,                    //1
-    createBuldingFixedAsset,             //2
-    createLandFixedAsset,                //3
-    createMachToolsFixedAsset,           //4
-    createMachToolsWarrantyFixedAsset,   //5
-    createOwnershipOwnerFixedAsset,      //6
-    createOwnershipLeastFixedAsset,      //7
-    createOwnershipPermitFixedAsset,     //8
-    createOwnershipSharedFixedAsset,     //9
+    createFixedAsset, //1
+    createBuldingFixedAsset, //2
+    createLandFixedAsset, //3
+    createMachToolsFixedAsset, //4
+    createMachToolsWarrantyFixedAsset, //5
+    createOwnershipOwnerFixedAsset, //6
+    createOwnershipLeastFixedAsset, //7
+    createOwnershipPermitFixedAsset, //8
+    createOwnershipSharedFixedAsset, //9
     createCurrentAssetRecord,
 
 
