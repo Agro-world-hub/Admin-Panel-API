@@ -286,8 +286,9 @@ exports.getAllNews = async (status, createdAt, limit, offset) => {
         }
 
         if (createdAt) {
+            const formattedCreatedAt = new Date(createdAt).toISOString().split('T')[0];
             whereClauses.push("DATE(createdAt) = ?");
-            queryParams.push(createdAt);
+            queryParams.push(formattedCreatedAt);
         }
 
         if (whereClauses.length > 0) {
@@ -516,6 +517,8 @@ exports.createMarketPrice = (
 };
 
 exports.getAllMarketPrice = (status, createdAt, limit, offset) => {
+    console.log("Create AT: ", createdAt);
+    
     return new Promise((resolve, reject) => {
         let countsSql = "SELECT COUNT(*) as total FROM marketprice";
         let dataSql = "SELECT * FROM marketprice";
@@ -528,8 +531,9 @@ exports.getAllMarketPrice = (status, createdAt, limit, offset) => {
         }
 
         if (createdAt) {
+            const formattedCreatedAt = new Date(createdAt).toISOString().split('T')[0];
             whereClauses.push("DATE(createdAt) = ?");
-            queryParams.push(createdAt);
+            queryParams.push(formattedCreatedAt);
         }
 
         if (whereClauses.length > 0) {
@@ -559,6 +563,7 @@ exports.getAllMarketPrice = (status, createdAt, limit, offset) => {
         });
     });
 };
+
 
 exports.deleteMarketPriceById = (id) => {
     return new Promise((resolve, reject) => {

@@ -418,11 +418,11 @@ exports.getAllNews = async(req, res) => {
 
         const result = await adminDao.getAllNews(status, createdAt, limit, offset);
 
-        if (result.items.length === 0) {
-            return res
-                .status(404)
-                .json({ message: "No news items found", data: result });
-        }
+        // if (result.items.length === 0) {
+        //     return res
+        //         .status(404)
+        //         .json({ message: "No news items found", data: result });
+        // }
 
         console.log("Successfully retrieved all contents");
         res.json(result);
@@ -742,6 +742,7 @@ exports.getAllMarketPrice = async(req, res) => {
             limit,
             offset
         );
+        
 
         console.log("Successfully fetched market prices");
         return res.json({
