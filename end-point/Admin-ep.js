@@ -1609,6 +1609,9 @@ exports.editTask = async(req, res) => {
             validatedParams.taskCategoryEnglish,
             validatedParams.taskCategorySinhala,
             validatedParams.taskCategoryTamil,
+            validatedParams.taskDescriptionEnglish,
+            validatedParams.taskDescriptionSinhala,
+            validatedParams.taskDescriptionTamil,
             validatedParams.id
         );
 

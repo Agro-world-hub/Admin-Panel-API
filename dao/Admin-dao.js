@@ -1170,13 +1170,16 @@ exports.editTask = (
     taskCategoryEnglish,
     taskCategorySinhala,
     taskCategoryTamil,
+    taskDescriptionEnglish,
+    taskDescriptionSinhala,
+    taskDescriptionTamil,
     id
 ) => {
     return new Promise((resolve, reject) => {
         const sql = `
             UPDATE cropcalendardays 
             SET taskEnglish=?, taskSinhala=?, taskTamil=?, taskTypeEnglish=?, taskTypeSinhala=?, taskTypeTamil=?, 
-                taskCategoryEnglish=?, taskCategorySinhala=?, taskCategoryTamil=? 
+                taskCategoryEnglish=?, taskCategorySinhala=?, taskCategoryTamil=?, taskDescriptionEnglish=?, taskDescriptionSinhala=?, taskDescriptionTamil=?  
             WHERE id = ?
         `;
         const values = [
@@ -1189,6 +1192,9 @@ exports.editTask = (
             taskCategoryEnglish,
             taskCategorySinhala,
             taskCategoryTamil,
+            taskDescriptionEnglish,
+            taskDescriptionSinhala,
+            taskDescriptionTamil,
             id,
         ];
 
