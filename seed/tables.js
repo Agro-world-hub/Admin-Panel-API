@@ -8,7 +8,7 @@ const createUsersTable = () => {
       lastName VARCHAR(50) NOT NULL,
       phoneNumber VARCHAR(12) NOT NULL,
       NICnumber VARCHAR(12) NOT NULL,
-      profileImage VARCHAR(150),
+      profileImage LONGBLOB,
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     )
   `;
@@ -56,7 +56,7 @@ const createContentTable = () => {
       descriptionEnglish  TEXT NOT NULL,
       descriptionSinhala TEXT NOT NULL,
       descriptionTamil TEXT NOT NULL,
-      image VARCHAR(150),
+      image LONGBLOB,
       status VARCHAR(15) NOT NULL,
       createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       createdBy INT,
@@ -82,6 +82,8 @@ const createCropCalenderTable = () => {
     CREATE TABLE IF NOT EXISTS cropCalender (
       id INT AUTO_INCREMENT PRIMARY KEY,
       cropName VARCHAR(50) NOT NULL,
+      sinhalaCropName VARCHAR(50) NOT NULL,
+      tamilCropName VARCHAR(50) NOT NULL,
       variety VARCHAR(50) NOT NULL,
       sinhalaVariety VARCHAR(50) NOT NULL,
       tamilVariety VARCHAR(50) NOT NULL,
@@ -91,7 +93,7 @@ const createCropCalenderTable = () => {
       SpecialNotes TEXT,
       sinhalaSpecialNotes TEXT,
       tamilSpecialNotes TEXT,
-      image VARCHAR(150),
+      image LONGBLOB,
       cropColor VARCHAR(10),
       SuitableAreas TEXT NOT NULL,
       Category VARCHAR(255) NOT NULL,
@@ -181,7 +183,7 @@ const createMarketPriceTable = () => {
       descriptionEnglish TEXT NOT NULL,
       descriptionSinhala TEXT NOT NULL,
       descriptionTamil TEXT NOT NULL,
-      image VARCHAR(150),
+      image LONGBLOB,
       status VARCHAR(20) NOT NULL,
       price VARCHAR(5) NOT NULL,
       createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -656,7 +658,7 @@ const createCollectionOfficer = () => {
       lastName VARCHAR(50) NOT NULL,
       phoneNumber01 VARCHAR(12) NOT NULL,
       phoneNumber02 VARCHAR(12) NOT NULL,
-      image VARCHAR(150) NOT NULL,
+      image LONGBLOB,
       nic VARCHAR(12) NOT NULL,
       email VARCHAR(50) NOT NULL,
       password VARCHAR(20) NOT NULL,
@@ -749,7 +751,7 @@ const createRegisteredFarmerPayments = () => {
       unitPrice DECIMAL(8, 2) NOT NULL,
       weight INT NOT NULL,
       total DECIMAL(8, 2) NOT NULL,
-      image VARCHAR(25) NOT NULL,
+      image LONGBLOB,
       createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (userId) REFERENCES users(id)
         ON DELETE SET NULL
