@@ -9,8 +9,6 @@ const adminDao = require("../dao/Admin-dao");
 const ValidateSchema = require("../validations/Admin-validation");
 const { type } = require("os");
 
-
-
 exports.loginAdmin = async(req, res) => {
     const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
     console.log(fullUrl);
@@ -171,10 +169,6 @@ exports.createCropCallender = async(req, res) => {
         }
 
         const fileBuffer = req.file.buffer;
-
-
-
-
 
         const cropId = await adminDao.createCropCallender(
             cropName,
@@ -405,7 +399,6 @@ exports.createNews = async(req, res) => {
     }
 };
 
-
 exports.getAllNews = async(req, res) => {
     try {
         console.log("Received request with query:", req.query);
@@ -438,7 +431,6 @@ exports.getAllNews = async(req, res) => {
     }
 };
 
-
 exports.deleteCropCalender = async(req, res) => {
     try {
         const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
@@ -470,7 +462,6 @@ exports.deleteCropCalender = async(req, res) => {
     }
 };
 
-
 // Controller method (endpoint handler)
 exports.editCropCalender = async(req, res) => {
     const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
@@ -488,13 +479,19 @@ exports.editCropCalender = async(req, res) => {
         }
 
         // Update the crop calendar
-        const affectedRows = await adminDao.updateCropCalender(id, updateData, imageData);
+        const affectedRows = await adminDao.updateCropCalender(
+            id,
+            updateData,
+            imageData
+        );
 
         if (affectedRows === 0) {
             return res.status(404).json({ message: "Crop Calendar not found" });
         } else {
             console.log("Crop Calendar updated successfully");
-            return res.status(200).json({ message: "Crop Calendar updated successfully" });
+            return res
+                .status(200)
+                .json({ message: "Crop Calendar updated successfully" });
         }
     } catch (err) {
         if (err.isJoi) {
@@ -502,10 +499,11 @@ exports.editCropCalender = async(req, res) => {
         }
 
         console.error("Error updating crop calendar:", err);
-        return res.status(500).json({ error: "An error occurred while updating the crop calendar" });
+        return res
+            .status(500)
+            .json({ error: "An error occurred while updating the crop calendar" });
     }
 };
-
 
 exports.createCropCalenderAddTask = async(req, res) => {
     try {
@@ -552,8 +550,8 @@ exports.getNewsById = async(req, res) => {
 
         // Convert image buffer to base64 string if image exists
         if (news[0].image) {
-            const base64Image = Buffer.from(news[0].image).toString('base64');
-            const mimeType = 'image/png'; // Adjust MIME type if necessary, depending on the image type
+            const base64Image = Buffer.from(news[0].image).toString("base64");
+            const mimeType = "image/png"; // Adjust MIME type if necessary, depending on the image type
             news[0].image = `data:${mimeType};base64,${base64Image}`;
         }
 
@@ -571,7 +569,6 @@ exports.getNewsById = async(req, res) => {
             .json({ error: "An error occurred while fetching the news content" });
     }
 };
-
 
 exports.getCropCalenderById = async(req, res) => {
     try {
@@ -591,8 +588,8 @@ exports.getCropCalenderById = async(req, res) => {
         }
 
         if (cropCalender[0].image) {
-            const base64Image = Buffer.from(cropCalender[0].image).toString('base64');
-            const mimeType = 'image/png'; // Adjust MIME type if necessary, depending on the image type
+            const base64Image = Buffer.from(cropCalender[0].image).toString("base64");
+            const mimeType = "image/png"; // Adjust MIME type if necessary, depending on the image type
             cropCalender[0].image = `data:${mimeType};base64,${base64Image}`;
         }
 
@@ -681,11 +678,6 @@ exports.createMarketPrice = async(req, res) => {
         }
 
         const fileBuffer = req.file.buffer;
-
-
-
-
-
 
         // Call the DAO to create the market price entry
         const insertId = await adminDao.createMarketPrice(
@@ -859,14 +851,12 @@ exports.getMarketPriceById = async(req, res) => {
         // Fetch market price data by ID
         const result = await adminDao.getMarketPriceById(id);
 
-
-
         if (result.length === 0) {
             return res.status(404).json({ error: "Market price not found" });
         }
         if (result[0].image) {
-            const base64Image = Buffer.from(result[0].image).toString('base64');
-            const mimeType = 'image/png'; // Adjust MIME type if necessary, depending on the image type
+            const base64Image = Buffer.from(result[0].image).toString("base64");
+            const mimeType = "image/png"; // Adjust MIME type if necessary, depending on the image type
             result[0].image = `data:${mimeType};base64,${base64Image}`;
         }
 
@@ -900,8 +890,7 @@ exports.editMarketPrice = async(req, res) => {
         let imageData = null;
         if (req.file) {
             imageData = req.file.buffer; // Store the binary image data from req.file
-        };
-
+        }
 
         // Call DAO to update the market price
         const updateData = {
@@ -1285,7 +1274,6 @@ exports.updatePlantCareUser = async(req, res) => {
 
         // Handle image upload if file is provided
 
-
         let imageData = null;
         if (req.file) {
             imageData = req.file.buffer; // Store the binary image data from req.file
@@ -1330,9 +1318,13 @@ exports.createPlantCareUser = async(req, res) => {
 
         const fileBuffer = req.file.buffer;
 
-
-
-        const userData = { firstName, lastName, phoneNumber, NICnumber, fileBuffer };
+        const userData = {
+            firstName,
+            lastName,
+            phoneNumber,
+            NICnumber,
+            fileBuffer,
+        };
 
         // Call DAO to create the user
         const userId = await adminDao.createPlantCareUser(userData);
@@ -1883,14 +1875,17 @@ exports.getAllPostyById = async(req, res) => {
             return res.status(404).json({ error: "No post found." });
         }
 
+        console.log(results);
+
+
         // Modify the results to convert images to base64
-
-        if (results[0].postimage) {
-            const base64Image = Buffer.from(results[0].postimage).toString('base64');
-            const mimeType = 'image/png';
-            results[0].postimage = `data:${mimeType};base64,${base64Image}`;
-        }
-
+        results.forEach((result, indexId) => {
+            if (result.postimage) {
+                const base64Image = Buffer.from(result.postimage).toString("base64");
+                const mimeType = "image/png";
+                results[indexId].postimage = `data:${mimeType};base64,${base64Image}`;
+            }
+        });
 
         res.json(results);
     } catch (error) {
@@ -1904,8 +1899,6 @@ exports.getAllPostyById = async(req, res) => {
     }
 };
 
-
-
 exports.addNewTask = async(req, res) => {
     const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
     console.log("Request URL:", fullUrl);
@@ -1918,7 +1911,6 @@ exports.addNewTask = async(req, res) => {
         const task = req.body;
         console.log(req.params);
 
-
         const taskIdArr = await adminDao.getAllTaskIdDao(cropId);
         console.log("Task array:", taskIdArr);
 
@@ -1926,22 +1918,35 @@ exports.addNewTask = async(req, res) => {
             const existingTask = taskIdArr[i];
 
             if (existingTask.taskIndex > indexId) {
-                console.log(`Updating task ${existingTask.id}, current taskIndex: ${existingTask.taskIndex}`);
-                await adminDao.shiftUpTaskIndexDao(existingTask.id, existingTask.taskIndex + 1);
+                console.log(
+                    `Updating task ${existingTask.id}, current taskIndex: ${existingTask.taskIndex}`
+                );
+                await adminDao.shiftUpTaskIndexDao(
+                    existingTask.id,
+                    existingTask.taskIndex + 1
+                );
             }
         }
 
-        const addedTaskResult = await adminDao.addNewTaskDao(task, (indexId + 1), cropId);
-
+        const addedTaskResult = await adminDao.addNewTaskDao(
+            task,
+            indexId + 1,
+            cropId
+        );
 
         if (addedTaskResult.insertId > 0) {
-            res.status(201).json({ status: true, message: "Succcesfull Task Added!" })
+            res
+                .status(201)
+                .json({ status: true, message: "Succcesfull Task Added!" });
         } else {
-            res.status(500).json({ status: false, message: "Issue Occor in Task Adding!" })
+            res
+                .status(500)
+                .json({ status: false, message: "Issue Occor in Task Adding!" });
         }
-
     } catch (error) {
         console.error("Error adding task:", error);
-        return res.status(500).json({ error: "An error occurred while adding the task" });
+        return res
+            .status(500)
+            .json({ error: "An error occurred while adding the task" });
     }
 };
