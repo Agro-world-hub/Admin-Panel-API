@@ -117,7 +117,7 @@ router.post(
     AdminEp.createCropCalenderAddTask
 );
 
-router.get("/get-user-by-id/:id", authMiddleware, AdminEp.getUserById);
+router.get("/get-user-by-id/:id", AdminEp.getUserById);
 
 router.delete("/delete-crop/:id", authMiddleware, AdminEp.deleteCropCalender);
 
