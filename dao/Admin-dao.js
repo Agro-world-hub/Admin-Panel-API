@@ -1242,7 +1242,8 @@ FROM
     slavecropcalendardays
 WHERE 
     slavecropcalendardays.cropCalendarId = ? 
-    AND slavecropcalendardays.userId = ?;
+    AND slavecropcalendardays.userId = ?
+ORDER BY slavecropcalendardays.taskIndex;;
 
         `;
         const values = [cropId, userId];
@@ -1429,6 +1430,65 @@ exports.addNewTaskDao = (task, indexId,cropId) => {
 
         // Ensure that the values array length matches the expected column count
         if (values.length !== 15) {
+            return reject(new Error("Mismatch between column count and value count."));
+        }
+
+        db.query(sql, values, (err, results) => {
+            if (err) {
+                reject(err);
+            } else {
+                resolve(results);
+            }
+        });
+    });
+};
+
+
+
+
+
+//User separate task
+exports.shiftUpTaskIndexDaoU = (taskId, indexId) => {
+    return new Promise((resolve, reject) => {
+        const sql = "UPDATE  slavecropcalendardays SET taskIndex = ? WHERE id = ?";
+        const values = [indexId, taskId];
+
+        db.query(sql, values, (err, results) => {
+            if (err) {
+                return reject(err); // Reject promise if an error occurs
+            }
+
+            resolve(results[0]); // Resolve the promise with the first result
+        });
+    });
+};
+
+
+exports.getAllTaskIdDaoU = (cropId, userId) => {
+    return new Promise((resolve, reject) => {
+        const sql = "SELECT id, taskIndex FROM slavecropcalendardays WHERE cropCalendarId  = ? AND userId = ?";
+        const values = [cropId, userId];
+
+        db.query(sql, values, (err, results) => {
+            if (err) {
+                return reject(err); // Reject promise if an error occurs
+            }
+
+            resolve(results); // No need to wrap in arrays, return results directly
+        });
+    });
+};
+
+exports.addNewTaskDaoU = (task, indexId,userId, cropId) => {
+    console.log("Dao Task: ",task);
+    
+    return new Promise((resolve, reject) => {
+        const sql = "INSERT INTO slavecropcalendardays (userId, cropCalendarId, taskIndex, days, taskTypeEnglish, taskTypeSinhala, taskTypeTamil, taskCategoryEnglish, taskCategorySinhala, taskCategoryTamil, taskEnglish, taskSinhala, taskTamil, taskDescriptionEnglish, taskDescriptionSinhala, taskDescriptionTamil, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Pending')" ;
+
+        const values = [ userId, cropId, indexId,  task.days, task.taskTypeEnglish, task.taskTypeSinhala, task.taskTypeTamil, task.taskCategoryEnglish, task.taskCategorySinhala, task.taskCategoryTamil, task.taskEnglish, task.taskSinhala, task.taskTamil, task.taskDescriptionEnglish, task.taskDescriptionSinhala, task.taskDescriptionTamil ];
+
+        // Ensure that the values array length matches the expected column count
+        if (values.length !== 16) {
             return reject(new Error("Mismatch between column count and value count."));
         }
 

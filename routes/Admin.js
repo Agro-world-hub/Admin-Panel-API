@@ -316,4 +316,11 @@ router.post(
 )
 
 
+router.post(
+    "/add-new-task-user/:cropId/:indexId/:userId",
+    authMiddleware,
+    AdminEp.addNewTaskU
+)
+
+
 module.exports = router;
