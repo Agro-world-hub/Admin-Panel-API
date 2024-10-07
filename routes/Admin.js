@@ -296,7 +296,8 @@ router.get(
 );
 
 router.post(
-    "/post-message/:postId",
+    "/send-message/:chatId",
+    authMiddleware,
     AdminEp.sendMessage
 );
 

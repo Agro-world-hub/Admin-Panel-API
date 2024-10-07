@@ -3,165 +3,165 @@ const path = require("path");
 const { Upload } = require("@aws-sdk/lib-storage");
 
 exports.loginAdmin = (email) => {
-    return new Promise((resolve, reject) => {
-        const sql = "SELECT * FROM adminusers WHERE mail = ?";
-        db.query(sql, [email], (err, results) => {
-            if (err) {
-                reject(err);
-            } else {
-                resolve(results);
-            }
-        });
+  return new Promise((resolve, reject) => {
+    const sql = "SELECT * FROM adminusers WHERE mail = ?";
+    db.query(sql, [email], (err, results) => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(results);
+      }
     });
+  });
 };
 
 exports.getAllAdminUsers = (limit, offset) => {
-    return new Promise((resolve, reject) => {
-        const countSql = "SELECT COUNT(*) as total FROM adminusers";
-        const dataSql =
-            "SELECT * FROM adminusers ORDER BY created_at DESC LIMIT ? OFFSET ?";
+  return new Promise((resolve, reject) => {
+    const countSql = "SELECT COUNT(*) as total FROM adminusers";
+    const dataSql =
+      "SELECT * FROM adminusers ORDER BY created_at DESC LIMIT ? OFFSET ?";
 
-        db.query(countSql, (countErr, countResults) => {
-            if (countErr) {
-                reject(countErr);
-            } else {
-                db.query(dataSql, [limit, offset], (dataErr, dataResults) => {
-                    if (dataErr) {
-                        reject(dataErr);
-                    } else {
-                        resolve({
-                            total: countResults[0].total,
-                            items: dataResults,
-                        });
-                    }
-                });
-            }
+    db.query(countSql, (countErr, countResults) => {
+      if (countErr) {
+        reject(countErr);
+      } else {
+        db.query(dataSql, [limit, offset], (dataErr, dataResults) => {
+          if (dataErr) {
+            reject(dataErr);
+          } else {
+            resolve({
+              total: countResults[0].total,
+              items: dataResults,
+            });
+          }
         });
+      }
     });
+  });
 };
 
 exports.adminCreateUser = (firstName, lastName, phoneNumber, NICnumber) => {
-    return new Promise((resolve, reject) => {
-        const sql =
-            "INSERT INTO users (`firstName`, `lastName`, `phoneNumber`, `NICnumber`) VALUES (?)";
-        const values = [firstName, lastName, phoneNumber, NICnumber];
+  return new Promise((resolve, reject) => {
+    const sql =
+      "INSERT INTO users (`firstName`, `lastName`, `phoneNumber`, `NICnumber`) VALUES (?)";
+    const values = [firstName, lastName, phoneNumber, NICnumber];
 
-        db.query(sql, [values], (err, results) => {
-            if (err) {
-                reject(err);
-            } else {
-                resolve(results);
-            }
-        });
+    db.query(sql, [values], (err, results) => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(results);
+      }
     });
+  });
 };
 
 exports.getAllUsers = (limit, offset, searchNIC) => {
-    return new Promise((resolve, reject) => {
-        let countSql = "SELECT COUNT(*) as total FROM users";
-        let dataSql = "SELECT * FROM users";
-        const params = [];
+  return new Promise((resolve, reject) => {
+    let countSql = "SELECT COUNT(*) as total FROM users";
+    let dataSql = "SELECT * FROM users";
+    const params = [];
 
-        // Add search condition for NICnumber if provided
-        if (searchNIC) {
-            countSql += " WHERE users.NICnumber LIKE ?";
-            dataSql += " WHERE users.NICnumber LIKE ?";
-            params.push(`%${searchNIC}%`);
+    // Add search condition for NICnumber if provided
+    if (searchNIC) {
+      countSql += " WHERE users.NICnumber LIKE ?";
+      dataSql += " WHERE users.NICnumber LIKE ?";
+      params.push(`%${searchNIC}%`);
+    }
+
+    // Add order, limit, and offset clauses
+    dataSql += " ORDER BY created_at DESC LIMIT ? OFFSET ?";
+    params.push(limit, offset);
+
+    // Execute the count query
+    db.query(countSql, params, (countErr, countResults) => {
+      if (countErr) {
+        return reject(countErr);
+      }
+
+      const total = countResults[0].total;
+
+      // Execute the data query
+      db.query(dataSql, params, (dataErr, dataResults) => {
+        if (dataErr) {
+          return reject(dataErr);
         }
 
-        // Add order, limit, and offset clauses
-        dataSql += " ORDER BY created_at DESC LIMIT ? OFFSET ?";
-        params.push(limit, offset);
-
-        // Execute the count query
-        db.query(countSql, params, (countErr, countResults) => {
-            if (countErr) {
-                return reject(countErr);
-            }
-
-            const total = countResults[0].total;
-
-            // Execute the data query
-            db.query(dataSql, params, (dataErr, dataResults) => {
-                if (dataErr) {
-                    return reject(dataErr);
-                }
-
-                // Process each user's image
-                const processedDataResults = dataResults.map((user) => {
-                    if (user.profileImage) {
-                        const base64Image = Buffer.from(user.profileImage).toString(
-                            "base64"
-                        );
-                        const mimeType = "image/png"; // Adjust the MIME type if needed
-                        user.profileImage = `data:${mimeType};base64,${base64Image}`;
-                    }
-                    return user;
-                });
-
-                // Resolve with total count and the processed results
-                resolve({
-                    total: total,
-                    items: processedDataResults,
-                });
-            });
+        // Process each user's image
+        const processedDataResults = dataResults.map((user) => {
+          if (user.profileImage) {
+            const base64Image = Buffer.from(user.profileImage).toString(
+              "base64"
+            );
+            const mimeType = "image/png"; // Adjust the MIME type if needed
+            user.profileImage = `data:${mimeType};base64,${base64Image}`;
+          }
+          return user;
         });
+
+        // Resolve with total count and the processed results
+        resolve({
+          total: total,
+          items: processedDataResults,
+        });
+      });
     });
+  });
 };
 
-exports.createCropCallender = async(
-    cropName,
-    sinhalaCropName,
-    tamilCropName,
-    variety,
-    sinhalaVariety,
-    tamilVariety,
-    cultivationMethod,
-    natureOfCultivation,
-    cropDuration,
-    cropCategory,
-    specialNotes,
-    sinhalaSpecialNotes,
-    tamilSpecialNotes,
-    suitableAreas,
-    cropColor,
-    imageBuffer
+exports.createCropCallender = async (
+  cropName,
+  sinhalaCropName,
+  tamilCropName,
+  variety,
+  sinhalaVariety,
+  tamilVariety,
+  cultivationMethod,
+  natureOfCultivation,
+  cropDuration,
+  cropCategory,
+  specialNotes,
+  sinhalaSpecialNotes,
+  tamilSpecialNotes,
+  suitableAreas,
+  cropColor,
+  imageBuffer
 ) => {
-    return new Promise((resolve, reject) => {
-        const sql =
-            "INSERT INTO cropcalender (cropName, sinhalaCropName, tamilCropName, variety, sinhalaVariety, tamilVariety, cultivationMethod, natureOfCultivation, cropDuration,Category, specialNotes, sinhalaSpecialNotes, tamilSpecialNotes, suitableAreas,cropColor,image) VALUES (?, ?, ?, ?, ?, ?, ?,?,?,?,?,?,?,?,?,?)";
-        const values = [
-            cropName,
-            sinhalaCropName,
-            tamilCropName,
-            variety,
-            sinhalaVariety,
-            tamilVariety,
-            cultivationMethod,
-            natureOfCultivation,
-            cropDuration,
-            cropCategory,
-            specialNotes,
-            sinhalaSpecialNotes,
-            tamilSpecialNotes,
-            suitableAreas,
-            cropColor,
-            imageBuffer,
-        ];
+  return new Promise((resolve, reject) => {
+    const sql =
+      "INSERT INTO cropcalender (cropName, sinhalaCropName, tamilCropName, variety, sinhalaVariety, tamilVariety, cultivationMethod, natureOfCultivation, cropDuration,Category, specialNotes, sinhalaSpecialNotes, tamilSpecialNotes, suitableAreas,cropColor,image) VALUES (?, ?, ?, ?, ?, ?, ?,?,?,?,?,?,?,?,?,?)";
+    const values = [
+      cropName,
+      sinhalaCropName,
+      tamilCropName,
+      variety,
+      sinhalaVariety,
+      tamilVariety,
+      cultivationMethod,
+      natureOfCultivation,
+      cropDuration,
+      cropCategory,
+      specialNotes,
+      sinhalaSpecialNotes,
+      tamilSpecialNotes,
+      suitableAreas,
+      cropColor,
+      imageBuffer,
+    ];
 
-        db.query(sql, values, (err, results) => {
-            if (err) {
-                reject(err);
-            } else {
-                resolve(results.insertId);
-            }
-        });
+    db.query(sql, values, (err, results) => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(results.insertId);
+      }
     });
+  });
 };
 
 exports.insertXLSXData = (cropId, data) => {
-    return new Promise((resolve, reject) => {
-        const sql = `
+  return new Promise((resolve, reject) => {
+    const sql = `
             INSERT INTO cropcalendardays 
             (cropId, taskIndex, days, taskTypeEnglish, taskTypeSinhala, taskTypeTamil, 
             taskCategoryEnglish, taskCategorySinhala, taskCategoryTamil, 
@@ -169,206 +169,206 @@ exports.insertXLSXData = (cropId, data) => {
             taskDescriptionEnglish, taskDescriptionSinhala, taskDescriptionTamil) 
             VALUES ?`;
 
-        const values = data.map((row) => [
-            cropId,
-            row["Task index"],
-            row.Day,
-            row["Task type (English)"],
-            row["Task type (Sinhala)"],
-            row["Task type (Tamil)"],
-            row["Task Category (English)"],
-            row["Task Category (Sinhala)"],
-            row["Task Category (Tamil)"],
-            row["Task (English)"],
-            row["Task (Sinhala)"],
-            row["Task (Tamil)"],
-            row["Task description (English)"],
-            row["Task description (Sinhala)"],
-            row["Task description (Tamil)"],
-        ]);
+    const values = data.map((row) => [
+      cropId,
+      row["Task index"],
+      row.Day,
+      row["Task type (English)"],
+      row["Task type (Sinhala)"],
+      row["Task type (Tamil)"],
+      row["Task Category (English)"],
+      row["Task Category (Sinhala)"],
+      row["Task Category (Tamil)"],
+      row["Task (English)"],
+      row["Task (Sinhala)"],
+      row["Task (Tamil)"],
+      row["Task description (English)"],
+      row["Task description (Sinhala)"],
+      row["Task description (Tamil)"],
+    ]);
 
-        db.query(sql, [values], (err, result) => {
-            if (err) {
-                reject(err);
-            } else {
-                resolve(result.affectedRows);
-            }
-        });
+    db.query(sql, [values], (err, result) => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(result.affectedRows);
+      }
     });
+  });
 };
 
 exports.getAllCropCalendars = (limit, offset) => {
-    return new Promise((resolve, reject) => {
-        const countSql = "SELECT COUNT(*) as total FROM cropcalender";
-        const dataSql =
-            "SELECT * FROM cropCalender ORDER BY createdAt DESC LIMIT ? OFFSET ?";
+  return new Promise((resolve, reject) => {
+    const countSql = "SELECT COUNT(*) as total FROM cropcalender";
+    const dataSql =
+      "SELECT * FROM cropCalender ORDER BY createdAt DESC LIMIT ? OFFSET ?";
 
-        db.query(countSql, (countErr, countResults) => {
-            if (countErr) {
-                reject(countErr);
-            } else {
-                db.query(dataSql, [limit, offset], (dataErr, dataResults) => {
-                    if (dataErr) {
-                        reject(dataErr);
-                    } else {
-                        resolve({
-                            total: countResults[0].total,
-                            items: dataResults,
-                        });
-                    }
-                });
-            }
+    db.query(countSql, (countErr, countResults) => {
+      if (countErr) {
+        reject(countErr);
+      } else {
+        db.query(dataSql, [limit, offset], (dataErr, dataResults) => {
+          if (dataErr) {
+            reject(dataErr);
+          } else {
+            resolve({
+              total: countResults[0].total,
+              items: dataResults,
+            });
+          }
         });
+      }
     });
+  });
 };
 
 exports.createOngoingCultivations = (userId, cropCalenderId) => {
-    return new Promise((resolve, reject) => {
-        const sql =
-            "INSERT INTO ongoingcultivations (`userId`, `cropCalenderId`) VALUES (?)";
-        const values = [userId, cropCalenderId];
+  return new Promise((resolve, reject) => {
+    const sql =
+      "INSERT INTO ongoingcultivations (`userId`, `cropCalenderId`) VALUES (?)";
+    const values = [userId, cropCalenderId];
 
-        db.query(sql, [values], (err, results) => {
-            if (err) {
-                reject(err);
-            } else {
-                resolve(results);
-            }
-        });
+    db.query(sql, [values], (err, results) => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(results);
+      }
     });
+  });
 };
 
-exports.createNews = async(
-    titleEnglish,
-    titleSinhala,
-    titleTamil,
-    descriptionEnglish,
-    descriptionSinhala,
-    descriptionTamil,
-    imageBuffer, // accept the image buffer
-    status,
-    createdBy
+exports.createNews = async (
+  titleEnglish,
+  titleSinhala,
+  titleTamil,
+  descriptionEnglish,
+  descriptionSinhala,
+  descriptionTamil,
+  imageBuffer, // accept the image buffer
+  status,
+  createdBy
 ) => {
-    return new Promise((resolve, reject) => {
-        const sql =
-            "INSERT INTO content (titleEnglish, titleSinhala, titleTamil, descriptionEnglish, descriptionSinhala, descriptionTamil, image, status, createdBy) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
-        const values = [
-            titleEnglish,
-            titleSinhala,
-            titleTamil,
-            descriptionEnglish,
-            descriptionSinhala,
-            descriptionTamil,
-            imageBuffer, // pass the buffer as image
-            status,
-            createdBy,
-        ];
+  return new Promise((resolve, reject) => {
+    const sql =
+      "INSERT INTO content (titleEnglish, titleSinhala, titleTamil, descriptionEnglish, descriptionSinhala, descriptionTamil, image, status, createdBy) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
+    const values = [
+      titleEnglish,
+      titleSinhala,
+      titleTamil,
+      descriptionEnglish,
+      descriptionSinhala,
+      descriptionTamil,
+      imageBuffer, // pass the buffer as image
+      status,
+      createdBy,
+    ];
 
-        db.query(sql, values, (err, results) => {
-            if (err) {
-                reject(err);
-            } else {
-                resolve(results.insertId);
-            }
-        });
+    db.query(sql, values, (err, results) => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(results.insertId);
+      }
     });
+  });
 };
 
-exports.getAllNews = async(status, createdAt, limit, offset) => {
-    return new Promise((resolve, reject) => {
-        let countsSql = "SELECT COUNT(*) as total FROM content";
-        let dataSql = "SELECT * FROM content";
-        let whereClauses = [];
-        let queryParams = [];
+exports.getAllNews = async (status, createdAt, limit, offset) => {
+  return new Promise((resolve, reject) => {
+    let countsSql = "SELECT COUNT(*) as total FROM content";
+    let dataSql = "SELECT * FROM content";
+    let whereClauses = [];
+    let queryParams = [];
 
-        if (status) {
-            whereClauses.push("status = ?");
-            queryParams.push(status);
+    if (status) {
+      whereClauses.push("status = ?");
+      queryParams.push(status);
+    }
+
+    if (createdAt) {
+      whereClauses.push("DATE(createdAt) = ?");
+      queryParams.push(createdAt);
+    }
+
+    if (whereClauses.length > 0) {
+      const whereClause = " WHERE " + whereClauses.join(" AND ");
+      countsSql += whereClause;
+      dataSql += whereClause;
+    }
+
+    dataSql += " ORDER BY createdAt DESC";
+    dataSql += " LIMIT ? OFFSET ?";
+    queryParams.push(limit, offset);
+
+    console.log(
+      "Executing count query:",
+      countsSql,
+      "with params:",
+      queryParams.slice(0, -2)
+    );
+    db.query(countsSql, queryParams.slice(0, -2), (countErr, countResults) => {
+      if (countErr) {
+        console.error("Error in count query:", countErr);
+        reject(countErr);
+        return;
+      }
+
+      const total = countResults[0].total;
+      console.log("Total count:", total);
+
+      if (total === 0) {
+        resolve({ items: [], total: 0 });
+        return;
+      }
+
+      console.log(
+        "Executing data query:",
+        dataSql,
+        "with params:",
+        queryParams
+      );
+      db.query(dataSql, queryParams, (dataErr, dataResults) => {
+        if (dataErr) {
+          console.error("Error in data query:", dataErr);
+          reject(dataErr);
+          return;
         }
 
-        if (createdAt) {
-            whereClauses.push("DATE(createdAt) = ?");
-            queryParams.push(createdAt);
-        }
-
-        if (whereClauses.length > 0) {
-            const whereClause = " WHERE " + whereClauses.join(" AND ");
-            countsSql += whereClause;
-            dataSql += whereClause;
-        }
-
-        dataSql += " ORDER BY createdAt DESC";
-        dataSql += " LIMIT ? OFFSET ?";
-        queryParams.push(limit, offset);
-
-        console.log(
-            "Executing count query:",
-            countsSql,
-            "with params:",
-            queryParams.slice(0, -2)
-        );
-        db.query(countsSql, queryParams.slice(0, -2), (countErr, countResults) => {
-            if (countErr) {
-                console.error("Error in count query:", countErr);
-                reject(countErr);
-                return;
-            }
-
-            const total = countResults[0].total;
-            console.log("Total count:", total);
-
-            if (total === 0) {
-                resolve({ items: [], total: 0 });
-                return;
-            }
-
-            console.log(
-                "Executing data query:",
-                dataSql,
-                "with params:",
-                queryParams
-            );
-            db.query(dataSql, queryParams, (dataErr, dataResults) => {
-                if (dataErr) {
-                    console.error("Error in data query:", dataErr);
-                    reject(dataErr);
-                    return;
-                }
-
-                // Convert the image blob to base64 and include in the response
-                const newsItems = dataResults.map((news) => {
-                    if (news.image) {
-                        // Convert the image (stored as longblob) to a base64 string
-                        news.image = `data:image/jpeg;base64,${news.image.toString(
+        // Convert the image blob to base64 and include in the response
+        const newsItems = dataResults.map((news) => {
+          if (news.image) {
+            // Convert the image (stored as longblob) to a base64 string
+            news.image = `data:image/jpeg;base64,${news.image.toString(
               "base64"
             )}`;
-                    }
-                    return news;
-                });
-
-                console.log("Data query results:", newsItems.length);
-                resolve({ items: newsItems, total: total });
-            });
+          }
+          return news;
         });
+
+        console.log("Data query results:", newsItems.length);
+        resolve({ items: newsItems, total: total });
+      });
     });
+  });
 };
 
-exports.deleteCropCalender = async(id) => {
-    return new Promise((resolve, reject) => {
-        const sql = "DELETE FROM cropcalender WHERE id = ?";
-        db.query(sql, [id], (err, results) => {
-            if (err) {
-                reject(err);
-            } else {
-                resolve(results.affectedRows);
-            }
-        });
+exports.deleteCropCalender = async (id) => {
+  return new Promise((resolve, reject) => {
+    const sql = "DELETE FROM cropcalender WHERE id = ?";
+    db.query(sql, [id], (err, results) => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(results.affectedRows);
+      }
     });
+  });
 };
 
-exports.updateCropCalender = async(id, updateData, imageData) => {
-    return new Promise((resolve, reject) => {
-        let sql = `
+exports.updateCropCalender = async (id, updateData, imageData) => {
+  return new Promise((resolve, reject) => {
+    let sql = `
             UPDATE cropcalender 
             SET 
                 cropName = ?,
@@ -387,231 +387,231 @@ exports.updateCropCalender = async(id, updateData, imageData) => {
                 cropColor = ?
         `;
 
-        // Update the values based on the provided data
-        let values = [
-            updateData.cropName,
-            updateData.sinhalaCropName,
-            updateData.tamilCropName,
-            updateData.variety,
-            updateData.sinhalaVariety,
-            updateData.tamilVariety,
-            updateData.CultivationMethod,
-            updateData.NatureOfCultivation,
-            updateData.CropDuration,
-            updateData.SpecialNotes,
-            updateData.sinhalaSpecialNotes,
-            updateData.SpecialNotes,
-            updateData.tamilSpecialNotes,
-            updateData.cropColor,
-        ];
+    // Update the values based on the provided data
+    let values = [
+      updateData.cropName,
+      updateData.sinhalaCropName,
+      updateData.tamilCropName,
+      updateData.variety,
+      updateData.sinhalaVariety,
+      updateData.tamilVariety,
+      updateData.CultivationMethod,
+      updateData.NatureOfCultivation,
+      updateData.CropDuration,
+      updateData.SpecialNotes,
+      updateData.sinhalaSpecialNotes,
+      updateData.SpecialNotes,
+      updateData.tamilSpecialNotes,
+      updateData.cropColor,
+    ];
 
-        // Append the image data if available
-        if (imageData) {
-            sql += `, image = ?`;
-            values.push(imageData);
-        }
+    // Append the image data if available
+    if (imageData) {
+      sql += `, image = ?`;
+      values.push(imageData);
+    }
 
-        // Complete the SQL query with the WHERE clause
-        sql += ` WHERE id = ?`;
-        values.push(id);
+    // Complete the SQL query with the WHERE clause
+    sql += ` WHERE id = ?`;
+    values.push(id);
 
-        // Execute the query
-        db.query(sql, values, (err, results) => {
-            if (err) {
-                reject(err);
-            } else {
-                resolve(results.affectedRows);
-            }
-        });
+    // Execute the query
+    db.query(sql, values, (err, results) => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(results.affectedRows);
+      }
     });
+  });
 };
 
 exports.getNewsById = (id) => {
-    return new Promise((resolve, reject) => {
-        const sql = "SELECT * FROM content WHERE id = ?";
-        db.query(sql, [id], (err, results) => {
-            if (err) {
-                reject(err);
-            } else {
-                resolve(results);
-            }
-        });
+  return new Promise((resolve, reject) => {
+    const sql = "SELECT * FROM content WHERE id = ?";
+    db.query(sql, [id], (err, results) => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(results);
+      }
     });
+  });
 };
 
 exports.getCropCalenderById = (id) => {
-    return new Promise((resolve, reject) => {
-        const sql = "SELECT * FROM cropcalender WHERE id = ?";
-        db.query(sql, [id], (err, results) => {
-            if (err) {
-                reject(err);
-            } else {
-                resolve(results);
-            }
-        });
+  return new Promise((resolve, reject) => {
+    const sql = "SELECT * FROM cropcalender WHERE id = ?";
+    db.query(sql, [id], (err, results) => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(results);
+      }
     });
+  });
 };
 
 exports.getNewsStatusById = (id) => {
-    return new Promise((resolve, reject) => {
-        const sql = "SELECT status FROM content WHERE id = ?";
-        db.query(sql, [id], (err, results) => {
-            if (err) {
-                reject(err);
-            } else {
-                resolve(results);
-            }
-        });
+  return new Promise((resolve, reject) => {
+    const sql = "SELECT status FROM content WHERE id = ?";
+    db.query(sql, [id], (err, results) => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(results);
+      }
     });
+  });
 };
 
 exports.updateNewsStatusById = (id, status) => {
-    return new Promise((resolve, reject) => {
-        const sql = "UPDATE content SET status = ? WHERE id = ?";
-        db.query(sql, [status, id], (err, results) => {
-            if (err) {
-                reject(err);
-            } else {
-                resolve(results);
-            }
-        });
+  return new Promise((resolve, reject) => {
+    const sql = "UPDATE content SET status = ? WHERE id = ?";
+    db.query(sql, [status, id], (err, results) => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(results);
+      }
     });
+  });
 };
 
 exports.createMarketPrice = (
-    titleEnglish,
-    titleSinhala,
-    titleTamil,
-    descriptionEnglish,
-    descriptionSinhala,
-    descriptionTamil,
-    imageBuffer,
-    status,
-    price,
-    createdBy
+  titleEnglish,
+  titleSinhala,
+  titleTamil,
+  descriptionEnglish,
+  descriptionSinhala,
+  descriptionTamil,
+  imageBuffer,
+  status,
+  price,
+  createdBy
 ) => {
-    return new Promise((resolve, reject) => {
-        const sql =
-            "INSERT INTO marketprice (titleEnglish, titleSinhala, titleTamil, descriptionEnglish, descriptionSinhala, descriptionTamil, image, status, price, createdBy) VALUES (?,?,?,?,?,?,?,?,?,?)";
-        const values = [
-            titleEnglish,
-            titleSinhala,
-            titleTamil,
-            descriptionEnglish,
-            descriptionSinhala,
-            descriptionTamil,
-            imageBuffer,
-            status,
-            price,
-            createdBy,
-        ];
+  return new Promise((resolve, reject) => {
+    const sql =
+      "INSERT INTO marketprice (titleEnglish, titleSinhala, titleTamil, descriptionEnglish, descriptionSinhala, descriptionTamil, image, status, price, createdBy) VALUES (?,?,?,?,?,?,?,?,?,?)";
+    const values = [
+      titleEnglish,
+      titleSinhala,
+      titleTamil,
+      descriptionEnglish,
+      descriptionSinhala,
+      descriptionTamil,
+      imageBuffer,
+      status,
+      price,
+      createdBy,
+    ];
 
-        db.query(sql, values, (err, results) => {
-            if (err) {
-                reject(err);
-            } else {
-                resolve(results.insertId);
-            }
-        });
+    db.query(sql, values, (err, results) => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(results.insertId);
+      }
     });
+  });
 };
 
 exports.getAllMarketPrice = (status, createdAt, limit, offset) => {
-    return new Promise((resolve, reject) => {
-        let countsSql = "SELECT COUNT(*) as total FROM marketprice";
-        let dataSql = "SELECT * FROM marketprice";
-        let whereClauses = [];
-        let queryParams = [];
+  return new Promise((resolve, reject) => {
+    let countsSql = "SELECT COUNT(*) as total FROM marketprice";
+    let dataSql = "SELECT * FROM marketprice";
+    let whereClauses = [];
+    let queryParams = [];
 
-        if (status) {
-            whereClauses.push("status = ?");
-            queryParams.push(status);
+    if (status) {
+      whereClauses.push("status = ?");
+      queryParams.push(status);
+    }
+
+    if (createdAt) {
+      whereClauses.push("DATE(createdAt) = ?");
+      queryParams.push(createdAt);
+    }
+
+    if (whereClauses.length > 0) {
+      const whereClause = " WHERE " + whereClauses.join(" AND ");
+      countsSql += whereClause;
+      dataSql += whereClause;
+    }
+
+    dataSql += " ORDER BY createdAt DESC";
+    dataSql += " LIMIT ? OFFSET ?";
+    queryParams.push(limit, offset);
+
+    db.query(countsSql, queryParams.slice(0, -2), (countErr, countResults) => {
+      if (countErr) {
+        return reject(countErr);
+      }
+
+      const total = countResults[0].total;
+
+      db.query(dataSql, queryParams, (dataErr, dataResults) => {
+        if (dataErr) {
+          return reject(dataErr);
         }
 
-        if (createdAt) {
-            whereClauses.push("DATE(createdAt) = ?");
-            queryParams.push(createdAt);
-        }
-
-        if (whereClauses.length > 0) {
-            const whereClause = " WHERE " + whereClauses.join(" AND ");
-            countsSql += whereClause;
-            dataSql += whereClause;
-        }
-
-        dataSql += " ORDER BY createdAt DESC";
-        dataSql += " LIMIT ? OFFSET ?";
-        queryParams.push(limit, offset);
-
-        db.query(countsSql, queryParams.slice(0, -2), (countErr, countResults) => {
-            if (countErr) {
-                return reject(countErr);
-            }
-
-            const total = countResults[0].total;
-
-            db.query(dataSql, queryParams, (dataErr, dataResults) => {
-                if (dataErr) {
-                    return reject(dataErr);
-                }
-
-                resolve({ total, dataResults });
-            });
-        });
+        resolve({ total, dataResults });
+      });
     });
+  });
 };
 
 exports.deleteMarketPriceById = (id) => {
-    return new Promise((resolve, reject) => {
-        const sql = "DELETE FROM marketprice WHERE id = ?";
-        db.query(sql, [id], (err, results) => {
-            if (err) {
-                return reject(err);
-            }
-            resolve(results);
-        });
+  return new Promise((resolve, reject) => {
+    const sql = "DELETE FROM marketprice WHERE id = ?";
+    db.query(sql, [id], (err, results) => {
+      if (err) {
+        return reject(err);
+      }
+      resolve(results);
     });
+  });
 };
 
 exports.getMarketPriceStatusById = (id) => {
-    return new Promise((resolve, reject) => {
-        const sql = "SELECT status FROM marketprice WHERE id = ?";
-        db.query(sql, [id], (err, results) => {
-            if (err) {
-                return reject(err);
-            }
-            resolve(results);
-        });
+  return new Promise((resolve, reject) => {
+    const sql = "SELECT status FROM marketprice WHERE id = ?";
+    db.query(sql, [id], (err, results) => {
+      if (err) {
+        return reject(err);
+      }
+      resolve(results);
     });
+  });
 };
 
 exports.updateMarketPriceStatusById = (id, newStatus) => {
-    return new Promise((resolve, reject) => {
-        const sql = "UPDATE marketprice SET status = ? WHERE id = ?";
-        db.query(sql, [newStatus, id], (err, results) => {
-            if (err) {
-                return reject(err);
-            }
-            resolve(results);
-        });
+  return new Promise((resolve, reject) => {
+    const sql = "UPDATE marketprice SET status = ? WHERE id = ?";
+    db.query(sql, [newStatus, id], (err, results) => {
+      if (err) {
+        return reject(err);
+      }
+      resolve(results);
     });
+  });
 };
 
 exports.getMarketPriceById = (id) => {
-    return new Promise((resolve, reject) => {
-        const sql = "SELECT * FROM marketprice WHERE id = ?";
-        db.query(sql, [id], (err, results) => {
-            if (err) {
-                return reject(err);
-            }
-            resolve(results);
-        });
+  return new Promise((resolve, reject) => {
+    const sql = "SELECT * FROM marketprice WHERE id = ?";
+    db.query(sql, [id], (err, results) => {
+      if (err) {
+        return reject(err);
+      }
+      resolve(results);
     });
+  });
 };
 
 exports.editMarketPrice = (id, data) => {
-    return new Promise((resolve, reject) => {
-        let sql = `
+  return new Promise((resolve, reject) => {
+    let sql = `
             UPDATE marketprice 
             SET 
                 titleEnglish = ?, 
@@ -622,41 +622,41 @@ exports.editMarketPrice = (id, data) => {
                 descriptionTamil = ?,
                 price = ?
         `;
-        let values = [
-            data.titleEnglish,
-            data.titleSinhala,
-            data.titleTamil,
-            data.descriptionEnglish,
-            data.descriptionSinhala,
-            data.descriptionTamil,
-            data.price,
-        ];
+    let values = [
+      data.titleEnglish,
+      data.titleSinhala,
+      data.titleTamil,
+      data.descriptionEnglish,
+      data.descriptionSinhala,
+      data.descriptionTamil,
+      data.price,
+    ];
 
-        if (data.imageData) {
-            sql += `, image = ?`;
-            values.push(data.imageData);
-        }
+    if (data.imageData) {
+      sql += `, image = ?`;
+      values.push(data.imageData);
+    }
 
-        sql += ` WHERE id = ?`;
-        values.push(id);
+    sql += ` WHERE id = ?`;
+    values.push(id);
 
-        db.query(sql, values, (err, results) => {
-            if (err) {
-                return reject(err);
-            }
-            resolve(results);
-        });
+    db.query(sql, values, (err, results) => {
+      if (err) {
+        return reject(err);
+      }
+      resolve(results);
     });
+  });
 };
 
 exports.getAllOngoingCultivations = (searchNIC, limit, offset) => {
-    return new Promise((resolve, reject) => {
-        let countSql = `
+  return new Promise((resolve, reject) => {
+    let countSql = `
             SELECT COUNT(*) as total 
             FROM ongoingCultivations 
             JOIN users ON ongoingCultivations.userId = users.id
         `;
-        let dataSql = `
+    let dataSql = `
             SELECT 
                 ongoingCultivations.id AS cultivationId, 
                 users.id,
@@ -668,38 +668,38 @@ exports.getAllOngoingCultivations = (searchNIC, limit, offset) => {
             JOIN 
                 users ON ongoingCultivations.userId = users.id
         `;
-        const params = [];
+    const params = [];
 
-        if (searchNIC) {
-            countSql += " WHERE users.NICnumber LIKE ?";
-            dataSql += " WHERE users.NICnumber LIKE ?";
-            params.push(`%${searchNIC}%`);
+    if (searchNIC) {
+      countSql += " WHERE users.NICnumber LIKE ?";
+      dataSql += " WHERE users.NICnumber LIKE ?";
+      params.push(`%${searchNIC}%`);
+    }
+
+    dataSql += " ORDER BY ongoingCultivations.createdAt DESC LIMIT ? OFFSET ?";
+    params.push(limit, offset);
+
+    // Fetch total count
+    db.query(countSql, params.slice(0, -2), (countErr, countResults) => {
+      if (countErr) {
+        return reject(countErr);
+      }
+
+      const total = countResults[0].total;
+
+      // Fetch paginated data
+      db.query(dataSql, params, (dataErr, dataResults) => {
+        if (dataErr) {
+          return reject(dataErr);
         }
-
-        dataSql += " ORDER BY ongoingCultivations.createdAt DESC LIMIT ? OFFSET ?";
-        params.push(limit, offset);
-
-        // Fetch total count
-        db.query(countSql, params.slice(0, -2), (countErr, countResults) => {
-            if (countErr) {
-                return reject(countErr);
-            }
-
-            const total = countResults[0].total;
-
-            // Fetch paginated data
-            db.query(dataSql, params, (dataErr, dataResults) => {
-                if (dataErr) {
-                    return reject(dataErr);
-                }
-                resolve({ total, items: dataResults });
-            });
-        });
+        resolve({ total, items: dataResults });
+      });
     });
+  });
 };
 
 exports.getOngoingCultivationsWithUserDetails = () => {
-    const sql = `
+  const sql = `
         SELECT 
             ongoingCultivations.id AS cultivationId, 
             users.firstName, 
@@ -710,19 +710,19 @@ exports.getOngoingCultivationsWithUserDetails = () => {
             users ON ongoingCultivations.userId = users.id;
     `;
 
-    return new Promise((resolve, reject) => {
-        db.query(sql, (err, results) => {
-            if (err) {
-                reject("Error fetching ongoing cultivations: " + err);
-            } else {
-                resolve(results);
-            }
-        });
+  return new Promise((resolve, reject) => {
+    db.query(sql, (err, results) => {
+      if (err) {
+        reject("Error fetching ongoing cultivations: " + err);
+      } else {
+        resolve(results);
+      }
     });
+  });
 };
 
 exports.getOngoingCultivationsById = (id) => {
-    const sql = `
+  const sql = `
         SELECT 
             ongoingcultivationscrops.id AS ongoingcultivationscropsid, 
             ongoingCultivationId,
@@ -739,20 +739,20 @@ exports.getOngoingCultivationsById = (id) => {
         WHERE
             ongoingCultivationId = ?`;
 
-    return new Promise((resolve, reject) => {
-        db.query(sql, [id], (err, results) => {
-            if (err) {
-                reject("Error fetching cultivation crops by ID: " + err);
-            } else {
-                resolve(results);
-            }
-        });
+  return new Promise((resolve, reject) => {
+    db.query(sql, [id], (err, results) => {
+      if (err) {
+        reject("Error fetching cultivation crops by ID: " + err);
+      } else {
+        resolve(results);
+      }
     });
+  });
 };
 
 exports.getFixedAssetsByCategory = (userId, category) => {
-    const validCategories = {
-        "Building and Infrastructures": `
+  const validCategories = {
+    "Building and Infrastructures": `
             SELECT 
                 fixedasset.id AS fixedassetId,
                 fixedasset.category AS fixedassetcategory,
@@ -768,7 +768,7 @@ exports.getFixedAssetsByCategory = (userId, category) => {
             WHERE 
                 fixedasset.userId = ?;
         `,
-        Land: `
+    Land: `
             SELECT 
                 fixedasset.id AS fixedassetId,
                 fixedasset.category AS fixedassetcategory,
@@ -785,7 +785,7 @@ exports.getFixedAssetsByCategory = (userId, category) => {
             WHERE 
                 fixedasset.userId = ?;
         `,
-        "Machinery and Vehicles": `
+    "Machinery and Vehicles": `
             SELECT
                 fixedasset.id AS fixedassetId,
                 fixedasset.category AS fixedassetcategory,
@@ -806,7 +806,7 @@ exports.getFixedAssetsByCategory = (userId, category) => {
             WHERE 
                 fixedasset.userId = ?;
         `,
-        "Tools and Equipments": `
+    "Tools and Equipments": `
             SELECT
                 fixedasset.id AS fixedassetId,
                 fixedasset.category AS fixedassetcategory,
@@ -827,56 +827,56 @@ exports.getFixedAssetsByCategory = (userId, category) => {
             WHERE 
                 fixedasset.userId = ?;
         `,
-    };
+  };
 
-    const sql = validCategories[category];
+  const sql = validCategories[category];
 
-    if (!sql) {
-        return Promise.reject("Invalid category.");
-    }
+  if (!sql) {
+    return Promise.reject("Invalid category.");
+  }
 
-    return new Promise((resolve, reject) => {
-        db.query(sql, [userId], (err, results) => {
-            if (err) {
-                reject("Error fetching assets: " + err);
-            } else {
-                resolve(results);
-            }
-        });
+  return new Promise((resolve, reject) => {
+    db.query(sql, [userId], (err, results) => {
+      if (err) {
+        reject("Error fetching assets: " + err);
+      } else {
+        resolve(results);
+      }
     });
+  });
 };
 
 exports.getCurrentAssetsByCategory = (userId, category) => {
-    const sql = `SELECT * FROM currentasset WHERE userId = ? AND category = ?`;
-    const values = [userId, category];
+  const sql = `SELECT * FROM currentasset WHERE userId = ? AND category = ?`;
+  const values = [userId, category];
 
-    return new Promise((resolve, reject) => {
-        db.query(sql, values, (err, results) => {
-            if (err) {
-                reject("Error fetching current assets: " + err);
-            } else {
-                resolve(results);
-            }
-        });
+  return new Promise((resolve, reject) => {
+    db.query(sql, values, (err, results) => {
+      if (err) {
+        reject("Error fetching current assets: " + err);
+      } else {
+        resolve(results);
+      }
     });
+  });
 };
 
 exports.deleteAdminUserById = (id) => {
-    const sql = "DELETE FROM adminusers WHERE id = ?";
+  const sql = "DELETE FROM adminusers WHERE id = ?";
 
-    return new Promise((resolve, reject) => {
-        db.query(sql, [id], (err, results) => {
-            if (err) {
-                reject("Error executing delete query: " + err);
-            } else {
-                resolve(results);
-            }
-        });
+  return new Promise((resolve, reject) => {
+    db.query(sql, [id], (err, results) => {
+      if (err) {
+        reject("Error executing delete query: " + err);
+      } else {
+        resolve(results);
+      }
     });
+  });
 };
 
 exports.updateAdminUserById = (id, mail, userName, role) => {
-    const sql = `
+  const sql = `
         UPDATE adminusers 
         SET 
             mail = ?, 
@@ -884,20 +884,20 @@ exports.updateAdminUserById = (id, mail, userName, role) => {
             role = ? 
         WHERE id = ?`;
 
-    return new Promise((resolve, reject) => {
-        db.query(sql, [mail, userName, role, id], (err, results) => {
-            if (err) {
-                reject("Error executing update query: " + err);
-            } else {
-                resolve(results);
-            }
-        });
+  return new Promise((resolve, reject) => {
+    db.query(sql, [mail, userName, role, id], (err, results) => {
+      if (err) {
+        reject("Error executing update query: " + err);
+      } else {
+        resolve(results);
+      }
     });
+  });
 };
 
 exports.updateAdminUser = (id, mail, userName, role) => {
-    return new Promise((resolve, reject) => {
-        const sql = `
+  return new Promise((resolve, reject) => {
+    const sql = `
             UPDATE adminusers 
             SET 
                 mail = ?, 
@@ -906,77 +906,77 @@ exports.updateAdminUser = (id, mail, userName, role) => {
             WHERE id = ?
         `;
 
-        const values = [mail, userName, role, id];
+    const values = [mail, userName, role, id];
 
-        db.query(sql, values, (err, results) => {
-            if (err) {
-                reject(err);
-            } else {
-                resolve(results);
-            }
-        });
+    db.query(sql, values, (err, results) => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(results);
+      }
     });
+  });
 };
 
 exports.getAdminUserById = (id) => {
-    return new Promise((resolve, reject) => {
-        const sql = "SELECT * FROM adminusers WHERE id = ?";
+  return new Promise((resolve, reject) => {
+    const sql = "SELECT * FROM adminusers WHERE id = ?";
 
-        db.query(sql, [id], (err, results) => {
-            if (err) {
-                reject(err);
-            } else {
-                resolve(results);
-            }
-        });
+    db.query(sql, [id], (err, results) => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(results);
+      }
     });
+  });
 };
 
 exports.getAdminPasswordById = (id) => {
-    return new Promise((resolve, reject) => {
-        const sql = "SELECT password FROM adminusers WHERE id = ?";
-        db.query(sql, [id], (err, results) => {
-            if (err) {
-                reject(err);
-            } else {
-                resolve(results);
-            }
-        });
+  return new Promise((resolve, reject) => {
+    const sql = "SELECT password FROM adminusers WHERE id = ?";
+    db.query(sql, [id], (err, results) => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(results);
+      }
     });
+  });
 };
 
 // Update the password for a given admin user
 exports.updateAdminPasswordById = (id, newPassword) => {
-    return new Promise((resolve, reject) => {
-        const sql = "UPDATE adminusers SET password = ? WHERE id = ?";
-        db.query(sql, [newPassword, id], (err, results) => {
-            if (err) {
-                reject(err);
-            } else {
-                resolve(results);
-            }
-        });
+  return new Promise((resolve, reject) => {
+    const sql = "UPDATE adminusers SET password = ? WHERE id = ?";
+    db.query(sql, [newPassword, id], (err, results) => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(results);
+      }
     });
+  });
 };
 
 exports.deletePlantCareUserById = (id) => {
-    return new Promise((resolve, reject) => {
-        const sql = "DELETE FROM users WHERE id = ?";
-        db.query(sql, [id], (err, results) => {
-            if (err) {
-                reject(err);
-            } else {
-                resolve(results);
-            }
-        });
+  return new Promise((resolve, reject) => {
+    const sql = "DELETE FROM users WHERE id = ?";
+    db.query(sql, [id], (err, results) => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(results);
+      }
     });
+  });
 };
 
 exports.updatePlantCareUserById = (userData, id) => {
-    return new Promise((resolve, reject) => {
-        const { firstName, lastName, phoneNumber, NICnumber, imageData } = userData;
+  return new Promise((resolve, reject) => {
+    const { firstName, lastName, phoneNumber, NICnumber, imageData } = userData;
 
-        let sql = `
+    let sql = `
             UPDATE users 
             SET 
                 firstName = ?, 
@@ -984,113 +984,113 @@ exports.updatePlantCareUserById = (userData, id) => {
                 phoneNumber = ?, 
                 NICnumber = ?
         `;
-        let values = [firstName, lastName, phoneNumber, NICnumber];
+    let values = [firstName, lastName, phoneNumber, NICnumber];
 
-        if (imageData) {
-            sql += `, profileImage = ?`;
-            values.push(imageData);
-        }
+    if (imageData) {
+      sql += `, profileImage = ?`;
+      values.push(imageData);
+    }
 
-        sql += ` WHERE id = ?`;
-        values.push(id);
+    sql += ` WHERE id = ?`;
+    values.push(id);
 
-        db.query(sql, values, (err, results) => {
-            if (err) {
-                reject(err);
-            } else {
-                resolve(results);
-            }
-        });
+    db.query(sql, values, (err, results) => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(results);
+      }
     });
+  });
 };
 
 exports.createPlantCareUser = (userData) => {
-    return new Promise((resolve, reject) => {
-        const { firstName, lastName, phoneNumber, NICnumber, fileBuffer } =
-        userData;
+  return new Promise((resolve, reject) => {
+    const { firstName, lastName, phoneNumber, NICnumber, fileBuffer } =
+      userData;
 
-        const sql = `
+    const sql = `
             INSERT INTO users (firstName, lastName, phoneNumber, NICnumber, profileImage) 
             VALUES (?, ?, ?, ?, ?)
         `;
-        const values = [firstName, lastName, phoneNumber, NICnumber, fileBuffer];
+    const values = [firstName, lastName, phoneNumber, NICnumber, fileBuffer];
 
-        db.query(sql, values, (err, results) => {
-            if (err) {
-                reject(err);
-            } else {
-                resolve(results.insertId); // Return the newly created user ID
-            }
-        });
+    db.query(sql, values, (err, results) => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(results.insertId); // Return the newly created user ID
+      }
     });
+  });
 };
 
 exports.getUserById = (userId) => {
-    return new Promise((resolve, reject) => {
-        const sql = "SELECT * FROM users WHERE id = ?";
-        db.query(sql, [userId], (err, results) => {
-            if (err) {
-                return reject(err);
-            }
-            if (results.length === 0) {
-                return resolve(null); // No user found
-            }
-            if (results[0].profileImage) {
-                const base64Image = Buffer.from(results[0].profileImage).toString(
-                    "base64"
-                );
-                const mimeType = "image/png"; // Adjust MIME type if necessary, depending on the image type
-                results[0].profileImage = `data:${mimeType};base64,${base64Image}`;
-            }
-            resolve(results[0]); // Return the first result
-        });
+  return new Promise((resolve, reject) => {
+    const sql = "SELECT * FROM users WHERE id = ?";
+    db.query(sql, [userId], (err, results) => {
+      if (err) {
+        return reject(err);
+      }
+      if (results.length === 0) {
+        return resolve(null); // No user found
+      }
+      if (results[0].profileImage) {
+        const base64Image = Buffer.from(results[0].profileImage).toString(
+          "base64"
+        );
+        const mimeType = "image/png"; // Adjust MIME type if necessary, depending on the image type
+        results[0].profileImage = `data:${mimeType};base64,${base64Image}`;
+      }
+      resolve(results[0]); // Return the first result
     });
+  });
 };
 
 exports.createAdmin = (adminData) => {
-    return new Promise((resolve, reject) => {
-        const sql = `
+  return new Promise((resolve, reject) => {
+    const sql = `
             INSERT INTO adminusers (mail, role, userName, password) 
             VALUES (?, ?, ?, ?)
         `;
-        const values = [
-            adminData.mail,
-            adminData.role,
-            adminData.userName,
-            adminData.password,
-        ];
+    const values = [
+      adminData.mail,
+      adminData.role,
+      adminData.userName,
+      adminData.password,
+    ];
 
-        db.query(sql, values, (err, results) => {
-            if (err) {
-                return reject(err); // Pass the error back if it occurs
-            }
-            resolve(results); // Resolve with the results
-        });
+    db.query(sql, values, (err, results) => {
+      if (err) {
+        return reject(err); // Pass the error back if it occurs
+      }
+      resolve(results); // Resolve with the results
     });
+  });
 };
 
 exports.getCurrentAssetGroup = (userId) => {
-    return new Promise((resolve, reject) => {
-        const sql = `
+  return new Promise((resolve, reject) => {
+    const sql = `
             SELECT category, SUM(total) as totPrice 
             FROM currentasset 
             WHERE userId = ? 
             GROUP BY category
         `;
-        const values = [userId];
+    const values = [userId];
 
-        db.query(sql, values, (err, results) => {
-            if (err) {
-                return reject(err); // Reject promise on error
-            }
-            resolve(results); // Resolve promise with the query results
-        });
+    db.query(sql, values, (err, results) => {
+      if (err) {
+        return reject(err); // Reject promise on error
+      }
+      resolve(results); // Resolve promise with the query results
     });
+  });
 };
 
 exports.getCurrentAssetRecordById = (currentAssetId) => {
-    return new Promise((resolve, reject) => {
-        const sql = `
+  return new Promise((resolve, reject) => {
+    const sql = `
             SELECT id, currentAssetId, 
                    COALESCE(numOfPlusUnit, 0) AS numOfPlusUnit, 
                    COALESCE(numOfMinUnit, 0) AS numOfMinUnit, 
@@ -1098,20 +1098,20 @@ exports.getCurrentAssetRecordById = (currentAssetId) => {
             FROM currentassetrecord 
             WHERE currentAssetId = ?
         `;
-        const values = [currentAssetId];
+    const values = [currentAssetId];
 
-        db.query(sql, values, (err, results) => {
-            if (err) {
-                return reject(err); // Reject promise if an error occurs
-            }
-            resolve(results); // Resolve the promise with the query results
-        });
+    db.query(sql, values, (err, results) => {
+      if (err) {
+        return reject(err); // Reject promise if an error occurs
+      }
+      resolve(results); // Resolve the promise with the query results
     });
+  });
 };
 
 exports.getAllTaskByCropId = (cropId) => {
-    return new Promise((resolve, reject) => {
-        const sql = `
+  return new Promise((resolve, reject) => {
+    const sql = `
             SELECT * 
             FROM cropcalender cc 
             JOIN cropcalendardays cd ON cc.id = cd.cropId 
@@ -1119,117 +1119,117 @@ exports.getAllTaskByCropId = (cropId) => {
              ORDER BY cd.taskIndex
 
         `;
-        const values = [cropId];
+    const values = [cropId];
 
-        db.query(sql, values, (err, results) => {
-            if (err) {
-                return reject(err); // Reject promise if an error occurs
-            }
-            resolve(results); // Resolve the promise with the query results
-        });
+    db.query(sql, values, (err, results) => {
+      if (err) {
+        return reject(err); // Reject promise if an error occurs
+      }
+      resolve(results); // Resolve the promise with the query results
     });
+  });
 };
 
 exports.deleteCropTask = (taskId) => {
-    return new Promise((resolve, reject) => {
-        const sql = "DELETE FROM cropcalendardays WHERE id = ?";
-        const values = [taskId];
+  return new Promise((resolve, reject) => {
+    const sql = "DELETE FROM cropcalendardays WHERE id = ?";
+    const values = [taskId];
 
-        db.query(sql, values, (err, results) => {
-            if (err) {
-                return reject(err); // Reject promise if an error occurs
-            }
-            resolve(results); // Resolve the promise with the query results
-        });
+    db.query(sql, values, (err, results) => {
+      if (err) {
+        return reject(err); // Reject promise if an error occurs
+      }
+      resolve(results); // Resolve the promise with the query results
     });
+  });
 };
 
 exports.getCropCalendarDayById = (taskId) => {
-    return new Promise((resolve, reject) => {
-        const sql = "SELECT * FROM cropcalendardays WHERE id = ?";
-        const values = [taskId];
+  return new Promise((resolve, reject) => {
+    const sql = "SELECT * FROM cropcalendardays WHERE id = ?";
+    const values = [taskId];
 
-        db.query(sql, values, (err, results) => {
-            if (err) {
-                return reject(err); // Reject promise if an error occurs
-            }
+    db.query(sql, values, (err, results) => {
+      if (err) {
+        return reject(err); // Reject promise if an error occurs
+      }
 
-            // Return null if no record is found
-            if (results.length === 0) {
-                return resolve(null);
-            }
+      // Return null if no record is found
+      if (results.length === 0) {
+        return resolve(null);
+      }
 
-            resolve(results[0]); // Resolve the promise with the first result
-        });
+      resolve(results[0]); // Resolve the promise with the first result
     });
+  });
 };
 
 exports.editTask = (
-    taskEnglish,
-    taskSinhala,
-    taskTamil,
-    taskTypeEnglish,
-    taskTypeSinhala,
-    taskTypeTamil,
-    taskCategoryEnglish,
-    taskCategorySinhala,
-    taskCategoryTamil,
-    taskDescriptionEnglish,
-    taskDescriptionSinhala,
-    taskDescriptionTamil,
-    id
+  taskEnglish,
+  taskSinhala,
+  taskTamil,
+  taskTypeEnglish,
+  taskTypeSinhala,
+  taskTypeTamil,
+  taskCategoryEnglish,
+  taskCategorySinhala,
+  taskCategoryTamil,
+  taskDescriptionEnglish,
+  taskDescriptionSinhala,
+  taskDescriptionTamil,
+  id
 ) => {
-    return new Promise((resolve, reject) => {
-        const sql = `
+  return new Promise((resolve, reject) => {
+    const sql = `
             UPDATE cropcalendardays 
             SET taskEnglish=?, taskSinhala=?, taskTamil=?, taskTypeEnglish=?, taskTypeSinhala=?, taskTypeTamil=?, 
                 taskCategoryEnglish=?, taskCategorySinhala=?, taskCategoryTamil=?, taskDescriptionEnglish=?, taskDescriptionSinhala=?, taskDescriptionTamil=?  
             WHERE id = ?
         `;
-        const values = [
-            taskEnglish,
-            taskSinhala,
-            taskTamil,
-            taskTypeEnglish,
-            taskTypeSinhala,
-            taskTypeTamil,
-            taskCategoryEnglish,
-            taskCategorySinhala,
-            taskCategoryTamil,
-            taskDescriptionEnglish,
-            taskDescriptionSinhala,
-            taskDescriptionTamil,
-            id,
-        ];
+    const values = [
+      taskEnglish,
+      taskSinhala,
+      taskTamil,
+      taskTypeEnglish,
+      taskTypeSinhala,
+      taskTypeTamil,
+      taskCategoryEnglish,
+      taskCategorySinhala,
+      taskCategoryTamil,
+      taskDescriptionEnglish,
+      taskDescriptionSinhala,
+      taskDescriptionTamil,
+      id,
+    ];
 
-        db.query(sql, values, (err, results) => {
-            if (err) {
-                return reject(err); // Reject the promise on error
-            }
+    db.query(sql, values, (err, results) => {
+      if (err) {
+        return reject(err); // Reject the promise on error
+      }
 
-            resolve(results); // Resolve the promise with the results
-        });
+      resolve(results); // Resolve the promise with the results
     });
+  });
 };
 
 exports.getAllPost = () => {
-    return new Promise((resolve, reject) => {
-        const sql = `SELECT * FROM publicforumposts `;
+  return new Promise((resolve, reject) => {
+    const sql = `SELECT * FROM publicforumposts `;
 
-        db.query(sql, (err, results) => {
-            if (err) {
-                return reject(err);
-            }
-            if (results.length === 0) {
-                return resolve(null);
-            }
-            resolve(results);
-        });
+    db.query(sql, (err, results) => {
+      if (err) {
+        return reject(err);
+      }
+      if (results.length === 0) {
+        return resolve(null);
+      }
+      resolve(results);
     });
+  });
 };
 exports.getAllUserTaskByCropId = (cropId, userId) => {
-    return new Promise((resolve, reject) => {
-        const sql = `
+  return new Promise((resolve, reject) => {
+    const sql = `
             SELECT 
     slavecropcalendardays.id AS slavecropcalendardaysId,
     slavecropcalendardays.cropCalendarId,
@@ -1244,242 +1244,240 @@ WHERE
     AND slavecropcalendardays.userId = ?;
 
         `;
-        const values = [cropId, userId];
+    const values = [cropId, userId];
 
-        db.query(sql, values, (err, results) => {
-            if (err) {
-                return reject(err); // Reject promise if an error occurs
-            }
-            resolve(results); // Resolve the promise with the query results
-        });
+    db.query(sql, values, (err, results) => {
+      if (err) {
+        return reject(err); // Reject promise if an error occurs
+      }
+      resolve(results); // Resolve the promise with the query results
     });
+  });
 };
 
 exports.deleteUserTasks = (id) => {
-    const sql = "DELETE FROM slavecropcalendardays WHERE id = ?";
+  const sql = "DELETE FROM slavecropcalendardays WHERE id = ?";
 
-    return new Promise((resolve, reject) => {
-        db.query(sql, [id], (err, results) => {
-            if (err) {
-                reject("Error executing delete query: " + err);
-            } else {
-                resolve(results);
-            }
-        });
+  return new Promise((resolve, reject) => {
+    db.query(sql, [id], (err, results) => {
+      if (err) {
+        reject("Error executing delete query: " + err);
+      } else {
+        resolve(results);
+      }
     });
+  });
 };
 
 exports.getUserTaskStatusById = (id) => {
-    return new Promise((resolve, reject) => {
-        const sql = "SELECT status FROM slavecropcalendardays WHERE id = ?";
-        db.query(sql, [id], (err, results) => {
-            if (err) {
-                return reject(err);
-            }
-            resolve(results);
-        });
+  return new Promise((resolve, reject) => {
+    const sql = "SELECT status FROM slavecropcalendardays WHERE id = ?";
+    db.query(sql, [id], (err, results) => {
+      if (err) {
+        return reject(err);
+      }
+      resolve(results);
     });
+  });
 };
 
 exports.updateUserTaskStatusById = (id, newStatus) => {
-    return new Promise((resolve, reject) => {
-        const sql = "UPDATE slavecropcalendardays SET status = ? WHERE id = ?";
-        db.query(sql, [newStatus, id], (err, results) => {
-            if (err) {
-                return reject(err);
-            }
-            resolve(results);
-        });
+  return new Promise((resolve, reject) => {
+    const sql = "UPDATE slavecropcalendardays SET status = ? WHERE id = ?";
+    db.query(sql, [newStatus, id], (err, results) => {
+      if (err) {
+        return reject(err);
+      }
+      resolve(results);
     });
+  });
 };
 
 exports.getSlaveCropCalendarDayById = (id) => {
-    return new Promise((resolve, reject) => {
-        const sql = "SELECT * FROM slavecropcalendardays WHERE id = ?";
-        const values = [id];
+  return new Promise((resolve, reject) => {
+    const sql = "SELECT * FROM slavecropcalendardays WHERE id = ?";
+    const values = [id];
 
-        db.query(sql, values, (err, results) => {
-            if (err) {
-                return reject(err); // Reject promise if an error occurs
-            }
+    db.query(sql, values, (err, results) => {
+      if (err) {
+        return reject(err); // Reject promise if an error occurs
+      }
 
-            // Return null if no record is found
-            if (results.length === 0) {
-                return resolve(null);
-            }
+      // Return null if no record is found
+      if (results.length === 0) {
+        return resolve(null);
+      }
 
-            resolve(results[0]); // Resolve the promise with the first result
-        });
+      resolve(results[0]); // Resolve the promise with the first result
     });
+  });
 };
 
 exports.editUserTask = (
-    taskEnglish,
-    taskSinhala,
-    taskTamil,
-    taskTypeEnglish,
-    taskTypeSinhala,
-    taskTypeTamil,
-    taskCategoryEnglish,
-    taskCategorySinhala,
-    taskCategoryTamil,
-    id
+  taskEnglish,
+  taskSinhala,
+  taskTamil,
+  taskTypeEnglish,
+  taskTypeSinhala,
+  taskTypeTamil,
+  taskCategoryEnglish,
+  taskCategorySinhala,
+  taskCategoryTamil,
+  id
 ) => {
-    return new Promise((resolve, reject) => {
-        const sql = `
+  return new Promise((resolve, reject) => {
+    const sql = `
             UPDATE slavecropcalendardays 
             SET taskEnglish=?, taskSinhala=?, taskTamil=?, taskTypeEnglish=?, taskTypeSinhala=?, taskTypeTamil=?, 
                 taskCategoryEnglish=?, taskCategorySinhala=?, taskCategoryTamil=? 
             WHERE id = ?
         `;
-        const values = [
-            taskEnglish,
-            taskSinhala,
-            taskTamil,
-            taskTypeEnglish,
-            taskTypeSinhala,
-            taskTypeTamil,
-            taskCategoryEnglish,
-            taskCategorySinhala,
-            taskCategoryTamil,
-            id,
-        ];
+    const values = [
+      taskEnglish,
+      taskSinhala,
+      taskTamil,
+      taskTypeEnglish,
+      taskTypeSinhala,
+      taskTypeTamil,
+      taskCategoryEnglish,
+      taskCategorySinhala,
+      taskCategoryTamil,
+      id,
+    ];
 
-        db.query(sql, values, (err, results) => {
-            if (err) {
-                return reject(err); // Reject the promise on error
-            }
+    db.query(sql, values, (err, results) => {
+      if (err) {
+        return reject(err); // Reject the promise on error
+      }
 
-            resolve(results); // Resolve the promise with the results
-        });
+      resolve(results); // Resolve the promise with the results
     });
+  });
 };
 
 //post reply
-exports.sendMessage = (chatId, replyId, replyMessages) => {
-    console.log("Dao Reply", replyMessages);
-    return new Promise((resolve, reject) => {
-        const sql =
-            "INSERT INTO publicforumreplies (chatId, replyId, replyMessage) VALUES (?,?,?)";
-
-        const values = [chatId, replyId, replyMessages];
-
-        if (values.length != 3) {
-            return reject(
-                new Error("Mismatch between column count and value count.")
-            );
-        }
-        db.query(sql, values, (err, resilts) => {
-            if (err) {
-                reject(err);
-            } else {
-                resolve(resilts);
-            }
-        });
-    });
-};
 exports.getAllPostReplyDao = (postid) => {
-    return new Promise((resolve, reject) => {
-        const sql =
-            "SELECT p.id, p.replyMessage, p.createdAt, u.firstName, u.lastName FROM publicforumreplies p ,users u WHERE p.replyId=u.id AND chatId = ?";
-        const values = [postid];
+  return new Promise((resolve, reject) => {
+    const sql =
+      "SELECT p.id, p.replyMessage, p.createdAt, u.firstName, u.lastName FROM publicforumreplies p ,users u WHERE p.replyId=u.id AND chatId = ?";
+    const values = [postid];
 
-        db.query(sql, values, (err, results) => {
-            if (err) {
-                return reject(err);
-            }
+    db.query(sql, values, (err, results) => {
+      if (err) {
+        return reject(err);
+      }
 
-            if (results.length === 0) {
-                return resolve(null);
-            }
+      if (results.length === 0) {
+        return resolve(null);
+      }
 
-            resolve(results);
-        });
+      resolve(results);
     });
+  });
 };
 
 exports.deleteReply = (id) => {
-    const sql = "DELETE FROM publicforumreplies WHERE id = ?";
+  const sql = "DELETE FROM publicforumreplies WHERE id = ?";
 
-    return new Promise((resolve, reject) => {
-        db.query(sql, [id], (err, results) => {
-            if (err) {
-                reject("Error executing delete query: " + err);
-            } else {
-                resolve(results);
-            }
-        });
+  return new Promise((resolve, reject) => {
+    db.query(sql, [id], (err, results) => {
+      if (err) {
+        reject("Error executing delete query: " + err);
+      } else {
+        resolve(results);
+      }
     });
+  });
 };
 
 exports.shiftUpTaskIndexDao = (taskId, indexId) => {
-    return new Promise((resolve, reject) => {
-        const sql = "UPDATE  cropcalendardays SET taskIndex = ? WHERE id = ?";
-        const values = [indexId, taskId];
+  return new Promise((resolve, reject) => {
+    const sql = "UPDATE  cropcalendardays SET taskIndex = ? WHERE id = ?";
+    const values = [indexId, taskId];
 
-        db.query(sql, values, (err, results) => {
-            if (err) {
-                return reject(err); // Reject promise if an error occurs
-            }
+    db.query(sql, values, (err, results) => {
+      if (err) {
+        return reject(err); // Reject promise if an error occurs
+      }
 
-            resolve(results[0]); // Resolve the promise with the first result
-        });
+      resolve(results[0]); // Resolve the promise with the first result
     });
+  });
 };
 
 exports.getAllTaskIdDao = (cropId) => {
-    return new Promise((resolve, reject) => {
-        const sql = "SELECT id, taskIndex FROM cropcalendardays WHERE cropId = ?";
-        const values = [cropId];
+  return new Promise((resolve, reject) => {
+    const sql = "SELECT id, taskIndex FROM cropcalendardays WHERE cropId = ?";
+    const values = [cropId];
 
-        db.query(sql, values, (err, results) => {
-            if (err) {
-                return reject(err); // Reject promise if an error occurs
-            }
+    db.query(sql, values, (err, results) => {
+      if (err) {
+        return reject(err); // Reject promise if an error occurs
+      }
 
-            resolve(results); // No need to wrap in arrays, return results directly
-        });
+      resolve(results); // No need to wrap in arrays, return results directly
     });
+  });
 };
 
 exports.addNewTaskDao = (task, indexId, cropId) => {
-    console.log("Dao Task: ", task);
+  console.log("Dao Task: ", task);
 
+  return new Promise((resolve, reject) => {
+    const sql =
+      "INSERT INTO cropcalendardays (cropId, taskIndex, days, taskTypeEnglish, taskTypeSinhala, taskTypeTamil, taskCategoryEnglish, taskCategorySinhala, taskCategoryTamil, taskEnglish, taskSinhala, taskTamil, taskDescriptionEnglish, taskDescriptionSinhala, taskDescriptionTamil) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+
+    const values = [
+      cropId,
+      indexId,
+      task.days,
+      task.taskTypeEnglish,
+      task.taskTypeSinhala,
+      task.taskTypeTamil,
+      task.taskCategoryEnglish,
+      task.taskCategorySinhala,
+      task.taskCategoryTamil,
+      task.taskEnglish,
+      task.taskSinhala,
+      task.taskTamil,
+      task.taskDescriptionEnglish,
+      task.taskDescriptionSinhala,
+      task.taskDescriptionTamil,
+    ];
+
+    // Ensure that the values array length matches the expected column count
+    if (values.length !== 15) {
+      return reject(
+        new Error("Mismatch between column count and value count.")
+      );
+    }
+
+    db.query(sql, values, (err, results) => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(results);
+      }
+    });
+  });
+};
+
+exports.addNewReplyDao = (chatId, replyId, replyMessage) => {
+    console.log("Dao Reply: ", replyMessage);
+    
     return new Promise((resolve, reject) => {
-        const sql =
-            "INSERT INTO cropcalendardays (cropId, taskIndex, days, taskTypeEnglish, taskTypeSinhala, taskTypeTamil, taskCategoryEnglish, taskCategorySinhala, taskCategoryTamil, taskEnglish, taskSinhala, taskTamil, taskDescriptionEnglish, taskDescriptionSinhala, taskDescriptionTamil) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
-
-        const values = [
-            cropId,
-            indexId,
-            task.days,
-            task.taskTypeEnglish,
-            task.taskTypeSinhala,
-            task.taskTypeTamil,
-            task.taskCategoryEnglish,
-            task.taskCategorySinhala,
-            task.taskCategoryTamil,
-            task.taskEnglish,
-            task.taskSinhala,
-            task.taskTamil,
-            task.taskDescriptionEnglish,
-            task.taskDescriptionSinhala,
-            task.taskDescriptionTamil,
-        ];
-
-        // Ensure that the values array length matches the expected column count
-        if (values.length !== 15) {
-            return reject(
-                new Error("Mismatch between column count and value count.")
-            );
-        }
+        const sql = "INSERT INTO publicforumreplies (chatId, replyId, replyMessage) VALUES (?, ?, ?)";
+        const values = [chatId, replyId, replyMessage];
 
         db.query(sql, values, (err, results) => {
             if (err) {
-                reject(err);
+                console.error("Error executing query:", err);  // Improved error logging
+                return reject(err);
             } else {
+                console.log("Insert successful:", results);
                 resolve(results);
             }
         });
     });
 };
+
