@@ -295,6 +295,11 @@ router.get(
     AdminEp.getAllPostyById
 );
 
+router.post(
+    "/post-message/:postId",
+    AdminEp.sendMessage
+);
+
 //get each post reply
 router.get(
     "/get-all-reply/:postId",

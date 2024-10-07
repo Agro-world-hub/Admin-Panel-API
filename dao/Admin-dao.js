@@ -2,7 +2,6 @@ const db = require("../startup/database");
 const path = require("path");
 const { Upload } = require("@aws-sdk/lib-storage");
 
-
 exports.loginAdmin = (email) => {
     return new Promise((resolve, reject) => {
         const sql = "SELECT * FROM adminusers WHERE mail = ?";
@@ -19,7 +18,8 @@ exports.loginAdmin = (email) => {
 exports.getAllAdminUsers = (limit, offset) => {
     return new Promise((resolve, reject) => {
         const countSql = "SELECT COUNT(*) as total FROM adminusers";
-        const dataSql = "SELECT * FROM adminusers ORDER BY created_at DESC LIMIT ? OFFSET ?";
+        const dataSql =
+            "SELECT * FROM adminusers ORDER BY created_at DESC LIMIT ? OFFSET ?";
 
         db.query(countSql, (countErr, countResults) => {
             if (countErr) {
@@ -90,8 +90,10 @@ exports.getAllUsers = (limit, offset, searchNIC) => {
                 // Process each user's image
                 const processedDataResults = dataResults.map((user) => {
                     if (user.profileImage) {
-                        const base64Image = Buffer.from(user.profileImage).toString('base64');
-                        const mimeType = 'image/png'; // Adjust the MIME type if needed
+                        const base64Image = Buffer.from(user.profileImage).toString(
+                            "base64"
+                        );
+                        const mimeType = "image/png"; // Adjust the MIME type if needed
                         user.profileImage = `data:${mimeType};base64,${base64Image}`;
                     }
                     return user;
@@ -106,8 +108,6 @@ exports.getAllUsers = (limit, offset, searchNIC) => {
         });
     });
 };
-
-
 
 exports.createCropCallender = async(
     cropName,
@@ -146,7 +146,7 @@ exports.createCropCallender = async(
             tamilSpecialNotes,
             suitableAreas,
             cropColor,
-            imageBuffer
+            imageBuffer,
         ];
 
         db.query(sql, values, (err, results) => {
@@ -200,7 +200,8 @@ exports.insertXLSXData = (cropId, data) => {
 exports.getAllCropCalendars = (limit, offset) => {
     return new Promise((resolve, reject) => {
         const countSql = "SELECT COUNT(*) as total FROM cropcalender";
-        const dataSql = "SELECT * FROM cropCalender ORDER BY createdAt DESC LIMIT ? OFFSET ?";
+        const dataSql =
+            "SELECT * FROM cropCalender ORDER BY createdAt DESC LIMIT ? OFFSET ?";
 
         db.query(countSql, (countErr, countResults) => {
             if (countErr) {
@@ -223,7 +224,8 @@ exports.getAllCropCalendars = (limit, offset) => {
 
 exports.createOngoingCultivations = (userId, cropCalenderId) => {
     return new Promise((resolve, reject) => {
-        const sql = "INSERT INTO ongoingcultivations (`userId`, `cropCalenderId`) VALUES (?)";
+        const sql =
+            "INSERT INTO ongoingcultivations (`userId`, `cropCalenderId`) VALUES (?)";
         const values = [userId, cropCalenderId];
 
         db.query(sql, [values], (err, results) => {
@@ -243,7 +245,7 @@ exports.createNews = async(
     descriptionEnglish,
     descriptionSinhala,
     descriptionTamil,
-    imageBuffer,  // accept the image buffer
+    imageBuffer, // accept the image buffer
     status,
     createdBy
 ) => {
@@ -257,7 +259,7 @@ exports.createNews = async(
             descriptionEnglish,
             descriptionSinhala,
             descriptionTamil,
-            imageBuffer,  // pass the buffer as image
+            imageBuffer, // pass the buffer as image
             status,
             createdBy,
         ];
@@ -272,8 +274,7 @@ exports.createNews = async(
     });
 };
 
-
-exports.getAllNews = async (status, createdAt, limit, offset) => {
+exports.getAllNews = async(status, createdAt, limit, offset) => {
     return new Promise((resolve, reject) => {
         let countsSql = "SELECT COUNT(*) as total FROM content";
         let dataSql = "SELECT * FROM content";
@@ -335,23 +336,24 @@ exports.getAllNews = async (status, createdAt, limit, offset) => {
                 }
 
                 // Convert the image blob to base64 and include in the response
-                const newsItems = dataResults.map(news => {
+                const newsItems = dataResults.map((news) => {
                     if (news.image) {
                         // Convert the image (stored as longblob) to a base64 string
-                        news.image = `data:image/jpeg;base64,${news.image.toString('base64')}`;
+                        news.image = `data:image/jpeg;base64,${news.image.toString(
+              "base64"
+            )}`;
                     }
                     return news;
                 });
 
-                console.log('Data query results:', newsItems.length);
+                console.log("Data query results:", newsItems.length);
                 resolve({ items: newsItems, total: total });
             });
         });
     });
 };
 
-
-exports.deleteCropCalender = async (id) => {
+exports.deleteCropCalender = async(id) => {
     return new Promise((resolve, reject) => {
         const sql = "DELETE FROM cropcalender WHERE id = ?";
         db.query(sql, [id], (err, results) => {
@@ -364,7 +366,7 @@ exports.deleteCropCalender = async (id) => {
     });
 };
 
-exports.updateCropCalender = async (id, updateData, imageData) => {
+exports.updateCropCalender = async(id, updateData, imageData) => {
     return new Promise((resolve, reject) => {
         let sql = `
             UPDATE cropcalender 
@@ -423,7 +425,6 @@ exports.updateCropCalender = async (id, updateData, imageData) => {
         });
     });
 };
-
 
 exports.getNewsById = (id) => {
     return new Promise((resolve, reject) => {
@@ -1005,7 +1006,8 @@ exports.updatePlantCareUserById = (userData, id) => {
 
 exports.createPlantCareUser = (userData) => {
     return new Promise((resolve, reject) => {
-        const { firstName, lastName, phoneNumber, NICnumber, fileBuffer } = userData;
+        const { firstName, lastName, phoneNumber, NICnumber, fileBuffer } =
+        userData;
 
         const sql = `
             INSERT INTO users (firstName, lastName, phoneNumber, NICnumber, profileImage) 
@@ -1034,10 +1036,12 @@ exports.getUserById = (userId) => {
                 return resolve(null); // No user found
             }
             if (results[0].profileImage) {
-                const base64Image = Buffer.from(results[0].profileImage).toString('base64');
-                const mimeType = 'image/png'; // Adjust MIME type if necessary, depending on the image type
+                const base64Image = Buffer.from(results[0].profileImage).toString(
+                    "base64"
+                );
+                const mimeType = "image/png"; // Adjust MIME type if necessary, depending on the image type
                 results[0].profileImage = `data:${mimeType};base64,${base64Image}`;
-            }
+            }
             resolve(results[0]); // Return the first result
         });
     });
@@ -1265,7 +1269,6 @@ exports.deleteUserTasks = (id) => {
     });
 };
 
-
 exports.getUserTaskStatusById = (id) => {
     return new Promise((resolve, reject) => {
         const sql = "SELECT status FROM slavecropcalendardays WHERE id = ?";
@@ -1290,8 +1293,6 @@ exports.updateUserTaskStatusById = (id, newStatus) => {
     });
 };
 
-
-
 exports.getSlaveCropCalendarDayById = (id) => {
     return new Promise((resolve, reject) => {
         const sql = "SELECT * FROM slavecropcalendardays WHERE id = ?";
@@ -1312,8 +1313,18 @@ exports.getSlaveCropCalendarDayById = (id) => {
     });
 };
 
-
-exports.editUserTask = (taskEnglish, taskSinhala, taskTamil, taskTypeEnglish, taskTypeSinhala, taskTypeTamil, taskCategoryEnglish, taskCategorySinhala, taskCategoryTamil, id) => {
+exports.editUserTask = (
+    taskEnglish,
+    taskSinhala,
+    taskTamil,
+    taskTypeEnglish,
+    taskTypeSinhala,
+    taskTypeTamil,
+    taskCategoryEnglish,
+    taskCategorySinhala,
+    taskCategoryTamil,
+    id
+) => {
     return new Promise((resolve, reject) => {
         const sql = `
             UPDATE slavecropcalendardays 
@@ -1331,7 +1342,7 @@ exports.editUserTask = (taskEnglish, taskSinhala, taskTamil, taskTypeEnglish, ta
             taskCategoryEnglish,
             taskCategorySinhala,
             taskCategoryTamil,
-            id
+            id,
         ];
 
         db.query(sql, values, (err, results) => {
@@ -1344,18 +1355,39 @@ exports.editUserTask = (taskEnglish, taskSinhala, taskTamil, taskTypeEnglish, ta
     });
 };
 
-
 //post reply
+exports.sendMessage = (chatId, replyId, replyMessages) => {
+    console.log("Dao Reply", replyMessages);
+    return new Promise((resolve, reject) => {
+        const sql =
+            "INSERT INTO publicforumreplies (chatId, replyId, replyMessage) VALUES (?,?,?)";
+
+        const values = [chatId, replyId, replyMessages];
+
+        if (values.length != 3) {
+            return reject(
+                new Error("Mismatch between column count and value count.")
+            );
+        }
+        db.query(sql, values, (err, resilts) => {
+            if (err) {
+                reject(err);
+            } else {
+                resolve(resilts);
+            }
+        });
+    });
+};
 exports.getAllPostReplyDao = (postid) => {
     return new Promise((resolve, reject) => {
-        const sql = "SELECT p.id, p.replyMessage, p.createdAt, u.firstName, u.lastName FROM publicforumreplies p ,users u WHERE p.replyId=u.id AND chatId = ?";
+        const sql =
+            "SELECT p.id, p.replyMessage, p.createdAt, u.firstName, u.lastName FROM publicforumreplies p ,users u WHERE p.replyId=u.id AND chatId = ?";
         const values = [postid];
 
         db.query(sql, values, (err, results) => {
             if (err) {
                 return reject(err);
             }
-
 
             if (results.length === 0) {
                 return resolve(null);
@@ -1365,7 +1397,6 @@ exports.getAllPostReplyDao = (postid) => {
         });
     });
 };
-
 
 exports.deleteReply = (id) => {
     const sql = "DELETE FROM publicforumreplies WHERE id = ?";
@@ -1380,8 +1411,6 @@ exports.deleteReply = (id) => {
         });
     });
 };
-
-
 
 exports.shiftUpTaskIndexDao = (taskId, indexId) => {
     return new Promise((resolve, reject) => {
@@ -1398,7 +1427,6 @@ exports.shiftUpTaskIndexDao = (taskId, indexId) => {
     });
 };
 
-
 exports.getAllTaskIdDao = (cropId) => {
     return new Promise((resolve, reject) => {
         const sql = "SELECT id, taskIndex FROM cropcalendardays WHERE cropId = ?";
@@ -1414,17 +1442,36 @@ exports.getAllTaskIdDao = (cropId) => {
     });
 };
 
-exports.addNewTaskDao = (task, indexId,cropId) => {
-    console.log("Dao Task: ",task);
-    
-    return new Promise((resolve, reject) => {
-        const sql = "INSERT INTO cropcalendardays (cropId, taskIndex, days, taskTypeEnglish, taskTypeSinhala, taskTypeTamil, taskCategoryEnglish, taskCategorySinhala, taskCategoryTamil, taskEnglish, taskSinhala, taskTamil, taskDescriptionEnglish, taskDescriptionSinhala, taskDescriptionTamil) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)" ;
+exports.addNewTaskDao = (task, indexId, cropId) => {
+    console.log("Dao Task: ", task);
 
-        const values = [ cropId, indexId,  task.days, task.taskTypeEnglish, task.taskTypeSinhala, task.taskTypeTamil, task.taskCategoryEnglish, task.taskCategorySinhala, task.taskCategoryTamil, task.taskEnglish, task.taskSinhala, task.taskTamil, task.taskDescriptionEnglish, task.taskDescriptionSinhala, task.taskDescriptionTamil ];
+    return new Promise((resolve, reject) => {
+        const sql =
+            "INSERT INTO cropcalendardays (cropId, taskIndex, days, taskTypeEnglish, taskTypeSinhala, taskTypeTamil, taskCategoryEnglish, taskCategorySinhala, taskCategoryTamil, taskEnglish, taskSinhala, taskTamil, taskDescriptionEnglish, taskDescriptionSinhala, taskDescriptionTamil) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+
+        const values = [
+            cropId,
+            indexId,
+            task.days,
+            task.taskTypeEnglish,
+            task.taskTypeSinhala,
+            task.taskTypeTamil,
+            task.taskCategoryEnglish,
+            task.taskCategorySinhala,
+            task.taskCategoryTamil,
+            task.taskEnglish,
+            task.taskSinhala,
+            task.taskTamil,
+            task.taskDescriptionEnglish,
+            task.taskDescriptionSinhala,
+            task.taskDescriptionTamil,
+        ];
 
         // Ensure that the values array length matches the expected column count
         if (values.length !== 15) {
-            return reject(new Error("Mismatch between column count and value count."));
+            return reject(
+                new Error("Mismatch between column count and value count.")
+            );
         }
 
         db.query(sql, values, (err, results) => {
