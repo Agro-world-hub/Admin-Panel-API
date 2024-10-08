@@ -308,6 +308,12 @@ router.get(
     AdminEp.getAllReplyByPost
 );
 
+router.get(
+    "/get-count/:chatId",
+    // authMiddleware,
+    AdminEp.getReplyCountByChatId
+)
+
 router.delete(
     "/delete-reply/:postId",
     // authMiddleware,

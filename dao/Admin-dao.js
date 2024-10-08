@@ -1376,6 +1376,25 @@ exports.getAllPostReplyDao = (postid) => {
   });
 };
 
+// replyDao.js
+
+exports.getReplyCountByChatId = (chatId) => {
+  return new Promise((resolve, reject) => {
+    const sql = "SELECT COUNT(*) as replyCount FROM publicforumreplies WHERE chatId = ?";
+    const values = [chatId];
+
+    db.query(sql, values, (err, results) => {
+      if (err) {
+        return reject(err); // Handle error in the promise
+      }
+
+      // Return the count result
+      resolve(results[0]);
+    });
+  });
+};
+
+
 exports.deleteReply = (id) => {
   const sql = "DELETE FROM publicforumreplies WHERE id = ?";
 

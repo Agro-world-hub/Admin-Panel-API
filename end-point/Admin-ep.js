@@ -1994,3 +1994,27 @@ exports.sendMessage = async (req, res) => {
     });
   }
 };
+
+exports.getReplyCountByChatId = async (req, res) => {
+  const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
+  console.log("Request URL:", fullUrl);
+
+  try {
+    const chatId = req.params.chatId;
+
+    // Use DAO to get reply count for the given chatId
+    const result = await adminDao.getReplyCountByChatId(chatId);
+
+    res.json(result);
+  } catch (error) {
+    if (error.isJoi) {
+      // Handle validation error (if using Joi for validation)
+      return res.status(400).json({ error: error.details[0].message });
+    }
+
+    console.error("Error fetching reply count for chatId:", error);
+    return res.status(500).json({
+      error: "An error occurred while fetching reply count for the chatId",
+    });
+  }
+};
