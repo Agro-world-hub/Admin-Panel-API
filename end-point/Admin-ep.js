@@ -1040,10 +1040,11 @@ exports.getCurrentAssetsByCategory = async(req, res) => {
 
     try {
         // Validate the request params (id and category)
-        const { id, category } =
-        await ValidateSchema.getCurrentAssetsByCategorySchema.validateAsync(
-            req.params
-        );
+        const { id, category } = req.params;
+        // const { id, category } =
+        // await ValidateSchema.getCurrentAssetsByCategorySchema.validateAsync(
+        //     req.params
+        // );
 
         // Fetch current assets by category from DAO
         const results = await adminDao.getCurrentAssetsByCategory(id, category);
