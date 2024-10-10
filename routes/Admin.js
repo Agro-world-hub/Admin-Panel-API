@@ -117,7 +117,7 @@ router.post(
     AdminEp.createCropCalenderAddTask
 );
 
-router.get("/get-user-by-id/:id", authMiddleware, AdminEp.getUserById);
+router.get("/get-user-by-id/:id", AdminEp.getUserById);
 
 router.delete("/delete-crop/:id", authMiddleware, AdminEp.deleteCropCalender);
 
@@ -295,6 +295,12 @@ router.get(
     AdminEp.getAllPostyById
 );
 
+router.post(
+    "/send-message/:chatId",
+    authMiddleware,
+    AdminEp.sendMessage
+);
+
 //get each post reply
 router.get(
     "/get-all-reply/:postId",
@@ -302,11 +308,23 @@ router.get(
     AdminEp.getAllReplyByPost
 );
 
+router.get(
+    "/get-count-reply",
+    // authMiddleware,
+    AdminEp.getReplyCountByChatId
+)
+
 router.delete(
     "/delete-reply/:postId",
     // authMiddleware,
     AdminEp.DeleteReply
 );
+
+router.delete(
+    "/delete-post/:postId",
+    // authMiddleware,
+    AdminEp.DeletPublicForumPost
+)
 
 //Pasan tsk
 router.post(
