@@ -1365,7 +1365,7 @@ exports.editUserTask = (
 exports.getAllPostReplyDao = (postid) => {
   return new Promise((resolve, reject) => {
     const sql =
-      "SELECT p.id, p.replyMessage, p.createdAt, u.firstName, u.lastName FROM publicforumreplies p ,users u WHERE p.replyId=u.id AND chatId = ?";
+      "SELECT p.id, p.replyMessage, p.createdAt, u.firstName, u.lastName FROM publicforumreplies p LEFT JOIN users u ON p.replyId = u.id WHERE p.chatId = ?";
     const values = [postid];
 
     db.query(sql, values, (err, results) => {
@@ -1381,6 +1381,8 @@ exports.getAllPostReplyDao = (postid) => {
     });
   });
 };
+
+
 
 // replyDao.js
 
@@ -1490,8 +1492,8 @@ exports.addNewReplyDao = (chatId, replyId, replyMessage) => {
     console.log("Dao Reply: ", replyMessage);
     
     return new Promise((resolve, reject) => {
-        const sql = "INSERT INTO publicforumreplies (chatId, replyId, replyMessage) VALUES (?, ?, ?)";
-        const values = [chatId, replyId, replyMessage];
+        const sql = "INSERT INTO publicforumreplies (chatId, replyMessage) VALUES (?, ?)";
+        const values = [chatId, replyMessage];
 
         db.query(sql, values, (err, results) => {
             if (err) {
