@@ -309,7 +309,7 @@ router.get(
 );
 
 router.get(
-    "/get-count/:chatId",
+    "/get-count-reply",
     // authMiddleware,
     AdminEp.getReplyCountByChatId
 )
@@ -319,6 +319,12 @@ router.delete(
     // authMiddleware,
     AdminEp.DeleteReply
 );
+
+router.delete(
+    "/delete-post/:postId",
+    // authMiddleware,
+    AdminEp.DeletPublicForumPost
+)
 
 //Pasan tsk
 router.post(

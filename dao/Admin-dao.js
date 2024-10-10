@@ -1378,18 +1378,17 @@ exports.getAllPostReplyDao = (postid) => {
 
 // replyDao.js
 
-exports.getReplyCountByChatId = (chatId) => {
+exports.getReplyCount = () => {
   return new Promise((resolve, reject) => {
-    const sql = "SELECT COUNT(*) as replyCount FROM publicforumreplies WHERE chatId = ?";
-    const values = [chatId];
+    const sql = "SELECT chatId, COUNT(id) AS replyCount FROM publicforumreplies GROUP BY chatId";
 
-    db.query(sql, values, (err, results) => {
+    db.query(sql, (err, results) => {
       if (err) {
         return reject(err); // Handle error in the promise
       }
 
       // Return the count result
-      resolve(results[0]);
+      resolve(results);
     });
   });
 };
@@ -1499,4 +1498,18 @@ exports.addNewReplyDao = (chatId, replyId, replyMessage) => {
         });
     });
 };
+
+exports.deletePublicForumPost = (id) =>{
+  const sql = "DELET FROM publicforumposts WHERE id = ?";
+
+  return new Promise((resolve, reject)=>{
+    db.query(sql, [id], (err, results)=>{
+      if(err){
+        reject("Error executing delete query: " + err)
+      }else{
+        resolve(results);
+      }
+    });
+  });
+}
 

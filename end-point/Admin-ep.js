@@ -1796,6 +1796,27 @@ exports.getAllReplyByPost = async (req, res) => {
   }
 };
 
+exports.DeletPublicForumPost = async(req, res)=>{
+  try{
+    const postId = req.params.postId;
+    const results = await adminDao.deletePublicForumPost(postId);
+    if(results.affectedRows === 1){
+      console.log("Delete");
+      res.json({status:true});
+    }else{
+      res.json({status:false})
+    }
+  }catch (error){
+    if(error.isJoi){
+      return res.status(400).json({error: error.details[0].message })
+    }
+    console.error("Error fetching post for post ID:", error);
+    return res.status(500).json({
+      error:"An error occurred while fetching post for the postID"
+    });
+  }
+};
+
 exports.DeleteReply = async (req, res) => {
   const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
   console.log("Request URL:", fullUrl);
@@ -1872,13 +1893,13 @@ exports.getAllPostyById = async (req, res) => {
 
   try {
     const results = await adminDao.getAllPost();
-    console.log(results);
+    // console.log(results);
 
     if (!results || results.length === 0) {
       return res.status(404).json({ error: "No post found." });
     }
 
-    console.log(results);
+    // console.log(results);
 
     // Modify the results to convert images to base64
     results.forEach((result, indexId) => {
@@ -1956,14 +1977,16 @@ exports.sendMessage = async (req, res) => {
   const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
   console.log("Request URL:", fullUrl);
   console.log("Send message data:", req.body);
+  console.log("Send message data:", req.user);
+
 
   const chatId = req.params.chatId;
-  const replyId = req.body.id;
+  const replyId = req.user.userId;
   const replyMessage = req.body.replyMessage;
 
   try {
     //const replyMessage = replyMessage;
-    const createdAt = new Date().toISOString(); // Generate current timestamp
+    // const createdAt = new Date().toISOString(); // Generate current timestamp
     console.log(req.params);
 
     // Get all the replies for the chatId
@@ -1973,19 +1996,10 @@ exports.sendMessage = async (req, res) => {
       replyMessage
     );
     console.log("Reply ID array:", replyIdArr);
-    const addedReply = await adminDao.addNewReplyDao(
-      chatId,
-      replyId,
-      replyMessage,
-      createdAt
-    );
-
-    console.log("Added reply:", addedReply);
 
     // Send a success response with the added reply
     return res.status(200).json({
-      message: "Reply sent successfully!",
-      reply: addedReply,
+      message: "Reply sent successfully!"
     });
   } catch (err) {
     console.error("Error sending message:", err);
@@ -2000,10 +2014,10 @@ exports.getReplyCountByChatId = async (req, res) => {
   console.log("Request URL:", fullUrl);
 
   try {
-    const chatId = req.params.chatId;
 
     // Use DAO to get reply count for the given chatId
-    const result = await adminDao.getReplyCountByChatId(chatId);
+    const result = await adminDao.getReplyCount();
+    console.log(result)
 
     res.json(result);
   } catch (error) {
