@@ -121,7 +121,9 @@ exports.adminCreateUser = async (req, res) => {
 
 exports.getAllUsers = async (req, res) => {
   try {
-    const { page, limit, nic } =
+    console.log(req.query);
+    
+    const { page, limit, nic} =
       await ValidateSchema.getAllUsersSchema.validateAsync(req.query);
     const offset = (page - 1) * limit;
 

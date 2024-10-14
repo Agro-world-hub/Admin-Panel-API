@@ -56,17 +56,18 @@ exports.adminCreateUser = (firstName, lastName, phoneNumber, NICnumber) => {
   });
 };
 
-exports.getAllUsers = (limit, offset, searchNIC) => {
+exports.getAllUsers = (limit, offset, searchItem) => {
   return new Promise((resolve, reject) => {
     let countSql = "SELECT COUNT(*) as total FROM users";
     let dataSql = "SELECT * FROM users";
     const params = [];
 
     // Add search condition for NICnumber if provided
-    if (searchNIC) {
-      countSql += " WHERE users.NICnumber LIKE ?";
-      dataSql += " WHERE users.NICnumber LIKE ?";
-      params.push(`%${searchNIC}%`);
+    if (searchItem) {
+      countSql += " WHERE users.NICnumber LIKE ? OR users.firstName LIKE ? OR users.lastName LIKE ?";
+      dataSql += " WHERE users.NICnumber LIKE ? OR users.firstName LIKE ? OR users.lastName LIKE ? ";
+      const searchQuery = `%${searchItem}%`;
+      params.push(searchQuery, searchQuery, searchQuery);
     }
 
     // Add order, limit, and offset clauses
@@ -654,7 +655,7 @@ exports.editMarketPrice = (id, data) => {
   });
 };
 
-exports.getAllOngoingCultivations = (searchNIC, limit, offset) => {
+exports.getAllOngoingCultivations = (searchItem, limit, offset) => {
   return new Promise((resolve, reject) => {
     let countSql = `
             SELECT COUNT(*) as total 
@@ -675,10 +676,12 @@ exports.getAllOngoingCultivations = (searchNIC, limit, offset) => {
         `;
     const params = [];
 
-    if (searchNIC) {
-      countSql += " WHERE users.NICnumber LIKE ?";
-      dataSql += " WHERE users.NICnumber LIKE ?";
-      params.push(`%${searchNIC}%`);
+    if (searchItem) {
+      countSql += " WHERE users.NICnumber LIKE ? OR users.firstName LIKE ? OR users.lastName LIKE ?";
+      dataSql += " WHERE users.NICnumber LIKE ? OR users.firstName LIKE ? OR users.lastName LIKE ?";
+      const searchQuery = `%${searchItem}%`;
+      params.push(searchQuery, searchQuery, searchQuery);
+
     }
 
     dataSql += " ORDER BY ongoingCultivations.createdAt DESC LIMIT ? OFFSET ?";
