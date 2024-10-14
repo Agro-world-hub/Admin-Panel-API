@@ -1409,9 +1409,10 @@ exports.createAdmin = async (req, res) => {
   try {
     // Validate the request body
     const validatedBody = req.body;
+    const hashedPassword = await bcrypt.hash(validatedBody.password, 10);
 
     // Create admin data in the database
-    const result = await adminDao.createAdmin(validatedBody);
+    const result = await adminDao.createAdmin(validatedBody, hashedPassword);
 
     console.log("Admin created successfully");
     return res.status(201).json({

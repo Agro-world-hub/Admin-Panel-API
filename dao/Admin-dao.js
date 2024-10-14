@@ -1085,8 +1085,11 @@ exports.getUserById = (userId) => {
   });
 };
 
-exports.createAdmin = (adminData) => {
+exports.createAdmin = (adminData, hashedPassword) => {
+ 
+
   return new Promise((resolve, reject) => {
+    
     const sql = `
             INSERT INTO adminusers (mail, role, userName, password) 
             VALUES (?, ?, ?, ?)
@@ -1095,7 +1098,7 @@ exports.createAdmin = (adminData) => {
       adminData.mail,
       adminData.role,
       adminData.userName,
-      adminData.password,
+      hashedPassword
     ];
 
     db.query(sql, values, (err, results) => {
