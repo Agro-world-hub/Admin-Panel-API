@@ -29,7 +29,7 @@ const createAdminUsersTable = () => {
       id INT AUTO_INCREMENT PRIMARY KEY,
       mail VARCHAR(50) NOT NULL,
       userName VARCHAR(30) NOT NULL,
-      password VARCHAR(20) NOT NULL,
+      password VARCHAR(255) NOT NULL,
       role VARCHAR(20) NOT NULL,
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     )

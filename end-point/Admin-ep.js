@@ -8,38 +8,70 @@ const { log } = require("console");
 const adminDao = require("../dao/Admin-dao");
 const ValidateSchema = require("../validations/Admin-validation");
 const { type } = require("os");
+const bcrypt = require('bcryptjs');
 
 exports.loginAdmin = async (req, res) => {
   const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
   console.log(fullUrl);
 
   try {
+    // Validate request body
     await ValidateSchema.loginAdminSchema.validateAsync(req.body);
 
     const { email, password } = req.body;
+    console.log("Password provided by user:", password);
 
+
+    const plainPassword = 'Admin123';
+    const hashedPassword = await bcrypt.hash(password, 10);
+    const isMatch = bcrypt.compareSync(password, hashedPassword);
+    console.log('test',isMatch);
+
+    // Fetch user from the database
     const [user] = await adminDao.loginAdmin(email);
-    if (user && user.password === password) {
-      const token = jwt.sign(
-        { userId: user.id, role: user.role },
-        process.env.JWT_SECRET,
-        { expiresIn: "5h" }
-      );
-      const data = {
-        token,
-        userId: user.id,
-        role: user.role,
-        userName: user.userName,
-      };
-      res.json(data);
-    } else {
-      res.status(401).json({ error: "Invalid email or password." });
+
+    if (user) {
+      console.log("Hashed password from DB:", user.password);
+
+      // Compare password with hashed password in DB
+      const verify_password = bcrypt.compareSync(password, user.password);
+      console.log("Password verification result:", verify_password);
+
+      if (verify_password) {
+        // Generate JWT token
+        const token = jwt.sign(
+          { userId: user.id, role: user.role },
+          process.env.JWT_SECRET,
+          { expiresIn: "5h" }
+        );
+
+        const data = {
+          token,
+          userId: user.id,
+          role: user.role,
+          userName: user.userName,
+        };
+
+        return res.json(data);
+      }
     }
+    
+    // If user is not found or password doesn't match
+    res.status(401).json({ error: "Invalid email or password." });
+
   } catch (err) {
-    console.error("Error executing query:", err);
+    console.error("Error during login:", err);
     res.status(500).json({ error: "An error occurred during login." });
   }
 };
+
+
+
+
+
+
+
+
 
 exports.getAllAdminUsers = async (req, res) => {
   try {
