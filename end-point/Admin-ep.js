@@ -19,23 +19,17 @@ exports.loginAdmin = async (req, res) => {
     await ValidateSchema.loginAdminSchema.validateAsync(req.body);
 
     const { email, password } = req.body;
-    console.log("Password provided by user:", password);
 
-
-    const plainPassword = 'Admin123';
-    const hashedPassword = await bcrypt.hash(password, 10);
-    const isMatch = bcrypt.compareSync(password, hashedPassword);
-    console.log('test',isMatch);
 
     // Fetch user from the database
     const [user] = await adminDao.loginAdmin(email);
 
     if (user) {
-      console.log("Hashed password from DB:", user.password);
+     
 
       // Compare password with hashed password in DB
       const verify_password = bcrypt.compareSync(password, user.password);
-      console.log("Password verification result:", verify_password);
+      
 
       if (verify_password) {
         // Generate JWT token
