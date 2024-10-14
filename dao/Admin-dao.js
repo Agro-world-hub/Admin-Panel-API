@@ -162,15 +162,43 @@ exports.createCropCallender = async (
 
 exports.insertXLSXData = (cropId, data) => {
   return new Promise((resolve, reject) => {
-    const sql = `
-            INSERT INTO cropcalendardays 
-            (cropId, taskIndex, days, taskTypeEnglish, taskTypeSinhala, taskTypeTamil, 
-            taskCategoryEnglish, taskCategorySinhala, taskCategoryTamil, 
-            taskEnglish, taskSinhala, taskTamil, 
-            taskDescriptionEnglish, taskDescriptionSinhala, taskDescriptionTamil) 
-            VALUES ?`;
+    // Define validation schema
+    const schema = Joi.object({
+      'Task index': Joi.number().required(),
+      'Day': Joi.number().integer().required(),
+      'Task type (English)': Joi.string().required(),
+      'Task type (Sinhala)': Joi.string().required(),
+      'Task type (Tamil)': Joi.string().required(),
+      'Task Category (English)': Joi.string().required(),
+      'Task Category (Sinhala)': Joi.string().required(),
+      'Task Category (Tamil)': Joi.string().required(),
+      'Task (English)': Joi.string().required(),
+      'Task (Sinhala)': Joi.string().required(),
+      'Task (Tamil)': Joi.string().required(),
+      'Task description (English)': Joi.string().required(),
+      'Task description (Sinhala)': Joi.string().required(),
+      'Task description (Tamil)': Joi.string().required(),
+    }).required();
 
-    const values = data.map((row) => [
+    // Validate all data
+    const validatedData = [];
+    for (let i = 0; i < data.length; i++) {
+      const { error, value } = schema.validate(data[i]);
+      if (error) {
+        return reject(new Error(`Validation error in row ${i + 1}: ${error.details[0].message}`));
+      }
+      validatedData.push(value);
+    }
+
+    const sql = `
+      INSERT INTO cropcalendardays 
+      (cropId, taskIndex, days, taskTypeEnglish, taskTypeSinhala, taskTypeTamil, 
+      taskCategoryEnglish, taskCategorySinhala, taskCategoryTamil, 
+      taskEnglish, taskSinhala, taskTamil, 
+      taskDescriptionEnglish, taskDescriptionSinhala, taskDescriptionTamil) 
+      VALUES ?`;
+
+    const values = validatedData.map((row) => [
       cropId,
       row["Task index"],
       row.Day,
@@ -192,7 +220,11 @@ exports.insertXLSXData = (cropId, data) => {
       if (err) {
         reject(err);
       } else {
-        resolve(result.affectedRows);
+        resolve({
+          message: "All data validated and inserted successfully",
+          totalRows: data.length,
+          insertedRows: result.affectedRows
+        });
       }
     });
   });
