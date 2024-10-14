@@ -340,5 +340,12 @@ router.post(
     AdminEp.addNewTaskU
 )
 
+router.post(
+    "/upload-user-xlsx",
+    authMiddleware,
+    uploadfile.single("file"),
+    AdminEp.uploadUsersXLSX
+);
+
 
 module.exports = router;

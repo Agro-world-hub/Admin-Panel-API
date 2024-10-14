@@ -1,6 +1,7 @@
 const db = require("../startup/database");
 const path = require("path");
 const { Upload } = require("@aws-sdk/lib-storage");
+const Joi = require('joi');
 
 exports.loginAdmin = (email) => {
   return new Promise((resolve, reject) => {
@@ -1579,4 +1580,56 @@ exports.addNewTaskDaoU = (task, indexId,userId, cropId) => {
             }
         });
     });
+};
+
+exports.insertUserXLSXData = (data) => {
+  return new Promise((resolve, reject) => {
+    // Define validation schema
+    const schema = Joi.object({
+      'First Name': Joi.string().trim().min(2).max(50).required(),
+      'Last Name': Joi.string().trim().min(2).max(50).required(),
+      'Phone Number': Joi.alternatives().try(
+        Joi.string().pattern(/^\+94\d{9}$/),
+        Joi.number().integer().min(94000000000).max(94999999999)
+      ).required(),
+      'NIC Number': Joi.alternatives().try(
+        Joi.string().pattern(/^(19\d{9}|\d{9}[vV])$/),
+        Joi.number().integer().min(10000000000).max(199999999999)
+      ).required()
+    }).required();
+
+    // Validate all data
+    const validatedData = [];
+    for (let i = 0; i < data.length; i++) {
+      const { error, value } = schema.validate(data[i]);
+      if (error) {
+        return reject(new Error(`Validation error in row ${i + 1}: ${error.details[0].message}`));
+      }
+      validatedData.push(value);
+    }
+
+    const sql = `
+      INSERT INTO users 
+      (firstName, lastName, phoneNumber, NICnumber) 
+      VALUES ?`;
+
+    const values = validatedData.map((row) => [
+      row['First Name'],
+      row['Last Name'],
+      String(row['Phone Number']).startsWith('+') ? row['Phone Number'] : `+${row['Phone Number']}`,
+      String(row['NIC Number'])
+    ]);
+
+    db.query(sql, [values], (err, result) => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve({
+          message: "All data validated and inserted successfully",
+          totalRows: data.length,
+          insertedRows: result.affectedRows
+        });
+      }
+    });
+  });
 };
