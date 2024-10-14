@@ -1040,13 +1040,13 @@ exports.getCurrentAssetsByCategory = async (req, res) => {
   const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
   console.log("Request URL:", fullUrl);
 
-    try {
-        // Validate the request params (id and category)
-        const { id, category } = req.params;
-        // const { id, category } =
-        // await ValidateSchema.getCurrentAssetsByCategorySchema.validateAsync(
-        //     req.params
-        // );
+  try {
+    // Validate the request params (id and category)
+    const { id, category } = req.params;
+    // const { id, category } =
+    // await ValidateSchema.getCurrentAssetsByCategorySchema.validateAsync(
+    //     req.params
+    // );
 
     // Fetch current assets by category from DAO
     const results = await adminDao.getCurrentAssetsByCategory(id, category);
@@ -1523,14 +1523,34 @@ exports.deleteCropTask = async (req, res) => {
 
   try {
     // Validate request parameters (taskId)
-    const validatedParams =
-      await ValidateSchema.deleteCropTaskSchema.validateAsync(req.params);
+    // const validatedParams =
+    //   await ValidateSchema.deleteCropTaskSchema.validateAsync(req.params);
+    const id = req.params.id
+    const cropId = req.params.cropId;
+    const indexId = parseInt(req.params.indexId);
 
     // Fetch the data from the DAO
-    const results = await adminDao.deleteCropTask(validatedParams.id);
+    const results = await adminDao.deleteCropTask(id);
 
     if (results.affectedRows === 0) {
       return res.status(404).json({ message: "Crop Calendar task not found" });
+    }
+
+    const taskIdArr = await adminDao.getAllTaskIdDao(cropId);
+    console.log("Task array:", taskIdArr);
+
+    for (let i = 0; i < taskIdArr.length; i++) {
+      const existingTask = taskIdArr[i];
+
+      if (existingTask.taskIndex > indexId) {
+        console.log(
+          `Updating task ${existingTask.id}, current taskIndex: ${existingTask.taskIndex}`
+        );
+        await adminDao.shiftUpTaskIndexDao(
+          existingTask.id,
+          existingTask.taskIndex - 1
+        );
+      }
     }
 
     console.log("Crop Calendar task deleted successfully");
@@ -1797,23 +1817,23 @@ exports.getAllReplyByPost = async (req, res) => {
   }
 };
 
-exports.DeletPublicForumPost = async(req, res)=>{
-  try{
+exports.DeletPublicForumPost = async (req, res) => {
+  try {
     const postId = req.params.postId;
     const results = await adminDao.deletePublicForumPost(postId);
-    if(results.affectedRows === 1){
+    if (results.affectedRows === 1) {
       console.log("Delete");
-      res.json({status:true});
-    }else{
-      res.json({status:false})
+      res.json({ status: true });
+    } else {
+      res.json({ status: false })
     }
-  }catch (error){
-    if(error.isJoi){
-      return res.status(400).json({error: error.details[0].message })
+  } catch (error) {
+    if (error.isJoi) {
+      return res.status(400).json({ error: error.details[0].message })
     }
     console.error("Error fetching post for post ID:", error);
     return res.status(500).json({
-      error:"An error occurred while fetching post for the postID"
+      error: "An error occurred while fetching post for the postID"
     });
   }
 };
@@ -1933,7 +1953,7 @@ exports.addNewTask = async (req, res) => {
 
   try {
     const task = req.body;
-    console.log(req.params);
+    // console.log(req.params);
 
     const taskIdArr = await adminDao.getAllTaskIdDao(cropId);
     console.log("Task array:", taskIdArr);
@@ -2037,43 +2057,43 @@ exports.getReplyCountByChatId = async (req, res) => {
 
 
 
-exports.addNewTaskU = async(req, res) => {
-    const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
-    console.log("Request URL:", fullUrl);
-    console.log("Add new task data:", req.body);
+exports.addNewTaskU = async (req, res) => {
+  const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
+  console.log("Request URL:", fullUrl);
+  console.log("Add new task data:", req.body);
 
-    const userId = req.params.userId;
-    const cropId = req.params.cropId;
-    const indexId = parseInt(req.params.indexId);
+  const userId = req.params.userId;
+  const cropId = req.params.cropId;
+  const indexId = parseInt(req.params.indexId);
 
-    try {
-        const task = req.body;
-        console.log(req.params);
-
-
-        const taskIdArr = await adminDao.getAllTaskIdDaoU(cropId, userId);
-        console.log("Task array:", taskIdArr);
-
-        for (let i = 0; i < taskIdArr.length; i++) {
-            const existingTask = taskIdArr[i];
-
-            if (existingTask.taskIndex > indexId) {
-                console.log(`Updating task ${existingTask.id}, current taskIndex: ${existingTask.taskIndex}`);
-                await adminDao.shiftUpTaskIndexDaoU(existingTask.id, existingTask.taskIndex + 1);
-            }
-        }
-
-        const addedTaskResult = await adminDao.addNewTaskDaoU(task, (indexId + 1),userId, cropId);
+  try {
+    const task = req.body;
+    console.log(req.params);
 
 
-        if (addedTaskResult.insertId > 0) {
-            res.status(201).json({ status: true, message: "Succcesfull Task Added!" })
-        } else {
-            res.status(500).json({ status: false, message: "Issue Occor in Task Adding!" })
-        }
+    const taskIdArr = await adminDao.getAllTaskIdDaoU(cropId, userId);
+    console.log("Task array:", taskIdArr);
 
-    } catch (error) {
-        console.error("Error adding task:", error);
-        return res.status(500).json({ error: "An error occurred while adding the task" });
+    for (let i = 0; i < taskIdArr.length; i++) {
+      const existingTask = taskIdArr[i];
+
+      if (existingTask.taskIndex > indexId) {
+        console.log(`Updating task ${existingTask.id}, current taskIndex: ${existingTask.taskIndex}`);
+        await adminDao.shiftUpTaskIndexDaoU(existingTask.id, existingTask.taskIndex + 1);
+      }
     }
+
+    const addedTaskResult = await adminDao.addNewTaskDaoU(task, (indexId + 1), userId, cropId);
+
+
+    if (addedTaskResult.insertId > 0) {
+      res.status(201).json({ status: true, message: "Succcesfull Task Added!" })
+    } else {
+      res.status(500).json({ status: false, message: "Issue Occor in Task Adding!" })
+    }
+
+  } catch (error) {
+    console.error("Error adding task:", error);
+    return res.status(500).json({ error: "An error occurred while adding the task" });
+  }
 };

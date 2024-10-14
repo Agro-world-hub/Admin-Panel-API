@@ -247,7 +247,7 @@ router.get(
 );
 
 //crop task delete function
-router.delete("/delete-crop-task/:id", authMiddleware, AdminEp.deleteCropTask);
+router.delete("/delete-crop-task/:id/:cropId/:indexId", authMiddleware, AdminEp.deleteCropTask);
 
 router.post("/edit-crop-task/:id", authMiddleware, AdminEp.editTask);
 
