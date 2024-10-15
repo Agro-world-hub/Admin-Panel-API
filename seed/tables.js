@@ -25,13 +25,16 @@ const createUsersTable = () => {
 
 const createAdminUsersTable = () => {
     const sql = `
-    CREATE TABLE IF NOT EXISTS adminUsers (
+    CREATE TABLE IF NOT EXISTS adminusers (
       id INT AUTO_INCREMENT PRIMARY KEY,
       mail VARCHAR(50) NOT NULL,
       userName VARCHAR(30) NOT NULL,
       password VARCHAR(255) NOT NULL,
-      role VARCHAR(20) NOT NULL,
-      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      role INT(11) NULL,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (role) REFERENCES adminroles(id)
+        ON DELETE SET NULL
+        ON UPDATE CASCADE
     )
   `;
     return new Promise((resolve, reject) => {
@@ -60,7 +63,7 @@ const createContentTable = () => {
       status VARCHAR(15) NOT NULL,
       createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       createdBy INT,
-      FOREIGN KEY (createdBy) REFERENCES adminUsers(id)
+      FOREIGN KEY (createdBy) REFERENCES adminusers(id)
         ON DELETE SET NULL
         ON UPDATE CASCADE
     )

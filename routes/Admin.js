@@ -348,4 +348,7 @@ router.post(
 );
 
 
+router.get("/get-all-roles", authMiddleware, AdminEp.getAllRoles);
+
+
 module.exports = router;

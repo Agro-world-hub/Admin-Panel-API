@@ -2194,3 +2194,23 @@ exports.uploadUsersXLSX = async (req, res) => {
       .json({ error: "An error occurred while processing the XLSX file." });
   }
 };
+
+
+
+exports.getAllRoles = async (req, res) => {
+  try {
+    const roles = await adminDao.getAllRoles();
+
+    console.log("Successfully fetched admin roles");
+    res.json({
+      roles
+    });
+  } catch (err) {
+    if (err.isJoi) {
+      // Validation error
+      return res.status(400).json({ error: err.details[0].message });
+    }
+    console.error("Error executing query:", err);
+    res.status(500).send("An error occurred while fetching data.");
+  }
+};

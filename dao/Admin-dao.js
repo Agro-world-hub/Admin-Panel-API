@@ -20,7 +20,11 @@ exports.getAllAdminUsers = (limit, offset) => {
   return new Promise((resolve, reject) => {
     const countSql = "SELECT COUNT(*) as total FROM adminusers";
     const dataSql =
-      "SELECT * FROM adminusers ORDER BY created_at DESC LIMIT ? OFFSET ?";
+      `SELECT adminusers.id, adminusers.mail, adminusers.userName, adminroles.role 
+FROM adminusers 
+JOIN adminroles ON adminusers.role = adminroles.id 
+ORDER BY adminusers.created_at DESC 
+LIMIT ? OFFSET ?`;
 
     db.query(countSql, (countErr, countResults) => {
       if (countErr) {
@@ -1666,5 +1670,21 @@ exports.insertUserXLSXData = (data) => {
         });
       }
     });
+  });
+};
+
+
+
+exports.getAllRoles = () => {
+  return new Promise((resolve, reject) => {
+      const sql = "SELECT * FROM adminroles";
+
+      db.query(sql,(err, results) => {
+          if (err) {
+              return reject(err); // Reject promise if an error occurs
+          }
+
+          resolve(results); // No need to wrap in arrays, return results directly
+      });
   });
 };

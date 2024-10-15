@@ -11,13 +11,13 @@ const createSuperAdmin = async () => {
 
     // Use parameterized query to insert the hashed password
     const sql = `
-      INSERT INTO adminUsers (mail, userName, password, role)
+      INSERT INTO adminusers (mail, userName, password, role)
       VALUES (?, ?, ?, ?)
     `;
 
     // Return a promise that resolves when the admin is created
     return new Promise((resolve, reject) => {
-      db.query(sql, ['admin@agroworld.com', 'superadmin123', hashedPassword, 'SUPER_ADMIN'], (err, result) => {
+      db.query(sql, ['admin@agroworld.com', 'superadmin123', hashedPassword, '1'], (err, result) => {
         if (err) {
           reject('Error creating Super Admin: ' + err);
         } else {
