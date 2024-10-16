@@ -390,6 +390,8 @@ exports.createNews = async (req, res) => {
       descriptionSinhala,
       descriptionTamil,
       status,
+      publishDate,
+      expireDate,
       createdBy,
     } = await ValidateSchema.createNewsSchema.validateAsync(req.body);
 
@@ -410,7 +412,9 @@ exports.createNews = async (req, res) => {
       descriptionTamil,
       fileBuffer, // pass the file buffer
       status,
-      createdBy
+      createdBy,
+      publishDate,
+      expireDate,
     );
 
     console.log("News creation success");

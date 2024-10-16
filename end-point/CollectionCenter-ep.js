@@ -1,0 +1,55 @@
+const CollectionCenterDao = require('../dao/CollectionCenter-dao')
+
+exports.getAllCollectionCenter = async (req, res) => {
+    try {
+  
+      const result = await CollectionCenterDao.GetAllCenterDAO()
+  
+      if (result.length === 0) {
+        return res
+          .status(404)
+          .json({ message: "No news items found", data: result });
+      }
+  
+      console.log("Successfully retrieved all collection center");
+      res.json(result);
+    } catch (err) {
+      if (err.isJoi) {
+        // Validation error
+        console.error("Validation error:", err.details[0].message);
+        return res.status(400).json({ error: err.details[0].message });
+      }
+  
+      console.error("Error fetching news:", err);
+      res.status(500).json({ error: "An error occurred while fetching news" });
+    }
+  };
+
+  //delete collection center
+  exports.deleteCollectionCenter = async (req, res) => {
+    try {
+      const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
+      console.log("Request URL:", fullUrl);
+
+      const id = req.params.id
+  
+      const affectedRows = await CollectionCenterDao.deleteCollectionCenterDAo(id);
+  
+      if (affectedRows === 0) {
+        return res.status(404).json({ message: "Crop Calendar not found" });
+      } else {
+        console.log("Crop Calendar deleted successfully");
+        return res.status(200).json({ status: true });
+      }
+    } catch (err) {
+      if (err.isJoi) {
+        // Validation error
+        return res.status(400).json({ error: err.details[0].message });
+      }
+  
+      console.error("Error deleting crop calendar:", err);
+      return res
+        .status(500)
+        .json({ error: "An error occurred while deleting crop calendar" });
+    }
+  };

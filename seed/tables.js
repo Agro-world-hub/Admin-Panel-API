@@ -61,6 +61,8 @@ const createContentTable = () => {
       descriptionTamil TEXT NOT NULL,
       image LONGBLOB,
       status VARCHAR(15) NOT NULL,
+      publishDate TIMESTAMP,
+      expireDate TIMESTAMP,
       createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       createdBy INT,
       FOREIGN KEY (createdBy) REFERENCES adminusers(id)
@@ -74,8 +76,8 @@ const createContentTable = () => {
                 reject('Error creating content table: ' + err);
             } else {
                 resolve('Content table created successfully.');
-            }    
-        });  
+            }
+        });
     });
 };
 
