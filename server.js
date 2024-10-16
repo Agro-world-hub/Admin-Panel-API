@@ -3,6 +3,7 @@ const db = require('./startup/database');
 const routes = require('./routes/Admin');
 const collectionOfficerRoutes = require('./routes/CollectionOfficer');
 const routesNewws = require('./routes/News');
+const CollectionCenterRoutes = require('./routes/CollectionCenter');
 require('dotenv').config();
 const cors = require('cors');
  
@@ -26,6 +27,7 @@ app.use(cors());
 app.use(process.env.AUTHOR, routes);
 app.use(process.env.AUTHOR, collectionOfficerRoutes);
 app.use(process.env.AUTHOR, routesNewws);
+app.use(process.env.AUTHOR, CollectionCenterRoutes);
 app.use('/uploads', express.static('uploads'));
 
 app.listen(port, () => {
