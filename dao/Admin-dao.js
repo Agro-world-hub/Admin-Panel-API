@@ -281,11 +281,13 @@ exports.createNews = async (
   descriptionTamil,
   imageBuffer, // accept the image buffer
   status,
-  createdBy
+  createdBy,
+  publishDate,
+  expireDate,
 ) => {
   return new Promise((resolve, reject) => {
     const sql =
-      "INSERT INTO content (titleEnglish, titleSinhala, titleTamil, descriptionEnglish, descriptionSinhala, descriptionTamil, image, status, createdBy) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
+      "INSERT INTO content (titleEnglish, titleSinhala, titleTamil, descriptionEnglish, descriptionSinhala, descriptionTamil, image, status, createdBy,publishDate, expireDate) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
     const values = [
       titleEnglish,
       titleSinhala,
@@ -296,6 +298,8 @@ exports.createNews = async (
       imageBuffer, // pass the buffer as image
       status,
       createdBy,
+      publishDate,
+      expireDate,
     ];
 
     db.query(sql, values, (err, results) => {
@@ -697,27 +701,29 @@ exports.getAllOngoingCultivations = (searchItem, limit, offset) => {
         `;
     let dataSql = `
             SELECT 
-                ongoingCultivations.id AS cultivationId, 
-                users.id,
-                users.firstName, 
-                users.lastName, 
-                users.NICnumber 
+                OC.id AS cultivationId, 
+                U.id,
+                U.firstName, 
+                U.lastName, 
+                U.NICnumber,
+                COUNT(OCC.cropCalendar) AS CropCount
             FROM 
-                ongoingcultivations 
-            JOIN 
-                users ON ongoingCultivations.userId = users.id
+                ongoingcultivations OC , users U , ongoingCultivationsCrops OCC
+            WHERE 
+                OC.userId = U.id AND OC.id = OCC.ongoingCultivationId
+            
         `;
     const params = [];
 
     if (searchItem) {
-      countSql += " WHERE users.NICnumber LIKE ? OR users.firstName LIKE ? OR users.lastName LIKE ?";
-      dataSql += " WHERE users.NICnumber LIKE ? OR users.firstName LIKE ? OR users.lastName LIKE ?";
+      countSql += " AND U.NICnumber LIKE ? OR U.firstName LIKE ? OR U.lastName LIKE ?";
+      dataSql += " AND U.NICnumber LIKE ? OR U.firstName LIKE ? OR U.lastName LIKE ?";
       const searchQuery = `%${searchItem}%`;
       params.push(searchQuery, searchQuery, searchQuery);
 
     }
 
-    dataSql += " ORDER BY ongoingCultivations.createdAt DESC LIMIT ? OFFSET ?";
+    dataSql += "GROUP BY OC.id, U.id, U.firstName, U.lastName, U.NICnumber ORDER BY OC.createdAt DESC LIMIT ? OFFSET ?";
     params.push(limit, offset);
 
     // Fetch total count
