@@ -1281,34 +1281,90 @@ exports.getAllPost = () => {
     });
   });
 };
-exports.getAllUserTaskByCropId = (cropId, userId) => {
+
+
+
+
+// exports.getAllUserTaskByCropId = (cropId, userId) => {
+//   return new Promise((resolve, reject) => {
+//     const countSql = `SELECT COUNT(*) as total FROM slavecropcalendardays WHERE 
+//     slavecropcalendardays.cropCalendarId = ? 
+//     AND slavecropcalendardays.userId = ?`;
+//     const sql = `
+//             SELECT 
+//     slavecropcalendardays.id AS slavecropcalendardaysId,
+//     slavecropcalendardays.cropCalendarId,
+//     slavecropcalendardays.taskIndex, 
+//     slavecropcalendardays.days, 
+//     slavecropcalendardays.taskEnglish,
+//     slavecropcalendardays.status
+// FROM 
+//     slavecropcalendardays
+// WHERE 
+//     slavecropcalendardays.cropCalendarId = ? 
+//     AND slavecropcalendardays.userId = ?
+// ORDER BY slavecropcalendardays.taskIndex;
+
+//         `;
+//     const values = [cropId, userId];
+
+//     db.query(sql, values, (err, results) => {
+//       if (err) {
+//         return reject(err); // Reject promise if an error occurs
+//       }
+//       resolve(results); // Resolve the promise with the query results
+//     });
+//   });
+// };
+
+
+exports.getAllUserTaskByCropId = (cropId, userId, limit, offset) => {
   return new Promise((resolve, reject) => {
-    const sql = `
-            SELECT 
-    slavecropcalendardays.id AS slavecropcalendardaysId,
-    slavecropcalendardays.cropCalendarId,
-    slavecropcalendardays.taskIndex, 
-    slavecropcalendardays.days, 
-    slavecropcalendardays.taskEnglish,
-    slavecropcalendardays.status
-FROM 
-    slavecropcalendardays
-WHERE 
-    slavecropcalendardays.cropCalendarId = ? 
-    AND slavecropcalendardays.userId = ?
-ORDER BY slavecropcalendardays.taskIndex;;
+    const countSql = `
+      SELECT COUNT(*) as total 
+      FROM slavecropcalendardays 
+      WHERE cropCalendarId = ? AND userId = ?`;
 
-        `;
-    const values = [cropId, userId];
+    const dataSql = `
+      SELECT 
+        slavecropcalendardays.id AS slavecropcalendardaysId,
+        slavecropcalendardays.cropCalendarId,
+        slavecropcalendardays.taskIndex, 
+        slavecropcalendardays.days, 
+        slavecropcalendardays.taskEnglish,
+        slavecropcalendardays.status
+      FROM 
+        slavecropcalendardays
+      WHERE 
+        slavecropcalendardays.cropCalendarId = ? 
+        AND slavecropcalendardays.userId = ?
+      ORDER BY slavecropcalendardays.taskIndex
+      LIMIT ? OFFSET ?`;
 
-    db.query(sql, values, (err, results) => {
-      if (err) {
-        return reject(err); // Reject promise if an error occurs
+    const values = [cropId, userId, limit, offset];
+
+    // First, query the total count of the tasks
+    db.query(countSql, [cropId, userId], (countErr, countResults) => {
+      if (countErr) {
+        return reject(countErr);
       }
-      resolve(results); // Resolve the promise with the query results
+
+      // Next, query the task data with pagination (limit and offset)
+      db.query(dataSql, values, (dataErr, dataResults) => {
+        if (dataErr) {
+          return reject(dataErr);
+        }
+
+        // Resolve with total count and paginated items
+        resolve({
+          total: countResults[0].total, // The total count of tasks
+          items: dataResults,           // The list of tasks for the user
+        });
+      });
     });
   });
 };
+
 
 
 
