@@ -805,6 +805,59 @@ const createUserBankDetails = () => {
 };
 
 
+const createCollectionCenter = () => {
+    const sql = `
+    CREATE TABLE IF NOT EXISTS collectioncenter (
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      regCode VARCHAR(30) NOT NULL,
+      centerName VARCHAR(30) NOT NULL,
+      contact01 VARCHAR(13) NOT NULL,
+      contact02 VARCHAR(13) NOT NULL,
+      buildingNumber VARCHAR(50) NOT NULL,
+      street VARCHAR(50) NOT NULL,
+      district VARCHAR(30) NOT NULL,
+      province VARCHAR(30) NOT NULL,
+      createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )
+  `;
+    return new Promise((resolve, reject) => {
+        db.query(sql, (err, result) => {
+            if (err) {
+                reject('Error creating collectioncenter table: ' + err);
+            } else {
+                resolve('collectioncenter table created successfully.');
+            }
+        });
+    });
+};
+
+const createCollectionCenterOfficer = () => {
+    const sql = `
+    CREATE TABLE IF NOT EXISTS collectioncenterofficer (
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      centerId INT,
+      name VARCHAR(30) NOT NULL,
+      role VARCHAR(13) NOT NULL,
+      contact01 VARCHAR(13) NOT NULL,
+      contact02 VARCHAR(50) NOT NULL,
+      createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (centerId) REFERENCES collectioncenter(id)
+        ON DELETE SET NULL
+        ON UPDATE CASCADE
+    )
+  `;
+    return new Promise((resolve, reject) => {
+        db.query(sql, (err, result) => {
+            if (err) {
+                reject('Error creating collectioncenterofficer table: ' + err);
+            } else {
+                resolve('collectioncenterofficer table created successfully.');
+            }
+        });
+    });
+};
+
+
 module.exports = {
     createUsersTable,
     createAdminUsersTable,
@@ -837,5 +890,7 @@ module.exports = {
     createCollectionOfficerCompanyDetails,
     createCollectionOfficerBankDetails,
     createRegisteredFarmerPayments,
-    createUserBankDetails
+    createUserBankDetails,
+    createCollectionCenter,
+    createCollectionCenterOfficer
 };

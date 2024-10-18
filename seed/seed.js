@@ -32,7 +32,8 @@ const { createCollectionOfficerCompanyDetails } = require('./tables');
 const { createCollectionOfficerBankDetails } = require('./tables');
 const { createRegisteredFarmerPayments } = require('./tables');
 const { createUserBankDetails } = require('./tables');
-
+const { createCollectionCenter } = require('./tables');
+const { createCollectionCenterOfficer } = require('./tables');
 
 const {createSuperAdmin} = require('./admin')
 
@@ -106,6 +107,10 @@ const runSeeds = async () => {
     console.log(messageCreateRegisteredFarmerPayments);
     const messageCreateUserBankDetails = await createUserBankDetails();
     console.log(messageCreateUserBankDetails);
+    const messagecreateCollectionCenter = await createCollectionCenter();
+    console.log(messagecreateCollectionCenter);
+    const messagecreateCollectionCenterOfficer = await createCollectionCenterOfficer();
+    console.log(messagecreateCollectionCenterOfficer);
   } catch (err) {
     console.error(err);
   } finally {
