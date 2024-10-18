@@ -53,3 +53,32 @@ exports.getAllCollectionCenter = async (req, res) => {
         .json({ error: "An error occurred while deleting crop calendar" });
     }
   };
+
+exports.addNewCollectionCenter = async (req, res) => {
+  try {
+    const centerData = {
+      regCode: req.body.regCode,
+      centerName: req.body.centerName,
+      contact01: req.body.contact01,
+      contact02: req.body.contact02,
+      buildingNumber: req.body.buildingNumber,
+      street: req.body.street,
+      district: req.body.district,
+      province: req.body.province,
+    };
+
+    const result = await collectionCenterDao.addCollectionCenter(centerData);
+    res.status(201).json({
+      success: true,
+      message: "Collection Center added successfully",
+      data: result,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Error adding collection center",
+      error: error.message,
+    });
+  }
+};
+  
