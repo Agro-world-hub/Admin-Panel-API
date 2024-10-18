@@ -62,7 +62,7 @@ const createContentTable = () => {
       image LONGBLOB,
       status VARCHAR(15) NOT NULL,
       publishDate TIMESTAMP,
-      expireDate TIMESTAMP,
+      expireDate TIMESTAMP NULL DEFAULT NULL,
       createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       createdBy INT,
       FOREIGN KEY (createdBy) REFERENCES adminusers(id)

@@ -1710,35 +1710,7 @@ exports.getAllUsersTaskByCropId = async (req, res) => {
   }
 };
 
-exports.deleteUserTask = async (req, res) => {
-  const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
-  console.log("Request URL:", fullUrl);
 
-  try {
-    // Validate the request parameters (id)
-    const { id } = req.params;
-
-    // Delete admin user by id from DAO
-    const results = await adminDao.deleteUserTasks(id);
-
-    if (results.affectedRows === 0) {
-      return res.status(404).json({ message: "User task not found" });
-    }
-
-    console.log("User task deleted successfully");
-    return res.status(200).json({ message: "User task deleted successfully" });
-  } catch (err) {
-    if (err.isJoi) {
-      // Validation error
-      return res.status(400).json({ error: err.details[0].message });
-    }
-
-    console.error("Error deleting User task:", err);
-    return res
-      .status(500)
-      .json({ error: "An error occurred while deleting User task" });
-  }
-};
 
 exports.editUserTaskStatus = async (req, res) => {
   try {
@@ -2238,5 +2210,54 @@ exports.getAllRoles = async (req, res) => {
     }
     console.error("Error executing query:", err);
     res.status(500).send("An error occurred while fetching data.");
+  }
+};
+
+
+//delete crop task
+exports.deleteUserCropTask = async (req, res) => {
+  const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
+  console.log("Request URL:", fullUrl);
+
+  try {
+    const id = req.params.id
+    const cropId = req.params.cropId;
+    const userId = req.params.userId;
+    const indexId = parseInt(req.params.indexId);
+
+    const results = await adminDao.deleteUserCropTask(id);
+
+    if (results.affectedRows === 0) {
+      return res.status(404).json({ message: "Crop Calendar task not found" });
+    }
+
+    const taskIdArr = await adminDao.getAllUserTaskIdDao(cropId, userId);
+   
+
+    for (let i = 0; i < taskIdArr.length; i++) {
+      const existingTask = taskIdArr[i];
+
+      if (existingTask.taskIndex > indexId) {
+        console.log(
+          `Updating task ${existingTask.id}, current taskIndex: ${existingTask.taskIndex}`
+        );
+        await adminDao.shiftUpUserTaskIndexDao(
+          existingTask.id,
+          existingTask.taskIndex - 1
+        );
+      }
+    }
+    console.log("Crop Calendar task deleted successfully");
+    res.status(200).json({ status: true });
+  } catch (error) {
+    if (error.isJoi) {
+      // Handle validation error
+      return res.status(400).json({ error: error.details[0].message });
+    }
+
+    console.error("Error deleting crop task:", error);
+    return res
+      .status(500)
+      .json({ error: "An error occurred while deleting the crop task" });
   }
 };

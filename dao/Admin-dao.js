@@ -1310,19 +1310,7 @@ ORDER BY slavecropcalendardays.taskIndex;;
   });
 };
 
-exports.deleteUserTasks = (id) => {
-  const sql = "DELETE FROM slavecropcalendardays WHERE id = ?";
 
-  return new Promise((resolve, reject) => {
-    db.query(sql, [id], (err, results) => {
-      if (err) {
-        reject("Error executing delete query: " + err);
-      } else {
-        resolve(results);
-      }
-    });
-  });
-};
 
 exports.getUserTaskStatusById = (id) => {
   return new Promise((resolve, reject) => {
@@ -1695,5 +1683,53 @@ exports.getAllRoles = () => {
 
           resolve(results); // No need to wrap in arrays, return results directly
       });
+  });
+};
+
+
+
+
+exports.deleteUserCropTask = (taskId) => {
+  return new Promise((resolve, reject) => {
+    const sql = "DELETE FROM slavecropcalendardays WHERE id = ?";
+    const values = [taskId];
+
+    db.query(sql, values, (err, results) => {
+      if (err) {
+        return reject(err); // Reject promise if an error occurs
+      }
+      resolve(results); // Resolve the promise with the query results
+    });
+  });
+};
+
+
+exports.getAllUserTaskIdDao = (cropId, userId) => {
+  return new Promise((resolve, reject) => {
+    const sql = "SELECT id, taskIndex FROM slavecropcalendardays WHERE cropCalendarId = ? AND userId = ?";
+    const values = [cropId, userId];
+
+    db.query(sql, values, (err, results) => {
+      if (err) {
+        return reject(err); // Reject promise if an error occurs
+      }
+
+      resolve(results); // No need to wrap in arrays, return results directly
+    });
+  });
+};
+
+exports.shiftUpUserTaskIndexDao = (taskId, indexId) => {
+  return new Promise((resolve, reject) => {
+    const sql = "UPDATE  slavecropcalendardays SET taskIndex = ? WHERE id = ?";
+    const values = [indexId, taskId];
+
+    db.query(sql, values, (err, results) => {
+      if (err) {
+        return reject(err); // Reject promise if an error occurs
+      }
+
+      resolve(results[0]); // Resolve the promise with the first result
+    });
   });
 };

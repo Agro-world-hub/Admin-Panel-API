@@ -265,9 +265,9 @@ router.get(
 );
 
 router.delete(
-    "/delete-user-task/:id",
+    "/delete-user-task/:id/:cropId/:indexId/:userId",
     authMiddleware,
-    AdminEp.deleteUserTask
+    AdminEp.deleteUserCropTask
 );
 
 
