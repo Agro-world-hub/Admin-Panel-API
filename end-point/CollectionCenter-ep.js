@@ -66,8 +66,21 @@ exports.addNewCollectionCenter = async (req, res) => {
       district: req.body.district,
       province: req.body.province,
     };
+    console.log("Add Collection center success", centerData);
 
-    const result = await collectionCenterDao.addCollectionCenter(centerData);
+    const result = await CollectionCenterDao.addCollectionCenter(
+      centerData.regCode,
+      centerData.centerName,
+      centerData.contact01,
+      centerData.contact02,
+      centerData.buildingNumber,
+      centerData.street,
+      centerData.district,
+      centerData.province
+    );
+
+    console.log("Insert result:", result);
+    
     res.status(201).json({
       success: true,
       message: "Collection Center added successfully",
