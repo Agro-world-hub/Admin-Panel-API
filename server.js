@@ -6,6 +6,7 @@ const routesNewws = require('./routes/News');
 const CollectionCenterRoutes = require('./routes/CollectionCenter');
 require('dotenv').config();
 const cors = require('cors');
+const db2 = require('./startup/marketPrice'); 
  
 
 const app = express();
@@ -23,6 +24,16 @@ db.connect(err => {
   }
   console.log('Connected to the MySQL database in server.js.');
 });
+
+db2.connect(err => {
+  if (err) {
+    console.error('Error connecting to the database in index.js (Market Price): ', err);
+    return;
+  }
+  console.log('Connected to the MySQL database in server.js. (Market Price)');
+});
+
+
 app.use(cors());
 app.use(process.env.AUTHOR, routes);
 app.use(process.env.AUTHOR, collectionOfficerRoutes);
