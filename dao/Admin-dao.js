@@ -1620,7 +1620,9 @@ exports.addNewReplyDao = (chatId, replyId, replyMessage) => {
 };
 
 exports.deletePublicForumPost = (id) =>{
-  const sql = "DELET FROM publicforumposts WHERE id = ?";
+  console.log("Deleting post with id:", id);
+  
+  const sql = "DELETE FROM publicforumposts WHERE id = ?";
 
   return new Promise((resolve, reject)=>{
     db.query(sql, [id], (err, results)=>{
