@@ -1868,6 +1868,7 @@ exports.DeletPublicForumPost = async (req, res) => {
   try {
     const postId = req.params.postId;
     const results = await adminDao.deletePublicForumPost(postId);
+    // const results = await adminDao.deletePublicForumPost(postId);
     if (results.affectedRows === 1) {
       console.log("Delete");
       res.json({ status: true });
