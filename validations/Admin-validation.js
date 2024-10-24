@@ -121,9 +121,6 @@ exports.createMarketPriceSchema = Joi.object({
     titleEnglish: Joi.string().required(),
     titleSinhala: Joi.string().required(),
     titleTamil: Joi.string().required(),
-    descriptionEnglish: Joi.string().required(),
-    descriptionSinhala: Joi.string().required(),
-    descriptionTamil: Joi.string().required(),
     status: Joi.string().valid('Draft', 'Published').required(), // Example values for status
     price: Joi.number().precision(2).required(),
     createdBy: Joi.string().required(),
@@ -153,9 +150,7 @@ exports.editMarketPriceSchema = Joi.object({
     titleEnglish: Joi.string().required(),
     titleSinhala: Joi.string().required(),
     titleTamil: Joi.string().required(),
-    descriptionEnglish: Joi.string().required(),
-    descriptionSinhala: Joi.string().required(),
-    descriptionTamil: Joi.string().required(),
+    
     price: Joi.number().required(),
     id: Joi.number().integer().required(), // The ID should be a valid integer
 });

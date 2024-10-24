@@ -2,7 +2,7 @@ const db = require("../startup/database");
 const db2 = require("../startup/marketPrice");
 const Joi = require('joi');
 
-exports.insertXLSXData = (cropId, data) => {
+exports.insertMarketPriceXLSXData = (cropId, data) => {
     return new Promise((resolve, reject) => {
       // Define validation schema
       const schema = Joi.object({

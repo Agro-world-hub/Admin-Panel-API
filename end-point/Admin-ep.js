@@ -699,9 +699,7 @@ exports.createMarketPrice = async (req, res) => {
       titleEnglish,
       titleSinhala,
       titleTamil,
-      descriptionEnglish,
-      descriptionSinhala,
-      descriptionTamil,
+      
       status,
       price,
       createdBy,
@@ -719,9 +717,7 @@ exports.createMarketPrice = async (req, res) => {
       titleEnglish,
       titleSinhala,
       titleTamil,
-      descriptionEnglish,
-      descriptionSinhala,
-      descriptionTamil,
+     
       fileBuffer,
       status,
       price,
@@ -1781,8 +1777,8 @@ exports.editUserTaskStatus = async (req, res) => {
 
     // Toggle between 'Draft' and 'Published'
     if (currentStatus === "Pending") {
-      newStatus = "Completed";
-    } else if (currentStatus === "Completed") {
+      newStatus = "completed";
+    } else if (currentStatus === "completed") {
       newStatus = "Pending";
     } else {
       return res.status(400).json({ error: "Invalid current status" });
