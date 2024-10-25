@@ -20,4 +20,16 @@ router.post(
     MarketPriceEp.createMarketPriceXLSX
 );
 
+router.get(
+    "/get-market-prices",
+    // authMiddleware,
+    MarketPriceEp.getAllMarketPrice
+)
+
+router.get(
+    "/get-all-crop-name",
+    // authMiddleware,
+    MarketPriceEp.getAllCropName
+)
+
 module.exports = router;
