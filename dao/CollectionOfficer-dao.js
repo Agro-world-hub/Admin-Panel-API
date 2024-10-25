@@ -17,24 +17,46 @@ exports.getCollectionOfficerDistrictReports = (district) => {
     });
 };
 
-exports.createCollectionOfficer = (officerData) => {
+exports.createCollectionOfficerPersonal = (officerData) => {
     return new Promise((resolve, reject) => {
         const sql =
-            "INSERT INTO collectionofficer (firstName, lastName, phoneNumber01, phoneNumber02, image, nic, email, houseNumber, streetName, district, province, country, languages) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
-        
-        db.query(sql, officerData, (err, results) => {
-            if (err) {
-                return reject(err); // Reject promise if an error occurs
-            }
-            resolve(results); // Resolve the promise with the query results
-        });
+            "INSERT INTO collectionofficer (firstNameEnglish, firstNameSinhala, firstNameTamil, lastNameEnglish, lastNameSinhala, lastNameTamil, phoneNumber01, phoneNumber02, image, nic, email, houseNumber, streetName, city, district, province, country, languages) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+
+        db.query(
+            sql,
+            [
+                officerData.firstNameEnglish,
+                officerData.firstNameSinhala,
+                officerData.firstNameTamil,
+                officerData.lastNameEnglish,
+                officerData.lastNameSinhala,
+                officerData.lastNameTamil,
+                officerData.phoneNumber01Code + officerData.phoneNumber01,
+                officerData.phoneNumber02Code + officerData.phoneNumber02,
+                officerData.image,
+                officerData.nic,
+                officerData.email,
+                officerData.houseNumber,
+                officerData.streetName,
+                officerData.city,
+                officerData.district,
+                officerData.province,
+                officerData.country,
+                officerData.languages,
+
+            ], (err, results) => {
+                if (err) {
+                    return reject(err); // Reject promise if an error occurs
+                }
+                resolve(results); // Resolve the promise with the query results
+            });
     });
 };
 
 exports.getAllCollectionOfficers = (page, limit, searchNIC) => {
     return new Promise((resolve, reject) => {
         const offset = (page - 1) * limit;
-        
+
         let countSql = "SELECT COUNT(*) as total FROM collectionofficer";
         let dataSql = `
             SELECT
@@ -104,5 +126,55 @@ exports.getCollectionOfficerReports = (collectionOfficerId, date) => {
             }
             resolve(results);
         });
+    });
+};
+
+
+exports.createCollectionOfficerCompany = (companyData, collectionOfficerId) => {
+    return new Promise((resolve, reject) => {
+        const sql =
+            "INSERT INTO collectionofficercompanydetails (collectionOfficerId, companyNameEnglish, companyNameSinhala, companyNameTamil, jobRole, IRMname, companyEmail, assignedDistrict, employeeType) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
+
+        db.query(
+            sql,
+            [
+                collectionOfficerId,
+                companyData.companyNameEnglish,
+                companyData.companyNameSinhala,
+                companyData.companyNameTamil,
+                companyData.jobRole,
+                companyData.IRMname,
+                companyData.companyEmail,
+                companyData.assignedDistrict,
+                companyData.employeeType,
+
+            ], (err, results) => {
+                if (err) {
+                    return reject(err); // Reject promise if an error occurs
+                }
+                resolve(results); // Resolve the promise with the query results
+            });
+    });
+};
+
+exports.createCollectionOfficerBank = (bankData, collectionOfficerId) => {
+    return new Promise((resolve, reject) => {
+        const sql =
+            "INSERT INTO collectionofficerbankdetails (collectionOfficerId, accHolderName, accNumber, bankName, branchName) VALUES (?, ?, ?, ?, ?)";
+
+        db.query(
+            sql,
+            [
+                collectionOfficerId,
+                bankData.accHolderName,
+                bankData.accNumber,
+                bankData.bankName,
+                bankData.branchName,
+            ], (err, results) => {
+                if (err) {
+                    return reject(err); // Reject promise if an error occurs
+                }
+                resolve(results); // Resolve the promise with the query results
+            });
     });
 };
