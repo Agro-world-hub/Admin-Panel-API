@@ -67,14 +67,14 @@ exports.createMarketPriceXLSX = async (req, res) => {
     console.log(`Data extracted from XLSX: ${data.length} rows`);
 
     // Step 7: Check if the date field is present in the data
-    const extractedDate = data[0]['Date']; // Assuming 'Date' is the column name in XLSX
+    // const extractedDate = data[0]['Date'];
 
     // Validate the extracted date (customize this logic as per your needs)
-    if (!extractedDate || isNaN(Date.parse(extractedDate))) {
-      return res.status(400).json({ error: "Invalid or missing 'Date' field in the XLSX file." });
-    }
+    // if (!extractedDate || isNaN(Date.parse(extractedDate))) {
+    //   return res.status(400).json({ error: "Invalid or missing 'Date' field in the XLSX file." });
+    // }
     
-    console.log(`Date extracted from XLSX: ${extractedDate}`);
+    // console.log(`Date extracted from XLSX: ${extractedDate}`);
 
     // Step 8: Insert market price data using xlindex and the extracted date
     const marketPriceResult = await marketPriceDao.insertMarketPriceXLSXData(xlindex, data, createdBy, date, startTime, endTime);

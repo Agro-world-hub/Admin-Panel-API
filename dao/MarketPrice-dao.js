@@ -32,9 +32,6 @@ exports.insertMarketPriceXLSXData = (xlindex, data, createdBy, date, startTime, 
         'Crop Id': Joi.number().required(),
         'Grade': Joi.string().required(),
         'Price': Joi.required(),
-        'Date': Joi.required(),
-        'Start Time': Joi.required(),
-        'End Time': Joi.required(),
       }).required();
   
       // Validate all data
