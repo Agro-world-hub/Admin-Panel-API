@@ -2,24 +2,39 @@ const db = require("../startup/database");
 const db2 = require("../startup/marketPrice");
 const Joi = require('joi');
 
-exports.insertMarketPriceXLSXData = (cropId, data) => {
+
+exports.createxlhistory = (xlName) => {
+  return new Promise((resolve, reject) => {
+    const sql = "INSERT INTO xlsxhistory (`xlName`) VALUES (?)";
+    const values = [xlName];
+
+    db.query(sql, [values], (err, results) => {
+      if (err) {
+        reject(err);
+      } else {
+        // Resolve with the inserted ID (xlindex)
+        resolve(results.insertId);
+        console.log(results.insertId);
+      }
+    });
+  });
+};
+
+
+
+
+
+exports.insertMarketPriceXLSXData = (xlindex, data, createdBy, date, startTime, endTime) => {
     return new Promise((resolve, reject) => {
-      // Define validation schema
+      console.log('dfdfhdgh');
+
       const schema = Joi.object({
-        'Task index': Joi.number().required(),
-        'Day': Joi.number().integer().required(),
-        'Task type (English)': Joi.string().required(),
-        'Task type (Sinhala)': Joi.string().required(),
-        'Task type (Tamil)': Joi.string().required(),
-        'Task Category (English)': Joi.string().required(),
-        'Task Category (Sinhala)': Joi.string().required(),
-        'Task Category (Tamil)': Joi.string().required(),
-        'Task (English)': Joi.string().required(),
-        'Task (Sinhala)': Joi.string().required(),
-        'Task (Tamil)': Joi.string().required(),
-        'Task description (English)': Joi.string().required(),
-        'Task description (Sinhala)': Joi.string().required(),
-        'Task description (Tamil)': Joi.string().required(),
+        'Crop Id': Joi.number().required(),
+        'Grade': Joi.string().required(),
+        'Price': Joi.required(),
+        'Date': Joi.required(),
+        'Start Time': Joi.required(),
+        'End Time': Joi.required(),
       }).required();
   
       // Validate all data
@@ -31,37 +46,30 @@ exports.insertMarketPriceXLSXData = (cropId, data) => {
         }
         validatedData.push(value);
       }
-  
+    
       const sql = `
-        INSERT INTO cropcalendardays 
-        (cropId, taskIndex, days, taskTypeEnglish, taskTypeSinhala, taskTypeTamil, 
-        taskCategoryEnglish, taskCategorySinhala, taskCategoryTamil, 
-        taskEnglish, taskSinhala, taskTamil, 
-        taskDescriptionEnglish, taskDescriptionSinhala, taskDescriptionTamil) 
+        INSERT INTO marketprice 
+        (cropId, xlindex, grade, price, date, startTime, 
+        endTime, createdBy) 
         VALUES ?`;
   
       const values = validatedData.map((row) => [
-        cropId,
-        row["Task index"],
-        row.Day,
-        row["Task type (English)"],
-        row["Task type (Sinhala)"],
-        row["Task type (Tamil)"],
-        row["Task Category (English)"],
-        row["Task Category (Sinhala)"],
-        row["Task Category (Tamil)"],
-        row["Task (English)"],
-        row["Task (Sinhala)"],
-        row["Task (Tamil)"],
-        row["Task description (English)"],
-        row["Task description (Sinhala)"],
-        row["Task description (Tamil)"],
+        row["Crop Id"],
+        xlindex,
+        row["Grade"],
+        row["Price"],
+        date,
+        startTime,
+        endTime,
+        createdBy
       ]);
   
       db.query(sql, [values], (err, result) => {
         if (err) {
           reject(err);
+          console.log('ttttt');
         } else {
+          console.log('xxx');
           resolve({
             message: "All data validated and inserted successfully",
             totalRows: data.length,
