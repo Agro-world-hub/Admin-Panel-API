@@ -3,10 +3,10 @@ const db2 = require("../startup/marketPrice");
 const Joi = require('joi');
 
 
-exports.createxlhistory = (xlName) => {
+exports.createxlhistory = (xlName, startTime, endTime) => {
   return new Promise((resolve, reject) => {
-    const sql = "INSERT INTO xlsxhistory (`xlName`) VALUES (?)";
-    const values = [xlName];
+    const sql = "INSERT INTO xlsxhistory (`xlName`, `startTime`, `endTime`) VALUES (?)";
+    const values = [xlName, startTime, endTime];
 
     db.query(sql, [values], (err, results) => {
       if (err) {
@@ -71,6 +71,34 @@ exports.insertMarketPriceXLSXData = (xlindex, data, createdBy, date, startTime, 
             message: "All data validated and inserted successfully",
             totalRows: data.length,
             insertedRows: result.affectedRows
+          });
+        }
+      });
+    });
+  };
+
+
+  exports.getAllxlsxlist = (limit, offset) => {
+    return new Promise((resolve, reject) => {
+      const countSql = "SELECT COUNT(*) as total FROM xlsxhistory";
+      const dataSql =
+        `SELECT * FROM xlsxhistory  
+  ORDER BY createdAt DESC 
+  LIMIT ? OFFSET ?`;
+  
+      db.query(countSql, (countErr, countResults) => {
+        if (countErr) {
+          reject(countErr);
+        } else {
+          db.query(dataSql, [limit, offset], (dataErr, dataResults) => {
+            if (dataErr) {
+              reject(dataErr);
+            } else {
+              resolve({
+                total: countResults[0].total,
+                items: dataResults,
+              });
+            }
           });
         }
       });

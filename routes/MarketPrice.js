@@ -15,9 +15,15 @@ const router = express.Router();
 
 router.post(
     "/upload-market-price-xlsx",
-    // authMiddleware,
+    authMiddleware,
     uploadfile.single("file"),
     MarketPriceEp.createMarketPriceXLSX
 );
+
+router.get(
+    "/get-all-market-xlsx",
+     authMiddleware, 
+     MarketPriceEp.getAllxlsxlist
+    );
 
 module.exports = router;

@@ -1,6 +1,7 @@
 const marketPriceDao = require('../dao/marketPrice-dao');
 const xlsx = require('xlsx');
 const path = require('path');
+const ValidateSchema = require("../validations/Admin-validation");
 
 
 exports.createMarketPriceXLSX = async (req, res) => {
@@ -11,7 +12,7 @@ exports.createMarketPriceXLSX = async (req, res) => {
     const { xlName, createdBy, date, startTime, endTime } = req.body;
 
     // Step 1: Insert XLSX history and get the xlindex
-    const xlindex = await marketPriceDao.createxlhistory(xlName);
+    const xlindex = await marketPriceDao.createxlhistory(xlName, startTime, endTime);
 
     // Step 2: Validate if a file was uploaded
     if (!req.file) {
@@ -89,6 +90,31 @@ exports.createMarketPriceXLSX = async (req, res) => {
   } catch (error) {
     console.error("Error processing XLSX file:", error);
     res.status(500).json({ error: "An error occurred while processing the XLSX file. Please try again." });
+  }
+};
+
+
+exports.getAllxlsxlist = async (req, res) => {
+  try {
+    const { page, limit } =
+      await ValidateSchema.getAllAdminUsersSchema.validateAsync(req.query);
+    const offset = (page - 1) * limit;
+
+    const { total, items } = await marketPriceDao.getAllxlsxlist(limit, offset);
+
+    console.log("Successfully fetched admin users");
+    res.json({
+      items,
+      total,
+    });
+  } catch (err) {
+    if (err.isJoi) {
+      // Validation error
+      return res.status(400).json({ error: err.details[0].message });
+    }
+
+    console.error("Error executing query:", err);
+    res.status(500).send("An error occurred while fetching data.");
   }
 };
 
