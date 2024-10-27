@@ -38,7 +38,7 @@ exports.loginAdmin = async (req, res) => {
 
       if (!verify_password) {
         // If password doesn't match
-        return res.status(401).json({ error: "Invalid Password password." });
+        return res.status(401).json({ error: "Invalid password." });
       }
       
 
