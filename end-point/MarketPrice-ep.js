@@ -118,3 +118,62 @@ exports.getAllxlsxlist = async (req, res) => {
   }
 };
 
+exports.deleteXl = async (req, res) => {
+  const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
+  console.log("Request URL:", fullUrl);
+
+  try {
+    // Validate the request parameters (id)
+    const { id } = await ValidateSchema.deleteAdminUserSchema.validateAsync(
+      req.params
+    );
+
+    // Delete admin user by id from DAO
+    const results = await marketPriceDao.deleteXl(id);
+
+    if (results.affectedRows === 0) {
+      return res.status(404).json({ message: "Admin user not found" });
+    }
+
+    console.log("Admin user deleted successfully");
+    return res.status(200).json({ message: "Admin user deleted successfully" });
+  } catch (err) {
+    if (err.isJoi) {
+      // Validation error
+      return res.status(400).json({ error: err.details[0].message });
+    }
+
+    console.error("Error deleting admin user:", err);
+    return res
+      .status(500)
+      .json({ error: "An error occurred while deleting admin user" });
+  }
+};
+
+
+
+exports.downloadXLSXFile = async (req, res) => {
+  try {
+    const { fileName } = req.params;
+    
+    // Fetch file path from DAO if stored in DB or directly if on server
+    const filePath = await marketPriceDao.getXLSXFilePath(fileName);
+
+    // Check if the file exists
+    if (!filePath) {
+      return res.status(404).json({ message: 'File not found.' });
+    }
+
+    // Serve the file for download
+    res.download(filePath, fileName, (err) => {
+      if (err) {
+        console.error('File download error:', err);
+        res.status(500).json({ message: 'Error downloading the file.' });
+      }
+    });
+  } catch (error) {
+    console.error('Error in downloadXLSXFile:', error);
+    res.status(500).json({ message: 'Server error.' });
+  }
+};
+

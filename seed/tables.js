@@ -23,6 +23,24 @@ const createUsersTable = () => {
     });
 };
 
+const createAdminUserRolesTable = () => {
+    const sql = `
+    CREATE TABLE IF NOT EXISTS adminroles (
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      role VARCHAR(100) NOT NULL
+    )
+  `;
+    return new Promise((resolve, reject) => {
+        db.query(sql, (err, result) => {
+            if (err) {
+                reject('Error creating adminUserRoles table: ' + err);
+            } else {
+                resolve('adminUserRoles table created successfully.');
+            }
+        });
+    });
+};
+
 const createAdminUsersTable = () => {
     const sql = `
     CREATE TABLE IF NOT EXISTS adminusers (
@@ -178,22 +196,52 @@ const createOngoingCultivationsTable = () => {
 
 
 
+const createXlsxHistoryTable = () => {
+    const sql = `
+    CREATE TABLE IF NOT EXISTS xlsxhistory (
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      xlName VARCHAR(50) NOT NULL,
+      createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      startTime TIME DEFAULT NULL,
+      endTime TIME DEFAULT NULL
+    )
+  `;
+    return new Promise((resolve, reject) => {
+        db.query(sql, (err, result) => {
+            if (err) {
+                reject('Error creating xlsxhistory table: ' + err);
+            } else {
+                resolve('xlsxhistory table created successfully.');
+            }
+        });
+    });
+};
+
+
+
+
+
+
 const createMarketPriceTable = () => {
     const sql = `
     CREATE TABLE IF NOT EXISTS marketprice (
       id INT AUTO_INCREMENT PRIMARY KEY,
-      titleEnglish TEXT NOT NULL,
-      titleSinhala TEXT NOT NULL,
-      titleTamil TEXT NOT NULL,
-      descriptionEnglish TEXT NOT NULL,
-      descriptionSinhala TEXT NOT NULL,
-      descriptionTamil TEXT NOT NULL,
-      image LONGBLOB,
-      status VARCHAR(20) NOT NULL,
-      price VARCHAR(5) NOT NULL,
-      createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-      createdBy INT,
+      cropId INT(11) DEFAULT NULL,
+      xlindex INT(11) DEFAULT NULL,
+      grade VARCHAR(1) COLLATE utf8mb4_general_ci DEFAULT NULL,
+      price DECIMAL(10,2) DEFAULT NULL,
+      date DATETIME DEFAULT NULL,
+      startTime TIME DEFAULT NULL,
+      endTime TIME DEFAULT NULL,
+      createdAt TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      createdBy INT(11) DEFAULT NULL,
+      FOREIGN KEY (cropId) REFERENCES cropcalender(id)
+        ON DELETE SET NULL
+        ON UPDATE CASCADE,
       FOREIGN KEY (createdBy) REFERENCES adminUsers(id)
+        ON DELETE SET NULL
+        ON UPDATE CASCADE,
+      FOREIGN KEY (xlindex) REFERENCES xlsxhistory(id)
         ON DELETE SET NULL
         ON UPDATE CASCADE
     )
@@ -866,11 +914,13 @@ const createCollectionCenterOfficer = () => {
 
 module.exports = {
     createUsersTable,
+    createAdminUserRolesTable,
     createAdminUsersTable,
     createContentTable,
     createCropCalenderTable,
     createCropCalenderDaysTable,
     createOngoingCultivationsTable,
+    createXlsxHistoryTable,
     createMarketPriceTable,
     createOngoingCultivationsCropsTable,
     createCurrentAssetTable,

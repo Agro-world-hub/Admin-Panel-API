@@ -1,5 +1,4 @@
 const express = require("express");
-const db = require("../startup/database");
 const MarketPriceEp = require("../end-point/MarketPrice-ep");
 const bodyParser = require("body-parser");
 const authMiddleware = require("../middlewares/authMiddleware");
@@ -25,5 +24,13 @@ router.get(
      authMiddleware, 
      MarketPriceEp.getAllxlsxlist
     );
+
+router.delete(
+    "/delete-xl-file/:id",
+    authMiddleware,
+    MarketPriceEp.deleteXl
+);
+
+router.get('/download/:fileName', MarketPriceEp.downloadXLSXFile);
 
 module.exports = router;

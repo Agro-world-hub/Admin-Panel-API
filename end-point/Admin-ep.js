@@ -24,11 +24,22 @@ exports.loginAdmin = async (req, res) => {
     // Fetch user from the database
     const [user] = await adminDao.loginAdmin(email);
 
+    if (!user) {
+      // If user is not found
+      return res.status(401).json({ error: "User not found." });
+    }
+
+
     if (user) {
      
 
       // Compare password with hashed password in DB
       const verify_password = bcrypt.compareSync(password, user.password);
+
+      if (!verify_password) {
+        // If password doesn't match
+        return res.status(401).json({ error: "Invalid Password password." });
+      }
       
 
       if (verify_password) {
@@ -55,7 +66,7 @@ exports.loginAdmin = async (req, res) => {
 
   } catch (err) {
     console.error("Error during login:", err);
-    res.status(500).json({ error: "An error occurred during login." });
+    res.status(500).json({ error: "Invalid email type" });
   }
 };
 

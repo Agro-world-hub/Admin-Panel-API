@@ -1,5 +1,4 @@
 const db = require("../startup/database");
-const db2 = require("../startup/marketPrice");
 const Joi = require('joi');
 
 
@@ -104,3 +103,37 @@ exports.insertMarketPriceXLSXData = (xlindex, data, createdBy, date, startTime, 
       });
     });
   };
+
+  exports.deleteXl = (id) => {
+    const sql = "DELETE FROM xlsxhistory WHERE id = ?";
+  
+    return new Promise((resolve, reject) => {
+      db.query(sql, [id], (err, results) => {
+        if (err) {
+          reject("Error executing delete query: " + err);
+        } else {
+          resolve(results);
+        }
+      });
+    });
+  };
+
+
+
+exports.getXLSXFilePath = async (fileName) => {
+  try {
+    // Assuming files are stored in a specific directory (e.g., 'uploads/xlsx')
+    const filePath = path.join(__dirname, '../uploads/xlsx', fileName);
+
+    // Check if the file exists on the server (Optional)
+    const fs = require('fs');
+    if (!fs.existsSync(filePath)) {
+      return null; // File does not exist
+    }
+
+    return filePath;
+  } catch (error) {
+    console.error('Error retrieving XLSX file path:', error);
+    throw error;
+  }
+};

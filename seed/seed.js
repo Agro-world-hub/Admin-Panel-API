@@ -1,10 +1,12 @@
 require('dotenv').config();
 const { createUsersTable } = require('./tables');
 const { createAdminUsersTable } = require('./tables');
+const { createAdminUserRolesTable } = require('./tables');
 const { createContentTable } = require('./tables');
 const { createCropCalenderTable } = require('./tables');
 const { createCropCalenderDaysTable } = require('./tables');
 const { createOngoingCultivationsTable } = require('./tables');
+const { createXlsxHistoryTable } = require('./tables');
 const { createMarketPriceTable } = require('./tables');
 const { createOngoingCultivationsCropsTable } = require('./tables');
 const { createpublicforumposts } = require('./tables');
@@ -42,6 +44,8 @@ const runSeeds = async () => {
   try {
     const messageUsers = await createUsersTable();
     console.log(messageUsers);
+    const messageAdminRoles = await createAdminUserRolesTable();
+    console.log(messageAdminRoles);
     const messageAdmin = await createAdminUsersTable();
     console.log(messageAdmin);
     const messageAdminCreate = await createSuperAdmin();
@@ -54,6 +58,9 @@ const runSeeds = async () => {
     console.log(messageCropCallenderDays);
     const messageOngoingCultivation = await createOngoingCultivationsTable();
     console.log(messageOngoingCultivation);
+    createXlsxHistoryTable
+    const messageXlsxHistory = await createXlsxHistoryTable();
+    console.log(messageXlsxHistory);
     const messageMarketPrice = await createMarketPriceTable();
     console.log(messageMarketPrice);
     const createOngoingCultivationsCro = await createOngoingCultivationsCropsTable();
