@@ -82,17 +82,33 @@ exports.insertMarketPriceXLSXData = (xlindex, data, createdBy, date, startTime, 
 
 
 
-exports.getAllMarketPriceDAO = () => {
+exports.getAllMarketPriceDAO = (crop,grade) => {
   return new Promise((resolve, reject) => {
-    const sql = `
+    const params = [];
+    let sql = `
         SELECT m.id, c.cropName,c.variety, m.grade, m.price, m.date, m.price, m.startTime, m.endTime
         FROM marketprice m, cropCalender c
-        WHERE m.cropId = c.id
-        ORDER BY c.cropName, m.grade
+        WHERE m.cropId = c.id 
+        
             
         `;
 
-    db.query(sql, (err, results) => {
+        if(crop){
+          sql=sql+`AND c.cropName= ?`          
+          params.push(crop)
+        }
+
+        if(grade){
+          sql=sql+`AND m.grade= ?`          
+          params.push(grade)
+        }
+
+
+        sql=sql+`ORDER BY c.cropName, m.grade`
+        // console.log(sql);
+        
+
+    db.query(sql,params, (err, results) => {
       if (err) {
         return reject(err);
       }

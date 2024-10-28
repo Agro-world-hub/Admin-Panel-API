@@ -100,8 +100,11 @@ exports.getAllMarketPrice = async (req, res) => {
   console.log(fullUrl);
 
   try {
+    const {crop,grade} = req.query
+    console.log(crop,grade);
+    
 
-      const result = await marketPriceDao.getAllMarketPriceDAO();
+      const result = await marketPriceDao.getAllMarketPriceDAO(crop,grade);
 
       console.log("Successfully fetched marcket price");
       return res.status(200).json(result);
