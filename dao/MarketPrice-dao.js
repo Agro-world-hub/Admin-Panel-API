@@ -25,8 +25,8 @@ exports.createxlhistory = (xlName, startTime, endTime) => {
 
 
 exports.insertMarketPriceXLSXData = (xlindex, data, createdBy, date, startTime, endTime) => {
-    return new Promise((resolve, reject) => {
-      console.log('dfdfhdgh');
+  return new Promise((resolve, reject) => {
+    console.log('dfdfhdgh');
 
       const schema = Joi.object({
         'Crop Id': Joi.number().required(),
@@ -139,3 +139,73 @@ exports.getXLSXFilePath = async (fileName) => {
     throw error;
   }
 };
+
+
+exports.getAllMarketPriceDAO = (limit, offset, crop, grade) => {
+  return new Promise((resolve, reject) => {
+    const params = [];
+    const countSql = "SELECT COUNT(*) as total FROM marketprice m, cropCalender c WHERE m.cropId = c.id ";
+
+    let sql = `
+        SELECT m.id, c.cropName,c.variety, m.grade, m.price, m.date, m.price, m.startTime, m.endTime
+        FROM marketprice m, cropCalender c
+        WHERE m.cropId = c.id 
+        
+            
+        `;
+
+    if (crop) {
+      sql = sql + `AND c.cropName= ?`
+      params.push(crop)
+    }
+
+    if (grade) {
+      sql = sql + `AND m.grade= ?`
+      params.push(grade)
+    }
+
+
+    sql = sql + `ORDER BY c.cropName, m.grade LIMIT ? OFFSET ?`
+    // console.log(sql);
+    params.push(parseInt(limit))
+    params.push(parseInt(offset))
+
+
+    db.query(countSql, (countErr, countResults) => {
+      if (countErr) {
+        reject(countErr);
+      } else {
+        db.query(sql, params, (dataErr, dataResults) => {
+          if (dataErr) {
+            reject(dataErr);
+          } else {
+            resolve({
+              results: dataResults,
+              total: countResults[0].total
+            });
+          }
+        });
+      }
+    });
+  });
+};
+
+
+exports.getAllCropNameDAO = () => {
+  return new Promise((resolve, reject) => {
+    const sql = `
+        SELECT id, cropName
+        FROM cropCalender
+        GROUP BY id, cropName
+            
+        `;
+
+    db.query(sql, (err, results) => {
+      if (err) {
+        return reject(err);
+      }
+      resolve(results);
+    });
+  });
+};
+

@@ -177,3 +177,53 @@ exports.downloadXLSXFile = async (req, res) => {
   }
 };
 
+
+//get all market price
+exports.getAllMarketPrice = async (req, res) => {
+  const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
+  console.log(fullUrl);
+
+  try {
+    const {page, limit,crop,grade} = req.query
+    console.log(page, limit,crop,grade);
+    const offset = (page - 1) * limit;
+    
+
+      const {results,total} = await marketPriceDao.getAllMarketPriceDAO(limit, offset, crop, grade);
+      console.log(results,total);
+      
+
+      console.log("Successfully fetched marcket price");
+      return res.status(200).json({results,total});
+  } catch (error) {
+      if (error.isJoi) {
+          // Handle validation error
+          return res.status(400).json({ error: error.details[0].message });
+      }
+
+      console.error("Error fetching collection officers:", error);
+      return res.status(500).json({ error: "An error occurred while fetching collection officers" });
+  }
+};
+
+
+exports.getAllCropName = async (req, res) => {
+  const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
+  console.log(fullUrl);
+
+  try {
+
+      const result = await marketPriceDao.getAllCropNameDAO();
+
+      console.log("Successfully fetched marcket price");
+      return res.status(200).json(result);
+  } catch (error) {
+      if (error.isJoi) {
+          // Handle validation error
+          return res.status(400).json({ error: error.details[0].message });
+      }
+
+      console.error("Error fetching collection officers:", error);
+      return res.status(500).json({ error: "An error occurred while fetching collection officers" });
+  }
+};
