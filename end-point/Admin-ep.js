@@ -38,7 +38,7 @@ exports.loginAdmin = async (req, res) => {
 
       if (!verify_password) {
         // If password doesn't match
-        return res.status(401).json({ error: "Invalid password." });
+        return res.status(401).json({ error: "Wrong password." });
       }
       
 
@@ -66,7 +66,7 @@ exports.loginAdmin = async (req, res) => {
 
   } catch (err) {
     console.error("Error during login:", err);
-    res.status(500).json({ error: "Invalid email type" });
+    res.status(500).json({ error: "An error occurred during login." });
   }
 };
 

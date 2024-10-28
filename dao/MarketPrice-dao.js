@@ -1,5 +1,6 @@
 const db = require("../startup/database");
 const Joi = require('joi');
+const path = require('path');
 
 
 exports.createxlhistory = (xlName, startTime, endTime) => {
@@ -123,7 +124,8 @@ exports.insertMarketPriceXLSXData = (xlindex, data, createdBy, date, startTime, 
 exports.getXLSXFilePath = async (fileName) => {
   try {
     // Assuming files are stored in a specific directory (e.g., 'uploads/xlsx')
-    const filePath = path.join(__dirname, '../uploads/xlsx', fileName);
+    const filePath = path.join(__dirname, '../files', fileName);
+    console.log(filePath);
 
     // Check if the file exists on the server (Optional)
     const fs = require('fs');
