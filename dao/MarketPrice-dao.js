@@ -82,9 +82,11 @@ exports.insertMarketPriceXLSXData = (xlindex, data, createdBy, date, startTime, 
 
 
 
-exports.getAllMarketPriceDAO = (crop,grade) => {
+exports.getAllMarketPriceDAO = (limit, offset, crop, grade) => {
   return new Promise((resolve, reject) => {
     const params = [];
+    const countSql = "SELECT COUNT(*) as total FROM marketprice m, cropCalender c WHERE m.cropId = c.id ";
+
     let sql = `
         SELECT m.id, c.cropName,c.variety, m.grade, m.price, m.date, m.price, m.startTime, m.endTime
         FROM marketprice m, cropCalender c
@@ -93,26 +95,38 @@ exports.getAllMarketPriceDAO = (crop,grade) => {
             
         `;
 
-        if(crop){
-          sql=sql+`AND c.cropName= ?`          
-          params.push(crop)
-        }
+    if (crop) {
+      sql = sql + `AND c.cropName= ?`
+      params.push(crop)
+    }
 
-        if(grade){
-          sql=sql+`AND m.grade= ?`          
-          params.push(grade)
-        }
+    if (grade) {
+      sql = sql + `AND m.grade= ?`
+      params.push(grade)
+    }
 
 
-        sql=sql+`ORDER BY c.cropName, m.grade`
-        // console.log(sql);
-        
+    sql = sql + `ORDER BY c.cropName, m.grade LIMIT ? OFFSET ?`
+    // console.log(sql);
+    params.push(parseInt(limit))
+    params.push(parseInt(offset))
 
-    db.query(sql,params, (err, results) => {
-      if (err) {
-        return reject(err);
+
+    db.query(countSql, (countErr, countResults) => {
+      if (countErr) {
+        reject(countErr);
+      } else {
+        db.query(sql, params, (dataErr, dataResults) => {
+          if (dataErr) {
+            reject(dataErr);
+          } else {
+            resolve({
+              results: dataResults,
+              total: countResults[0].total
+            });
+          }
+        });
       }
-      resolve(results);
     });
   });
 };

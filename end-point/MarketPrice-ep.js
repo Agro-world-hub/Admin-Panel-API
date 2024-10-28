@@ -100,14 +100,17 @@ exports.getAllMarketPrice = async (req, res) => {
   console.log(fullUrl);
 
   try {
-    const {crop,grade} = req.query
-    console.log(crop,grade);
+    const {page, limit,crop,grade} = req.query
+    console.log(page, limit,crop,grade);
+    const offset = (page - 1) * limit;
     
 
-      const result = await marketPriceDao.getAllMarketPriceDAO(crop,grade);
+      const {results,total} = await marketPriceDao.getAllMarketPriceDAO(limit, offset, crop, grade);
+      console.log(results,total);
+      
 
       console.log("Successfully fetched marcket price");
-      return res.status(200).json(result);
+      return res.status(200).json({results,total});
   } catch (error) {
       if (error.isJoi) {
           // Handle validation error
