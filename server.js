@@ -33,7 +33,7 @@ app.use(process.env.AUTHOR, routes);
 app.use(process.env.AUTHOR, collectionOfficerRoutes);
 app.use(process.env.AUTHOR, routesNewws);
 app.use(process.env.AUTHOR, CollectionCenterRoutes);
-app.use(process.env.MARKETPRICE, MarketPrice);
+// app.use(process.env.MARKETPRICE, MarketPrice);
 app.use('/uploads', express.static('uploads'));
 
 app.listen(port, () => {
