@@ -736,6 +736,7 @@ const createCollectionOfficer = () => {
     const sql = `
     CREATE TABLE IF NOT EXISTS collectionofficer (
       id INT AUTO_INCREMENT PRIMARY KEY,
+      centerId INT NOT NULL,
       firstNameEnglish VARCHAR(50) NOT NULL,
       firstNameSinhala VARCHAR(50) NOT NULL,
       firstNameTamil VARCHAR(50) NOT NULL,
@@ -745,6 +746,7 @@ const createCollectionOfficer = () => {
       phoneNumber01 VARCHAR(12) NOT NULL,
       phoneNumber02 VARCHAR(12) NOT NULL,
       image LONGBLOB,
+      QRcode LONGBLOB,
       nic VARCHAR(12) NOT NULL,
       email VARCHAR(50) NOT NULL,
       password VARCHAR(20) NOT NULL,
@@ -756,7 +758,9 @@ const createCollectionOfficer = () => {
       province VARCHAR(25) NOT NULL,
       country VARCHAR(25) NOT NULL,
       languages VARCHAR(255) NOT NULL,
-      createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (centerId) REFERENCES collectioncenter(id)
+
     )
   `;
     return new Promise((resolve, reject) => {
