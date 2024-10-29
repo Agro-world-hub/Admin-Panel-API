@@ -258,6 +258,35 @@ const createMarketPriceTable = () => {
 };
 
 
+const createMarketPriceServeTable = () => {
+    const sql = `
+    CREATE TABLE IF NOT EXISTS marketpriceserve (
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      marketPriceId INT(11) DEFAULT NULL,
+      xlindex INT(11) DEFAULT NULL,
+      newPrice DECIMAL(10,2) DEFAULT NULL,
+      collectionCenterId INT(11) DEFAULT NULL,
+      FOREIGN KEY (marketPriceId) REFERENCES marketprice(id)
+        ON DELETE SET NULL
+        ON UPDATE CASCADE,
+      FOREIGN KEY (collectionCenterId) REFERENCES collectioncenter(id)
+        ON DELETE SET NULL
+        ON UPDATE CASCADE
+    )
+  `;
+    return new Promise((resolve, reject) => {
+        db.query(sql, (err, result) => {
+            if (err) {
+                reject('Error creating marketpriceserve table: ' + err);
+            } else {
+                resolve('mmarketpriceserve table created successfully.');
+            }
+        });
+    });
+};
+
+
+
 const createOngoingCultivationsCropsTable = () => {
     const sql = `
     CREATE TABLE IF NOT EXISTS ongoingCultivationsCrops (
@@ -805,17 +834,22 @@ const createRegisteredFarmerPayments = () => {
       id INT AUTO_INCREMENT PRIMARY KEY,
       userId INT,
       collectionOfficerId INT,
-      cropName VARCHAR(25) NOT NULL,
-      quality VARCHAR(25) NOT NULL,
-      unitPrice DECIMAL(8, 2) NOT NULL,
-      weight INT NOT NULL,
+      cropId INT,
+      gradeAprice DECIMAL(8, 2) NOT NULL,
+      gradeBprice DECIMAL(8, 2) NOT NULL,
+      gradeCprice DECIMAL(8, 2) NOT NULL,
+      gradeAquan INT(11) NOT NULL,
+      gradeBquan INT(11) NOT NULL,
+      gradeCquan INT(11) NOT NULL,
       total DECIMAL(8, 2) NOT NULL,
-      image LONGBLOB,
       createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (userId) REFERENCES users(id)
         ON DELETE SET NULL
         ON UPDATE CASCADE,
       FOREIGN KEY (collectionOfficerId) REFERENCES collectionofficer(id)
+        ON DELETE SET NULL
+        ON UPDATE CASCADE,
+      FOREIGN KEY (cropId) REFERENCES cropCalender(id)
         ON DELETE SET NULL
         ON UPDATE CASCADE
     )
@@ -922,6 +956,7 @@ module.exports = {
     createOngoingCultivationsTable,
     createXlsxHistoryTable,
     createMarketPriceTable,
+    createMarketPriceServeTable,
     createOngoingCultivationsCropsTable,
     createCurrentAssetTable,
     createpublicforumposts,
