@@ -21,7 +21,7 @@ exports.createCollectionOfficer = async (req, res) => {
 
         // Call the DAO to create the collection officer
         // const results = await collectionofficerDao.createCollectionOfficerPersonal(Object.values(validatedData));
-        const resultsPersonal = await collectionofficerDao.createCollectionOfficerPersonal(officerData);
+        const resultsPersonal = await collectionofficerDao.createCollectionOfficerPersonal(officerData, companyData, bankData);
         const resultCompany = await collectionofficerDao.createCollectionOfficerCompany(companyData,resultsPersonal.insertId);
         const resultBank = await collectionofficerDao.createCollectionOfficerBank(bankData,resultsPersonal.insertId);
         
