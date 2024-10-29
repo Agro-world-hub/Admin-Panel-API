@@ -8,7 +8,7 @@ const { log } = require("console");
 const adminDao = require("../dao/Admin-dao");
 const ValidateSchema = require("../validations/Admin-validation");
 const { type } = require("os");
-const bcrypt = require('bcryptjs');
+const bcrypt = require("bcryptjs");
 
 exports.loginAdmin = async (req, res) => {
   const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
@@ -20,7 +20,6 @@ exports.loginAdmin = async (req, res) => {
 
     const { email, password } = req.body;
 
-
     // Fetch user from the database
     const [user] = await adminDao.loginAdmin(email);
 
@@ -29,10 +28,7 @@ exports.loginAdmin = async (req, res) => {
       return res.status(401).json({ error: "User not found." });
     }
 
-
     if (user) {
-     
-
       // Compare password with hashed password in DB
       const verify_password = bcrypt.compareSync(password, user.password);
 
@@ -40,7 +36,6 @@ exports.loginAdmin = async (req, res) => {
         // If password doesn't match
         return res.status(401).json({ error: "Wrong password." });
       }
-      
 
       if (verify_password) {
         // Generate JWT token
@@ -60,23 +55,14 @@ exports.loginAdmin = async (req, res) => {
         return res.json(data);
       }
     }
-    
+
     // If user is not found or password doesn't match
     res.status(401).json({ error: "Invalid email or password." });
-
   } catch (err) {
     console.error("Error during login:", err);
     res.status(500).json({ error: "An error occurred during login." });
   }
 };
-
-
-
-
-
-
-
-
 
 exports.getAllAdminUsers = async (req, res) => {
   try {
@@ -159,8 +145,8 @@ exports.adminCreateUser = async (req, res) => {
 exports.getAllUsers = async (req, res) => {
   try {
     console.log(req.query);
-    
-    const { page, limit, nic} =
+
+    const { page, limit, nic } =
       await ValidateSchema.getAllUsersSchema.validateAsync(req.query);
     const offset = (page - 1) * limit;
 
@@ -392,7 +378,6 @@ exports.createNews = async (req, res) => {
     const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
     console.log("Request URL:", fullUrl);
     console.log(req.body);
-    
 
     // Validate the request body
     const {
@@ -406,7 +391,9 @@ exports.createNews = async (req, res) => {
       publishDate,
       expireDate,
       createdBy,
-    } = req.body;
+    } = await ValidateSchema.createNewsSchema.validateAsync(req.body, {
+      abortEarly: false,
+    });
 
     if (!req.file) {
       return res.status(400).json({ error: "No file uploaded" });
@@ -427,7 +414,7 @@ exports.createNews = async (req, res) => {
       status,
       createdBy,
       publishDate,
-      expireDate,
+      expireDate
     );
 
     console.log("News creation success");
@@ -712,7 +699,7 @@ exports.createMarketPrice = async (req, res) => {
       titleEnglish,
       titleSinhala,
       titleTamil,
-      
+
       status,
       price,
       createdBy,
@@ -730,7 +717,7 @@ exports.createMarketPrice = async (req, res) => {
       titleEnglish,
       titleSinhala,
       titleTamil,
-     
+
       fileBuffer,
       status,
       price,
@@ -1532,8 +1519,8 @@ exports.getAllTaskByCropId = async (req, res) => {
   const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
   console.log("Request URL:", fullUrl);
 
-  const { page, limit } = req.query
-  
+  const { page, limit } = req.query;
+
   const offset = (page - 1) * limit;
 
   try {
@@ -1542,13 +1529,17 @@ exports.getAllTaskByCropId = async (req, res) => {
       await ValidateSchema.getAllTaskByCropIdSchema.validateAsync(req.params);
 
     // Fetch the data from the DAO
-    const {total, results} = await adminDao.getAllTaskByCropId(validatedParams.id , limit, offset);
-    
+    const { total, results } = await adminDao.getAllTaskByCropId(
+      validatedParams.id,
+      limit,
+      offset
+    );
+
     console.log(
       "Successfully retrieved all tasks for crop ID:",
       validatedParams.id
     );
-    res.json({results , total});
+    res.json({ results, total });
   } catch (error) {
     // if (error.isJoi) {
     //   // Handle validation error
@@ -1571,7 +1562,7 @@ exports.deleteCropTask = async (req, res) => {
     // Validate request parameters (taskId)
     // const validatedParams =
     //   await ValidateSchema.deleteCropTaskSchema.validateAsync(req.params);
-    const id = req.params.id
+    const id = req.params.id;
     const cropId = req.params.cropId;
     const indexId = parseInt(req.params.indexId);
 
@@ -1734,7 +1725,8 @@ exports.getAllUsersTaskByCropId = async (req, res) => {
 
     // Validate request parameters (cropId, userId, page, limit)
     const { cropId, userId } = req.params;
-    const { page, limit } = await ValidateSchema.getAllCropCalendarSchema.validateAsync(req.query);
+    const { page, limit } =
+      await ValidateSchema.getAllCropCalendarSchema.validateAsync(req.query);
 
     const offset = (page - 1) * limit;
 
@@ -1742,10 +1734,15 @@ exports.getAllUsersTaskByCropId = async (req, res) => {
     console.log("userId:", userId);
 
     // Fetch total and paginated tasks from the DAO
-    const { total, items } = await adminDao.getAllUserTaskByCropId(cropId, userId, limit, offset);
+    const { total, items } = await adminDao.getAllUserTaskByCropId(
+      cropId,
+      userId,
+      limit,
+      offset
+    );
 
     console.log("Successfully fetched user tasks for crop ID:", cropId);
-    
+
     // Send response with paginated tasks and total count
     res.json({
       total,
@@ -1763,9 +1760,6 @@ exports.getAllUsersTaskByCropId = async (req, res) => {
     });
   }
 };
-
-
-
 
 exports.editUserTaskStatus = async (req, res) => {
   try {
@@ -1886,15 +1880,15 @@ exports.DeletPublicForumPost = async (req, res) => {
       console.log("Delete");
       res.json({ status: true });
     } else {
-      res.json({ status: false })
+      res.json({ status: false });
     }
   } catch (error) {
     if (error.isJoi) {
-      return res.status(400).json({ error: error.details[0].message })
+      return res.status(400).json({ error: error.details[0].message });
     }
     console.error("Error fetching post for post ID:", error);
     return res.status(500).json({
-      error: "An error occurred while fetching post for the postID"
+      error: "An error occurred while fetching post for the postID",
     });
   }
 };
@@ -2061,7 +2055,6 @@ exports.sendMessage = async (req, res) => {
   console.log("Send message data:", req.body);
   console.log("Send message data:", req.user);
 
-
   const chatId = req.params.chatId;
   const replyId = req.user.userId;
   const replyMessage = req.body.replyMessage;
@@ -2081,7 +2074,7 @@ exports.sendMessage = async (req, res) => {
 
     // Send a success response with the added reply
     return res.status(200).json({
-      message: "Reply sent successfully!"
+      message: "Reply sent successfully!",
     });
   } catch (err) {
     console.error("Error sending message:", err);
@@ -2096,10 +2089,9 @@ exports.getReplyCountByChatId = async (req, res) => {
   console.log("Request URL:", fullUrl);
 
   try {
-
     // Use DAO to get reply count for the given chatId
     const result = await adminDao.getReplyCount();
-    console.log(result)
+    console.log(result);
 
     res.json(result);
   } catch (error) {
@@ -2115,9 +2107,6 @@ exports.getReplyCountByChatId = async (req, res) => {
   }
 };
 
-
-
-
 exports.addNewTaskU = async (req, res) => {
   const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
   console.log("Request URL:", fullUrl);
@@ -2131,7 +2120,6 @@ exports.addNewTaskU = async (req, res) => {
     const task = req.body;
     console.log(req.params);
 
-
     const taskIdArr = await adminDao.getAllTaskIdDaoU(cropId, userId);
     console.log("Task array:", taskIdArr);
 
@@ -2139,35 +2127,42 @@ exports.addNewTaskU = async (req, res) => {
       const existingTask = taskIdArr[i];
 
       if (existingTask.taskIndex > indexId) {
-        console.log(`Updating task ${existingTask.id}, current taskIndex: ${existingTask.taskIndex}`);
-        await adminDao.shiftUpTaskIndexDaoU(existingTask.id, existingTask.taskIndex + 1);
+        console.log(
+          `Updating task ${existingTask.id}, current taskIndex: ${existingTask.taskIndex}`
+        );
+        await adminDao.shiftUpTaskIndexDaoU(
+          existingTask.id,
+          existingTask.taskIndex + 1
+        );
       }
     }
 
-    const addedTaskResult = await adminDao.addNewTaskDaoU(task, (indexId + 1), userId, cropId);
-
+    const addedTaskResult = await adminDao.addNewTaskDaoU(
+      task,
+      indexId + 1,
+      userId,
+      cropId
+    );
 
     if (addedTaskResult.insertId > 0) {
-      res.status(201).json({ status: true, message: "Succcesfull Task Added!" })
+      res
+        .status(201)
+        .json({ status: true, message: "Succcesfull Task Added!" });
     } else {
-      res.status(500).json({ status: false, message: "Issue Occor in Task Adding!" })
+      res
+        .status(500)
+        .json({ status: false, message: "Issue Occor in Task Adding!" });
     }
-
-    } catch (error) {
-        console.error("Error adding task:", error);
-        return res.status(500).json({ error: "An error occurred while adding the task" });
-    }
+  } catch (error) {
+    console.error("Error adding task:", error);
+    return res
+      .status(500)
+      .json({ error: "An error occurred while adding the task" });
+  }
 };
-
-
-
-
-
-
 
 exports.uploadUsersXLSX = async (req, res) => {
   try {
-
     if (!req.file) {
       return res.status(400).json({ error: "No file uploaded." });
     }
@@ -2249,15 +2244,13 @@ exports.uploadUsersXLSX = async (req, res) => {
   }
 };
 
-
-
 exports.getAllRoles = async (req, res) => {
   try {
     const roles = await adminDao.getAllRoles();
 
     console.log("Successfully fetched admin roles");
     res.json({
-      roles
+      roles,
     });
   } catch (err) {
     if (err.isJoi) {
@@ -2269,14 +2262,13 @@ exports.getAllRoles = async (req, res) => {
   }
 };
 
-
 //delete crop task
 exports.deleteUserCropTask = async (req, res) => {
   const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
   console.log("Request URL:", fullUrl);
 
   try {
-    const id = req.params.id
+    const id = req.params.id;
     const cropId = req.params.cropId;
     const userId = req.params.userId;
     const indexId = parseInt(req.params.indexId);
@@ -2288,7 +2280,6 @@ exports.deleteUserCropTask = async (req, res) => {
     }
 
     const taskIdArr = await adminDao.getAllUserTaskIdDao(cropId, userId);
-   
 
     for (let i = 0; i < taskIdArr.length; i++) {
       const existingTask = taskIdArr[i];
