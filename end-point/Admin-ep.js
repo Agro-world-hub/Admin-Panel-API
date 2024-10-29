@@ -391,6 +391,8 @@ exports.createNews = async (req, res) => {
   try {
     const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
     console.log("Request URL:", fullUrl);
+    console.log(req.body);
+    
 
     // Validate the request body
     const {
@@ -404,7 +406,7 @@ exports.createNews = async (req, res) => {
       publishDate,
       expireDate,
       createdBy,
-    } = await ValidateSchema.createNewsSchema.validateAsync(req.body);
+    } = req.body;
 
     if (!req.file) {
       return res.status(400).json({ error: "No file uploaded" });
