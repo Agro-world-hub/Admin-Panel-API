@@ -8,6 +8,7 @@ const { createCropCalenderDaysTable } = require('./tables');
 const { createOngoingCultivationsTable } = require('./tables');
 const { createXlsxHistoryTable } = require('./tables');
 const { createMarketPriceTable } = require('./tables');
+const { createMarketPriceServeTable } = require('./tables');
 const { createOngoingCultivationsCropsTable } = require('./tables');
 const { createpublicforumposts } = require('./tables');
 const { createpublicforumreplies } = require('./tables');
@@ -63,6 +64,8 @@ const runSeeds = async () => {
     console.log(messageXlsxHistory);
     const messageMarketPrice = await createMarketPriceTable();
     console.log(messageMarketPrice);
+    const messageMarketPriceServeTable = await createMarketPriceServeTable();
+    console.log(messageMarketPriceServeTable);
     const createOngoingCultivationsCro = await createOngoingCultivationsCropsTable();
     console.log(createOngoingCultivationsCro);
     const messageCurrentAsset = await createCurrentAssetTable();
