@@ -1622,7 +1622,7 @@ exports.addNewReplyDao = (chatId, replyId, replyMessage) => {
   });
 };
 
-exports.deletePublicForumPost = (id) =>{
+exports.deletePublicForumPost = (id) => {
   const sql = "DELETE FROM publicforumposts WHERE id = ?";
 
   return new Promise((resolve, reject) => {
@@ -1831,3 +1831,27 @@ exports.shiftUpUserTaskIndexDao = (taskId, indexId) => {
     });
   });
 };
+
+exports.getPaymentSlipReport = () => {
+  return new Promise((resolve, reject) => {
+    const dataSql = `SELECT 
+          users.firstName AS farmerFirstName,
+          users.lastName AS farmerLastName,
+          registeredfarmerpayments.total,
+          officer.firstName AS officerFirstName,
+          officer.lastName AS officerLastName,
+          registeredfarmerpayments.createdAt
+      FROM 
+          registeredfarmerpayments
+      JOIN users ON registeredfarmerpayments.userId = users.id
+      JOIN users AS officer ON registeredfarmerpayments.collectionOfficerId = officer.id;
+    `;
+    db.query(dataSql, (error, results)=>{
+      if(error){
+        reject(error);
+      }else{
+        resolve(results);
+      }
+    })
+  })
+}
