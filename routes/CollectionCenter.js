@@ -27,6 +27,11 @@ router.delete(
     CollectionCenterEp.deleteCollectionCenter
 )
 
-
+//get all complains
+router.get(
+    "/get-all-complains",
+    // authMiddleware,
+    CollectionCenterEp.getAllComplains
+)
 
 module.exports = router;

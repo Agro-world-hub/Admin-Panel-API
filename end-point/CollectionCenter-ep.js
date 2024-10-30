@@ -94,3 +94,32 @@ exports.addNewCollectionCenter = async (req, res) => {
     });
   }
 };
+
+
+//get all complains
+exports.getAllComplains = async (req, res) => {
+  try {
+    console.log(req.query);
+    const {page, limit} = req.query
+    
+    const { results, total } = await CollectionCenterDao.GetAllComplainDAO(page, limit)
+
+    if (results.length === 0) {
+      return res
+        .status(404)
+        .json({ message: "No news items found", data: result });
+    }
+
+    console.log("Successfully retrieved all collection center");
+    res.json({ results, total });
+  } catch (err) {
+    if (err.isJoi) {
+      // Validation error
+      console.error("Validation error:", err.details[0].message);
+      return res.status(400).json({ error: err.details[0].message });
+    }
+
+    console.error("Error fetching news:", err);
+    res.status(500).json({ error: "An error occurred while fetching news" });
+  }
+};
