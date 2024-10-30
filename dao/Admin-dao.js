@@ -1622,9 +1622,7 @@ exports.addNewReplyDao = (chatId, replyId, replyMessage) => {
   });
 };
 
-exports.deletePublicForumPost = (id) => {
-  console.log("Deleting post with id:", id);
-
+exports.deletePublicForumPost = (id) =>{
   const sql = "DELETE FROM publicforumposts WHERE id = ?";
 
   return new Promise((resolve, reject) => {

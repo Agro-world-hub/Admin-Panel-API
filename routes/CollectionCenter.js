@@ -9,10 +9,10 @@ const CollectionCenterEp = require('../end-point/CollectionCenter-ep')
 
 const router = express.Router();
 
-// router.post(
-//     "/add-collection-center",
-//     // authMiddleware,
-//     CollectionCenterEp.addNewCollectionCenter);
+router.post(
+    "/add-collection-center",
+    authMiddleware,
+    CollectionCenterEp.addNewCollectionCenter);
 
 router.get(
     "/get-all-center",
