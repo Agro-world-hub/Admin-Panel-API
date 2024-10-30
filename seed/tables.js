@@ -9,6 +9,7 @@ const createUsersTable = () => {
       phoneNumber VARCHAR(12) NOT NULL,
       NICnumber VARCHAR(12) NOT NULL,
       profileImage LONGBLOB,
+      farmerQr LONGBLOB,
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     )
   `;
@@ -952,6 +953,33 @@ const createCollectionCenterOfficer = () => {
     });
 };
 
+const createFarmerComplains  = () => {
+    const sql = `
+   CREATE TABLE IF NOT EXISTS farmerComplains (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    refNo VARCHAR(20) NOT NULL,
+    createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    status VARCHAR(20) NOT NULL,
+    officerName VARCHAR(55) NOT NULL,
+    farmerName VARCHAR(255) NOT NULL,
+    officerPhone VARCHAR(15) NOT NULL,
+    farmerPhone VARCHAR(15) NOT NULL,
+    complain TEXT NOT NULL,
+    language VARCHAR(50) NOT NULL
+)
+  `;
+    return new Promise((resolve, reject) => {
+        db.query(sql, (err, result) => {
+            if (err) {
+                reject('Error creating market place users table: ' + err);
+            } else {
+                resolve('market place users table created successfully.');
+            }
+        });
+    });
+};
+
+
 
 
 
@@ -1050,6 +1078,83 @@ const createPackageDetails = () => {
                 reject('Error creating package details table: ' + err);
             } else {
                 resolve('package details table created successfully.');
+            }
+        });
+    });
+};
+
+
+const createPromoItems = () => {
+    const sql = `
+    CREATE TABLE IF NOT EXISTS promoitems (
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      mpItemId INT,
+      discount DECIMAL(8, 2) NOT NULL,
+      createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (mpItemId) REFERENCES marketplaceitems(id)
+        ON DELETE SET NULL
+        ON UPDATE CASCADE,
+    )
+  `;
+    return new Promise((resolve, reject) => {
+        db.query(sql, (err, result) => {
+            if (err) {
+                reject('Error creating promo items table: ' + err);
+            } else {
+                resolve('promo items table created successfully.');
+            }
+        });
+    });
+};
+
+
+const createCart = () => {
+    const sql = `
+    CREATE TABLE IF NOT EXISTS cart (
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      userId INT,
+      status VARCHAR(13) NOT NULL,
+      createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (userId) REFERENCES users(id)
+        ON DELETE SET NULL
+        ON UPDATE CASCADE,
+    )
+  `;
+    return new Promise((resolve, reject) => {
+        db.query(sql, (err, result) => {
+            if (err) {
+                reject('Error creating cart table: ' + err);
+            } else {
+                resolve('cart table created successfully.');
+            }
+        });
+    });
+};
+
+
+const createCartItems = () => {
+    const sql = `
+    CREATE TABLE IF NOT EXISTS cartitems (
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      cartId INT,
+      mpItemId INT,
+      quantity DECIMAL(8, 2) NOT NULL,
+      total DECIMAL(8, 2) NOT NULL,
+      createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (cartId) REFERENCES cart(id)
+        ON DELETE SET NULL
+        ON UPDATE CASCADE,
+      FOREIGN KEY (mpItemId) REFERENCES marketplaceitems(id)
+        ON DELETE SET NULL
+        ON UPDATE CASCADE,
+    )
+  `;
+    return new Promise((resolve, reject) => {
+        db.query(sql, (err, result) => {
+            if (err) {
+                reject('Error creating cart table: ' + err);
+            } else {
+                resolve('cart table created successfully.');
             }
         });
     });
