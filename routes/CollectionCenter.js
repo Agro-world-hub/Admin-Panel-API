@@ -30,8 +30,14 @@ router.delete(
 //get all complains
 router.get(
     "/get-all-complains",
-    // authMiddleware,
+    authMiddleware,
     CollectionCenterEp.getAllComplains
+)
+
+router.get(
+    "/get-complain-by-id/:id",
+    authMiddleware,
+    CollectionCenterEp.getComplainById
 )
 
 module.exports = router;

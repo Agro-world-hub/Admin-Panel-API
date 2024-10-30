@@ -98,3 +98,16 @@ exports.GetAllComplainDAO = (page, limit, status, searchText) => {
     });
   });
 };
+
+
+exports.getComplainById = (id) => {
+  return new Promise((resolve, reject) => {
+    const sql = "SELECT * FROM farmercomplains WHERE id = ?";
+    db.query(sql,[id], (err, results) => {
+      if (err) {
+        return reject(err);
+      }
+      resolve(results);
+    });
+  });
+};
