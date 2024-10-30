@@ -1,4 +1,6 @@
 const db = require("../startup/database");
+const QRCode = require('qrcode');
+
 
 exports.getCollectionOfficerDistrictReports = (district) => {
     return new Promise((resolve, reject) => {
@@ -17,41 +19,80 @@ exports.getCollectionOfficerDistrictReports = (district) => {
     });
 };
 
-exports.createCollectionOfficerPersonal = (officerData) => {
-    return new Promise((resolve, reject) => {
-        const sql =
-            "INSERT INTO collectionofficer (firstNameEnglish, firstNameSinhala, firstNameTamil, lastNameEnglish, lastNameSinhala, lastNameTamil, phoneNumber01, phoneNumber02, image, nic, email, houseNumber, streetName, city, district, province, country, languages) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+exports.createCollectionOfficerPersonal = (officerData, companyData, bankData) => {
+    return new Promise(async (resolve, reject) => {
+        try {
+            // Prepare data for QR code generation
+            const qrData = `
+            {
+                "centerId": ${officerData.centerId},
+                "firstNameEnglish": "${officerData.firstNameEnglish}",
+                "firstNameEnglish": "${officerData.lastNameEnglish}",
+                "phoneNumber01": ${officerData.phoneNumber01Code + officerData.phoneNumber01},
+                "phoneNumber01": ${officerData.phoneNumber02Code + officerData.phoneNumber02},
+                "nic": "${officerData.nic}",
+                "companyNameEnglish": "${companyData.companyNameEnglish}",
+                "jobRole": "${companyData.jobRole}",
+                "accHolderName": "${bankData.accHolderName}",
+                "accNumber": "${bankData.accNumber}",
+                "bankName": "${bankData.bankName}",
+                "branchName": "${bankData.branchName}",
+            }
+            `;
 
-        db.query(
-            sql,
-            [
-                officerData.firstNameEnglish,
-                officerData.firstNameSinhala,
-                officerData.firstNameTamil,
-                officerData.lastNameEnglish,
-                officerData.lastNameSinhala,
-                officerData.lastNameTamil,
-                officerData.phoneNumber01Code + officerData.phoneNumber01,
-                officerData.phoneNumber02Code + officerData.phoneNumber02,
-                officerData.image,
-                officerData.nic,
-                officerData.email,
-                officerData.houseNumber,
-                officerData.streetName,
-                officerData.city,
-                officerData.district,
-                officerData.province,
-                officerData.country,
-                officerData.languages,
+            const qrCodeBase64 = await QRCode.toDataURL(qrData);
 
-            ], (err, results) => {
-                if (err) {
-                    return reject(err); // Reject promise if an error occurs
+            const qrCodeBuffer = Buffer.from(
+                qrCodeBase64.replace(/^data:image\/png;base64,/, ""),
+                'base64'
+            );
+
+            const sql = `
+                INSERT INTO collectionofficer (
+                    centerId, firstNameEnglish, firstNameSinhala, firstNameTamil, lastNameEnglish, lastNameSinhala, lastNameTamil,
+                    phoneNumber01, phoneNumber02, image, QRcode, nic, email, houseNumber, streetName, city, district,
+                    province, country, languages
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            `;
+
+            // Database query with QR image data added
+            db.query(
+                sql,
+                [
+                    officerData.centerId,
+                    officerData.firstNameEnglish,
+                    officerData.firstNameSinhala,
+                    officerData.firstNameTamil,
+                    officerData.lastNameEnglish,
+                    officerData.lastNameSinhala,
+                    officerData.lastNameTamil,
+                    officerData.phoneNumber01Code + officerData.phoneNumber01,
+                    officerData.phoneNumber02Code + officerData.phoneNumber02,
+                    officerData.image,
+                    qrCodeBuffer,
+                    officerData.nic,
+                    officerData.email,
+                    officerData.houseNumber,
+                    officerData.streetName,
+                    officerData.city,
+                    officerData.district,
+                    officerData.province,
+                    officerData.country,
+                    officerData.languages,
+                ],
+                (err, results) => {
+                    if (err) {
+                        return reject(err); // Reject promise if an error occurs
+                    }
+                    resolve(results); // Resolve the promise with the query results
                 }
-                resolve(results); // Resolve the promise with the query results
-            });
+            );
+        } catch (error) {
+            reject(error); // Reject if any error occurs during QR code generation
+        }
     });
 };
+
 
 exports.getAllCollectionOfficers = (page, limit, searchNIC) => {
     return new Promise((resolve, reject) => {

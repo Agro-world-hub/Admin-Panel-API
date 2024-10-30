@@ -1,7 +1,7 @@
 const db = require("../startup/database");
 const path = require("path");
 const { Upload } = require("@aws-sdk/lib-storage");
-const Joi = require('joi');
+const Joi = require("joi");
 
 exports.loginAdmin = (email) => {
   return new Promise((resolve, reject) => {
@@ -19,8 +19,7 @@ exports.loginAdmin = (email) => {
 exports.getAllAdminUsers = (limit, offset) => {
   return new Promise((resolve, reject) => {
     const countSql = "SELECT COUNT(*) as total FROM adminusers";
-    const dataSql =
-      `SELECT adminusers.id, adminusers.mail, adminusers.userName, adminroles.role 
+    const dataSql = `SELECT adminusers.id, adminusers.mail, adminusers.userName, adminroles.role 
 FROM adminusers 
 JOIN adminroles ON adminusers.role = adminroles.id 
 ORDER BY adminusers.created_at DESC 
@@ -69,8 +68,10 @@ exports.getAllUsers = (limit, offset, searchItem) => {
 
     // Add search condition for NICnumber if provided
     if (searchItem) {
-      countSql += " WHERE users.NICnumber LIKE ? OR users.firstName LIKE ? OR users.lastName LIKE ?";
-      dataSql += " WHERE users.NICnumber LIKE ? OR users.firstName LIKE ? OR users.lastName LIKE ? ";
+      countSql +=
+        " WHERE users.NICnumber LIKE ? OR users.firstName LIKE ? OR users.lastName LIKE ?";
+      dataSql +=
+        " WHERE users.NICnumber LIKE ? OR users.firstName LIKE ? OR users.lastName LIKE ? ";
       const searchQuery = `%${searchItem}%`;
       params.push(searchQuery, searchQuery, searchQuery);
     }
@@ -169,20 +170,20 @@ exports.insertXLSXData = (cropId, data) => {
   return new Promise((resolve, reject) => {
     // Define validation schema
     const schema = Joi.object({
-      'Task index': Joi.number().required(),
-      'Day': Joi.number().integer().required(),
-      'Task type (English)': Joi.string().required(),
-      'Task type (Sinhala)': Joi.string().required(),
-      'Task type (Tamil)': Joi.string().required(),
-      'Task Category (English)': Joi.string().required(),
-      'Task Category (Sinhala)': Joi.string().required(),
-      'Task Category (Tamil)': Joi.string().required(),
-      'Task (English)': Joi.string().required(),
-      'Task (Sinhala)': Joi.string().required(),
-      'Task (Tamil)': Joi.string().required(),
-      'Task description (English)': Joi.string().required(),
-      'Task description (Sinhala)': Joi.string().required(),
-      'Task description (Tamil)': Joi.string().required(),
+      "Task index": Joi.number().required(),
+      Day: Joi.number().integer().required(),
+      "Task type (English)": Joi.string().required(),
+      "Task type (Sinhala)": Joi.string().required(),
+      "Task type (Tamil)": Joi.string().required(),
+      "Task Category (English)": Joi.string().required(),
+      "Task Category (Sinhala)": Joi.string().required(),
+      "Task Category (Tamil)": Joi.string().required(),
+      "Task (English)": Joi.string().required(),
+      "Task (Sinhala)": Joi.string().required(),
+      "Task (Tamil)": Joi.string().required(),
+      "Task description (English)": Joi.string().required(),
+      "Task description (Sinhala)": Joi.string().required(),
+      "Task description (Tamil)": Joi.string().required(),
     }).required();
 
     // Validate all data
@@ -190,7 +191,11 @@ exports.insertXLSXData = (cropId, data) => {
     for (let i = 0; i < data.length; i++) {
       const { error, value } = schema.validate(data[i]);
       if (error) {
-        return reject(new Error(`Validation error in row ${i + 1}: ${error.details[0].message}`));
+        return reject(
+          new Error(
+            `Validation error in row ${i + 1}: ${error.details[0].message}`
+          )
+        );
       }
       validatedData.push(value);
     }
@@ -228,7 +233,7 @@ exports.insertXLSXData = (cropId, data) => {
         resolve({
           message: "All data validated and inserted successfully",
           totalRows: data.length,
-          insertedRows: result.affectedRows
+          insertedRows: result.affectedRows,
         });
       }
     });
@@ -287,11 +292,11 @@ exports.createNews = async (
   status,
   createdBy,
   publishDate,
-  expireDate,
+  expireDate
 ) => {
   return new Promise((resolve, reject) => {
     const sql =
-      "INSERT INTO content (titleEnglish, titleSinhala, titleTamil, descriptionEnglish, descriptionSinhala, descriptionTamil, image, status, createdBy,publishDate, expireDate) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
+      "INSERT INTO content (titleEnglish, titleSinhala, titleTamil, descriptionEnglish, descriptionSinhala, descriptionTamil, image, status, createdBy,publishDate, expireDate) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
     const values = [
       titleEnglish,
       titleSinhala,
@@ -328,11 +333,13 @@ exports.getAllNews = async (status, createdAt, limit, offset) => {
       queryParams.push(status);
     }
 
-        if (createdAt) {
-            const formattedCreatedAt = new Date(createdAt).toISOString().split('T')[0];
-            whereClauses.push("DATE(createdAt) = ?");
-            queryParams.push(formattedCreatedAt);
-        }
+    if (createdAt) {
+      const formattedCreatedAt = new Date(createdAt)
+        .toISOString()
+        .split("T")[0];
+      whereClauses.push("DATE(createdAt) = ?");
+      queryParams.push(formattedCreatedAt);
+    }
 
     if (whereClauses.length > 0) {
       const whereClause = " WHERE " + whereClauses.join(" AND ");
@@ -560,24 +567,26 @@ exports.createMarketPrice = (
 };
 
 exports.getAllMarketPrice = (status, createdAt, limit, offset) => {
-    console.log("Create AT: ", createdAt);
-    
-    return new Promise((resolve, reject) => {
-        let countsSql = "SELECT COUNT(*) as total FROM marketprice";
-        let dataSql = "SELECT * FROM marketprice";
-        let whereClauses = [];
-        let queryParams = [];
+  console.log("Create AT: ", createdAt);
+
+  return new Promise((resolve, reject) => {
+    let countsSql = "SELECT COUNT(*) as total FROM marketprice";
+    let dataSql = "SELECT * FROM marketprice";
+    let whereClauses = [];
+    let queryParams = [];
 
     if (status) {
       whereClauses.push("status = ?");
       queryParams.push(status);
     }
 
-        if (createdAt) {
-            const formattedCreatedAt = new Date(createdAt).toISOString().split('T')[0];
-            whereClauses.push("DATE(createdAt) = ?");
-            queryParams.push(formattedCreatedAt);
-        }
+    if (createdAt) {
+      const formattedCreatedAt = new Date(createdAt)
+        .toISOString()
+        .split("T")[0];
+      whereClauses.push("DATE(createdAt) = ?");
+      queryParams.push(formattedCreatedAt);
+    }
 
     if (whereClauses.length > 0) {
       const whereClause = " WHERE " + whereClauses.join(" AND ");
@@ -606,7 +615,6 @@ exports.getAllMarketPrice = (status, createdAt, limit, offset) => {
     });
   });
 };
-
 
 exports.deleteMarketPriceById = (id) => {
   return new Promise((resolve, reject) => {
@@ -720,14 +728,16 @@ exports.getAllOngoingCultivations = (searchItem, limit, offset) => {
     const params = [];
 
     if (searchItem) {
-      countSql += " AND U.NICnumber LIKE ? OR U.firstName LIKE ? OR U.lastName LIKE ?";
-      dataSql += " AND U.NICnumber LIKE ? OR U.firstName LIKE ? OR U.lastName LIKE ?";
+      countSql +=
+        " AND U.NICnumber LIKE ? OR U.firstName LIKE ? OR U.lastName LIKE ?";
+      dataSql +=
+        " AND U.NICnumber LIKE ? OR U.firstName LIKE ? OR U.lastName LIKE ?";
       const searchQuery = `%${searchItem}%`;
       params.push(searchQuery, searchQuery, searchQuery);
-
     }
 
-    dataSql += "GROUP BY OC.id, U.id, U.firstName, U.lastName, U.NICnumber ORDER BY OC.createdAt DESC LIMIT ? OFFSET ?";
+    dataSql +=
+      "GROUP BY OC.id, U.id, U.firstName, U.lastName, U.NICnumber ORDER BY OC.createdAt DESC LIMIT ? OFFSET ?";
     params.push(limit, offset);
 
     // Fetch total count
@@ -1099,10 +1109,7 @@ exports.getUserById = (userId) => {
 };
 
 exports.createAdmin = (adminData, hashedPassword) => {
- 
-
   return new Promise((resolve, reject) => {
-    
     const sql = `
             INSERT INTO adminusers (mail, role, userName, password) 
             VALUES (?, ?, ?, ?)
@@ -1111,7 +1118,7 @@ exports.createAdmin = (adminData, hashedPassword) => {
       adminData.mail,
       adminData.role,
       adminData.userName,
-      hashedPassword
+      hashedPassword,
     ];
 
     db.query(sql, values, (err, results) => {
@@ -1164,9 +1171,9 @@ exports.getCurrentAssetRecordById = (currentAssetId) => {
 };
 
 exports.getAllTaskByCropId = (cropId, limit, offset) => {
-
   return new Promise((resolve, reject) => {
-    const countSql = "SELECT COUNT(*) as total FROM cropcalender cc, cropcalendardays cd WHERE cc.id = cd.cropId AND cc.id = ?";
+    const countSql =
+      "SELECT COUNT(*) as total FROM cropcalender cc, cropcalendardays cd WHERE cc.id = cd.cropId AND cc.id = ?";
     const sql = `
             SELECT * 
             FROM cropcalender cc 
@@ -1180,26 +1187,30 @@ exports.getAllTaskByCropId = (cropId, limit, offset) => {
       if (countErr) {
         reject(countErr);
       } else {
-        db.query(sql, [cropId, parseInt(limit), parseInt(offset)], (dataErr, dataResults) => {
-          if (dataErr) {
-            reject(dataErr);
-          } else {
-            resolve({
-              results: dataResults,
-              total: countResults[0].total   
-            });
+        db.query(
+          sql,
+          [cropId, parseInt(limit), parseInt(offset)],
+          (dataErr, dataResults) => {
+            if (dataErr) {
+              reject(dataErr);
+            } else {
+              resolve({
+                results: dataResults,
+                total: countResults[0].total,
+              });
+            }
           }
-        });
+        );
       }
     });
   });
 
-    // db.query(sql, values, (err, results) => {
-    //   if (err) {
-    //     return reject(err); // Reject promise if an error occurs
-    //   }
-    //   resolve(results); // Resolve the promise with the query results
-    // });
+  // db.query(sql, values, (err, results) => {
+  //   if (err) {
+  //     return reject(err); // Reject promise if an error occurs
+  //   }
+  //   resolve(results); // Resolve the promise with the query results
+  // });
   // });
 };
 
@@ -1301,26 +1312,23 @@ exports.getAllPost = () => {
   });
 };
 
-
-
-
 // exports.getAllUserTaskByCropId = (cropId, userId) => {
 //   return new Promise((resolve, reject) => {
-//     const countSql = `SELECT COUNT(*) as total FROM slavecropcalendardays WHERE 
-//     slavecropcalendardays.cropCalendarId = ? 
+//     const countSql = `SELECT COUNT(*) as total FROM slavecropcalendardays WHERE
+//     slavecropcalendardays.cropCalendarId = ?
 //     AND slavecropcalendardays.userId = ?`;
 //     const sql = `
-//             SELECT 
+//             SELECT
 //     slavecropcalendardays.id AS slavecropcalendardaysId,
 //     slavecropcalendardays.cropCalendarId,
-//     slavecropcalendardays.taskIndex, 
-//     slavecropcalendardays.days, 
+//     slavecropcalendardays.taskIndex,
+//     slavecropcalendardays.days,
 //     slavecropcalendardays.taskEnglish,
 //     slavecropcalendardays.status
-// FROM 
+// FROM
 //     slavecropcalendardays
-// WHERE 
-//     slavecropcalendardays.cropCalendarId = ? 
+// WHERE
+//     slavecropcalendardays.cropCalendarId = ?
 //     AND slavecropcalendardays.userId = ?
 // ORDER BY slavecropcalendardays.taskIndex;
 
@@ -1335,7 +1343,6 @@ exports.getAllPost = () => {
 //     });
 //   });
 // };
-
 
 exports.getAllUserTaskByCropId = (cropId, userId, limit, offset) => {
   return new Promise((resolve, reject) => {
@@ -1377,15 +1384,12 @@ exports.getAllUserTaskByCropId = (cropId, userId, limit, offset) => {
         // Resolve with total count and paginated items
         resolve({
           total: countResults[0].total, // The total count of tasks
-          items: dataResults,           // The list of tasks for the user
+          items: dataResults, // The list of tasks for the user
         });
       });
     });
   });
 };
-
-
-
 
 exports.getUserTaskStatusById = (id) => {
   return new Promise((resolve, reject) => {
@@ -1494,13 +1498,12 @@ exports.getAllPostReplyDao = (postid) => {
   });
 };
 
-
-
 // replyDao.js
 
 exports.getReplyCount = () => {
   return new Promise((resolve, reject) => {
-    const sql = "SELECT chatId, COUNT(id) AS replyCount FROM publicforumreplies GROUP BY chatId";
+    const sql =
+      "SELECT chatId, COUNT(id) AS replyCount FROM publicforumreplies GROUP BY chatId";
 
     db.query(sql, (err, results) => {
       if (err) {
@@ -1512,7 +1515,6 @@ exports.getReplyCount = () => {
     });
   });
 };
-
 
 exports.deleteReply = (id) => {
   const sql = "DELETE FROM publicforumreplies WHERE id = ?";
@@ -1601,114 +1603,132 @@ exports.addNewTaskDao = (task, indexId, cropId) => {
 };
 
 exports.addNewReplyDao = (chatId, replyId, replyMessage) => {
-    console.log("Dao Reply: ", replyMessage);
-    
-    return new Promise((resolve, reject) => {
-        const sql = "INSERT INTO publicforumreplies (chatId, replyMessage) VALUES (?, ?)";
-        const values = [chatId, replyMessage];
+  console.log("Dao Reply: ", replyMessage);
 
-        db.query(sql, values, (err, results) => {
-            if (err) {
-                console.error("Error executing query:", err);  // Improved error logging
-                return reject(err);
-            } else {
-                console.log("Insert successful:", results);
-                resolve(results);
-            }
-        });
-    });
-};
+  return new Promise((resolve, reject) => {
+    const sql =
+      "INSERT INTO publicforumreplies (chatId, replyMessage) VALUES (?, ?)";
+    const values = [chatId, replyMessage];
 
-exports.deletePublicForumPost = (id) =>{
-  console.log("Deleting post with id:", id);
-  
-  const sql = "DELETE FROM publicforumposts WHERE id = ?";
-
-  return new Promise((resolve, reject)=>{
-    db.query(sql, [id], (err, results)=>{
-      if(err){
-        reject("Error executing delete query: " + err)
-      }else{
+    db.query(sql, values, (err, results) => {
+      if (err) {
+        console.error("Error executing query:", err); // Improved error logging
+        return reject(err);
+      } else {
+        console.log("Insert successful:", results);
         resolve(results);
       }
     });
   });
-}
+};
 
+exports.deletePublicForumPost = (id) =>{
+  const sql = "DELETE FROM publicforumposts WHERE id = ?";
 
-
-
-
+  return new Promise((resolve, reject) => {
+    db.query(sql, [id], (err, results) => {
+      if (err) {
+        reject("Error executing delete query: " + err);
+      } else {
+        resolve(results);
+      }
+    });
+  });
+};
 
 //User separate task
 exports.shiftUpTaskIndexDaoU = (taskId, indexId) => {
-    return new Promise((resolve, reject) => {
-        const sql = "UPDATE  slavecropcalendardays SET taskIndex = ? WHERE id = ?";
-        const values = [indexId, taskId];
+  return new Promise((resolve, reject) => {
+    const sql = "UPDATE  slavecropcalendardays SET taskIndex = ? WHERE id = ?";
+    const values = [indexId, taskId];
 
-        db.query(sql, values, (err, results) => {
-            if (err) {
-                return reject(err); // Reject promise if an error occurs
-            }
+    db.query(sql, values, (err, results) => {
+      if (err) {
+        return reject(err); // Reject promise if an error occurs
+      }
 
-            resolve(results[0]); // Resolve the promise with the first result
-        });
+      resolve(results[0]); // Resolve the promise with the first result
     });
+  });
 };
-
 
 exports.getAllTaskIdDaoU = (cropId, userId) => {
-    return new Promise((resolve, reject) => {
-        const sql = "SELECT id, taskIndex FROM slavecropcalendardays WHERE cropCalendarId  = ? AND userId = ?";
-        const values = [cropId, userId];
+  return new Promise((resolve, reject) => {
+    const sql =
+      "SELECT id, taskIndex FROM slavecropcalendardays WHERE cropCalendarId  = ? AND userId = ?";
+    const values = [cropId, userId];
 
-        db.query(sql, values, (err, results) => {
-            if (err) {
-                return reject(err); // Reject promise if an error occurs
-            }
+    db.query(sql, values, (err, results) => {
+      if (err) {
+        return reject(err); // Reject promise if an error occurs
+      }
 
-            resolve(results); // No need to wrap in arrays, return results directly
-        });
+      resolve(results); // No need to wrap in arrays, return results directly
     });
+  });
 };
 
-exports.addNewTaskDaoU = (task, indexId,userId, cropId) => {
-    console.log("Dao Task: ",task);
-    
-    return new Promise((resolve, reject) => {
-        const sql = "INSERT INTO slavecropcalendardays (userId, cropCalendarId, taskIndex, days, taskTypeEnglish, taskTypeSinhala, taskTypeTamil, taskCategoryEnglish, taskCategorySinhala, taskCategoryTamil, taskEnglish, taskSinhala, taskTamil, taskDescriptionEnglish, taskDescriptionSinhala, taskDescriptionTamil, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Pending')" ;
+exports.addNewTaskDaoU = (task, indexId, userId, cropId) => {
+  console.log("Dao Task: ", task);
 
-        const values = [ userId, cropId, indexId,  task.days, task.taskTypeEnglish, task.taskTypeSinhala, task.taskTypeTamil, task.taskCategoryEnglish, task.taskCategorySinhala, task.taskCategoryTamil, task.taskEnglish, task.taskSinhala, task.taskTamil, task.taskDescriptionEnglish, task.taskDescriptionSinhala, task.taskDescriptionTamil ];
+  return new Promise((resolve, reject) => {
+    const sql =
+      "INSERT INTO slavecropcalendardays (userId, cropCalendarId, taskIndex, days, taskTypeEnglish, taskTypeSinhala, taskTypeTamil, taskCategoryEnglish, taskCategorySinhala, taskCategoryTamil, taskEnglish, taskSinhala, taskTamil, taskDescriptionEnglish, taskDescriptionSinhala, taskDescriptionTamil, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Pending')";
 
-        // Ensure that the values array length matches the expected column count
-        if (values.length !== 16) {
-            return reject(new Error("Mismatch between column count and value count."));
-        }
+    const values = [
+      userId,
+      cropId,
+      indexId,
+      task.days,
+      task.taskTypeEnglish,
+      task.taskTypeSinhala,
+      task.taskTypeTamil,
+      task.taskCategoryEnglish,
+      task.taskCategorySinhala,
+      task.taskCategoryTamil,
+      task.taskEnglish,
+      task.taskSinhala,
+      task.taskTamil,
+      task.taskDescriptionEnglish,
+      task.taskDescriptionSinhala,
+      task.taskDescriptionTamil,
+    ];
 
-        db.query(sql, values, (err, results) => {
-            if (err) {
-                reject(err);
-            } else {
-                resolve(results);
-            }
-        });
+    // Ensure that the values array length matches the expected column count
+    if (values.length !== 16) {
+      return reject(
+        new Error("Mismatch between column count and value count.")
+      );
+    }
+
+    db.query(sql, values, (err, results) => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(results);
+      }
     });
+  });
 };
 
 exports.insertUserXLSXData = (data) => {
   return new Promise((resolve, reject) => {
     // Define validation schema
     const schema = Joi.object({
-      'First Name': Joi.string().trim().min(2).max(50).required(),
-      'Last Name': Joi.string().trim().min(2).max(50).required(),
-      'Phone Number': Joi.alternatives().try(
-        Joi.string().pattern(/^\+94\d{9}$/),
-        Joi.number().integer().min(94000000000).max(94999999999)
-      ).required(),
-      'NIC Number': Joi.alternatives().try(
-        Joi.string().pattern(/^(19\d{9}|\d{9}[vV])$/),
-        Joi.number().integer().min(10000000000).max(199999999999)
-      ).required()
+      "First Name": Joi.string().trim().min(2).max(50).required(),
+      "Last Name": Joi.string().trim().min(2).max(50).required(),
+      "Phone Number": Joi.alternatives()
+        .try(
+          Joi.string().pattern(/^\+94\d{9}$/),
+          Joi.number().integer().min(94000000000).max(94999999999)
+        )
+        .required(),
+      "NIC Number": Joi.alternatives()
+        .try(
+          Joi.string().pattern(/^(19\d{9}|\d{9}[vV])$/),
+          Joi.number().integer().min(10000000000).max(199999999999)
+        )
+        .required(),
     }).required();
 
     // Validate all data
@@ -1716,7 +1736,11 @@ exports.insertUserXLSXData = (data) => {
     for (let i = 0; i < data.length; i++) {
       const { error, value } = schema.validate(data[i]);
       if (error) {
-        return reject(new Error(`Validation error in row ${i + 1}: ${error.details[0].message}`));
+        return reject(
+          new Error(
+            `Validation error in row ${i + 1}: ${error.details[0].message}`
+          )
+        );
       }
       validatedData.push(value);
     }
@@ -1727,10 +1751,12 @@ exports.insertUserXLSXData = (data) => {
       VALUES ?`;
 
     const values = validatedData.map((row) => [
-      row['First Name'],
-      row['Last Name'],
-      String(row['Phone Number']).startsWith('+') ? row['Phone Number'] : `+${row['Phone Number']}`,
-      String(row['NIC Number'])
+      row["First Name"],
+      row["Last Name"],
+      String(row["Phone Number"]).startsWith("+")
+        ? row["Phone Number"]
+        : `+${row["Phone Number"]}`,
+      String(row["NIC Number"]),
     ]);
 
     db.query(sql, [values], (err, result) => {
@@ -1740,31 +1766,26 @@ exports.insertUserXLSXData = (data) => {
         resolve({
           message: "All data validated and inserted successfully",
           totalRows: data.length,
-          insertedRows: result.affectedRows
+          insertedRows: result.affectedRows,
         });
       }
     });
   });
 };
 
-
-
 exports.getAllRoles = () => {
   return new Promise((resolve, reject) => {
-      const sql = "SELECT * FROM adminroles";
+    const sql = "SELECT * FROM adminroles";
 
-      db.query(sql,(err, results) => {
-          if (err) {
-              return reject(err); // Reject promise if an error occurs
-          }
+    db.query(sql, (err, results) => {
+      if (err) {
+        return reject(err); // Reject promise if an error occurs
+      }
 
-          resolve(results); // No need to wrap in arrays, return results directly
-      });
+      resolve(results); // No need to wrap in arrays, return results directly
+    });
   });
 };
-
-
-
 
 exports.deleteUserCropTask = (taskId) => {
   return new Promise((resolve, reject) => {
@@ -1780,10 +1801,10 @@ exports.deleteUserCropTask = (taskId) => {
   });
 };
 
-
 exports.getAllUserTaskIdDao = (cropId, userId) => {
   return new Promise((resolve, reject) => {
-    const sql = "SELECT id, taskIndex FROM slavecropcalendardays WHERE cropCalendarId = ? AND userId = ?";
+    const sql =
+      "SELECT id, taskIndex FROM slavecropcalendardays WHERE cropCalendarId = ? AND userId = ?";
     const values = [cropId, userId];
 
     db.query(sql, values, (err, results) => {
