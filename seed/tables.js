@@ -102,7 +102,7 @@ const createContentTable = () => {
 
 const createCropCalenderTable = () => {
     const sql = `
-    CREATE TABLE IF NOT EXISTS cropCalender (
+    CREATE TABLE IF NOT EXISTS cropcalender (
       id INT AUTO_INCREMENT PRIMARY KEY,
       cropName VARCHAR(50) NOT NULL,
       sinhalaCropName VARCHAR(50) NOT NULL,
@@ -174,7 +174,7 @@ const createCropCalenderDaysTable = () => {
 
 const createOngoingCultivationsTable = () => {
     const sql = `
-    CREATE TABLE IF NOT EXISTS ongoingCultivations (
+    CREATE TABLE IF NOT EXISTS ongoingcultivations (
       id INT AUTO_INCREMENT PRIMARY KEY,
       userId INT,
       createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -289,7 +289,7 @@ const createMarketPriceServeTable = () => {
 
 const createOngoingCultivationsCropsTable = () => {
     const sql = `
-    CREATE TABLE IF NOT EXISTS ongoingCultivationsCrops (
+    CREATE TABLE IF NOT EXISTS ongoingcultivationscrops (
       id INT AUTO_INCREMENT PRIMARY KEY,
       ongoingCultivationId INT,
       cropCalendar INT,
@@ -635,7 +635,7 @@ const createCurrentAssetRecord = () => {
 
 const createSlaveCropCalenderDaysTable = () => {
     const sql = `
-      CREATE TABLE IF NOT EXISTS slaveCropcalendardays (
+      CREATE TABLE IF NOT EXISTS slavecropcalendardays (
       id INT AUTO_INCREMENT PRIMARY KEY,
       userId INT(11) NULL,
       cropCalendarId INT(11) NULL,
@@ -919,6 +919,9 @@ const createCollectionCenter = () => {
     });
 };
 
+
+
+
 const createCollectionCenterOfficer = () => {
     const sql = `
     CREATE TABLE IF NOT EXISTS collectioncenterofficer (
@@ -940,6 +943,109 @@ const createCollectionCenterOfficer = () => {
                 reject('Error creating collectioncenterofficer table: ' + err);
             } else {
                 resolve('collectioncenterofficer table created successfully.');
+            }
+        });
+    });
+};
+
+
+
+
+
+//Seed for market Place Application
+
+const createMarketPlaceUsersTable = () => {
+    const sql = `
+    CREATE TABLE IF NOT EXISTS marketplaceusers (
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      firstName VARCHAR(50) NOT NULL,
+      lastName VARCHAR(50) NOT NULL,
+      phoneNumber VARCHAR(12) NOT NULL,
+      NICnumber VARCHAR(12) NOT NULL,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )
+  `;
+    return new Promise((resolve, reject) => {
+        db.query(sql, (err, result) => {
+            if (err) {
+                reject('Error creating market place users table: ' + err);
+            } else {
+                resolve('market place users table created successfully.');
+            }
+        });
+    });
+};
+
+
+const createMarketPlacePackages = () => {
+    const sql = `
+    CREATE TABLE IF NOT EXISTS marketplacepackages (
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      name VARCHAR(50) NOT NULL,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )
+  `;
+    return new Promise((resolve, reject) => {
+        db.query(sql, (err, result) => {
+            if (err) {
+                reject('Error creating market place users package: ' + err);
+            } else {
+                resolve('market place package table created successfully.');
+            }
+        });
+    });
+};
+
+
+const createMarketPlaceItems = () => {
+    const sql = `
+    CREATE TABLE IF NOT EXISTS marketplaceitems (
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      cropId INT,
+      displayName VARCHAR(50) NOT NULL,
+      normalPrice DECIMAL(8, 2) NOT NULL,
+      discountedPrice DECIMAL(8, 2) NOT NULL,
+      promo BOOLEAN  NOT NULL,
+      createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (cropId) REFERENCES cropcalender(id)
+        ON DELETE SET NULL
+        ON UPDATE CASCADE
+    )
+  `;
+    return new Promise((resolve, reject) => {
+        db.query(sql, (err, result) => {
+            if (err) {
+                reject('Error creating market place items table: ' + err);
+            } else {
+                resolve('market place items table created successfully.');
+            }
+        });
+    });
+};
+
+
+const createPackageDetails = () => {
+    const sql = `
+    CREATE TABLE IF NOT EXISTS packagedetails (
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      packageId INT,
+      mpItemId INT,
+      quantity INT(11) NOT NULL,
+      createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (packageId) REFERENCES marketplacepackages(id)
+        ON DELETE SET NULL
+        ON UPDATE CASCADE,
+      FOREIGN KEY (mpItemId) REFERENCES marketplaceitems(id)
+        ON DELETE SET NULL
+        ON UPDATE CASCADE,
+    )
+  `;
+    return new Promise((resolve, reject) => {
+        db.query(sql, (err, result) => {
+            if (err) {
+                reject('Error creating package details table: ' + err);
+            } else {
+                resolve('package details table created successfully.');
             }
         });
     });
