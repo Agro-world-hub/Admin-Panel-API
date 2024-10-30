@@ -52,20 +52,34 @@ exports.deleteCollectionCenterDAo = async (id) => {
   });
 };
 
-exports.GetAllComplainDAO = (page, limit) => {
+exports.GetAllComplainDAO = (page, limit, status) => {
   return new Promise((resolve, reject) => {
+    const Sqlparams = [];
+    const Counterparams = [];
     const offset = (page - 1) * limit;
+    
     let countSql = "SELECT COUNT(*) as total FROM farmercomplains";
-    let sql = `SELECT * FROM farmercomplains LIMIT ? OFFSET ?`;
-    db.query(countSql, (countErr, countResults) => {
+    let sql = "SELECT * FROM farmercomplains";
+    
+    if (status) {
+      countSql += " WHERE status = ?"; 
+      sql += " WHERE status = ?";
+      Sqlparams.push(status);
+      Counterparams.push(status);
+    }
+    
+    sql += " LIMIT ? OFFSET ?";
+    Sqlparams.push(parseInt(limit));
+    Sqlparams.push(parseInt(offset));
+    
+    db.query(countSql, Counterparams, (countErr, countResults) => {
       if (countErr) {
         return reject(countErr);
       }
 
       const total = countResults[0].total;
 
-      // Execute data query
-      db.query(sql, [parseInt(limit), parseInt(offset)], (dataErr, results) => {
+      db.query(sql, Sqlparams, (dataErr, results) => {
         if (dataErr) {
           return reject(dataErr);
         }
