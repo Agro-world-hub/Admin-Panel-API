@@ -708,7 +708,7 @@ exports.getAllOngoingCultivations = (searchItem, limit, offset) => {
   return new Promise((resolve, reject) => {
     let countSql = `
             SELECT COUNT(*) as total 
-            FROM ongoingCultivations 
+            FROM ongoingcultivations 
             JOIN users ON ongoingCultivations.userId = users.id
         `;
     let dataSql = `
@@ -720,7 +720,7 @@ exports.getAllOngoingCultivations = (searchItem, limit, offset) => {
                 U.NICnumber,
                 COUNT(OCC.cropCalendar) AS CropCount
             FROM 
-                ongoingcultivations OC , users U , ongoingCultivationsCrops OCC
+                ongoingcultivations OC , users U , ongoingcultivationscrops OCC
             WHERE 
                 OC.userId = U.id AND OC.id = OCC.ongoingCultivationId
             
