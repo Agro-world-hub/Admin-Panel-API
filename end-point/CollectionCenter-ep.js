@@ -100,9 +100,10 @@ exports.addNewCollectionCenter = async (req, res) => {
 exports.getAllComplains = async (req, res) => {
   try {
     console.log(req.query);
-    const {page, limit} = req.query
+    const {page, limit, status} = req.query
     
-    const { results, total } = await CollectionCenterDao.GetAllComplainDAO(page, limit)
+    
+    const { results, total } = await CollectionCenterDao.GetAllComplainDAO(page, limit, status)
 
     if (results.length === 0) {
       return res
