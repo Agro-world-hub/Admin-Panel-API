@@ -51,3 +51,27 @@ exports.deleteCollectionCenterDAo = async (id) => {
     });
   });
 };
+
+exports.GetAllComplainDAO = (page, limit) => {
+  return new Promise((resolve, reject) => {
+    const offset = (page - 1) * limit;
+    let countSql = "SELECT COUNT(*) as total FROM farmercomplains";
+    let sql = `SELECT * FROM farmercomplains LIMIT ? OFFSET ?`;
+    db.query(countSql, (countErr, countResults) => {
+      if (countErr) {
+        return reject(countErr);
+      }
+
+      const total = countResults[0].total;
+
+      // Execute data query
+      db.query(sql, [parseInt(limit), parseInt(offset)], (dataErr, results) => {
+        if (dataErr) {
+          return reject(dataErr);
+        }
+
+        resolve({ results, total });
+      });
+    });
+  });
+};
