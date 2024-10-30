@@ -100,15 +100,16 @@ exports.addNewCollectionCenter = async (req, res) => {
 exports.getAllComplains = async (req, res) => {
   try {
     console.log(req.query);
-    const {page, limit, status} = req.query
+    const {page, limit, status, searchText} = req.query
     
     
-    const { results, total } = await CollectionCenterDao.GetAllComplainDAO(page, limit, status)
-
+    const { results, total } = await CollectionCenterDao.GetAllComplainDAO(page, limit, status, searchText)
+    console.log(results,total);
+    
     if (results.length === 0) {
       return res
         .status(404)
-        .json({ message: "No news items found", data: result });
+        .json({ message: "No news items found", data: results });
     }
 
     console.log("Successfully retrieved all collection center");
