@@ -1069,7 +1069,7 @@ const createPackageDetails = () => {
         ON UPDATE CASCADE,
       FOREIGN KEY (mpItemId) REFERENCES marketplaceitems(id)
         ON DELETE SET NULL
-        ON UPDATE CASCADE,
+        ON UPDATE CASCADE
     )
   `;
     return new Promise((resolve, reject) => {
@@ -1093,7 +1093,7 @@ const createPromoItems = () => {
       createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (mpItemId) REFERENCES marketplaceitems(id)
         ON DELETE SET NULL
-        ON UPDATE CASCADE,
+        ON UPDATE CASCADE
     )
   `;
     return new Promise((resolve, reject) => {
@@ -1117,7 +1117,7 @@ const createCart = () => {
       createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (userId) REFERENCES users(id)
         ON DELETE SET NULL
-        ON UPDATE CASCADE,
+        ON UPDATE CASCADE
     )
   `;
     return new Promise((resolve, reject) => {
@@ -1146,7 +1146,7 @@ const createCartItems = () => {
         ON UPDATE CASCADE,
       FOREIGN KEY (mpItemId) REFERENCES marketplaceitems(id)
         ON DELETE SET NULL
-        ON UPDATE CASCADE,
+        ON UPDATE CASCADE
     )
   `;
     return new Promise((resolve, reject) => {
@@ -1198,5 +1198,15 @@ module.exports = {
     createRegisteredFarmerPayments,
     createUserBankDetails,
     createCollectionCenter,
-    createCollectionCenterOfficer
+    createCollectionCenterOfficer,
+    createFarmerComplains,
+
+    //Seed for market Place Application
+    createMarketPlaceUsersTable,
+    createMarketPlacePackages,
+    createMarketPlaceItems,
+    createPackageDetails,
+    createPromoItems,
+    createCart,
+    createCartItems
 };

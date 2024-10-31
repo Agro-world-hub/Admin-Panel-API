@@ -37,8 +37,19 @@ const { createRegisteredFarmerPayments } = require('./tables');
 const { createUserBankDetails } = require('./tables');
 const { createCollectionCenter } = require('./tables');
 const { createCollectionCenterOfficer } = require('./tables');
+const { createFarmerComplains } = require('./tables');
+
+//Seed for market Place Application
+const { createMarketPlaceUsersTable } = require('./tables');
+const { createMarketPlacePackages } = require('./tables');
+const { createMarketPlaceItems } = require('./tables');
+const { createPackageDetails } = require('./tables');
+const { createPromoItems } = require('./tables');
+const { createCart } = require('./tables');
+const { createCartItems } = require('./tables');
 
 const {createSuperAdmin} = require('./admin')
+
 
 
 const runSeeds = async () => {
@@ -121,6 +132,27 @@ const runSeeds = async () => {
     console.log(messagecreateCollectionCenter);
     const messagecreateCollectionCenterOfficer = await createCollectionCenterOfficer();
     console.log(messagecreateCollectionCenterOfficer);
+
+    const messagecreateFarmerComplains = await createFarmerComplains();
+    console.log(messagecreateFarmerComplains);
+
+
+    //Seed for market Place Application
+    const messageCreateMarketPlaceUsersTable = await createMarketPlaceUsersTable();
+    console.log(messageCreateMarketPlaceUsersTable);
+    const messageCreateMarketPlacePackages = await createMarketPlacePackages();
+    console.log(messageCreateMarketPlacePackages);
+    const messageCreateMarketPlaceItems = await createMarketPlaceItems();
+    console.log(messageCreateMarketPlaceItems);
+    const messageCreatePackageDetails = await createPackageDetails();
+    console.log(messageCreatePackageDetails);
+    const messageCreatePromoItems = await createPromoItems();
+    console.log(messageCreatePromoItems);
+    const messageCreateCart = await createCart();
+    console.log(messageCreateCart);
+    const messageCreateCartItems = await createCartItems();
+    console.log(messageCreateCartItems);
+    
   } catch (err) {
     console.error(err);
   } finally {
