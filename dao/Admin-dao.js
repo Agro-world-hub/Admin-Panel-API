@@ -1834,24 +1834,28 @@ exports.shiftUpUserTaskIndexDao = (taskId, indexId) => {
 
 exports.getPaymentSlipReport = () => {
   return new Promise((resolve, reject) => {
-    const dataSql = `SELECT 
+    const dataSql = `
+      SELECT 
           users.firstName AS farmerFirstName,
           users.lastName AS farmerLastName,
-          registeredfarmerpayments.total,
+          users.NICnumber AS farmerNIC,
+          registeredfarmerpayments.total AS paymentTotal,
           officer.firstName AS officerFirstName,
           officer.lastName AS officerLastName,
-          registeredfarmerpayments.createdAt
+          registeredfarmerpayments.createdAt AS paymentDate
       FROM 
           registeredfarmerpayments
       JOIN users ON registeredfarmerpayments.userId = users.id
-      JOIN users AS officer ON registeredfarmerpayments.collectionOfficerId = officer.id;
+      JOIN collectionofficer AS officer ON registeredfarmerpayments.collectionOfficerId = officer.id;
     `;
-    db.query(dataSql, (error, results)=>{
-      if(error){
+    
+    db.query(dataSql, (error, results) => {
+      if (error) {
         reject(error);
-      }else{
+      } else {
         resolve(results);
       }
-    })
-  })
+    });
+  });
 }
+
