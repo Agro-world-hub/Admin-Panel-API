@@ -57,30 +57,33 @@ exports.GetAllComplainDAO = (page, limit, status, searchText) => {
     const Sqlparams = [];
     const Counterparams = [];
     const offset = (page - 1) * limit;
-    
-    let countSql = "SELECT COUNT(*) as total FROM farmercomplains WHERE 1=1 ";
-    let sql = "SELECT * FROM farmercomplains WHERE 1=1";
-    
+
+    let countSql = "SELECT COUNT(*) as total FROM farmercomplains fc, collectionofficer c, users u WHERE fc.farmerId = u.id AND fc.coId = c.id  ";
+    let sql = ` 
+    SELECT fc.id, fc.refNo, fc.createdAt, fc.status, fc.language, u.firstName as farmerName, c.firstNameEnglish as officerName 
+    FROM farmercomplains fc, collectionofficer c, users u 
+    WHERE fc.farmerId = u.id AND fc.coId = c.id `;
+
     if (status) {
-      countSql += " AND status = ?"; 
-      sql += " AND status = ?";
+      countSql += " AND fc.status = ? ";
+      sql += " AND fc.status = ? ";
       Sqlparams.push(status);
       Counterparams.push(status);
     }
 
-    if(searchText){
-      countSql += " AND refNo LIKE ? OR officerName LIKE ? OR farmerName LIKE ? "; 
-      sql += " AND refNo LIKE ? OR officerName LIKE ? OR farmerName LIKE ? ";
+    if (searchText) {
+      countSql += " AND fc.refNo LIKE ? OR c.firstNameEnglish LIKE ? OR u.firstName LIKE ? ";
+      sql += " AND fc.refNo LIKE ? OR c.firstNameEnglish LIKE ? OR u.firstName LIKE ? ";
       const searchQuery = `%${searchText}%`;
       Sqlparams.push(searchQuery, searchQuery, searchQuery);
       Counterparams.push(searchQuery, searchQuery, searchQuery);
 
     }
-    
+
     sql += " LIMIT ? OFFSET ?";
     Sqlparams.push(parseInt(limit));
     Sqlparams.push(parseInt(offset));
-    
+
     db.query(countSql, Counterparams, (countErr, countResults) => {
       if (countErr) {
         return reject(countErr);
@@ -102,8 +105,12 @@ exports.GetAllComplainDAO = (page, limit, status, searchText) => {
 
 exports.getComplainById = (id) => {
   return new Promise((resolve, reject) => {
-    const sql = "SELECT * FROM farmercomplains WHERE id = ?";
-    db.query(sql,[id], (err, results) => {
+    const sql = ` 
+    SELECT fc.id, fc.refNo, fc.createdAt, fc.status, fc.language, fc.complain, u.firstName AS farmerName, u.phoneNumber AS farmerPhone, c.firstNameEnglish as officerName, c.phoneNumber01 AS officerPhone
+    FROM farmercomplains fc, collectionofficer c, users u 
+    WHERE fc.farmerId = u.id AND fc.coId = c.id AND fc.id = ? 
+    `;
+    db.query(sql, [id], (err, results) => {
       if (err) {
         return reject(err);
       }
