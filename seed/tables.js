@@ -957,15 +957,19 @@ const createFarmerComplains  = () => {
     const sql = `
    CREATE TABLE IF NOT EXISTS farmerComplains (
     id INT AUTO_INCREMENT PRIMARY KEY,
+    farmerId INT,
+    coId INT,
     refNo VARCHAR(20) NOT NULL,
-    createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    status VARCHAR(20) NOT NULL,
-    officerName VARCHAR(55) NOT NULL,
-    farmerName VARCHAR(255) NOT NULL,
-    officerPhone VARCHAR(15) NOT NULL,
-    farmerPhone VARCHAR(15) NOT NULL,
+    language VARCHAR(50) NOT NULL,
     complain TEXT NOT NULL,
-    language VARCHAR(50) NOT NULL
+    status VARCHAR(20) NOT NULL,
+    createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (farmerId) REFERENCES users(id)
+        ON DELETE SET NULL
+        ON UPDATE CASCADE,
+    FOREIGN KEY (coId) REFERENCES collectionofficer(id)
+        ON DELETE SET NULL
+        ON UPDATE CASCADE
 )
   `;
     return new Promise((resolve, reject) => {
