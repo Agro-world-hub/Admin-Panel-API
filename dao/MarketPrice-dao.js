@@ -144,34 +144,36 @@ exports.getXLSXFilePath = async (fileName) => {
 exports.getAllMarketPriceDAO = (limit, offset, crop, grade) => {
   return new Promise((resolve, reject) => {
     const params = [];
-    const countSql = "SELECT COUNT(*) as total FROM marketprice m, cropCalender c WHERE m.cropId = c.id ";
-
+    const countParams = [];
+    
+    let countSql = "SELECT COUNT(*) as total FROM marketprice m, cropCalender c WHERE m.cropId = c.id";
     let sql = `
-        SELECT m.id, c.cropName,c.variety, m.grade, m.price, m.date, m.price, m.startTime, m.endTime
-        FROM marketprice m, cropCalender c
-        WHERE m.cropId = c.id 
-        
-            
-        `;
+      SELECT m.id, c.cropName, c.variety, m.grade, m.price, m.date, m.startTime, m.endTime
+      FROM marketprice m, cropCalender c
+      WHERE m.cropId = c.id
+    `;
 
     if (crop) {
-      sql = sql + `AND c.cropName= ?`
-      params.push(crop)
+      sql += " AND c.cropName = ?";
+      countSql += " AND c.cropName = ?";
+      params.push(crop);
+      countParams.push(crop);
     }
 
     if (grade) {
-      sql = sql + `AND m.grade= ?`
-      params.push(grade)
+      sql += " AND m.grade = ?";
+      countSql += " AND m.grade = ?";
+      params.push(grade);
+      countParams.push(grade);
     }
 
+    sql += ` ORDER BY c.cropName, m.grade LIMIT ? OFFSET ?`;
+    params.push(parseInt(limit));
+    params.push(parseInt(offset));
 
-    sql = sql + `ORDER BY c.cropName, m.grade LIMIT ? OFFSET ?`
-    // console.log(sql);
-    params.push(parseInt(limit))
-    params.push(parseInt(offset))
+    console.log(sql, params);
 
-
-    db.query(countSql, (countErr, countResults) => {
+    db.query(countSql, countParams, (countErr, countResults) => {
       if (countErr) {
         reject(countErr);
       } else {
@@ -189,6 +191,7 @@ exports.getAllMarketPriceDAO = (limit, offset, crop, grade) => {
     });
   });
 };
+
 
 
 exports.getAllCropNameDAO = () => {
