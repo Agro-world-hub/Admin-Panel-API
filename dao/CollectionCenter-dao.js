@@ -52,20 +52,29 @@ exports.deleteCollectionCenterDAo = async (id) => {
   });
 };
 
-exports.GetAllComplainDAO = (page, limit, status) => {
+exports.GetAllComplainDAO = (page, limit, status, searchText) => {
   return new Promise((resolve, reject) => {
     const Sqlparams = [];
     const Counterparams = [];
     const offset = (page - 1) * limit;
     
-    let countSql = "SELECT COUNT(*) as total FROM farmercomplains";
-    let sql = "SELECT * FROM farmercomplains";
+    let countSql = "SELECT COUNT(*) as total FROM farmercomplains WHERE 1=1 ";
+    let sql = "SELECT * FROM farmercomplains WHERE 1=1";
     
     if (status) {
-      countSql += " WHERE status = ?"; 
-      sql += " WHERE status = ?";
+      countSql += " AND status = ?"; 
+      sql += " AND status = ?";
       Sqlparams.push(status);
       Counterparams.push(status);
+    }
+
+    if(searchText){
+      countSql += " AND refNo LIKE ? OR officerName LIKE ? OR farmerName LIKE ? "; 
+      sql += " AND refNo LIKE ? OR officerName LIKE ? OR farmerName LIKE ? ";
+      const searchQuery = `%${searchText}%`;
+      Sqlparams.push(searchQuery, searchQuery, searchQuery);
+      Counterparams.push(searchQuery, searchQuery, searchQuery);
+
     }
     
     sql += " LIMIT ? OFFSET ?";
@@ -86,6 +95,19 @@ exports.GetAllComplainDAO = (page, limit, status) => {
 
         resolve({ results, total });
       });
+    });
+  });
+};
+
+
+exports.getComplainById = (id) => {
+  return new Promise((resolve, reject) => {
+    const sql = "SELECT * FROM farmercomplains WHERE id = ?";
+    db.query(sql,[id], (err, results) => {
+      if (err) {
+        return reject(err);
+      }
+      resolve(results);
     });
   });
 };

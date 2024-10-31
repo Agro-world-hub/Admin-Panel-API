@@ -100,19 +100,47 @@ exports.addNewCollectionCenter = async (req, res) => {
 exports.getAllComplains = async (req, res) => {
   try {
     console.log(req.query);
-    const {page, limit, status} = req.query
+    const {page, limit, status, searchText} = req.query
     
     
-    const { results, total } = await CollectionCenterDao.GetAllComplainDAO(page, limit, status)
-
+    const { results, total } = await CollectionCenterDao.GetAllComplainDAO(page, limit, status, searchText)
+    
     if (results.length === 0) {
       return res
         .status(404)
-        .json({ message: "No news items found", data: result });
+        .json({ message: "No news items found", data: results });
     }
 
     console.log("Successfully retrieved all collection center");
     res.json({ results, total });
+  } catch (err) {
+    if (err.isJoi) {
+      // Validation error
+      console.error("Validation error:", err.details[0].message);
+      return res.status(400).json({ error: err.details[0].message });
+    }
+
+    console.error("Error fetching news:", err);
+    res.status(500).json({ error: "An error occurred while fetching news" });
+  }
+};
+
+//get complain by id
+exports.getComplainById = async (req, res) => {
+  try {
+    const id = req.params.id
+
+    const result = await CollectionCenterDao.getComplainById(id)
+    console.log(result[0]);
+    
+    if (result.length === 0) {
+      return res
+        .status(404)
+        .json({ message: "No Complain found", data: result[0] });
+    }
+
+    console.log("Successfully retrieved collection center");
+    res.json(result[0]);
   } catch (err) {
     if (err.isJoi) {
       // Validation error
