@@ -49,10 +49,10 @@ const createAdminUsersTable = () => {
       mail VARCHAR(50) NOT NULL,
       userName VARCHAR(30) NOT NULL,
       password VARCHAR(255) NOT NULL,
-      role INT(11) NULL,
+      role INT,
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (role) REFERENCES adminroles(id)
-        ON DELETE SET NULL
+        ON DELETE CASCADE
         ON UPDATE CASCADE
     )
   `;
@@ -204,7 +204,8 @@ const createXlsxHistoryTable = () => {
       xlName VARCHAR(50) NOT NULL,
       createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       startTime TIME DEFAULT NULL,
-      endTime TIME DEFAULT NULL
+      endTime TIME DEFAULT NULL,
+      date DATE DEFAULT NULL
     )
   `;
     return new Promise((resolve, reject) => {
@@ -231,9 +232,10 @@ const createMarketPriceTable = () => {
       xlindex INT(11) DEFAULT NULL,
       grade VARCHAR(1) COLLATE utf8mb4_general_ci DEFAULT NULL,
       price DECIMAL(10,2) DEFAULT NULL,
-      date DATETIME DEFAULT NULL,
+      date DATE DEFAULT NULL,
       startTime TIME DEFAULT NULL,
       endTime TIME DEFAULT NULL,
+      status VARCHAR(20) NOT NULL,
       createdAt TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
       createdBy INT(11) DEFAULT NULL,
       FOREIGN KEY (cropId) REFERENCES cropcalender(id)
@@ -268,10 +270,10 @@ const createMarketPriceServeTable = () => {
       newPrice DECIMAL(10,2) DEFAULT NULL,
       collectionCenterId INT(11) DEFAULT NULL,
       FOREIGN KEY (marketPriceId) REFERENCES marketprice(id)
-        ON DELETE SET NULL
+        ON DELETE CASCADE
         ON UPDATE CASCADE,
       FOREIGN KEY (collectionCenterId) REFERENCES collectioncenter(id)
-        ON DELETE SET NULL
+        ON DELETE CASCADE
         ON UPDATE CASCADE
     )
   `;
@@ -520,6 +522,7 @@ const createOwnershipOwnerFixedAsset = () => {
 };
 
 //07
+
 const createOwnershipLeastFixedAsset = () => {
     const sql = `
     CREATE TABLE IF NOT EXISTS ownershipleastfixedasset (
@@ -527,7 +530,8 @@ const createOwnershipLeastFixedAsset = () => {
       buildingAssetId INT NULL,
       landAssetId INT NULL,
       startDate DATETIME NOT NULL,
-      duration INT(8) NOT NULL,
+      durationYears INT(8) NOT NULL,
+      durationMonths INT(8) NOT NULL,
       leastAmountAnnually DECIMAL(8, 2) NOT NULL,
       FOREIGN KEY (buildingAssetId) REFERENCES buildingfixedasset(id)
         ON DELETE SET NULL

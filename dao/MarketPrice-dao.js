@@ -3,10 +3,10 @@ const Joi = require('joi');
 const path = require('path');
 
 
-exports.createxlhistory = (xlName, startTime, endTime) => {
+exports.createxlhistory = (xlName, startTime, endTime, date) => {
   return new Promise((resolve, reject) => {
-    const sql = "INSERT INTO xlsxhistory (`xlName`, `startTime`, `endTime`) VALUES (?)";
-    const values = [xlName, startTime, endTime];
+    const sql = "INSERT INTO xlsxhistory (`xlName`, `startTime`, `endTime`, `date`) VALUES (?)";
+    const values = [xlName, startTime, endTime, date];
 
     db.query(sql, [values], (err, results) => {
       if (err) {
@@ -47,7 +47,7 @@ exports.insertMarketPriceXLSXData = (xlindex, data, createdBy, date, startTime, 
       const sql = `
         INSERT INTO marketprice 
         (cropId, xlindex, grade, price, date, startTime, 
-        endTime, createdBy) 
+        endTime, status, createdBy) 
         VALUES ?`;
   
       const values = validatedData.map((row) => [
@@ -58,6 +58,7 @@ exports.insertMarketPriceXLSXData = (xlindex, data, createdBy, date, startTime, 
         date,
         startTime,
         endTime,
+        'Draft',
         createdBy
       ]);
   

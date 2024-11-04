@@ -12,7 +12,7 @@ exports.createMarketPriceXLSX = async (req, res) => {
     const { xlName, createdBy, date, startTime, endTime } = req.body;
 
     // Step 1: Insert XLSX history and get the xlindex
-    const xlindex = await marketPriceDao.createxlhistory(xlName, startTime, endTime);
+    const xlindex = await marketPriceDao.createxlhistory(xlName, startTime, endTime, date);
 
     // Step 2: Validate if a file was uploaded
     if (!req.file) {
