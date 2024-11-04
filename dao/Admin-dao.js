@@ -1839,14 +1839,16 @@ exports.getPaymentSlipReport = () => {
           users.firstName AS farmerFirstName,
           users.lastName AS farmerLastName,
           users.NICnumber AS farmerNIC,
-          registeredfarmerpayments.total AS paymentTotal,
+          SUM(registeredfarmerpayments.total) AS totalPaymentAmount,
           officer.firstName AS officerFirstName,
           officer.lastName AS officerLastName,
-          registeredfarmerpayments.createdAt AS paymentDate
+          DATE(registeredfarmerpayments.createdAt) AS paymentDate
       FROM 
           registeredfarmerpayments
       JOIN users ON registeredfarmerpayments.userId = users.id
-      JOIN collectionofficer AS officer ON registeredfarmerpayments.collectionOfficerId = officer.id;
+      JOIN collectionofficer AS officer ON registeredfarmerpayments.collectionOfficerId = officer.id
+      GROUP BY 
+          users.id, officer.id, DATE(registeredfarmerpayments.createdAt);
     `;
     
     db.query(dataSql, (error, results) => {
