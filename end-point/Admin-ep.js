@@ -2308,3 +2308,26 @@ exports.deleteUserCropTask = async (req, res) => {
       .json({ error: "An error occurred while deleting the crop task" });
   }
 };
+
+exports.getPaymentSlipReport = async (req, res) => {
+  try {
+    const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
+    console.log("Request URL:", fullUrl);
+
+    const payments = await adminDao.getPaymentSlipReport();
+
+    console.log("Successfully fetched farmer payments");
+
+    res.json({
+      total: payments.length,
+      items: payments[0],
+    });
+
+  } catch (error) {
+    console.error("Error fetching farmer payments:", error);
+    return res.status(500).json({
+      error: "An error occurred while fetching farmer payments",
+    });
+  }
+};
+

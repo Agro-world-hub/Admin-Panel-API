@@ -15,10 +15,10 @@ const router = express.Router();
 
 
 const storage = multer.diskStorage({
-    destination: function(req, file, cb) {
+    destination: function (req, file, cb) {
         cb(null, "uploads/");
     },
-    filename: function(req, file, cb) {
+    filename: function (req, file, cb) {
         cb(
             null,
             file.fieldname + "-" + Date.now() + path.extname(file.originalname)
@@ -27,7 +27,7 @@ const storage = multer.diskStorage({
 });
 const uploadfile = multer({
     storage: storage,
-    fileFilter: function(req, file, callback) {
+    fileFilter: function (req, file, callback) {
         var ext = path.extname(file.originalname);
         if (ext !== ".xlsx" && ext !== ".xls") {
             return callback(new Error("Only Excel files are allowed"));
@@ -349,6 +349,12 @@ router.post(
 
 
 router.get("/get-all-roles", authMiddleware, AdminEp.getAllRoles);
+
+router.get(
+    "/farmer-payments",
+    // authMiddleware,
+    AdminEp.getPaymentSlipReport
+)
 
 
 module.exports = router;
