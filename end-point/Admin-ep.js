@@ -2331,3 +2331,28 @@ exports.getPaymentSlipReport = async (req, res) => {
   }
 };
 
+exports.getFarmerListReport = async (req, res) => {
+  try {
+    // Construct the full URL for logging purposes
+    const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
+    console.log("Request URL:", fullUrl);
+
+    // Fetch farmer list report data from the DAO
+    const farmerList = await adminDao.getFarmerListReport();
+
+    console.log("Successfully fetched farmer list report");
+
+    // Respond with the farmer list report data
+    res.json({
+      total: farmerList.length,
+      items: farmerList,
+    });
+
+  } catch (error) {
+    console.error("Error fetching farmer list report:", error);
+    return res.status(500).json({
+      error: "An error occurred while fetching the farmer list report",
+    });
+  }
+};
+

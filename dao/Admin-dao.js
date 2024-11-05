@@ -1861,3 +1861,54 @@ exports.getPaymentSlipReport = () => {
   });
 }
 
+exports.getFarmerListReport = () => {
+  return new Promise((resolve, reject) => {
+    const dataSql = `
+      SELECT 
+          users.firstName AS farmerFirstName,
+          users.lastName AS farmerLastName,
+          users.NICnumber AS farmerNIC,
+          SUM(registeredfarmerpayments.total) AS totalPaymentAmount,
+          officer.firstName AS officerFirstName,
+          officer.lastName AS officerLastName,
+          officer.phoneNumber01 AS officerPhone1,
+          officer.phoneNumber02 AS officerPhone2,
+          officer.email AS officerEmail,
+          ANY_VALUE(officerBank.accHolderName) AS officerBankAccountHolder,
+          ANY_VALUE(officerBank.accNumber) AS officerAccountNumber,
+          ANY_VALUE(officerBank.bankName) AS officerBankName,
+          ANY_VALUE(officerBank.branchName) AS officerBranchName,
+          registeredfarmerpayments.cropName AS cropName,
+          registeredfarmerpayments.unitPriceA AS unitPriceA,
+          registeredfarmerpayments.weightA AS weightA,
+          registeredfarmerpayments.image AS paymentImage,
+          registeredfarmerpayments.variety AS cropVariety,
+          registeredfarmerpayments.weightB AS weightB,
+          registeredfarmerpayments.weightC AS weightC,
+          registeredfarmerpayments.unitPriceB AS unitPriceB,
+          registeredfarmerpayments.unitPriceC AS unitPriceC,
+          DATE(registeredfarmerpayments.createdAt) AS paymentDate
+      FROM 
+          registeredfarmerpayments
+      JOIN users ON registeredfarmerpayments.userId = users.id
+      JOIN collectionofficer AS officer ON registeredfarmerpayments.collectionOfficerId = officer.id
+      LEFT JOIN collectionofficerbankdetails AS officerBank ON officer.id = officerBank.collectionOfficerId
+      GROUP BY 
+          users.id, officer.id, DATE(registeredfarmerpayments.createdAt), registeredfarmerpayments.cropName, 
+          registeredfarmerpayments.unitPriceA, registeredfarmerpayments.weightA,
+          registeredfarmerpayments.image, registeredfarmerpayments.variety, 
+          registeredfarmerpayments.weightB, registeredfarmerpayments.weightC, 
+          registeredfarmerpayments.unitPriceB, registeredfarmerpayments.unitPriceC;
+    `;
+    
+    db.query(dataSql, (error, results) => {
+      if (error) {
+        reject(error);
+      } else {
+        resolve(results);
+      }
+    });
+  });
+}
+
+
