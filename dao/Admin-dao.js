@@ -1850,7 +1850,7 @@ exports.getPaymentSlipReport = () => {
       GROUP BY 
           users.id, officer.id, DATE(registeredfarmerpayments.createdAt);
     `;
-    
+
     db.query(dataSql, (error, results) => {
       if (error) {
         reject(error);
@@ -1859,7 +1859,7 @@ exports.getPaymentSlipReport = () => {
       }
     });
   });
-}
+};
 
 exports.getFarmerListReport = () => {
   return new Promise((resolve, reject) => {
@@ -1868,16 +1868,15 @@ exports.getFarmerListReport = () => {
           users.firstName AS farmerFirstName,
           users.lastName AS farmerLastName,
           users.NICnumber AS farmerNIC,
+          users.phoneNumber AS farmerPhoneNumber,  -- Added farmer's phone number
           SUM(registeredfarmerpayments.total) AS totalPaymentAmount,
+          
           officer.firstName AS officerFirstName,
           officer.lastName AS officerLastName,
           officer.phoneNumber01 AS officerPhone1,
           officer.phoneNumber02 AS officerPhone2,
           officer.email AS officerEmail,
-          ANY_VALUE(officerBank.accHolderName) AS officerBankAccountHolder,
-          ANY_VALUE(officerBank.accNumber) AS officerAccountNumber,
-          ANY_VALUE(officerBank.bankName) AS officerBankName,
-          ANY_VALUE(officerBank.branchName) AS officerBranchName,
+          
           registeredfarmerpayments.cropName AS cropName,
           registeredfarmerpayments.unitPriceA AS unitPriceA,
           registeredfarmerpayments.weightA AS weightA,
@@ -1887,20 +1886,34 @@ exports.getFarmerListReport = () => {
           registeredfarmerpayments.weightC AS weightC,
           registeredfarmerpayments.unitPriceB AS unitPriceB,
           registeredfarmerpayments.unitPriceC AS unitPriceC,
-          DATE(registeredfarmerpayments.createdAt) AS paymentDate
+          DATE(registeredfarmerpayments.createdAt) AS paymentDate,
+          
+          ANY_VALUE(userBank.accHolderName) AS farmerBankAccountHolder,
+          ANY_VALUE(userBank.accNumber) AS farmerAccountNumber,
+          ANY_VALUE(userBank.bankName) AS farmerBankName,
+          ANY_VALUE(userBank.branchName) AS farmerBranchName,
+          ANY_VALUE(userBank.address) AS farmerAddress
       FROM 
           registeredfarmerpayments
       JOIN users ON registeredfarmerpayments.userId = users.id
+      LEFT JOIN userbankdetails AS userBank ON users.id = userBank.userId
       JOIN collectionofficer AS officer ON registeredfarmerpayments.collectionOfficerId = officer.id
       LEFT JOIN collectionofficerbankdetails AS officerBank ON officer.id = officerBank.collectionOfficerId
       GROUP BY 
-          users.id, officer.id, DATE(registeredfarmerpayments.createdAt), registeredfarmerpayments.cropName, 
-          registeredfarmerpayments.unitPriceA, registeredfarmerpayments.weightA,
-          registeredfarmerpayments.image, registeredfarmerpayments.variety, 
-          registeredfarmerpayments.weightB, registeredfarmerpayments.weightC, 
-          registeredfarmerpayments.unitPriceB, registeredfarmerpayments.unitPriceC;
+          users.id, 
+          officer.id, 
+          DATE(registeredfarmerpayments.createdAt), 
+          registeredfarmerpayments.cropName, 
+          registeredfarmerpayments.unitPriceA, 
+          registeredfarmerpayments.weightA,
+          registeredfarmerpayments.image, 
+          registeredfarmerpayments.variety, 
+          registeredfarmerpayments.weightB, 
+          registeredfarmerpayments.weightC, 
+          registeredfarmerpayments.unitPriceB, 
+          registeredfarmerpayments.unitPriceC;
     `;
-    
+
     db.query(dataSql, (error, results) => {
       if (error) {
         reject(error);
@@ -1909,6 +1922,4 @@ exports.getFarmerListReport = () => {
       }
     });
   });
-}
-
-
+};
