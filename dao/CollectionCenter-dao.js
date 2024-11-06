@@ -1,21 +1,16 @@
 const db = require("../startup/database")
 const Joi = require('joi')
 
-exports.addCollectionCenter = (regCode, centerName, contact01, contact02, buildingNumber, street, district, province) => {
+exports.addCollectionCenter = (regCode, centerName, contact01, contact02, buildingNumber, street, district, province, contact01Code, contact02Code) => {
   return new Promise((resolve, reject) => {
     const sql = `INSERT INTO collectioncenter 
       (regCode, centerName, contact01, contact02, buildingNumber, street, district, province) 
       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`;
 
-    const values = [regCode, centerName, contact01, contact02, buildingNumber, street, district, province];
-
-    // Log the SQL query and values for debugging
-    console.log("SQL Query:", sql);
-    console.log("SQL Values:", values);
+    const values = [regCode, centerName, contact01Code + contact01, contact02Code + contact02, buildingNumber, street, district, province];
 
     db.query(sql, values, (err, results) => {
       if (err) {
-        // Log the complete error details, not just the error message
         console.error("Database error details:", err);
         return reject(err);
       }

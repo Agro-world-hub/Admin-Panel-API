@@ -1,5 +1,5 @@
 const CollectionCenterDao = require('../dao/CollectionCenter-dao')
-
+const  ValidateSchema = require('../validations/CollectionCenter-validation')
 exports.getAllCollectionCenter = async (req, res) => {
   try {
 
@@ -100,11 +100,11 @@ exports.addNewCollectionCenter = async (req, res) => {
 exports.getAllComplains = async (req, res) => {
   try {
     console.log(req.query);
-    const {page, limit, status, searchText} = req.query
-    
-    
+    const { page, limit, status, searchText } = req.query
+
+
     const { results, total } = await CollectionCenterDao.GetAllComplainDAO(page, limit, status, searchText)
-    
+
     if (results.length === 0) {
       return res
         .status(404)
@@ -132,7 +132,7 @@ exports.getComplainById = async (req, res) => {
 
     const result = await CollectionCenterDao.getComplainById(id)
     console.log(result[0]);
-    
+
     if (result.length === 0) {
       return res
         .status(404)
@@ -150,5 +150,43 @@ exports.getComplainById = async (req, res) => {
 
     console.error("Error fetching news:", err);
     res.status(500).json({ error: "An error occurred while fetching news" });
+  }
+};
+
+
+exports.createCollectionCenter = async (req, res) => {
+  try {
+    const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
+    console.log(fullUrl);    
+
+    console.log(req.body);
+    
+
+    const {
+      regCode,
+      centerName,
+      contact01Code,
+      contact01,
+      contact02,
+      contact02Code,
+      buildingNumber,
+      street,
+      district,
+      province
+    } = await ValidateSchema.createCollectionCenterValidation.validateAsync(req.body)
+    
+
+    const result = await CollectionCenterDao.addCollectionCenter(regCode, centerName, contact01, contact02, buildingNumber, street, district, province, contact01Code, contact02Code);
+
+    console.log("Crop Collection Center creation success");
+    return res.status(201).json({result: result, status:true});
+  } catch (err) {
+    if (err.isJoi) {
+      return res.status(400).json({ error: err.details[0].message, status:false });
+    }
+    console.error("Error executing query:", err);
+    return res
+      .status(500)
+      .json({ error: "An error occurred while creating Crop Calendar tasks" });
   }
 };
