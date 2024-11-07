@@ -1861,6 +1861,70 @@ exports.getPaymentSlipReport = () => {
   });
 };
 
+// exports.getFarmerListReport = () => {
+//   return new Promise((resolve, reject) => {
+//     const dataSql = `
+//       SELECT 
+//           users.firstName AS farmerFirstName,
+//           users.lastName AS farmerLastName,
+//           users.NICnumber AS farmerNIC,
+//           users.phoneNumber AS farmerPhoneNumber,
+//           SUM(registeredfarmerpayments.total) AS totalPaymentAmount,
+          
+//           officer.firstName AS officerFirstName,
+//           officer.lastName AS officerLastName,
+//           officer.phoneNumber01 AS officerPhone1,
+//           officer.phoneNumber02 AS officerPhone2,
+//           officer.email AS officerEmail,
+          
+//           registeredfarmerpayments.cropName AS cropName,
+//           registeredfarmerpayments.unitPriceA AS unitPriceA,
+//           registeredfarmerpayments.weightA AS weightA,
+//           registeredfarmerpayments.image AS paymentImage,
+//           registeredfarmerpayments.variety AS cropVariety,
+//           registeredfarmerpayments.weightB AS weightB,
+//           registeredfarmerpayments.weightC AS weightC,
+//           registeredfarmerpayments.unitPriceB AS unitPriceB,
+//           registeredfarmerpayments.unitPriceC AS unitPriceC,
+//           registeredfarmerpayments.qty AS qty,  -- New quantity column
+//           DATE(registeredfarmerpayments.createdAt) AS paymentDate,
+          
+//           ANY_VALUE(userBank.accHolderName) AS farmerBankAccountHolder,
+//           ANY_VALUE(userBank.accNumber) AS farmerAccountNumber,
+//           ANY_VALUE(userBank.bankName) AS farmerBankName,
+//           ANY_VALUE(userBank.branchName) AS farmerBranchName,
+//           ANY_VALUE(userBank.address) AS farmerAddress
+//       FROM 
+//           registeredfarmerpayments
+//       JOIN users ON registeredfarmerpayments.userId = users.id
+//       LEFT JOIN userbankdetails AS userBank ON users.id = userBank.userId
+//       JOIN collectionofficer AS officer ON registeredfarmerpayments.collectionOfficerId = officer.id
+//       LEFT JOIN collectionofficerbankdetails AS officerBank ON officer.id = officerBank.collectionOfficerId
+//       GROUP BY 
+//           users.id, 
+//           officer.id, 
+//           DATE(registeredfarmerpayments.createdAt), 
+//           registeredfarmerpayments.cropName, 
+//           registeredfarmerpayments.unitPriceA, 
+//           registeredfarmerpayments.weightA,
+//           registeredfarmerpayments.image, 
+//           registeredfarmerpayments.variety, 
+//           registeredfarmerpayments.weightB, 
+//           registeredfarmerpayments.weightC, 
+//           registeredfarmerpayments.unitPriceB, 
+//           registeredfarmerpayments.unitPriceC,
+//           registeredfarmerpayments.qty;  -- Add qty to GROUP BY
+//     `;
+
+//     db.query(dataSql, (error, results) => {
+//       if (error) {
+//         reject(error);
+//       } else {
+//         resolve(results[0]);
+//       }
+//     });
+//   });
+// };
 exports.getFarmerListReport = () => {
   return new Promise((resolve, reject) => {
     const dataSql = `
@@ -1868,7 +1932,7 @@ exports.getFarmerListReport = () => {
           users.firstName AS farmerFirstName,
           users.lastName AS farmerLastName,
           users.NICnumber AS farmerNIC,
-          users.phoneNumber AS farmerPhoneNumber,  -- Added farmer's phone number
+          users.phoneNumber AS farmerPhoneNumber,
           SUM(registeredfarmerpayments.total) AS totalPaymentAmount,
           
           officer.firstName AS officerFirstName,
@@ -1876,6 +1940,7 @@ exports.getFarmerListReport = () => {
           officer.phoneNumber01 AS officerPhone1,
           officer.phoneNumber02 AS officerPhone2,
           officer.email AS officerEmail,
+          officer.image AS officerImage,  -- Added officer image column
           
           registeredfarmerpayments.cropName AS cropName,
           registeredfarmerpayments.unitPriceA AS unitPriceA,
@@ -1886,6 +1951,7 @@ exports.getFarmerListReport = () => {
           registeredfarmerpayments.weightC AS weightC,
           registeredfarmerpayments.unitPriceB AS unitPriceB,
           registeredfarmerpayments.unitPriceC AS unitPriceC,
+          registeredfarmerpayments.qty AS qty,
           DATE(registeredfarmerpayments.createdAt) AS paymentDate,
           
           ANY_VALUE(userBank.accHolderName) AS farmerBankAccountHolder,
@@ -1911,14 +1977,15 @@ exports.getFarmerListReport = () => {
           registeredfarmerpayments.weightB, 
           registeredfarmerpayments.weightC, 
           registeredfarmerpayments.unitPriceB, 
-          registeredfarmerpayments.unitPriceC;
+          registeredfarmerpayments.unitPriceC,
+          registeredfarmerpayments.qty;
     `;
 
     db.query(dataSql, (error, results) => {
       if (error) {
         reject(error);
       } else {
-        resolve(results);
+        resolve(results[0]);
       }
     });
   });
