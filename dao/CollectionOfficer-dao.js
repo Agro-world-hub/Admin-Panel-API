@@ -219,3 +219,21 @@ exports.createCollectionOfficerBank = (bankData, collectionOfficerId) => {
             });
     });
 };
+
+
+exports.getCollectionOfficerProvinceReports = (province) => {
+    return new Promise((resolve, reject) => {
+        const sql = `
+            SELECT rp.cropName, rp.quality, c.province, SUM(rp.total) AS totPrice, SUM(rp.weight) AS totWeight
+            FROM registeredfarmerpayments rp, collectionofficer c
+            WHERE rp.collectionOfficerId = c.id AND c.province = ?
+            GROUP BY rp.cropName, rp.quality, c.province
+        `;
+        db.query(sql, [province], (err, results) => {
+            if (err) {
+                return reject(err); 
+            }
+            resolve(results);
+        });
+    });
+};
