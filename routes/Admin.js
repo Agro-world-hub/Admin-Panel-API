@@ -356,5 +356,10 @@ router.get(
     AdminEp.getPaymentSlipReport
 )
 
+router.get(
+    "/farmer-list-report",
+    // authMiddleware, 
+    AdminEp.getFarmerListReport);
+
 
 module.exports = router;
