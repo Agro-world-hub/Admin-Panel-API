@@ -117,43 +117,45 @@ exports.getAllUsers = (limit, offset, searchItem) => {
 };
 
 exports.createCropCallender = async (
-  cropName,
-  sinhalaCropName,
-  tamilCropName,
-  variety,
-  sinhalaVariety,
-  tamilVariety,
-  cultivationMethod,
-  natureOfCultivation,
-  cropDuration,
-  cropCategory,
-  specialNotes,
-  sinhalaSpecialNotes,
-  tamilSpecialNotes,
-  suitableAreas,
-  cropColor,
-  imageBuffer
-) => {
-  return new Promise((resolve, reject) => {
-    const sql =
-      "INSERT INTO cropcalender (cropName, sinhalaCropName, tamilCropName, variety, sinhalaVariety, tamilVariety, cultivationMethod, natureOfCultivation, cropDuration,Category, specialNotes, sinhalaSpecialNotes, tamilSpecialNotes, suitableAreas,cropColor,image) VALUES (?, ?, ?, ?, ?, ?, ?,?,?,?,?,?,?,?,?,?)";
-    const values = [
-      cropName,
-      sinhalaCropName,
-      tamilCropName,
+      groupId,
       variety,
       sinhalaVariety,
       tamilVariety,
       cultivationMethod,
+      methodSinhala,
+      methodTamil,
       natureOfCultivation,
+      natOfCulSinhala,
+      natOfCulTamil,
       cropDuration,
-      cropCategory,
       specialNotes,
       sinhalaSpecialNotes,
       tamilSpecialNotes,
       suitableAreas,
       cropColor,
-      imageBuffer,
+      fileBuffer
+) => {
+  return new Promise((resolve, reject) => {
+    const sql =
+      "INSERT INTO cropcalender (cropGroupId , varietyEnglish, varietySinhala, varietyTamil, methodEnglish, methodSinhala, methodTamil, natOfCulEnglish, natOfCulSinhala,natOfCulTamil, cropDuration, specialNotesEnglish, specialNotesSinhala, specialNotesTamil, image, cropColor, suitableAreas) VALUES (?, ?, ?, ?, ?, ?, ?,?,?,?,?,?,?,?,?,?,?)";
+    const values = [
+      groupId,
+      variety,
+      sinhalaVariety,
+      tamilVariety,
+      cultivationMethod,
+      methodSinhala,
+      methodTamil,
+      natureOfCultivation,
+      natOfCulSinhala,
+      natOfCulTamil,
+      cropDuration,
+      specialNotes,
+      sinhalaSpecialNotes,
+      tamilSpecialNotes,
+      fileBuffer,
+      cropColor,
+      suitableAreas,
     ];
 
     db.query(sql, values, (err, results) => {
@@ -242,9 +244,20 @@ exports.insertXLSXData = (cropId, data) => {
 
 exports.getAllCropCalendars = (limit, offset) => {
   return new Promise((resolve, reject) => {
-    const countSql = "SELECT COUNT(*) as total FROM cropcalender";
-    const dataSql =
-      "SELECT * FROM cropCalender ORDER BY createdAt DESC LIMIT ? OFFSET ?";
+    const countSql = "SELECT COUNT(*) AS total FROM cropcalender";
+    const dataSql = `
+      SELECT 
+        cropcalender.*, 
+        cropgroup.cropNameEnglish, 
+        cropgroup.category 
+      FROM 
+        cropcalender
+      LEFT JOIN 
+        cropgroup ON cropcalender.cropGroupId = cropgroup.id
+      ORDER BY 
+        cropcalender.createdAt DESC
+      LIMIT ? OFFSET ?;
+    `;
 
     db.query(countSql, (countErr, countResults) => {
       if (countErr) {
@@ -264,6 +277,7 @@ exports.getAllCropCalendars = (limit, offset) => {
     });
   });
 };
+
 
 exports.createOngoingCultivations = (userId, cropCalenderId) => {
   return new Promise((resolve, reject) => {
@@ -421,37 +435,33 @@ exports.updateCropCalender = async (id, updateData, imageData) => {
     let sql = `
             UPDATE cropcalender 
             SET 
-                cropName = ?,
-                sinhalaCropName = ?, 
-                tamilCropName = ?,
-                variety = ?, 
-                sinhalaVariety = ?,
-                tamilVariety = ?,
-                CultivationMethod = ?, 
-                NatureOfCultivation = ?, 
-                CropDuration = ?, 
-                SpecialNotes = ?, 
-                sinhalaSpecialNotes = ?,
-                tamilSpecialNotes = ?,
-                SuitableAreas = ?, 
+                cropGroupId = ?,
+                varietyEnglish = ?, 
+                varietySinhala = ?,
+                varietyTamil = ?,
+                methodEnglish = ?, 
+                natOfCulEnglish = ?, 
+                cropDuration = ?, 
+                specialNotesEnglish = ?, 
+                specialNotesSinhala = ?,
+                specialNotesTamil = ?,
+                suitableAreas = ?, 
                 cropColor = ?
         `;
 
     // Update the values based on the provided data
     let values = [
-      updateData.cropName,
-      updateData.sinhalaCropName,
-      updateData.tamilCropName,
-      updateData.variety,
-      updateData.sinhalaVariety,
-      updateData.tamilVariety,
-      updateData.CultivationMethod,
-      updateData.NatureOfCultivation,
-      updateData.CropDuration,
-      updateData.SpecialNotes,
-      updateData.sinhalaSpecialNotes,
-      updateData.SpecialNotes,
-      updateData.tamilSpecialNotes,
+      updateData.groupId,
+      updateData.varietyEnglish,
+      updateData.varietySinhala,
+      updateData.varietyTamil,
+      updateData.methodEnglish,
+      updateData.natOfCulEnglish,
+      updateData.cropDuration,
+      updateData.specialNotesEnglish,
+      updateData.specialNotesSinhala,
+      updateData.specialNotesTamil,
+      updateData.suitableAreas,
       updateData.cropColor,
     ];
 
@@ -1773,6 +1783,22 @@ exports.insertUserXLSXData = (data) => {
   });
 };
 
+exports.allCropGroups = () => {
+  return new Promise((resolve, reject) => {
+    const sql = "SELECT id, cropNameEnglish FROM cropgroup";
+
+    db.query(sql, (err, results) => {
+      if (err) {
+        return reject(err); // Reject promise if an error occurs
+      }
+
+      resolve(results); // No need to wrap in arrays, return results directly
+    });
+  });
+};
+
+
+
 exports.getAllRoles = () => {
   return new Promise((resolve, reject) => {
     const sql = "SELECT * FROM adminroles";
@@ -1861,3 +1887,95 @@ exports.getPaymentSlipReport = () => {
   });
 }
 
+
+
+exports.createCropGroup = async (
+  cropNameEnglish,
+  cropNameSinhala,
+  cropNameTamil,
+  category,
+  image,
+  bgColor
+) => {
+  return new Promise((resolve, reject) => {
+    const sql =
+      "INSERT INTO cropgroup (cropNameEnglish, cropNameSinhala, cropNameTamil, category, image, bgColor) VALUES (?, ?, ?, ?, ?, ?)";
+    const values = [
+      cropNameEnglish,
+      cropNameSinhala,
+      cropNameTamil,
+      category,
+      image,
+      bgColor
+    ];
+
+    db.query(sql, values, (err, results) => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(results.insertId);
+      }
+    });
+  });
+};
+
+
+
+exports.getAllCropGroups = (limit, offset) => {
+  return new Promise((resolve, reject) => {
+    const countSql = "SELECT COUNT(*) AS total FROM cropgroup";
+    const dataSql = `
+      SELECT 
+        cg.*,
+        COUNT(cc.id) as varietyCount,
+        GROUP_CONCAT(DISTINCT cc.varietyEnglish) as varietyList
+      FROM 
+        cropgroup cg
+      LEFT JOIN 
+        cropcalender cc ON cg.id = cc.cropGroupId
+      GROUP BY 
+        cg.id
+      ORDER BY 
+        cg.createdAt DESC
+      LIMIT ? OFFSET ?;
+    `;
+
+    db.query(countSql, (countErr, countResults) => {
+      if (countErr) {
+        reject(countErr);
+      } else {
+        db.query(dataSql, [limit, offset], (dataErr, dataResults) => {
+          if (dataErr) {
+            reject(dataErr);
+          } else {
+            // Process the results to convert varietyList from comma-separated string to array
+            const processedResults = dataResults.map(row => ({
+              ...row,
+              varietyList: row.varietyList ? row.varietyList.split(',') : []
+            }));
+
+            resolve({
+              total: countResults[0].total,
+              items: processedResults,
+            });
+          }
+        });
+      }
+    });
+  });
+};
+
+
+
+exports.deleteCropGroup = async (id) => {
+  return new Promise((resolve, reject) => {
+    const sql = "DELETE FROM cropgroup WHERE id = ?";
+    db.query(sql, [id], (err, results) => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(results.affectedRows);
+      }
+    });
+  });
+};

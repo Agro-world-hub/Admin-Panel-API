@@ -100,28 +100,56 @@ const createContentTable = () => {
     });
 };
 
+const createCropGroup = () => {
+    const sql = `
+    CREATE TABLE IF NOT EXISTS cropgroup (
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      cropNameEnglish VARCHAR(50) NOT NULL,
+      cropNameSinhala VARCHAR(50) NOT NULL,
+      cropNameTamil VARCHAR(50) NOT NULL,
+      category VARCHAR(255) NOT NULL,
+      image LONGBLOB,
+      bgColor VARCHAR(10),
+      createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )
+  `;
+    return new Promise((resolve, reject) => {
+        db.query(sql, (err, result) => {
+            if (err) {
+                reject('Error creating cropgroup table: ' + err);
+            } else {
+                resolve('cropgroup table created successfully.');
+            }
+        });
+    });
+};
+
 
 const createCropCalenderTable = () => {
     const sql = `
     CREATE TABLE IF NOT EXISTS cropcalender (
       id INT AUTO_INCREMENT PRIMARY KEY,
-      cropName VARCHAR(50) NOT NULL,
-      sinhalaCropName VARCHAR(50) NOT NULL,
-      tamilCropName VARCHAR(50) NOT NULL,
-      variety VARCHAR(50) NOT NULL,
-      sinhalaVariety VARCHAR(50) NOT NULL,
-      tamilVariety VARCHAR(50) NOT NULL,
-      CultivationMethod VARCHAR(20) NOT NULL,
-      NatureOfCultivation VARCHAR(25) NOT NULL,
-      CropDuration VARCHAR(3) NOT NULL,
-      SpecialNotes TEXT,
-      sinhalaSpecialNotes TEXT,
-      tamilSpecialNotes TEXT,
+      cropGroupId INT(11) NULL,
+      varietyEnglish VARCHAR(50) NOT NULL,
+      varietySinhala VARCHAR(50) NOT NULL,
+      varietyTamil VARCHAR(50) NOT NULL,
+      methodEnglish VARCHAR(20) NOT NULL,
+      methodSinhala VARCHAR(25) NOT NULL,
+      methodTamil VARCHAR(25) NOT NULL,
+      natOfCulEnglish VARCHAR(25) NOT NULL,
+      natOfCulSinhala VARCHAR(25) NOT NULL,
+      natOfCulTamil VARCHAR(25) NOT NULL,
+      cropDuration VARCHAR(3) NOT NULL,
+      specialNotesEnglish TEXT,
+      specialNotesSinhala TEXT,
+      specialNotesTamil TEXT,
       image LONGBLOB,
       cropColor VARCHAR(10),
-      SuitableAreas TEXT NOT NULL,
-      Category VARCHAR(255) NOT NULL,
-      createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      suitableAreas TEXT NOT NULL,
+      createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (cropGroupId) REFERENCES cropgroup(id)
+        ON DELETE CASCADE
+        ON UPDATE CASCADE
     )
   `;
     return new Promise((resolve, reject) => {
@@ -156,8 +184,12 @@ const createCropCalenderDaysTable = () => {
     taskDescriptionEnglish TEXT COLLATE latin1_swedish_ci NULL,
     taskDescriptionSinhala TEXT COLLATE utf8_unicode_ci NULL,
     taskDescriptionTamil TEXT COLLATE utf8_unicode_ci NULL,
+    image VARCHAR(20) NOT NULL,
+    imageLink TEXT NOT NULL,
+    video VARCHAR(20) NOT NULL,
+    videoLink TEXT NOT NULL,
     createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-   FOREIGN KEY (cropId) REFERENCES cropCalender(id)
+    FOREIGN KEY (cropId) REFERENCES cropCalender(id)
         ON DELETE CASCADE
         ON UPDATE CASCADE
 );
@@ -534,10 +566,10 @@ const createOwnershipLeastFixedAsset = () => {
       durationMonths INT(8) NOT NULL,
       leastAmountAnnually DECIMAL(8, 2) NOT NULL,
       FOREIGN KEY (buildingAssetId) REFERENCES buildingfixedasset(id)
-        ON DELETE SET NULL
+        ON DELETE CASCADE
         ON UPDATE CASCADE,
      FOREIGN KEY (landAssetId) REFERENCES landfixedasset(id)
-        ON DELETE SET NULL
+        ON DELETE CASCADE
         ON UPDATE CASCADE
     )
   `;
@@ -563,10 +595,10 @@ const createOwnershipPermitFixedAsset = () => {
       issuedDate DATETIME NOT NULL,
       permitFeeAnnually DECIMAL(8, 2) NOT NULL,
       FOREIGN KEY (buildingAssetId) REFERENCES buildingfixedasset(id)
-        ON DELETE SET NULL
+        ON DELETE CASCADE
         ON UPDATE CASCADE,
      FOREIGN KEY (landAssetId) REFERENCES landfixedasset(id)
-        ON DELETE SET NULL
+        ON DELETE CASCADE
         ON UPDATE CASCADE
     )
   `;
@@ -590,10 +622,10 @@ const createOwnershipSharedFixedAsset = () => {
       landAssetId INT NULL,
       paymentAnnually DECIMAL(8, 2) NOT NULL,
       FOREIGN KEY (buildingAssetId) REFERENCES buildingfixedasset(id)
-        ON DELETE SET NULL
+        ON DELETE CASCADE
         ON UPDATE CASCADE,
      FOREIGN KEY (landAssetId) REFERENCES landfixedasset(id)
-        ON DELETE SET NULL
+        ON DELETE CASCADE
         ON UPDATE CASCADE
     )
   `;
@@ -658,7 +690,11 @@ const createSlaveCropCalenderDaysTable = () => {
       taskDescriptionEnglish TEXT COLLATE latin1_swedish_ci NULL,
       taskDescriptionSinhala TEXT COLLATE utf8_unicode_ci NULL,
       taskDescriptionTamil TEXT COLLATE utf8_unicode_ci NULL,
-      status VARCHAR(20), 
+      status VARCHAR(20),
+      image VARCHAR(20),
+      imageLink TEXT,
+      video VARCHAR(20),
+      videoLink TEXT,
       createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (userId) REFERENCES users(id)
           ON DELETE CASCADE
@@ -1174,6 +1210,7 @@ module.exports = {
     createAdminUserRolesTable,
     createAdminUsersTable,
     createContentTable,
+    createCropGroup,
     createCropCalenderTable,
     createCropCalenderDaysTable,
     createOngoingCultivationsTable,

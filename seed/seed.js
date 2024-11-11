@@ -3,6 +3,7 @@ const { createUsersTable } = require('./tables');
 const { createAdminUsersTable } = require('./tables');
 const { createAdminUserRolesTable } = require('./tables');
 const { createContentTable } = require('./tables');
+const { createCropGroup } = require('./tables');
 const { createCropCalenderTable } = require('./tables');
 const { createCropCalenderDaysTable } = require('./tables');
 const { createOngoingCultivationsTable } = require('./tables');
@@ -73,6 +74,8 @@ const runSeeds = async () => {
     console.log(messageAdminCreate);
     const messageContentTableCreate = await createContentTable();
     console.log(messageContentTableCreate);
+    const messageCreateCropGroup = await createCropGroup();
+    console.log(messageCreateCropGroup);
     const messageCropCallender = await createCropCalenderTable();
     console.log(messageCropCallender);
     const messageCropCallenderDays = await createCropCalenderDaysTable();

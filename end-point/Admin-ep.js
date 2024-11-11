@@ -171,19 +171,15 @@ exports.createCropCallender = async (req, res) => {
   try {
     const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
     console.log(fullUrl);
-    // Validate the request body
 
     const {
-      cropName,
-      sinhalaCropName,
-      tamilCropName,
+      groupId,
       variety,
       sinhalaVariety,
       tamilVariety,
       cultivationMethod,
       natureOfCultivation,
       cropDuration,
-      cropCategory,
       specialNotes,
       sinhalaSpecialNotes,
       tamilSpecialNotes,
@@ -195,19 +191,46 @@ exports.createCropCallender = async (req, res) => {
       return res.status(400).json({ error: "No file uploaded" });
     }
 
+    // Initialize variables
+    let methodSinhala, methodTamil;
+    let natOfCulSinhala, natOfCulTamil;
+
+    // Cultivation Method
+    if (cultivationMethod === 'Open Field' || cultivationMethod === 'Protected Field') {
+      methodSinhala = '01';
+      methodTamil = '02';
+    } else {
+      return res.status(400).json({ error: "Invalid cultivation method" });
+    }
+
+    // Nature of Cultivation
+    if (natureOfCultivation === 'Conventional Farming') {
+      natOfCulSinhala = '01';
+      natOfCulTamil = '02';
+    } else if (natureOfCultivation === 'GAP Farming') {
+      natOfCulSinhala = '01';
+      natOfCulTamil = '02';
+    } else if (natureOfCultivation === 'Organic Farming') {
+      natOfCulSinhala = '01';
+      natOfCulTamil = '02';
+    } else {
+      return res.status(400).json({ error: "Invalid nature of cultivation" });
+    }
+
     const fileBuffer = req.file.buffer;
 
     const cropId = await adminDao.createCropCallender(
-      cropName,
-      sinhalaCropName,
-      tamilCropName,
+      groupId,
       variety,
       sinhalaVariety,
       tamilVariety,
       cultivationMethod,
+      methodSinhala,
+      methodTamil,
       natureOfCultivation,
+      natOfCulSinhala,
+      natOfCulTamil,
       cropDuration,
-      cropCategory,
       specialNotes,
       sinhalaSpecialNotes,
       tamilSpecialNotes,
@@ -217,10 +240,9 @@ exports.createCropCallender = async (req, res) => {
     );
 
     console.log("Crop Calendar creation success");
-    return res.status(200).json({ cropId: cropId });
+    return res.status(200).json({ cropId });
   } catch (err) {
     if (err.isJoi) {
-      // Validation error
       return res.status(400).json({ error: err.details[0].message });
     }
 
@@ -230,6 +252,7 @@ exports.createCropCallender = async (req, res) => {
       .json({ error: "An error occurred while creating Crop Calendar" });
   }
 };
+
 
 exports.uploadXLSX = async (req, res) => {
   try {
@@ -519,6 +542,8 @@ exports.editCropCalender = async (req, res) => {
       updateData,
       imageData
     );
+
+    console.log(updateData);
 
     if (affectedRows === 0) {
       return res.status(404).json({ message: "Crop Calendar not found" });
@@ -2262,6 +2287,25 @@ exports.getAllRoles = async (req, res) => {
   }
 };
 
+
+exports.allCropGroups = async (req, res) => {
+  try {
+    const groups = await adminDao.allCropGroups();
+
+    console.log("Successfully fetched admin roles");
+    res.json({
+      groups,
+    });
+  } catch (err) {
+    if (err.isJoi) {
+      // Validation error
+      return res.status(400).json({ error: err.details[0].message });
+    }
+    console.error("Error executing query:", err);
+    res.status(500).send("An error occurred while fetching data.");
+  }
+};
+
 //delete crop task
 exports.deleteUserCropTask = async (req, res) => {
   const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
@@ -2331,3 +2375,118 @@ exports.getPaymentSlipReport = async (req, res) => {
   }
 };
 
+
+
+
+exports.createCropGroup = async (req, res) => {
+  try {
+    const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
+    console.log("Request URL:", fullUrl);
+    console.log(req.body);
+
+    // Validate the request body
+    const {
+      cropNameEnglish,
+      cropNameSinhala,
+      cropNameTamil,
+      category,
+      bgColor
+    } = req.body;
+
+    if (!req.file) {
+      return res.status(400).json({ error: "No file uploaded" });
+    }
+
+    // Get file buffer (binary data)
+    const fileBuffer = req.file.buffer;
+
+    // Call DAO to save news and the image file as longblob
+    const newsId = await adminDao.createCropGroup(
+      cropNameEnglish,
+      cropNameSinhala,
+      cropNameTamil,
+      category,
+      fileBuffer,
+      bgColor
+    );
+
+    console.log("crop group creation success");
+    return res
+      .status(201)
+      .json({ message: "crop group created successfully", id: newsId });
+  } catch (err) {
+    if (err.isJoi) {
+      // Validation error
+      return res.status(400).json({ error: err.details[0].message });
+    }
+
+    console.error("Error executing query:", err);
+    return res
+      .status(500)
+      .json({ error: "An error occurred while creating crop group" });
+  }
+};
+
+
+
+
+
+exports.getAllCropGroups = async (req, res) => {
+  try {
+    const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
+    console.log(fullUrl);
+    const { page, limit } =
+      await ValidateSchema.getAllCropCalendarSchema.validateAsync(req.query);
+    const offset = (page - 1) * limit;
+
+    const { total, items } = await adminDao.getAllCropGroups(limit, offset);
+
+    console.log("Successfully fetched crop groups");
+    res.json({
+      items,
+      total,
+    });
+  } catch (err) {
+    if (err.isJoi) {
+      // Validation error
+      return res.status(400).json({ error: err.details[0].message });
+    }
+
+    console.error("Error executing query:", err);
+    res.status(500).send("An error occurred while fetching data.");
+  }
+};
+
+
+
+
+exports.deleteCropGroup = async (req, res) => {
+  try {
+    const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
+    console.log("Request URL:", fullUrl);
+
+    // Validate the request parameters
+    const { id } = await ValidateSchema.deleteCropCalenderSchema.validateAsync(
+      req.params
+    );
+
+    const affectedRows = await adminDao.deleteCropGroup(id);
+
+    if (affectedRows === 0) {
+      return res.status(404).json({ message: "Crop group not found" });
+    } else {
+      console.log("Crop group deleted successfully");
+      return res.status(200).json({ status: true });
+    }
+  } catch (err) {
+    if (err.isJoi) {
+      // Validation error
+      return res.status(400).json({ error: err.details[0].message });
+    }
+
+    console.error("Error deleting crop group:", err);
+    return res
+      .status(500)
+      .json({ error: "An error occurred while deleting crop group" });
+  }
+};

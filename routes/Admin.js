@@ -350,11 +350,25 @@ router.post(
 
 router.get("/get-all-roles", authMiddleware, AdminEp.getAllRoles);
 
+router.get("/crop-groups", authMiddleware, AdminEp.allCropGroups);
+
 router.get(
     "/farmer-payments",
     // authMiddleware,
     AdminEp.getPaymentSlipReport
 )
 
+router.post("/create-crop-group", 
+    authMiddleware,  
+    upload.single("image"), 
+    AdminEp.createCropGroup
+);
+
+router.get("/get-all-crop-groups", 
+    authMiddleware, 
+    AdminEp.getAllCropGroups
+);
+
+router.delete("/delete-crop-group/:id", authMiddleware, AdminEp.deleteCropGroup);
 
 module.exports = router;
