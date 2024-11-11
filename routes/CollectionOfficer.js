@@ -50,8 +50,15 @@ router.get(
 
 router.get(
     "/collection-officer/district-report/:district",
-    // authMiddleware,
+    authMiddleware,
     CollectionOfficerEp.getCollectionOfficerDistrictReports
+);
+
+//province report
+router.get(
+    "/collection-officer/province-report/:province",
+    // authMiddleware,
+    CollectionOfficerEp.getCollectionOfficerProvinceReports
 );
 
 

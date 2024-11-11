@@ -134,3 +134,27 @@ exports.getCollectionOfficerDistrictReports = async (req, res) => {
         return res.status(500).json({ error: "An error occurred while fetching the reports" });
     }
 };
+
+
+exports.getCollectionOfficerProvinceReports = async (req, res) => {
+    const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
+    console.log(fullUrl);
+
+    try {
+        const validatedParams = await collectionofficerValidate.getDistrictProvinceSchema.validateAsync(req.params);
+
+        const results = await collectionofficerDao.getCollectionOfficerProvinceReports(validatedParams.province);
+        console.log(validatedParams,results);
+        
+
+        console.log("Successfully retrieved reports");
+        res.status(200).json(results);
+    } catch (error) {
+        if (error.isJoi) {
+            return res.status(400).json({ error: error.details[0].message });
+        }
+
+        console.error("Error retrieving district reports:", error);
+        return res.status(500).json({ error: "An error occurred while fetching the reports" });
+    }
+};

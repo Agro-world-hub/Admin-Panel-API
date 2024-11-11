@@ -40,4 +40,11 @@ router.get(
     CollectionCenterEp.getComplainById
 )
 
+router.post(
+    "/create-collection-center",
+    authMiddleware,
+    CollectionCenterEp.createCollectionCenter
+)
+
+
 module.exports = router;

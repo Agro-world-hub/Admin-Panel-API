@@ -71,3 +71,12 @@ exports.getCollectionOfficerReportsSchema = Joi.object({
     id: Joi.string().required(), // Assuming id is a string, adjust if necessary
     date: Joi.string().isoDate().required() // Ensuring the date is in ISO format
 });
+
+
+exports.getDistrictProvinceSchema = Joi.object({
+    province: Joi.string().min(1).required().messages({
+        'any.required': 'Province is required',
+        'string.base': 'Province must be a string',
+        'string.min': 'Province cannot be empty',
+    }),
+});

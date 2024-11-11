@@ -358,6 +358,11 @@ router.get(
     AdminEp.getPaymentSlipReport
 )
 
+router.get(
+    "/farmer-list-report",
+    // authMiddleware, 
+    AdminEp.getFarmerListReport);
+
 router.post("/create-crop-group", 
     authMiddleware,  
     upload.single("image"), 
