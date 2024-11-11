@@ -184,9 +184,7 @@ const createCropCalenderDaysTable = () => {
     taskDescriptionEnglish TEXT COLLATE latin1_swedish_ci NULL,
     taskDescriptionSinhala TEXT COLLATE utf8_unicode_ci NULL,
     taskDescriptionTamil TEXT COLLATE utf8_unicode_ci NULL,
-    image VARCHAR(20) NOT NULL,
     imageLink TEXT NOT NULL,
-    video VARCHAR(20) NOT NULL,
     videoLink TEXT NOT NULL,
     createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (cropId) REFERENCES cropCalender(id)

@@ -186,6 +186,8 @@ exports.insertXLSXData = (cropId, data) => {
       "Task description (English)": Joi.string().required(),
       "Task description (Sinhala)": Joi.string().required(),
       "Task description (Tamil)": Joi.string().required(),
+      "Image Link": Joi.string().required(),
+      "Video Link": Joi.string().required(),
     }).required();
 
     // Validate all data
@@ -207,7 +209,7 @@ exports.insertXLSXData = (cropId, data) => {
       (cropId, taskIndex, days, taskTypeEnglish, taskTypeSinhala, taskTypeTamil, 
       taskCategoryEnglish, taskCategorySinhala, taskCategoryTamil, 
       taskEnglish, taskSinhala, taskTamil, 
-      taskDescriptionEnglish, taskDescriptionSinhala, taskDescriptionTamil) 
+      taskDescriptionEnglish, taskDescriptionSinhala, taskDescriptionTamil, imageLink, videoLink) 
       VALUES ?`;
 
     const values = validatedData.map((row) => [
@@ -226,6 +228,8 @@ exports.insertXLSXData = (cropId, data) => {
       row["Task description (English)"],
       row["Task description (Sinhala)"],
       row["Task description (Tamil)"],
+      row["Image Link"],
+      row["Video Link"],
     ]);
 
     db.query(sql, [values], (err, result) => {
@@ -430,7 +434,7 @@ exports.deleteCropCalender = async (id) => {
   });
 };
 
-exports.updateCropCalender = async (id, updateData, imageData) => {
+exports.updateCropCalender = async (id, updateData, methodSinhala, methodTamil, natOfCulSinhala, natOfCulTamil,imageData) => {
   return new Promise((resolve, reject) => {
     let sql = `
             UPDATE cropcalender 
@@ -440,7 +444,11 @@ exports.updateCropCalender = async (id, updateData, imageData) => {
                 varietySinhala = ?,
                 varietyTamil = ?,
                 methodEnglish = ?, 
+                methodSinhala = ?,
+                methodTamil =?,
                 natOfCulEnglish = ?, 
+                natOfCulSinhala = ?,
+                natOfCulTamil = ?,
                 cropDuration = ?, 
                 specialNotesEnglish = ?, 
                 specialNotesSinhala = ?,
@@ -456,7 +464,11 @@ exports.updateCropCalender = async (id, updateData, imageData) => {
       updateData.varietySinhala,
       updateData.varietyTamil,
       updateData.methodEnglish,
+      methodSinhala,
+      methodTamil,
       updateData.natOfCulEnglish,
+      natOfCulSinhala,
+      natOfCulTamil,
       updateData.cropDuration,
       updateData.specialNotesEnglish,
       updateData.specialNotesSinhala,

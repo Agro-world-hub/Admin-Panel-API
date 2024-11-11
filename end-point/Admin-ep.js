@@ -118,8 +118,7 @@ exports.getMe = (req, res) => {
 exports.adminCreateUser = async (req, res) => {
   try {
     // Validate the request body
-    const { firstName, lastName, phoneNumber, NICnumber } =
-      await ValidateSchema.adminCreateUserSchema.validateAsync(req.body);
+    const { firstName, lastName, phoneNumber, NICnumber } = await ValidateSchema.adminCreateUserSchema.validateAsync(req.body);
 
     const results = await adminDao.adminCreateUser(
       firstName,
@@ -196,23 +195,26 @@ exports.createCropCallender = async (req, res) => {
     let natOfCulSinhala, natOfCulTamil;
 
     // Cultivation Method
-    if (cultivationMethod === 'Open Field' || cultivationMethod === 'Protected Field') {
-      methodSinhala = '01';
-      methodTamil = '02';
-    } else {
+    if (cultivationMethod === 'Open Field') {
+      methodSinhala = 'විවෘත ක්ෂේත්රය';
+      methodTamil = 'திறந்தவெளி';
+    } else if(cultivationMethod === 'Protected Field'){
+      methodSinhala = 'ආරක්ෂිත ගෘහ';
+      methodTamil = 'பாதுகாப்பான வீடுகள்';
+    }else {
       return res.status(400).json({ error: "Invalid cultivation method" });
     }
 
     // Nature of Cultivation
     if (natureOfCultivation === 'Conventional Farming') {
-      natOfCulSinhala = '01';
-      natOfCulTamil = '02';
+      natOfCulSinhala = 'සාම්ප්‍රදායික ගොවිතැන';
+      natOfCulTamil = 'பாரம்பரிய விவசாயம்';
     } else if (natureOfCultivation === 'GAP Farming') {
-      natOfCulSinhala = '01';
-      natOfCulTamil = '02';
+      natOfCulSinhala = 'යහපත් කෘෂිකාර්මික පිලිවෙත් (GAP)';
+      natOfCulTamil = 'நல்ல விவசாய நடைமுறைகள் (GAP)';
     } else if (natureOfCultivation === 'Organic Farming') {
-      natOfCulSinhala = '01';
-      natOfCulTamil = '02';
+      natOfCulSinhala = 'කාබනික ගොවිතැන';
+      natOfCulTamil = 'இயற்கை விவசாயம்';
     } else {
       return res.status(400).json({ error: "Invalid nature of cultivation" });
     }
@@ -530,6 +532,34 @@ exports.editCropCalender = async (req, res) => {
     const updateData = req.body;
     const { id } = req.params;
 
+    let methodSinhala, methodTamil;
+    let natOfCulSinhala, natOfCulTamil;
+
+    // Cultivation Method
+    if (req.body.methodEnglish === 'Open Field') {
+      methodSinhala = 'විවෘත ක්ෂේත්රය';
+      methodTamil = 'திறந்தவெளி';
+    } else if(req.body.methodEnglish === 'Protected Field'){
+      methodSinhala = 'ආරක්ෂිත ගෘහ';
+      methodTamil = 'பாதுகாப்பான வீடுகள்';
+    }else {
+      return res.status(400).json({ error: "Invalid cultivation method" });
+    }
+
+    // Nature of Cultivation
+    if (req.body.natOfCulEnglish === 'Conventional Farming') {
+      natOfCulSinhala = 'සාම්ප්‍රදායික ගොවිතැන';
+      natOfCulTamil = 'பாரம்பரிய விவசாயம்';
+    } else if (req.body.natOfCulEnglish === 'GAP Farming') {
+      natOfCulSinhala = 'යහපත් කෘෂිකාර්මික පිලිවෙත් (GAP)';
+      natOfCulTamil = 'நல்ல விவசாய நடைமுறைகள் (GAP)';
+    } else if (req.body.natOfCulEnglish === 'Organic Farming') {
+      natOfCulSinhala = 'කාබනික ගොවිතැන';
+      natOfCulTamil = 'இயற்கை விவசாயம்';
+    } else {
+      return res.status(400).json({ error: "Invalid nature of cultivation" });
+    }
+
     // Handle file upload if present
     let imageData = null;
     if (req.file) {
@@ -540,8 +570,13 @@ exports.editCropCalender = async (req, res) => {
     const affectedRows = await adminDao.updateCropCalender(
       id,
       updateData,
+      methodSinhala,
+      methodTamil,
+      natOfCulSinhala,
+      natOfCulTamil,
       imageData
     );
+    id, updateData, imageData, methodSinhala, methodTamil, natOfCulSinhala, natOfCulTamil,
 
     console.log(updateData);
 
