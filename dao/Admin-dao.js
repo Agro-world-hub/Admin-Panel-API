@@ -810,15 +810,17 @@ exports.getOngoingCultivationsById = (id) => {
             ongoingcultivationscrops.id AS ongoingcultivationscropsid, 
             ongoingCultivationId,
             cropCalendar,
-            cropcalender.cropName,
-            cropcalender.variety,
-            cropcalender.CultivationMethod,
-            cropcalender.NatureOfCultivation,
-            cropcalender.CropDuration
+            cropgroup.cropNameEnglish AS cropName,
+            cropcalender.varietyEnglish AS variety,
+            cropcalender.methodEnglish AS cultivationMethod,
+            cropcalender.natOfCulEnglish AS natureOfCultivation,
+            cropcalender.cropDuration AS cropDuration
         FROM 
             ongoingcultivationscrops
         JOIN 
             cropcalender ON ongoingcultivationscrops.cropCalendar = cropcalender.id
+        JOIN 
+            cropgroup ON cropcalender.cropGroupId = cropgroup.id
         WHERE
             ongoingCultivationId = ?`;
 
@@ -832,6 +834,7 @@ exports.getOngoingCultivationsById = (id) => {
     });
   });
 };
+
 
 exports.getFixedAssetsByCategory = (userId, category) => {
   const validCategories = {
@@ -1283,13 +1286,16 @@ exports.editTask = (
   taskDescriptionEnglish,
   taskDescriptionSinhala,
   taskDescriptionTamil,
+  reqImages,
+  imageLink,
+  videoLink,
   id
 ) => {
   return new Promise((resolve, reject) => {
     const sql = `
             UPDATE cropcalendardays 
             SET taskEnglish=?, taskSinhala=?, taskTamil=?, taskTypeEnglish=?, taskTypeSinhala=?, taskTypeTamil=?, 
-                taskCategoryEnglish=?, taskCategorySinhala=?, taskCategoryTamil=?, taskDescriptionEnglish=?, taskDescriptionSinhala=?, taskDescriptionTamil=?  
+                taskCategoryEnglish=?, taskCategorySinhala=?, taskCategoryTamil=?, taskDescriptionEnglish=?, taskDescriptionSinhala=?, taskDescriptionTamil=?, reqImages=?, imageLink=?, videoLink=?
             WHERE id = ?
         `;
     const values = [
@@ -1305,6 +1311,9 @@ exports.editTask = (
       taskDescriptionEnglish,
       taskDescriptionSinhala,
       taskDescriptionTamil,
+      reqImages,
+      imageLink,
+      videoLink,
       id,
     ];
 
@@ -1380,6 +1389,8 @@ exports.getAllUserTaskByCropId = (cropId, userId, limit, offset) => {
         slavecropcalendardays.taskIndex, 
         slavecropcalendardays.days, 
         slavecropcalendardays.taskEnglish,
+        slavecropcalendardays.imageLink,
+        slavecropcalendardays.videoLink,
         slavecropcalendardays.status
       FROM 
         slavecropcalendardays
@@ -1587,7 +1598,7 @@ exports.addNewTaskDao = (task, indexId, cropId) => {
 
   return new Promise((resolve, reject) => {
     const sql =
-      "INSERT INTO cropcalendardays (cropId, taskIndex, days, taskTypeEnglish, taskTypeSinhala, taskTypeTamil, taskCategoryEnglish, taskCategorySinhala, taskCategoryTamil, taskEnglish, taskSinhala, taskTamil, taskDescriptionEnglish, taskDescriptionSinhala, taskDescriptionTamil) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+      "INSERT INTO cropcalendardays (cropId, taskIndex, days, taskTypeEnglish, taskTypeSinhala, taskTypeTamil, taskCategoryEnglish, taskCategorySinhala, taskCategoryTamil, taskEnglish, taskSinhala, taskTamil, taskDescriptionEnglish, taskDescriptionSinhala, taskDescriptionTamil, reqImages, imageLink, videoLink) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
     const values = [
       cropId,
@@ -1605,10 +1616,13 @@ exports.addNewTaskDao = (task, indexId, cropId) => {
       task.taskDescriptionEnglish,
       task.taskDescriptionSinhala,
       task.taskDescriptionTamil,
+      task.reqImages,
+      task.imageLink,
+      task.videoLink,
     ];
 
     // Ensure that the values array length matches the expected column count
-    if (values.length !== 15) {
+    if (values.length !== 18) {
       return reject(
         new Error("Mismatch between column count and value count.")
       );
@@ -1695,7 +1709,7 @@ exports.addNewTaskDaoU = (task, indexId, userId, cropId) => {
 
   return new Promise((resolve, reject) => {
     const sql =
-      "INSERT INTO slavecropcalendardays (userId, cropCalendarId, taskIndex, days, taskTypeEnglish, taskTypeSinhala, taskTypeTamil, taskCategoryEnglish, taskCategorySinhala, taskCategoryTamil, taskEnglish, taskSinhala, taskTamil, taskDescriptionEnglish, taskDescriptionSinhala, taskDescriptionTamil, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Pending')";
+      "INSERT INTO slavecropcalendardays (userId, cropCalendarId, taskIndex, days, taskTypeEnglish, taskTypeSinhala, taskTypeTamil, taskCategoryEnglish, taskCategorySinhala, taskCategoryTamil, taskEnglish, taskSinhala, taskTamil, taskDescriptionEnglish, taskDescriptionSinhala, taskDescriptionTamil, reqImages, imageLink, videoLink, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Pending')";
 
     const values = [
       userId,
@@ -1714,10 +1728,13 @@ exports.addNewTaskDaoU = (task, indexId, userId, cropId) => {
       task.taskDescriptionEnglish,
       task.taskDescriptionSinhala,
       task.taskDescriptionTamil,
+      task.reqImages,
+      task.imageLink,
+      task.videoLink,
     ];
 
     // Ensure that the values array length matches the expected column count
-    if (values.length !== 16) {
+    if (values.length !== 19) {
       return reject(
         new Error("Mismatch between column count and value count.")
       );
