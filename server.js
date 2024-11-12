@@ -5,6 +5,7 @@ const collectionOfficerRoutes = require('./routes/CollectionOfficer');
 const routesNewws = require('./routes/News');
 const CollectionCenterRoutes = require('./routes/CollectionCenter');
 const MarketPrice = require('./routes/MarketPrice');
+const MarketPlace = require('./routes/MarketPlace');
 require('dotenv').config();
 const cors = require('cors');
 
@@ -34,6 +35,7 @@ app.use(process.env.AUTHOR, collectionOfficerRoutes);
 app.use(process.env.AUTHOR, routesNewws);
 app.use(process.env.AUTHOR, CollectionCenterRoutes);
 app.use(process.env.MARKETPRICE, MarketPrice);
+app.use('/api/market-place', MarketPlace);
 app.use('/uploads', express.static('uploads'));
 
 app.listen(port, () => {
