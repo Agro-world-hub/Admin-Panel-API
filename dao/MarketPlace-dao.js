@@ -14,6 +14,9 @@ exports.getMarketplaceItems = () => {
             marketplaceitems.normalPrice AS itemNormalPrice,
             marketplaceitems.discountedPrice AS itemDiscountedPrice,
             marketplaceitems.promo AS itemPromo,
+            marketplaceitems.unitType AS unitType,
+            marketplaceitems.startValue AS startValue,
+            marketplaceitems.changeby AS changeby,
             cropcalender.varietyEnglish AS cropVarietyEnglish,
             cropcalender.suitableAreas AS cropSuitableAreas
         FROM 
