@@ -125,29 +125,48 @@ const createCropGroup = () => {
 };
 
 
+const createCropVariety = () => {
+    const sql = `
+    CREATE TABLE IF NOT EXISTS cropvariety (
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      cropGroupId INT(11) NULL,
+      varietyNameEnglish VARCHAR(50) NOT NULL,
+      varietyNameSinhala VARCHAR(50) NOT NULL,
+      varietyNameTamil VARCHAR(50) NOT NULL,
+      descriptionEnglish TEXT NOT NULL,
+      descriptionSinhala TEXT NOT NULL,
+      descriptionTamil TEXT NOT NULL,
+      image LONGBLOB,
+      bgColor VARCHAR(10),
+      createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (cropGroupId) REFERENCES cropgroup(id)
+        ON DELETE CASCADE
+        ON UPDATE CASCADE
+    )
+  `;
+    return new Promise((resolve, reject) => {
+        db.query(sql, (err, result) => {
+            if (err) {
+                reject('Error creating cropvariety table: ' + err);
+            } else {
+                resolve('cropvariety table created successfully.');
+            }
+        });
+    });
+};
+
+
 const createCropCalenderTable = () => {
     const sql = `
     CREATE TABLE IF NOT EXISTS cropcalender (
       id INT AUTO_INCREMENT PRIMARY KEY,
-      cropGroupId INT(11) NULL,
-      varietyEnglish VARCHAR(50) NOT NULL,
-      varietySinhala VARCHAR(50) NOT NULL,
-      varietyTamil VARCHAR(50) NOT NULL,
-      methodEnglish VARCHAR(20) NOT NULL,
-      methodSinhala VARCHAR(25) NOT NULL,
-      methodTamil VARCHAR(25) NOT NULL,
-      natOfCulEnglish VARCHAR(25) NOT NULL,
-      natOfCulSinhala VARCHAR(25) NOT NULL,
-      natOfCulTamil VARCHAR(25) NOT NULL,
+      cropVarietyId INT(11) NULL,
+      method VARCHAR(25) NOT NULL,
+      natOfCul VARCHAR(25) NOT NULL,
       cropDuration VARCHAR(3) NOT NULL,
-      specialNotesEnglish TEXT,
-      specialNotesSinhala TEXT,
-      specialNotesTamil TEXT,
-      image LONGBLOB,
-      cropColor VARCHAR(10),
       suitableAreas TEXT NOT NULL,
       createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-      FOREIGN KEY (cropGroupId) REFERENCES cropgroup(id)
+      FOREIGN KEY (cropVarietyId) REFERENCES cropvariety(id)
         ON DELETE CASCADE
         ON UPDATE CASCADE
     )
@@ -327,6 +346,8 @@ const createOngoingCultivationsCropsTable = () => {
       id INT AUTO_INCREMENT PRIMARY KEY,
       ongoingCultivationId INT,
       cropCalendar INT,
+      startedAt DATE DEFAULT NULL,
+      extent DECIMAL(8, 2) NOT NULL,
       createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (ongoingCultivationId) REFERENCES ongoingCultivations(id)
         ON DELETE CASCADE
@@ -676,7 +697,7 @@ const createSlaveCropCalenderDaysTable = () => {
       userId INT(11) NULL,
       cropCalendarId INT(11) NULL,
       taskIndex INT(255) NULL,
-      days INT(11) NULL,
+      startingDate DATE DEFAULT NULL,
       taskTypeEnglish TEXT COLLATE latin1_swedish_ci NULL,
       taskTypeSinhala TEXT COLLATE utf8_unicode_ci NULL,
       taskTypeTamil TEXT COLLATE utf8_unicode_ci NULL,
@@ -694,6 +715,7 @@ const createSlaveCropCalenderDaysTable = () => {
       imageLink TEXT,
       video VARCHAR(20),
       videoLink TEXT,
+      reqImages INT(11) NULL,
       createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (userId) REFERENCES users(id)
           ON DELETE CASCADE
@@ -1210,6 +1232,7 @@ module.exports = {
     createAdminUsersTable,
     createContentTable,
     createCropGroup,
+    createCropVariety,
     createCropCalenderTable,
     createCropCalenderDaysTable,
     createOngoingCultivationsTable,
