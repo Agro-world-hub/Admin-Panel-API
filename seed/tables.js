@@ -711,9 +711,7 @@ const createSlaveCropCalenderDaysTable = () => {
       taskDescriptionSinhala TEXT COLLATE utf8_unicode_ci NULL,
       taskDescriptionTamil TEXT COLLATE utf8_unicode_ci NULL,
       status VARCHAR(20),
-      image VARCHAR(20),
       imageLink TEXT,
-      video VARCHAR(20),
       videoLink TEXT,
       reqImages INT(11) NULL,
       createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -735,6 +733,33 @@ const createSlaveCropCalenderDaysTable = () => {
         });
     });
 };
+
+
+const createTaskImages = () => {
+    const sql = `
+      CREATE TABLE IF NOT EXISTS taskimages (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            slaveId INT(11) NOT NULL,
+            image LONGBLOB,
+            createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (slaveId) REFERENCES slavecropcalendardays(id)
+                ON DELETE CASCADE
+                ON UPDATE CASCADE
+  );
+    `;
+    return new Promise((resolve, reject) => {
+        db.query(sql, (err, result) => {
+            if (err) {
+                reject('Error taskimages table: ' + err);
+            } else {
+                resolve('taskimages table created successfully.');
+            }
+        });
+    });
+};
+
+
+
 
 const createpublicforumposts = () => {
     const sql = `
@@ -1093,6 +1118,30 @@ const createMarketPlacePackages = () => {
     });
 };
 
+const createCoupon = () => {
+    const sql = `
+    CREATE TABLE IF NOT EXISTS coupon(
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      code VARCHAR(25),
+      type VARCHAR(25) NOT NULL,
+      percentage DECIMAL(3, 2) NOT NULL,
+      status Boolean NOT NULL,
+      startDate DATETIME NOT NULL,
+      endDate DATETIME NOT NULL,
+      createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )
+  `;
+    return new Promise((resolve, reject) => {
+        db.query(sql, (err, result) => {
+            if (err) {
+                reject('Error creating coupen table: ' + err);
+            } else {
+                resolve('coupen table created successfully.');
+            }
+      });
+});
+};
+
 
 const createMarketPlaceItems = () => {
     const sql = `
@@ -1261,6 +1310,7 @@ module.exports = {
 
 
     createSlaveCropCalenderDaysTable,
+    createTaskImages,
 
     //collection officer
     createCollectionOfficer,
@@ -1275,6 +1325,7 @@ module.exports = {
     //Seed for market Place Application
     createMarketPlaceUsersTable,
     createMarketPlacePackages,
+    createCoupon,
     createMarketPlaceItems,
     createPackageDetails,
     createPromoItems,
