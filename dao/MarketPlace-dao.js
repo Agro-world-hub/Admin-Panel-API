@@ -1,43 +1,84 @@
 const db = require("../startup/database");
 
 exports.getAllCropNameDAO = () => {
-    return new Promise((resolve, reject) => {
-        const sql = `
-            SELECT cg.id AS cropId, cc.id AS varietyId, cg.cropNameEnglish, cc.varietyEnglish
-            FROM cropcalender cc
-            JOIN cropgroup cg ON cg.id = cc.cropGroupId
-        `;
+  return new Promise((resolve, reject) => {
+      const sql = `
+          SELECT cg.id AS cropId, cc.id AS varietyId, cg.cropNameEnglish, cc.varietyEnglish, cc.image
+          FROM cropcalender cc
+          JOIN cropgroup cg ON cg.id = cc.cropGroupId
+      `;
 
-        db.query(sql, (err, results) => {
-            if (err) {
-                return reject(err);
-            }
+      db.query(sql, (err, results) => {
+          if (err) {
+              return reject(err);
+          }
 
-            const groupedData = {};
+          const groupedData = {};
 
-            results.forEach(item => {
-                const { cropNameEnglish, varietyEnglish, varietyId, cropId } = item;
+          results.forEach(item => {
+              const { cropNameEnglish, varietyEnglish, varietyId, cropId, image } = item;
 
-                if (!groupedData[cropNameEnglish]) {
-                    groupedData[cropNameEnglish] = {
-                        cropId: cropId,
-                        variety: [] 
-                    };
-                }
+              // Convert image to base64 if available
+              let base64Image = null;
+              if (image) {
+                  base64Image = Buffer.from(image).toString("base64");
+                  const mimeType = "image/png"; // Set MIME type (adjust if necessary)
+                  base64Image = `data:${mimeType};base64,${base64Image}`;
+              }
 
-                groupedData[cropNameEnglish].variety.push({
-                    id: varietyId,
-                    varietyEnglish: varietyEnglish
-                });
-            });
+              if (!groupedData[cropNameEnglish]) {
+                  groupedData[cropNameEnglish] = {
+                      cropId: cropId,
+                      variety: []
+                  };
+              }
 
-            const formattedResult = Object.keys(groupedData).map(cropName => ({
-                cropId: groupedData[cropName].cropId,
-                cropNameEnglish: cropName,
-                variety: groupedData[cropName].variety
-            }));
+              groupedData[cropNameEnglish].variety.push({
+                  id: varietyId,
+                  varietyEnglish: varietyEnglish,
+                  image: base64Image  // Store the Base64 image string
+              });
+          });
 
-            resolve(formattedResult);
-        });
-    });
+          // Format the final result
+          const formattedResult = Object.keys(groupedData).map(cropName => ({
+              cropId: groupedData[cropName].cropId,
+              cropNameEnglish: cropName,
+              variety: groupedData[cropName].variety
+          }));
+
+          resolve(formattedResult);
+      });
+  });
 };
+
+
+
+
+
+exports.createCropGroup = async (product) => {
+    return new Promise((resolve, reject) => {
+      const sql =
+        "INSERT INTO marketplaceitems (cropId, displayName, normalPrice, discountedPrice, promo, unitType, startValue, changeby, tags) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
+      const values = [
+        product.variety, 
+        product.cropName, 
+        product.normalPrice, 
+        product.discountedPrice, 
+        product.promo, 
+        product.unitType, 
+        product.startValue, 
+        product.changeby,
+        product.tags
+      ];
+  
+      db.query(sql, values, (err, results) => {
+        if (err) {
+          reject(err);
+        } else {
+          resolve(results.insertId);
+        }
+      });
+    });
+  };
+  

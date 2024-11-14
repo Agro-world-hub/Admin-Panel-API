@@ -11,6 +11,12 @@ router.get(
     marketPlaceEp.getAllCropCatogory
 )
 
+router.post(
+    '/add-market-product',
+    authMiddleware,
+    marketPlaceEp.createMarketProduct
+)
+
 
 
 module.exports = router;
