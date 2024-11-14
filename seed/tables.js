@@ -1103,6 +1103,10 @@ const createMarketPlaceItems = () => {
       normalPrice DECIMAL(8, 2) NOT NULL,
       discountedPrice DECIMAL(8, 2) NOT NULL,
       promo BOOLEAN  NOT NULL,
+      unitType VARCHAR(5) NOT NULL,
+      startValue DECIMAL(8, 2) NOT NULL,
+      changeby DECIMAL(8, 2) NOT NULL,
+      tags TEXT NOT NULL,
       createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (cropId) REFERENCES cropcalender(id)
         ON DELETE SET NULL
