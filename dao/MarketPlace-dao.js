@@ -47,13 +47,13 @@ exports.getMarketplaceItems = () => {
             marketplaceitems.unitType AS unitType,
             marketplaceitems.startValue AS startValue,
             marketplaceitems.changeby AS changeby,
-            cropcalender.varietyEnglish AS cropVarietyEnglish,
+            cropcalender.variety AS cropVarietyEnglish,
             cropcalender.suitableAreas AS cropSuitableAreas,
             cropgroup.cropNameEnglish AS cropNameEnglish
         FROM 
             marketplaceitems
         JOIN cropcalender ON marketplaceitems.cropId = cropcalender.id
-        JOIN cropgroup ON cropcalender.cropGroupId = cropgroup.id;
+        JOIN cropgroup ON cropcalender.id = cropgroup.id;
       `;
   
       db.query(dataSql, (error, results) => {
