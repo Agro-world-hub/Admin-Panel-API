@@ -454,17 +454,17 @@ exports.allCropGroups = async (req, res) => {
 
 
   exports.updateGroup = async (req, res) => {
+
+    const { cropNameEnglish, cropNameSinhala, cropNameTamil, category, bgColor } = req.body;
+    const id = req.params.id;
     try {
-      const id = req.params.id;
-      const updates = req.body;
-      let image = null;
-      console.log('hiii',req.body);
-      if (req.file) {
-        image = req.file.buffer; // Handle file upload if present
-        updates.image = image;
-      }
+      let imageData = null;
+        if (req.file) {
+            imageData = req.file.buffer; // Store the binary image data from req.file
+        }
+      
   
-      await cropCalendarDao.updateGroup(id, updates);
+      await cropCalendarDao.updateGroup({ cropNameEnglish, cropNameSinhala, cropNameTamil, category, bgColor,  image: imageData }, id);
       res.json({ message: 'Crop group updated successfully.' });
     } catch (err) {
       console.error('Error updating crop group:', err);

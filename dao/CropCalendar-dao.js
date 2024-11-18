@@ -353,24 +353,67 @@ exports.createCropCallender = async (
 
 
 
-  exports.updateGroup = (id, updates) => {
+  // exports.updateGroup = (updates, id) => {
+  //   return new Promise((resolve, reject) => {
+
+  //     const { cropNameEnglish, cropNameSinhala, cropNameTamil, category, bgColor, image } = newsData;
+  //     const fields = [];
+  //     const values = [];
+  
+  //     for (const [key, value] of Object.entries(updates)) {
+  //       fields.push(`${key} = ?`);
+  //       values.push(value);
+  //     }
+  
+  //     const sql = `UPDATE cropgroup SET ${fields.join(', ')} WHERE id = ?`;
+  //     values.push(id); // Add ID as the last parameter
+  
+  //     db.query(sql, values, (err, result) => {
+  //       if (err) return reject(err);
+  //       resolve(result);
+  //     });
+  //   });
+  // };
+  
+
+
+  exports.updateGroup = (newsData, id) => {
     return new Promise((resolve, reject) => {
-      const fields = [];
-      const values = [];
-  
-      for (const [key, value] of Object.entries(updates)) {
-        fields.push(`${key} = ?`);
-        values.push(value);
-      }
-  
-      const sql = `UPDATE cropgroup SET ${fields.join(', ')} WHERE id = 5`;
-      values.push(id); // Add ID as the last parameter
-  
-      db.query(sql, values, (err, result) => {
-        if (err) return reject(err);
-        resolve(result);
-      });
+        const { cropNameEnglish, cropNameSinhala, cropNameTamil, category, bgColor, image } = newsData;
+        console.log(newsData);
+        
+        let sql = `
+            UPDATE cropgroup 
+            SET 
+                cropNameEnglish = ?, 
+                cropNameSinhala = ?, 
+                cropNameTamil = ?, 
+                category = ?, 
+                bgColor = ?
+        `;
+        
+        let values = [
+          cropNameEnglish,
+          cropNameSinhala,
+          cropNameTamil,
+          category,
+          bgColor,
+        ];
+
+        if (image) {
+            sql += `, image = ?`;  // Update the image field with binary data
+            values.push(image);
+        }
+
+        sql += ` WHERE id = ?`;
+        values.push(id);
+
+        db.query(sql, values, (err, results) => {
+            if (err) {
+                return reject(err);
+            }
+            resolve(results);
+        });
     });
-  };
-  
+};
   
