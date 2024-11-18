@@ -1665,6 +1665,10 @@ exports.editUserTask = async (req, res) => {
       validatedParams.taskCategoryEnglish,
       validatedParams.taskCategorySinhala,
       validatedParams.taskCategoryTamil,
+      validatedParams.startingDate,
+      validatedParams.reqImages,
+      validatedParams.imageLink,
+      validatedParams.videoLink,
       validatedParams.id
     );
 
@@ -1753,7 +1757,7 @@ exports.addNewTask = async (req, res) => {
     const addedTaskResult = await adminDao.addNewTaskDao(
       task,
       indexId + 1,
-      cropId
+      cropId,
     );
 
     if (addedTaskResult.insertId > 0) {
@@ -1772,6 +1776,8 @@ exports.addNewTask = async (req, res) => {
       .json({ error: "An error occurred while adding the task" });
   }
 };
+
+
 exports.sendMessage = async (req, res) => {
   const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
   console.log("Request URL:", fullUrl);
@@ -1837,7 +1843,9 @@ exports.addNewTaskU = async (req, res) => {
 
   const userId = req.params.userId;
   const cropId = req.params.cropId;
+  const onCulscropID = req.params.onCulscropID;
   const indexId = parseInt(req.params.indexId);
+
 
   try {
     const task = req.body;
@@ -1864,7 +1872,8 @@ exports.addNewTaskU = async (req, res) => {
       task,
       indexId + 1,
       userId,
-      cropId
+      cropId,
+      onCulscropID
     );
 
     if (addedTaskResult.insertId > 0) {

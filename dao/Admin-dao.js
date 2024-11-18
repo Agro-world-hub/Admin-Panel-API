@@ -572,21 +572,23 @@ exports.getOngoingCultivationsById = (id) => {
   const sql = `
         SELECT 
             ongoingcultivationscrops.id AS ongoingcultivationscropsid, 
-            ongoingCultivationId,
-            cropCalendar,
+            ongoingcultivationscrops.ongoingCultivationId,
+            ongoingcultivationscrops.cropCalendar,
             cropgroup.cropNameEnglish AS cropName,
-            cropcalender.varietyEnglish AS variety,
-            cropcalender.methodEnglish AS cultivationMethod,
-            cropcalender.natOfCulEnglish AS natureOfCultivation,
+            cropvariety.varietyNameEnglish AS variety,
+            cropcalender.method AS cultivationMethod,
+            cropcalender.natOfCul AS natureOfCultivation,
             cropcalender.cropDuration AS cropDuration
         FROM 
             ongoingcultivationscrops
         JOIN 
             cropcalender ON ongoingcultivationscrops.cropCalendar = cropcalender.id
         JOIN 
-            cropgroup ON cropcalender.cropGroupId = cropgroup.id
+            cropvariety ON cropcalender.cropVarietyId = cropvariety.id
+        JOIN 
+            cropgroup ON cropvariety.cropGroupId = cropgroup.id
         WHERE
-            ongoingCultivationId = ?`;
+            ongoingcultivationscrops.ongoingCultivationId = ?`;
 
   return new Promise((resolve, reject) => {
     db.query(sql, [id], (err, results) => {
@@ -598,6 +600,7 @@ exports.getOngoingCultivationsById = (id) => {
     });
   });
 };
+
 
 
 exports.getFixedAssetsByCategory = (userId, category) => {
@@ -1109,7 +1112,7 @@ exports.getAllUserTaskByCropId = (cropId, userId, limit, offset) => {
         slavecropcalendardays.id AS slavecropcalendardaysId,
         slavecropcalendardays.cropCalendarId,
         slavecropcalendardays.taskIndex, 
-        slavecropcalendardays.days, 
+        slavecropcalendardays.startingDate, 
         slavecropcalendardays.taskEnglish,
         slavecropcalendardays.imageLink,
         slavecropcalendardays.videoLink,
@@ -1200,13 +1203,17 @@ exports.editUserTask = (
   taskCategoryEnglish,
   taskCategorySinhala,
   taskCategoryTamil,
+  startingDate,
+  reqImages,
+  imageLink,
+  videoLink,
   id
 ) => {
   return new Promise((resolve, reject) => {
     const sql = `
             UPDATE slavecropcalendardays 
             SET taskEnglish=?, taskSinhala=?, taskTamil=?, taskTypeEnglish=?, taskTypeSinhala=?, taskTypeTamil=?, 
-                taskCategoryEnglish=?, taskCategorySinhala=?, taskCategoryTamil=? 
+                taskCategoryEnglish=?, taskCategorySinhala=?, taskCategoryTamil=? , startingDate=?, reqImages=?,imageLink=?, videoLink= ?
             WHERE id = ?
         `;
     const values = [
@@ -1219,6 +1226,10 @@ exports.editUserTask = (
       taskCategoryEnglish,
       taskCategorySinhala,
       taskCategoryTamil,
+      startingDate,
+  reqImages,
+  imageLink,
+  videoLink,
       id,
     ];
 
@@ -1320,12 +1331,12 @@ exports.addNewTaskDao = (task, indexId, cropId) => {
 
   return new Promise((resolve, reject) => {
     const sql =
-      "INSERT INTO cropcalendardays (cropId, taskIndex, days, taskTypeEnglish, taskTypeSinhala, taskTypeTamil, taskCategoryEnglish, taskCategorySinhala, taskCategoryTamil, taskEnglish, taskSinhala, taskTamil, taskDescriptionEnglish, taskDescriptionSinhala, taskDescriptionTamil, reqImages, imageLink, videoLink) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+      "INSERT INTO cropcalendardays ( cropId, taskIndex, startingDate, taskTypeEnglish, taskTypeSinhala, taskTypeTamil, taskCategoryEnglish, taskCategorySinhala, taskCategoryTamil, taskEnglish, taskSinhala, taskTamil, taskDescriptionEnglish, taskDescriptionSinhala, taskDescriptionTamil, reqImages, imageLink, videoLink) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
     const values = [
       cropId,
       indexId,
-      task.days,
+      task.startingDate,
       task.taskTypeEnglish,
       task.taskTypeSinhala,
       task.taskTypeTamil,
@@ -1426,18 +1437,21 @@ exports.getAllTaskIdDaoU = (cropId, userId) => {
   });
 };
 
-exports.addNewTaskDaoU = (task, indexId, userId, cropId) => {
+exports.addNewTaskDaoU = (task, indexId, userId, cropId, onCulscropID) => {
   console.log("Dao Task: ", task);
+  const defStatus= 'Pending';
+  
 
   return new Promise((resolve, reject) => {
     const sql =
-      "INSERT INTO slavecropcalendardays (userId, cropCalendarId, taskIndex, days, taskTypeEnglish, taskTypeSinhala, taskTypeTamil, taskCategoryEnglish, taskCategorySinhala, taskCategoryTamil, taskEnglish, taskSinhala, taskTamil, taskDescriptionEnglish, taskDescriptionSinhala, taskDescriptionTamil, reqImages, imageLink, videoLink, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Pending')";
+      "INSERT INTO slavecropcalendardays (userId, onCulscropID, cropCalendarId, taskIndex, startingDate, taskTypeEnglish, taskTypeSinhala, taskTypeTamil, taskCategoryEnglish, taskCategorySinhala, taskCategoryTamil, taskEnglish, taskSinhala, taskTamil, taskDescriptionEnglish, taskDescriptionSinhala, taskDescriptionTamil, reqImages, imageLink, videoLink, status) VALUES (?,?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
     const values = [
       userId,
+      onCulscropID,
       cropId,
       indexId,
-      task.days,
+      task.startingDate,
       task.taskTypeEnglish,
       task.taskTypeSinhala,
       task.taskTypeTamil,
@@ -1453,10 +1467,11 @@ exports.addNewTaskDaoU = (task, indexId, userId, cropId) => {
       task.reqImages,
       task.imageLink,
       task.videoLink,
+      defStatus
     ];
 
     // Ensure that the values array length matches the expected column count
-    if (values.length !== 19) {
+    if (values.length !== 21) {
       return reject(
         new Error("Mismatch between column count and value count.")
       );
