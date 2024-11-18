@@ -283,3 +283,94 @@ exports.createCropCallender = async (
       });
     });
   };
+
+
+
+  exports.getAllVarietyByGroup = (cropGroupId) => {
+    return new Promise((resolve, reject) => {
+      const sql = "SELECT * FROM cropvariety WHERE cropGroupId = ?";
+  
+      db.query(sql,[cropGroupId], (err, results) => {
+        if (err) {
+          return reject(err); // Reject promise if an error occurs
+        }
+        const processedDataResults = results.map((variety) => {
+          if (variety.image) {
+            const base64Image = Buffer.from(variety.image).toString(
+              "base64"
+            );
+            const mimeType = "image/png"; // Adjust the MIME type if needed
+            variety.image = `data:${mimeType};base64,${base64Image}`;
+          }
+          return variety;
+        });
+  
+        resolve(processedDataResults); // No need to wrap in arrays, return results directly
+      });
+    });
+  };
+
+
+
+
+  exports.deleteCropVariety = async (id) => {
+    return new Promise((resolve, reject) => {
+      const sql = "DELETE FROM cropvariety WHERE id = ?";
+      db.query(sql, [id], (err, results) => {
+        if (err) {
+          reject(err);
+        } else {
+          resolve(results.affectedRows);
+        }
+      });
+    });
+  };
+
+
+
+  exports.getGroupById = (id) => {
+    return new Promise((resolve, reject) => {
+      const sql = "SELECT * FROM cropgroup WHERE id = ?";
+  
+      db.query(sql,[id], (err, results) => {
+        if (err) {
+          return reject(err); // Reject promise if an error occurs
+        }
+        const processedDataResults = results.map((variety) => {
+          if (variety.image) {
+            const base64Image = Buffer.from(variety.image).toString(
+              "base64"
+            );
+            const mimeType = "image/png"; // Adjust the MIME type if needed
+            variety.image = `data:${mimeType};base64,${base64Image}`;
+          }
+          return variety;
+        });
+        resolve(processedDataResults); // No need to wrap in arrays, return results directly
+      });
+    });
+  };
+
+
+
+  exports.updateGroup = (id, updates) => {
+    return new Promise((resolve, reject) => {
+      const fields = [];
+      const values = [];
+  
+      for (const [key, value] of Object.entries(updates)) {
+        fields.push(`${key} = ?`);
+        values.push(value);
+      }
+  
+      const sql = `UPDATE cropgroup SET ${fields.join(', ')} WHERE id = 5`;
+      values.push(id); // Add ID as the last parameter
+  
+      db.query(sql, values, (err, result) => {
+        if (err) return reject(err);
+        resolve(result);
+      });
+    });
+  };
+  
+  

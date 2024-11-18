@@ -89,5 +89,32 @@ router.post(
 );
 
 
+router.get(
+    "/crop-variety-by-group/:cropGroupId", 
+    authMiddleware, 
+    cropCalendarEp.getAllVarietyByGroup
+);
+
+
+router.delete(
+    "/delete-crop-variety/:id", 
+    authMiddleware, 
+    cropCalendarEp.deleteCropVariety
+);
+
+
+router.get(
+    "/crop-group-by-id/:id", 
+    authMiddleware, 
+    cropCalendarEp.getGroupById
+);
+
+router.put(
+    '/update-crop-group/:id', 
+    authMiddleware, 
+    cropCalendarEp.updateGroup);
+
+
+
 
 module.exports = router;

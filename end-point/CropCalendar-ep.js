@@ -6,6 +6,7 @@ const path = require("path");
 const xlsx = require("xlsx");
 const cropCalendarDao = require("../dao/CropCalendar-dao");
 const cropCalendarValidations = require('../validations/CropCalendar-validation');
+const mime = require("mime-types");
 
 exports.allCropGroups = async (req, res) => {
     try {
@@ -360,3 +361,115 @@ exports.allCropGroups = async (req, res) => {
         .json({ error: "An error occurred while processing the XLSX file." });
     }
   };
+
+
+
+  exports.getAllVarietyByGroup = async (req, res) => {
+    try {
+      const cropGroupId = req.params.cropGroupId;
+      const groups = await cropCalendarDao.getAllVarietyByGroup(cropGroupId);
+
+      console.log(groups?.cropGroupId);
+
+      if (groups.image) {
+        console.log('find');
+        const base64Image = Buffer.from(groups.image).toString(
+          "base64"
+        );
+        const mimeType = "image/png"; // Adjust the MIME type if needed
+        groups.image = `data:${mimeType};base64,${base64Image}`;
+      }
+  
+      console.log("Successfully fetched crop groups");
+      res.json({
+        groups,
+      });
+    } catch (err) {
+      if (err.isJoi) {
+        // Validation error
+        return res.status(400).json({ error: err.details[0].message });
+      }
+      console.error("Error executing query:", err);
+      res.status(500).send("An error occurred while fetching data.");
+    }
+  };
+
+
+
+  exports.deleteCropVariety = async (req, res) => {
+    try {
+      const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
+      console.log("Request URL:", fullUrl);
+  
+      // Validate the request parameters
+      const { id } = await cropCalendarValidations.deleteCropCalenderSchema.validateAsync(
+        req.params
+      );
+  
+      const affectedRows = await cropCalendarDao.deleteCropVariety(id);
+  
+      if (affectedRows === 0) {
+        return res.status(404).json({ message: "Crop variety not found" });
+      } else {
+        console.log("Crop variety deleted successfully");
+        return res.status(200).json({ status: true });
+      }
+    } catch (err) {
+      if (err.isJoi) {
+        // Validation error
+        return res.status(400).json({ error: err.details[0].message });
+      }
+  
+      console.error("Error deleting crop variety:", err);
+      return res
+        .status(500)
+        .json({ error: "An error occurred while deleting crop variety" });
+    }
+  };
+
+
+
+
+  exports.getGroupById = async (req, res) => {
+    try {
+      const id = req.params.id;
+      const groups = await cropCalendarDao.getGroupById(id);
+
+      console.log(groups?.cropGroupId);
+
+      console.log("Successfully fetched crop groups");
+      res.json({
+        groups,
+      });
+    } catch (err) {
+      if (err.isJoi) {
+        // Validation error
+        return res.status(400).json({ error: err.details[0].message });
+      }
+      console.error("Error executing query:", err);
+      res.status(500).send("An error occurred while fetching data.");
+    }
+  };
+
+
+
+  exports.updateGroup = async (req, res) => {
+    try {
+      const id = req.params.id;
+      const updates = req.body;
+      let image = null;
+      console.log('hiii',req.body);
+      if (req.file) {
+        image = req.file.buffer; // Handle file upload if present
+        updates.image = image;
+      }
+  
+      await cropCalendarDao.updateGroup(id, updates);
+      res.json({ message: 'Crop group updated successfully.' });
+    } catch (err) {
+      console.error('Error updating crop group:', err);
+      res.status(500).send('An error occurred while updating the crop group.');
+    }
+  };
+  
+
