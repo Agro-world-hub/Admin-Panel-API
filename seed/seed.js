@@ -30,7 +30,7 @@ const { createCurrentAssetRecord } = require('./tables');
 
 const { createCurrentAssetTable } = require('./tables');
 const { createSlaveCropCalenderDaysTable } = require('./tables');
-
+const { createTaskImages } = require('./tables');
 
 const { createCollectionOfficer } = require('./tables');
 const { createCollectionOfficerCompanyDetails } = require('./tables');
@@ -44,6 +44,7 @@ const { createFarmerComplains } = require('./tables');
 //Seed for market Place Application
 const { createMarketPlaceUsersTable } = require('./tables');
 const { createMarketPlacePackages } = require('./tables');
+const { createCoupon } = require('./tables');
 const { createMarketPlaceItems } = require('./tables');
 const { createPackageDetails } = require('./tables');
 const { createPromoItems } = require('./tables');
@@ -127,6 +128,8 @@ const runSeeds = async () => {
 
     const messageSlaveCropCalenderDaysTable = await createSlaveCropCalenderDaysTable();
     console.log(messageSlaveCropCalenderDaysTable);
+    const messageCreateTaskImages= await createTaskImages();
+    console.log(messageCreateTaskImages);
 
 
 
@@ -159,6 +162,8 @@ const runSeeds = async () => {
     console.log(messageCreateMarketPlaceUsersTable);
     const messageCreateMarketPlacePackages = await createMarketPlacePackages();
     console.log(messageCreateMarketPlacePackages);
+    const messageCreateCoupon = await createCoupon();
+    console.log(messageCreateCoupon);
     const messageCreateMarketPlaceItems = await createMarketPlaceItems();
     console.log(messageCreateMarketPlaceItems);
     const messageCreatePackageDetails = await createPackageDetails();

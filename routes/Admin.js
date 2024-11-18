@@ -102,13 +102,6 @@ router.get("/get-news-by-id/:id", authMiddleware, AdminEp.getNewsById);
 
 router.post("/edit-news-status/:id", authMiddleware, AdminEp.editNewsStatus);
 
-router.post(
-    "/admin-add-crop-calender",
-    authMiddleware,
-    upload.single("image"),
-
-    AdminEp.createCropCallender
-);
 
 router.post(
     "/admin-add-crop-calender-add-task",
@@ -206,19 +199,8 @@ router.get(
     AdminEp.getCurrentAssetsByCategory
 );
 
-// router.get('/get-total-fixed-assets-by-id/:id',
-//     authMiddleware,
-//     AdminEp.getTotalFixedAssetValue
-// );
 
-router.post(
-    "/upload-xlsx/:id",
-    authMiddleware,
-    uploadfile.single("file"),
-    AdminEp.uploadXLSX
-);
 
-// editAdminUserPassword
 
 router.post(
     "/admin-change-password/",
@@ -348,32 +330,27 @@ router.post(
 );
 
 
-router.get("/get-all-roles", authMiddleware, AdminEp.getAllRoles);
+router.get(
+    "/get-all-roles", 
+    authMiddleware, 
+    AdminEp.getAllRoles
+);
 
-router.get("/crop-groups", authMiddleware, AdminEp.allCropGroups);
 
 router.get(
     "/farmer-payments",
     // authMiddleware,
     AdminEp.getPaymentSlipReport
-)
+);
 
 router.get(
     "/farmer-list-report",
-    // authMiddleware, 
-    AdminEp.getFarmerListReport);
-
-router.post("/create-crop-group", 
-    authMiddleware,  
-    upload.single("image"), 
-    AdminEp.createCropGroup
-);
-
-router.get("/get-all-crop-groups", 
     authMiddleware, 
-    AdminEp.getAllCropGroups
+    AdminEp.getFarmerListReport
 );
 
-router.delete("/delete-crop-group/:id", authMiddleware, AdminEp.deleteCropGroup);
+
+
+
 
 module.exports = router;
