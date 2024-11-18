@@ -118,41 +118,8 @@ exports.getAllUsers = (limit, offset, searchItem) => {
 
 
 
-exports.getAllCropCalendars = (limit, offset) => {
-  return new Promise((resolve, reject) => {
-    const countSql = "SELECT COUNT(*) AS total FROM cropcalender";
-    const dataSql = `
-      SELECT 
-        cropcalender.*, 
-        cropgroup.cropNameEnglish, 
-        cropgroup.category 
-      FROM 
-        cropcalender
-      LEFT JOIN 
-        cropgroup ON cropcalender.cropGroupId = cropgroup.id
-      ORDER BY 
-        cropcalender.createdAt DESC
-      LIMIT ? OFFSET ?;
-    `;
 
-    db.query(countSql, (countErr, countResults) => {
-      if (countErr) {
-        reject(countErr);
-      } else {
-        db.query(dataSql, [limit, offset], (dataErr, dataResults) => {
-          if (dataErr) {
-            reject(dataErr);
-          } else {
-            resolve({
-              total: countResults[0].total,
-              items: dataResults,
-            });
-          }
-        });
-      }
-    });
-  });
-};
+
 
 
 exports.createOngoingCultivations = (userId, cropCalenderId) => {

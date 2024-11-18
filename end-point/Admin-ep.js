@@ -169,31 +169,7 @@ exports.getAllUsers = async (req, res) => {
 
 
 
-exports.getAllCropCalender = async (req, res) => {
-  try {
-    const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
-    console.log(fullUrl);
-    const { page, limit } =
-      await ValidateSchema.getAllCropCalendarSchema.validateAsync(req.query);
-    const offset = (page - 1) * limit;
 
-    const { total, items } = await adminDao.getAllCropCalendars(limit, offset);
-
-    console.log("Successfully fetched crop caledars");
-    res.json({
-      items,
-      total,
-    });
-  } catch (err) {
-    if (err.isJoi) {
-      // Validation error
-      return res.status(400).json({ error: err.details[0].message });
-    }
-
-    console.error("Error executing query:", err);
-    res.status(500).send("An error occurred while fetching data.");
-  }
-};
 
 exports.createOngoingCultivations = async (req, res) => {
   try {

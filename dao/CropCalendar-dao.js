@@ -416,4 +416,49 @@ exports.createCropCallender = async (
         });
     });
 };
+
+
+
+
+
+exports.getAllCropCalendars = (limit, offset) => {
+  return new Promise((resolve, reject) => {
+    const countSql = "SELECT COUNT(*) AS total FROM cropcalender";
+    const dataSql = `
+      SELECT 
+        cropcalender.method,
+        cropcalender.natOfCul,
+        cropcalender.cropDuration,
+        cropgroup.cropNameEnglish,
+        cropgroup.category,
+        cropvariety.varietyNameEnglish
+      FROM 
+        cropcalender
+      LEFT JOIN 
+        cropvariety ON cropcalender.cropVarietyId = cropvariety.id
+      LEFT JOIN 
+        cropgroup ON cropvariety.cropGroupId = cropgroup.id
+      ORDER BY 
+        cropcalender.createdAt DESC
+      LIMIT ? OFFSET ?;
+    `;
+
+    db.query(countSql, (countErr, countResults) => {
+      if (countErr) {
+        reject(countErr);
+      } else {
+        db.query(dataSql, [limit, offset], (dataErr, dataResults) => {
+          if (dataErr) {
+            reject(dataErr);
+          } else {
+            resolve({
+              total: countResults[0].total,
+              items: dataResults,
+            });
+          }
+        });
+      }
+    });
+  });
+};
   

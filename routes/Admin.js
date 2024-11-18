@@ -77,11 +77,7 @@ router.get("/get-all-users", authMiddleware, AdminEp.getAllUsers);
 //     AdminEp.createCropCallender
 // );
 
-router.get(
-    "/get-all-crop-calender",
-    authMiddleware,
-    AdminEp.getAllCropCalender
-);
+
 
 router.post(
     "/admin-create-ongoing-cultivations",
