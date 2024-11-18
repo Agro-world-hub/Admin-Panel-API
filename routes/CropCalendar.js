@@ -136,4 +136,11 @@ router.delete(
 );
 
 
+router.get(
+    "/get-all-crop-task/:id",
+    authMiddleware,
+    cropCalendarEp.getAllTaskByCropId
+);
+
+
 module.exports = router;

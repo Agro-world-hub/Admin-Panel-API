@@ -212,12 +212,7 @@ router.get(
     AdminEp.getCurrentAssetRecordById
 );
 
-//get all task of crop
-router.get(
-    "/get-all-crop-task/:id",
-    authMiddleware,
-    AdminEp.getAllTaskByCropId
-);
+
 
 //crop task delete function
 router.delete("/delete-crop-task/:id/:cropId/:indexId", authMiddleware, AdminEp.deleteCropTask);

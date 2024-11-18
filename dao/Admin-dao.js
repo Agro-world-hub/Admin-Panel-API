@@ -959,49 +959,7 @@ exports.getCurrentAssetRecordById = (currentAssetId) => {
   });
 };
 
-exports.getAllTaskByCropId = (cropId, limit, offset) => {
-  return new Promise((resolve, reject) => {
-    const countSql =
-      "SELECT COUNT(*) as total FROM cropcalender cc, cropcalendardays cd WHERE cc.id = cd.cropId AND cc.id = ?";
-    const sql = `
-            SELECT * 
-            FROM cropcalender cc 
-            JOIN cropcalendardays cd ON cc.id = cd.cropId 
-            WHERE cc.id = ?
-            ORDER BY cd.taskIndex 
-            LIMIT ? OFFSET ?`;
-    const values = [cropId];
 
-    db.query(countSql, [cropId], (countErr, countResults) => {
-      if (countErr) {
-        reject(countErr);
-      } else {
-        db.query(
-          sql,
-          [cropId, parseInt(limit), parseInt(offset)],
-          (dataErr, dataResults) => {
-            if (dataErr) {
-              reject(dataErr);
-            } else {
-              resolve({
-                results: dataResults,
-                total: countResults[0].total,
-              });
-            }
-          }
-        );
-      }
-    });
-  });
-
-  // db.query(sql, values, (err, results) => {
-  //   if (err) {
-  //     return reject(err); // Reject promise if an error occurs
-  //   }
-  //   resolve(results); // Resolve the promise with the query results
-  // });
-  // });
-};
 
 exports.deleteCropTask = (taskId) => {
   return new Promise((resolve, reject) => {

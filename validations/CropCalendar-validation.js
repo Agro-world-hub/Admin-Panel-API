@@ -24,3 +24,12 @@ exports.getAllCropCalendarSchema = Joi.object({
 exports.deleteCropCalenderSchema = Joi.object({
     id: Joi.number().integer().positive().required()
 });
+
+
+exports.getAllTaskByCropIdSchema = Joi.object({
+    id: Joi.number().integer().required().messages({
+        'any.required': 'Crop ID is required',
+        'number.base': 'Crop ID must be a number',
+        'number.integer': 'Crop ID must be an integer',
+    }),
+});

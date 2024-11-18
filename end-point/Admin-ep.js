@@ -1270,44 +1270,8 @@ exports.getCurrentAssetRecordById = async (req, res) => {
   }
 };
 
-//get all task of crop
-exports.getAllTaskByCropId = async (req, res) => {
-  const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
-  console.log("Request URL:", fullUrl);
 
-  const { page, limit } = req.query;
 
-  const offset = (page - 1) * limit;
-
-  try {
-    // Validate request parameters (cropId)
-    const validatedParams =
-      await ValidateSchema.getAllTaskByCropIdSchema.validateAsync(req.params);
-
-    // Fetch the data from the DAO
-    const { total, results } = await adminDao.getAllTaskByCropId(
-      validatedParams.id,
-      limit,
-      offset
-    );
-
-    console.log(
-      "Successfully retrieved all tasks for crop ID:",
-      validatedParams.id
-    );
-    res.json({ results, total });
-  } catch (error) {
-    // if (error.isJoi) {
-    //   // Handle validation error
-    //   return res.status(400).json({ error: error.details[0].message });
-    // }
-
-    console.error("Error fetching tasks for crop ID:", error);
-    return res.status(500).json({
-      error: "An error occurred while fetching tasks for the crop ID",
-    });
-  }
-};
 
 //delete crop task
 exports.deleteCropTask = async (req, res) => {
