@@ -500,3 +500,74 @@ exports.allCropGroups = async (req, res) => {
     }
   };
 
+
+
+
+  exports.editCropCalender = async (req, res) => {
+    const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
+    console.log("Request URL:", fullUrl);
+  
+    try {
+      // Validate the request body
+      const updateData = req.body;
+      const { id } = req.params;
+  
+      const affectedRows = await cropCalendarDao.updateCropCalender(
+        id,
+        updateData,
+      );
+     
+      console.log(updateData);
+  
+      if (affectedRows === 0) {
+        return res.status(404).json({ message: "Crop Calendar not found" });
+      } else {
+        console.log("Crop Calendar updated successfully");
+        return res
+          .status(200)
+          .json({ message: "Crop Calendar updated successfully" });
+      }
+    } catch (err) {
+      if (err.isJoi) {
+        return res.status(400).json({ error: err.details[0].message });
+      }
+  
+      console.error("Error updating crop calendar:", err);
+      return res
+        .status(500)
+        .json({ error: "An error occurred while updating the crop calendar" });
+    }
+  };
+
+
+
+  exports.deleteCropCalender = async (req, res) => {
+    try {
+      const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
+      console.log("Request URL:", fullUrl);
+  
+      // Validate the request parameters
+      const { id } = await cropCalendarValidations.deleteCropCalenderSchema.validateAsync(
+        req.params
+      );
+  
+      const affectedRows = await cropCalendarDao.deleteCropCalender(id);
+  
+      if (affectedRows === 0) {
+        return res.status(404).json({ message: "Crop Calendar not found" });
+      } else {
+        console.log("Crop Calendar deleted successfully");
+        return res.status(200).json({ status: true });
+      }
+    } catch (err) {
+      if (err.isJoi) {
+        // Validation error
+        return res.status(400).json({ error: err.details[0].message });
+      }
+  
+      console.error("Error deleting crop calendar:", err);
+      return res
+        .status(500)
+        .json({ error: "An error occurred while deleting crop calendar" });
+    }
+  };

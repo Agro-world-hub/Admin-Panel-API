@@ -115,11 +115,25 @@ router.put(
     upload.single('image'),
     cropCalendarEp.updateGroup);
 
-    router.get(
+router.get(
         "/get-all-crop-calender",
         authMiddleware,
         cropCalendarEp.getAllCropCalender
     );
+
+
+router.put(
+        "/edit-cropcalender/:id",
+        authMiddleware,
+        upload.single("image"), // Handle image upload (Multer)
+        cropCalendarEp.editCropCalender
+    );
+
+router.delete(
+    "/delete-crop/:id", 
+    authMiddleware, 
+    cropCalendarEp.deleteCropCalender
+);
 
 
 module.exports = router;

@@ -108,7 +108,7 @@ router.post(
 
 router.get("/get-user-by-id/:id", AdminEp.getUserById);
 
-router.delete("/delete-crop/:id", authMiddleware, AdminEp.deleteCropCalender);
+
 
 router.get(
     "/get-cropcalender-by-id/:id",
@@ -116,12 +116,7 @@ router.get(
     AdminEp.getCropCalenderById
 );
 
-router.put(
-    "/edit-cropcalender/:id",
-    authMiddleware,
-    upload.single("image"), // Handle image upload (Multer)
-    AdminEp.editCropCalender
-);
+
 
 router.get("/get-all-market-price", authMiddleware, AdminEp.getAllMarketPrice);
 

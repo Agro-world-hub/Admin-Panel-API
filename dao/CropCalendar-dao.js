@@ -426,6 +426,7 @@ exports.getAllCropCalendars = (limit, offset) => {
     const countSql = "SELECT COUNT(*) AS total FROM cropcalender";
     const dataSql = `
       SELECT 
+      cropcalender.id,
         cropcalender.method,
         cropcalender.natOfCul,
         cropcalender.cropDuration,
@@ -457,6 +458,58 @@ exports.getAllCropCalendars = (limit, offset) => {
             });
           }
         });
+      }
+    });
+  });
+};
+
+
+
+exports.updateCropCalender = async (id, updateData) => {
+  return new Promise((resolve, reject) => {
+    let sql = `
+            UPDATE cropcalender 
+            SET 
+                method = ?,
+                natOfCul = ?, 
+                cropDuration = ?,
+                suitableAreas = ?
+        `;
+
+    // Update the values based on the provided data
+    let values = [
+      updateData.method,
+      updateData.natOfCul,
+      updateData.cropDuration,
+      updateData.suitableAreas,
+    ];
+
+
+    // Complete the SQL query with the WHERE clause
+    sql += ` WHERE id = ?`;
+    values.push(id);
+
+    // Execute the query
+    db.query(sql, values, (err, results) => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(results.affectedRows);
+      }
+    });
+  });
+};
+
+
+
+exports.deleteCropCalender = async (id) => {
+  return new Promise((resolve, reject) => {
+    const sql = "DELETE FROM cropcalender WHERE id = ?";
+    db.query(sql, [id], (err, results) => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(results.affectedRows);
       }
     });
   });

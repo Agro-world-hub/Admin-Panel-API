@@ -76,9 +76,7 @@ exports.getAllNewsSchema = Joi.object({
     createdAt: Joi.date().iso().optional()
 });
 
-exports.deleteCropCalenderSchema = Joi.object({
-    id: Joi.number().integer().positive().required()
-});
+
 
 exports.editCropCalenderSchema = Joi.object({
     cropName: Joi.string().required(),
