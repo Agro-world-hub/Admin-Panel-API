@@ -89,8 +89,8 @@ exports.createCropGroup = async (product) => {
 
 
 exports.getMarketplaceItems = () => {
-    return new Promise((resolve, reject) => {
-      const dataSql = `
+  return new Promise((resolve, reject) => {
+    const dataSql = `
         SELECT 
             marketplaceitems.id AS itemId,
             marketplaceitems.cropId AS cropId,
@@ -109,14 +109,27 @@ exports.getMarketplaceItems = () => {
         JOIN cropcalender ON marketplaceitems.cropId = cropcalender.id
         JOIN cropgroup ON cropcalender.id = cropgroup.id;
       `;
-  
-      db.query(dataSql, (error, results) => {
-        if (error) {
-          reject(error);
-        } else {
-          resolve(results);
-        }
-      });
+
+    db.query(dataSql, (error, results) => {
+      if (error) {
+        reject(error);
+      } else {
+        resolve(results);
+      }
     });
+  });
 };
-  
+
+exports.deleteMarketplaceItem = async (id) => {
+  return new Promise((resolve, reject) => {
+    const sql = "DELETE FROM marketplaceitems WHERE id = ?";
+    db.query(sql, [id], (err, results) => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(results.affectedRows);
+      }
+    });
+  });
+};
+

@@ -18,4 +18,10 @@ router.post(
 
 router.get("/get-market-items", marketPlaceEp.getMarketplaceItems);
 
+router.delete(
+    "/delete-product/:id",
+    // authMiddleware,
+    marketPlaceEp.deleteMarketplaceItem
+)
+
 module.exports = router;
