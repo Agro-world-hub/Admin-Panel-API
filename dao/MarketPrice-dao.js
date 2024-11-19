@@ -47,15 +47,14 @@ exports.insertMarketPriceXLSXData = (xlindex, data, createdBy) => {
     
       const sql = `
         INSERT INTO marketprice 
-        (varietyId , xlindex, priceA, priceB, priceC, createdBy) 
+        (varietyId , xlindex, grade, price, createdBy) 
         VALUES ?`;
   
       const values = data.map((row) => [
         row["Variety Id"],
         xlindex,
-        row["Grade A Price"],
-        row["Grade B Price"],
-        row["Grade C Price"],
+        row["Grade"],
+        row["Price"],
         createdBy
       ]);
   
@@ -139,21 +138,88 @@ exports.getXLSXFilePath = async (fileName) => {
 };
 
 
+// exports.getAllMarketPriceDAO = (limit, offset, crop, grade) => {
+//   return new Promise((resolve, reject) => {
+//     const params = [];
+//     const countParams = [];
+    
+//     let countSql = "SELECT COUNT(*) as total FROM marketprice m, cropCalender c WHERE m.cropId = c.id";
+//     let sql = `
+//       SELECT m.id, c.cropName, c.variety, m.grade, m.price, m.date, m.startTime, m.endTime
+//       FROM marketprice m, cropCalender c
+//       WHERE m.cropId = c.id
+//     `;
+
+//     if (crop) {
+//       sql += " AND c.cropName = ?";
+//       countSql += " AND c.cropName = ?";
+//       params.push(crop);
+//       countParams.push(crop);
+//     }
+
+//     if (grade) {
+//       sql += " AND m.grade = ?";
+//       countSql += " AND m.grade = ?";
+//       params.push(grade);
+//       countParams.push(grade);
+//     }
+
+//     sql += ` ORDER BY c.cropName, m.grade LIMIT ? OFFSET ?`;
+//     params.push(parseInt(limit));
+//     params.push(parseInt(offset));
+
+//     console.log(sql, params);
+
+//     db.query(countSql, countParams, (countErr, countResults) => {
+//       if (countErr) {
+//         reject(countErr);
+//       } else {
+//         db.query(sql, params, (dataErr, dataResults) => {
+//           if (dataErr) {
+//             reject(dataErr);
+//           } else {
+//             resolve({
+//               results: dataResults,
+//               total: countResults[0].total
+//             });
+//           }
+//         });
+//       }
+//     });
+//   });
+// };
+
+
 exports.getAllMarketPriceDAO = (limit, offset, crop, grade) => {
   return new Promise((resolve, reject) => {
     const params = [];
     const countParams = [];
-    
-    let countSql = "SELECT COUNT(*) as total FROM marketprice m, cropCalender c WHERE m.cropId = c.id";
+
+    let countSql = `
+      SELECT COUNT(*) as total
+      FROM marketprice m
+      JOIN cropvariety cv ON m.varietyId = cv.id
+      JOIN cropgroup cg ON cv.cropGroupId = cg.id
+      WHERE 1=1
+    `;
     let sql = `
-      SELECT m.id, c.cropName, c.variety, m.grade, m.price, m.date, m.startTime, m.endTime
-      FROM marketprice m, cropCalender c
-      WHERE m.cropId = c.id
+      SELECT 
+        m.id,
+        cg.cropNameEnglish AS cropName,
+        cv.varietyNameEnglish AS varietyName,
+        m.grade,
+        m.price,
+        m.createdAt
+      FROM marketprice m
+      JOIN cropvariety cv ON m.varietyId = cv.id
+      JOIN cropgroup cg ON cv.cropGroupId = cg.id
+      WHERE 1=1
     `;
 
+    // Add filters if crop or grade is provided
     if (crop) {
-      sql += " AND c.cropName = ?";
-      countSql += " AND c.cropName = ?";
+      sql += " AND cg.id = ?";
+      countSql += " AND cg.id = ?";
       params.push(crop);
       countParams.push(crop);
     }
@@ -165,40 +231,51 @@ exports.getAllMarketPriceDAO = (limit, offset, crop, grade) => {
       countParams.push(grade);
     }
 
-    sql += ` ORDER BY c.cropName, m.grade LIMIT ? OFFSET ?`;
+    sql += ` ORDER BY cg.cropNameEnglish, cv.varietyNameEnglish, m.grade LIMIT ? OFFSET ?`;
     params.push(parseInt(limit));
     params.push(parseInt(offset));
 
-    console.log(sql, params);
+    console.log("SQL Query:", sql);
+    console.log("SQL Params:", params);
 
+    // Execute the count query
     db.query(countSql, countParams, (countErr, countResults) => {
       if (countErr) {
-        reject(countErr);
-      } else {
-        db.query(sql, params, (dataErr, dataResults) => {
-          if (dataErr) {
-            reject(dataErr);
-          } else {
-            resolve({
-              results: dataResults,
-              total: countResults[0].total
-            });
-          }
-        });
+        console.error("Count Query Error:", countErr.message || countErr);
+        return reject(countErr);
       }
+
+      // Execute the main query
+      db.query(sql, params, (dataErr, dataResults) => {
+        if (dataErr) {
+          console.error("Data Query Error:", dataErr.message || dataErr);
+          return reject(dataErr);
+        }
+
+        resolve({
+          results: dataResults,
+          total: countResults[0].total,
+        });
+      });
     });
   });
 };
 
 
 
+
+
+
+
+
+
+
+
 exports.getAllCropNameDAO = () => {
   return new Promise((resolve, reject) => {
     const sql = `
-        SELECT id, cropName
-        FROM cropCalender
-        GROUP BY id, cropName
-            
+        SELECT id, cropNameEnglish
+        FROM cropgroup  
         `;
 
     db.query(sql, (err, results) => {

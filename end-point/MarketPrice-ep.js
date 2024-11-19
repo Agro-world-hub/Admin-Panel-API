@@ -179,32 +179,54 @@ exports.downloadXLSXFile = async (req, res) => {
 
 
 //get all market price
-exports.getAllMarketPrice = async (req, res) => {
-  const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
-  console.log(fullUrl);
+// exports.getAllMarketPrice = async (req, res) => {
+//   const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
+//   console.log(fullUrl);
 
-  try {
-    const {page, limit,crop,grade} = req.query
-    console.log(page, limit,crop,grade);
-    const offset = (page - 1) * limit;
+//   try {
+//     const {page, limit,crop,grade} = req.query
+//     console.log(page, limit,crop,grade);
+//     const offset = (page - 1) * limit;
     
 
-      const {results,total} = await marketPriceDao.getAllMarketPriceDAO(limit, offset, crop, grade);
-      console.log(results,total);
+//       const {results,total} = await marketPriceDao.getAllMarketPriceDAO(limit, offset, crop, grade);
+//       console.log(results,total);
       
 
-      console.log("Successfully fetched marcket price");
-      return res.status(200).json({results,total});
-  } catch (error) {
-      if (error.isJoi) {
-          // Handle validation error
-          return res.status(400).json({ error: error.details[0].message });
-      }
+//       console.log("Successfully fetched marcket price");
+//       return res.status(200).json({results,total});
+//   } catch (error) {
+//       if (error.isJoi) {
+//           // Handle validation error
+//           return res.status(400).json({ error: error.details[0].message });
+//       }
 
-      console.error("Error fetching collection officers:", error);
-      return res.status(500).json({ error: "An error occurred while fetching collection officers" });
+//       console.error("Error fetching collection officers:", error);
+//       return res.status(500).json({ error: "An error occurred while fetching collection officers" });
+//   }
+// };
+
+exports.getAllMarketPrice = async (req, res) => {
+  try {
+    const { page = 1, limit = 10, crop, grade } = req.query;
+
+    // Calculate offset
+    const offset = (page - 1) * limit;
+
+    // Fetch data from DAO
+    const { results, total } = await marketPriceDao.getAllMarketPriceDAO(limit, offset, crop, grade);
+
+    console.log("Successfully fetched market prices");
+    return res.status(200).json({ results, total });
+  } catch (error) {
+    console.error("Error fetching market prices:", error.message || error);
+    return res.status(500).json({ error: "An error occurred while fetching market prices" });
   }
 };
+
+
+
+
 
 
 exports.getAllCropName = async (req, res) => {

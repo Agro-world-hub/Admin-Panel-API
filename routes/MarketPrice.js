@@ -78,14 +78,30 @@ const getCropVarietyData = () => {
       const data = await getCropVarietyData();
   
       // Format data for Excel
-      const formattedData = data.map(item => ({
-        'Crop Name' : item.cropName,
-        'Variety Name' : item.varietyName,
-        'Variety Id' : item.varietyId,
-        'Grade A Price' : '',
-        'Grade B Price' : '',
-        'Grade C Price' : '',
-      }));
+      const formattedData = data.flatMap(item => [
+        {
+          'Crop Name': item.cropName,
+          'Variety Name': item.varietyName,
+          'Variety Id': item.varietyId,
+          Grade: 'A',
+          Price: '',
+        },
+        {
+          'Crop Name': item.cropName,
+          'Variety Name': item.varietyName,
+          'Variety Id': item.varietyId,
+          Grade: 'B',
+          Price: '',
+        },
+        {
+          'Crop Name': item.cropName,
+          'Variety Name': item.varietyName,
+          'Variety Id': item.varietyId,
+          Grade: 'C',
+          Price: '',
+        },
+      ]);
+      
   
       // Create a worksheet and workbook
       const worksheet = XLSX.utils.json_to_sheet(formattedData);
