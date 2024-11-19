@@ -275,21 +275,22 @@ const createMarketPriceTable = () => {
     const sql = `
     CREATE TABLE IF NOT EXISTS marketprice (
       id INT AUTO_INCREMENT PRIMARY KEY,
-      cropId INT(11) DEFAULT NULL,
+      varietyId INT(11) DEFAULT NULL,
       xlindex INT(11) DEFAULT NULL,
-      grade VARCHAR(1) COLLATE utf8mb4_general_ci DEFAULT NULL,
-      price DECIMAL(10,2) DEFAULT NULL,
+      priceA DECIMAL(10,2) DEFAULT NULL,
+      priceB DECIMAL(10,2) DEFAULT NULL,
+      priceC DECIMAL(10,2) DEFAULT NULL,
       averagePrice DECIMAL(10,2) DEFAULT NULL,
       createdAt TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
       createdBy INT(11) DEFAULT NULL,
-      FOREIGN KEY (cropId) REFERENCES cropcalender(id)
-        ON DELETE SET NULL
+      FOREIGN KEY (varietyId) REFERENCES cropvariety(id)
+        ON DELETE CASCADE
         ON UPDATE CASCADE,
       FOREIGN KEY (createdBy) REFERENCES adminUsers(id)
-        ON DELETE SET NULL
+        ON DELETE CASCADE
         ON UPDATE CASCADE,
       FOREIGN KEY (xlindex) REFERENCES xlsxhistory(id)
-        ON DELETE SET NULL
+        ON DELETE CASCADE
         ON UPDATE CASCADE
     )
   `;

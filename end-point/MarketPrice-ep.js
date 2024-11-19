@@ -9,10 +9,10 @@ exports.createMarketPriceXLSX = async (req, res) => {
   console.log(`Full request URL: ${fullUrl}`);
 
   try {
-    const { xlName, createdBy, date, startTime, endTime } = req.body;
+    const { xlName, createdBy } = req.body;
 
     // Step 1: Insert XLSX history and get the xlindex
-    const xlindex = await marketPriceDao.createxlhistory(xlName, startTime, endTime, date);
+    const xlindex = await marketPriceDao.createxlhistory(xlName);
 
     // Step 2: Validate if a file was uploaded
     if (!req.file) {
@@ -78,7 +78,7 @@ exports.createMarketPriceXLSX = async (req, res) => {
     // console.log(`Date extracted from XLSX: ${extractedDate}`);
 
     // Step 8: Insert market price data using xlindex and the extracted date
-    const marketPriceResult = await marketPriceDao.insertMarketPriceXLSXData(xlindex, data, createdBy, date, startTime, endTime);
+    const marketPriceResult = await marketPriceDao.insertMarketPriceXLSXData(xlindex, data, createdBy);
     console.log('Market price data successfully inserted.');
 
     // Step 9: Respond with success message

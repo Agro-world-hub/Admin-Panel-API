@@ -3,10 +3,10 @@ const Joi = require('joi');
 const path = require('path');
 
 
-exports.createxlhistory = (xlName, startTime, endTime, date) => {
+exports.createxlhistory = (xlName) => {
   return new Promise((resolve, reject) => {
-    const sql = "INSERT INTO xlsxhistory (`xlName`, `startTime`, `endTime`, `date`) VALUES (?)";
-    const values = [xlName, startTime, endTime, date];
+    const sql = "INSERT INTO xlsxhistory (`xlName`) VALUES (?)";
+    const values = [xlName];
 
     db.query(sql, [values], (err, results) => {
       if (err) {
@@ -24,41 +24,38 @@ exports.createxlhistory = (xlName, startTime, endTime, date) => {
 
 
 
-exports.insertMarketPriceXLSXData = (xlindex, data, createdBy, date, startTime, endTime) => {
+exports.insertMarketPriceXLSXData = (xlindex, data, createdBy) => {
   return new Promise((resolve, reject) => {
     console.log('dfdfhdgh');
 
-      const schema = Joi.object({
-        'Crop Id': Joi.number().required(),
-        'Grade': Joi.string().required(),
-        'Price': Joi.required(),
-      }).required();
+      // const schema = Joi.object({
+      //   'Crop Name': Joi.number().required(),
+      //   'Variety Name': Joi.string().required(),
+      //   'Variety Id': Joi.required(),
+      //   'Variety Id': Joi.required(),
+      // }).required();
   
       // Validate all data
-      const validatedData = [];
-      for (let i = 0; i < data.length; i++) {
-        const { error, value } = schema.validate(data[i]);
-        if (error) {
-          return reject(new Error(`Validation error in row ${i + 1}: ${error.details[0].message}`));
-        }
-        validatedData.push(value);
-      }
+      // const validatedData = [];
+      // for (let i = 0; i < data.length; i++) {
+      //   const { error, value } = schema.validate(data[i]);
+      //   if (error) {
+      //     return reject(new Error(`Validation error in row ${i + 1}: ${error.details[0].message}`));
+      //   }
+      //   validatedData.push(value);
+      // }
     
       const sql = `
         INSERT INTO marketprice 
-        (cropId, xlindex, grade, price, date, startTime, 
-        endTime, status, createdBy) 
+        (varietyId , xlindex, priceA, priceB, priceC, createdBy) 
         VALUES ?`;
   
-      const values = validatedData.map((row) => [
-        row["Crop Id"],
+      const values = data.map((row) => [
+        row["Variety Id"],
         xlindex,
-        row["Grade"],
-        row["Price"],
-        date,
-        startTime,
-        endTime,
-        'Draft',
+        row["Grade A Price"],
+        row["Grade B Price"],
+        row["Grade C Price"],
         createdBy
       ]);
   
