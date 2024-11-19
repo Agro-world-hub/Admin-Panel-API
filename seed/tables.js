@@ -252,10 +252,7 @@ const createXlsxHistoryTable = () => {
     CREATE TABLE IF NOT EXISTS xlsxhistory (
       id INT AUTO_INCREMENT PRIMARY KEY,
       xlName VARCHAR(50) NOT NULL,
-      createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-      startTime TIME DEFAULT NULL,
-      endTime TIME DEFAULT NULL,
-      date DATE DEFAULT NULL
+      createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     )
   `;
     return new Promise((resolve, reject) => {
@@ -282,10 +279,7 @@ const createMarketPriceTable = () => {
       xlindex INT(11) DEFAULT NULL,
       grade VARCHAR(1) COLLATE utf8mb4_general_ci DEFAULT NULL,
       price DECIMAL(10,2) DEFAULT NULL,
-      date DATE DEFAULT NULL,
-      startTime TIME DEFAULT NULL,
-      endTime TIME DEFAULT NULL,
-      status VARCHAR(20) NOT NULL,
+      averagePrice DECIMAL(10,2) DEFAULT NULL,
       createdAt TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
       createdBy INT(11) DEFAULT NULL,
       FOREIGN KEY (cropId) REFERENCES cropcalender(id)
@@ -695,9 +689,11 @@ const createSlaveCropCalenderDaysTable = () => {
       CREATE TABLE IF NOT EXISTS slavecropcalendardays (
       id INT AUTO_INCREMENT PRIMARY KEY,
       userId INT(11) NULL,
+      onCulscropID  INT(11) NULL,
       cropCalendarId INT(11) NULL,
       taskIndex INT(255) NULL,
       startingDate DATE DEFAULT NULL,
+      days INT(255) NULL,
       taskTypeEnglish TEXT COLLATE latin1_swedish_ci NULL,
       taskTypeSinhala TEXT COLLATE utf8_unicode_ci NULL,
       taskTypeTamil TEXT COLLATE utf8_unicode_ci NULL,
@@ -719,6 +715,9 @@ const createSlaveCropCalenderDaysTable = () => {
           ON DELETE CASCADE
           ON UPDATE CASCADE,
       FOREIGN KEY (cropCalendarId) REFERENCES cropCalender(id)
+        ON DELETE CASCADE
+        ON UPDATE CASCADE,
+      FOREIGN KEY (onCulscropID) REFERENCES ongoingcultivationscrops(id)
         ON DELETE CASCADE
         ON UPDATE CASCADE
   );

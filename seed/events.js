@@ -21,25 +21,7 @@ const createExpiredContentCleanupEvent = () => {
     });
 };
 
-const createExpiredXlsxHistoryCleanupEvent = () => {
-    const sql = `
-    CREATE EVENT IF NOT EXISTS delete_expired_xlsxhistory
-      ON SCHEDULE EVERY 1 MINUTE
-      DO
-        DELETE FROM xlsxhistory
-        WHERE DATE(date) = CURRENT_DATE()
-        AND endTime < CURRENT_TIME();
-  `;
-    return new Promise((resolve, reject) => {
-        db.query(sql, (err, result) => {
-            if (err) {
-                reject('Error createExpiredXlsxHistoryCleanupEvent ' + err);
-            } else {
-                resolve('createExpiredXlsxHistoryCleanupEvent created successfully.');
-            }
-        });
-    });
-};
+
 
 
 const createContentPublishingEvent = () => {
@@ -64,31 +46,11 @@ const createContentPublishingEvent = () => {
 };
 
 
-const createMarketPricePublishingEvent = () => {
-    const sql = `
-    CREATE EVENT IF NOT EXISTS update_market_price_status
-      ON SCHEDULE EVERY 1 MINUTE
-      DO
-        UPDATE marketprice
-        SET status = 'Published'
-        WHERE date = CURRENT_DATE()
-        AND startTime <= CURRENT_TIME();
-  `;
-    return new Promise((resolve, reject) => {
-        db.query(sql, (err, result) => {
-            if (err) {
-                reject('Error createMarketPricePublishingEvent ' + err);
-            } else {
-                resolve('createMarketPricePublishingEvent created successfully.');
-            }
-        });
-    });
-};
+
 
 
 module.exports = {
   createExpiredContentCleanupEvent,
-  createExpiredXlsxHistoryCleanupEvent,
-  createContentPublishingEvent,
-  createMarketPricePublishingEvent
+  createContentPublishingEvent
+
 };

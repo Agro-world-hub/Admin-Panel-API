@@ -1227,9 +1227,9 @@ exports.editUserTask = (
       taskCategorySinhala,
       taskCategoryTamil,
       startingDate,
-  reqImages,
-  imageLink,
-  videoLink,
+      reqImages,
+      imageLink,
+      videoLink,
       id,
     ];
 
