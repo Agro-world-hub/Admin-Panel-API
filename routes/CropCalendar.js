@@ -121,6 +121,13 @@ router.get(
         cropCalendarEp.getAllCropCalender
     );
 
+router.put(
+    '/update-crop-variety/:id',
+    // authMiddleware,
+    upload.single("image"),
+    cropCalendarEp.updateCropVariety
+)
+
 
 router.put(
         "/edit-cropcalender/:id",

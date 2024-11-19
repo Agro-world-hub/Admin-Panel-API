@@ -472,6 +472,25 @@ exports.allCropGroups = async (req, res) => {
     }
   };
   
+  exports.updateCropVariety = async (req, res) => {
+    try {
+        const id = req.params.id;
+        const updates = req.body;
+        let image = null;
+        console.log('Request body:', req.body);
+
+        if (req.file) {
+            image = req.file.buffer; // Handle file upload if present
+            updates.image = image;
+        }
+
+        await cropCalendarDao.updateCropVariety(id, updates);
+        res.json({ message: 'Crop variety updated successfully.' });
+    } catch (err) {
+        console.error('Error updating crop variety:', err);
+        res.status(500).send('An error occurred while updating the crop variety.');
+    }
+};
 
 
   exports.getAllCropCalender = async (req, res) => {
