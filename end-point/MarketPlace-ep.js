@@ -94,3 +94,31 @@ exports.deleteMarketplaceItem = async (req, res) => {
       .json({ error: "An error occurred while deleting the marketplace item" });
   }
 };
+
+exports.createCoupen = async (req, res) => {
+  try {
+      const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
+      console.log("Request URL:", fullUrl); 
+      // console.log(req.body);
+             
+      const coupen = await MarketPriceValidate.CreateCoupenValidation.validateAsync(req.body)
+      console.log(coupen);
+      
+      
+      const result = await MarketPlaceDao.createCoupenDAO(coupen)
+      console.log("coupen creation success");
+      return res
+          .status(201)
+          .json({ message: "coupen created successfully",result:result,status:true});
+  } catch (err) {
+      if (err.isJoi) {
+          // Validation error
+          return res.status(400).json({ error: err.details[0].message,status:false });
+      }
+
+      console.error("Error executing query:", err);
+      return res
+          .status(500)
+          .json({ error: "An error occurred while creating marcket product" ,status:false});
+  }
+}

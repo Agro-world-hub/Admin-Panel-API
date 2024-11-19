@@ -133,3 +133,28 @@ exports.deleteMarketplaceItem = async (id) => {
   });
 };
 
+
+exports.createCoupenDAO = async (coupen) => {
+  return new Promise((resolve, reject) => {
+    const sql =
+      "INSERT INTO coupon (code, type, percentage, status, checkLimit, startDate, endDate) VALUES (?, ?, ?, ?, ?, ?, ?)";
+    const values = [
+      coupen.code, 
+      coupen.type, 
+      coupen.percentage, 
+      coupen.status, 
+      coupen.checkLimit, 
+      coupen.startDate, 
+      coupen.endDate,
+    ];
+
+    db.query(sql, values, (err, results) => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(results.insertId);
+      }
+    });
+  });
+}
+
