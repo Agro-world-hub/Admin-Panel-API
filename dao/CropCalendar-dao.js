@@ -353,6 +353,7 @@ exports.createCropCallender = async (
 
 
 
+
   exports.updateGroup = (id, updates) => {
     return new Promise((resolve, reject) => {
       const fields = [];
@@ -372,5 +373,26 @@ exports.createCropCallender = async (
       });
     });
   };
+
+  exports.updateCropVariety = (id, updates) => {
+    return new Promise((resolve, reject) => {
+        const fields = [];
+        const values = [];
+
+        for (const [key, value] of Object.entries(updates)) {
+            fields.push(`${key} = ?`);
+            values.push(value);
+        }
+
+        const sql = `UPDATE cropvariety SET ${fields.join(', ')} WHERE id = ?`;
+        values.push(id); // Add ID as the last parameter
+
+        db.query(sql, values, (err, result) => {
+            if (err) return reject(err);
+            resolve(result);
+        });
+    });
+};
+
   
   

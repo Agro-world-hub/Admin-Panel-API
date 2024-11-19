@@ -115,6 +115,13 @@ router.put(
     cropCalendarEp.updateGroup);
 
 
+router.put(
+    '/update-crop-variety/:id',
+    // authMiddleware,
+    upload.single("image"),
+    cropCalendarEp.updateCropVariety
+)
+
 
 
 module.exports = router;
