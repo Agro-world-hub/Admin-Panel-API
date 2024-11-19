@@ -77,11 +77,7 @@ router.get("/get-all-users", authMiddleware, AdminEp.getAllUsers);
 //     AdminEp.createCropCallender
 // );
 
-router.get(
-    "/get-all-crop-calender",
-    authMiddleware,
-    AdminEp.getAllCropCalender
-);
+
 
 router.post(
     "/admin-create-ongoing-cultivations",
@@ -112,7 +108,7 @@ router.post(
 
 router.get("/get-user-by-id/:id", AdminEp.getUserById);
 
-router.delete("/delete-crop/:id", authMiddleware, AdminEp.deleteCropCalender);
+
 
 router.get(
     "/get-cropcalender-by-id/:id",
@@ -120,12 +116,7 @@ router.get(
     AdminEp.getCropCalenderById
 );
 
-router.put(
-    "/edit-cropcalender/:id",
-    authMiddleware,
-    upload.single("image"), // Handle image upload (Multer)
-    AdminEp.editCropCalender
-);
+
 
 router.get("/get-all-market-price", authMiddleware, AdminEp.getAllMarketPrice);
 
@@ -221,12 +212,7 @@ router.get(
     AdminEp.getCurrentAssetRecordById
 );
 
-//get all task of crop
-router.get(
-    "/get-all-crop-task/:id",
-    authMiddleware,
-    AdminEp.getAllTaskByCropId
-);
+
 
 //crop task delete function
 router.delete("/delete-crop-task/:id/:cropId/:indexId", authMiddleware, AdminEp.deleteCropTask);
@@ -317,7 +303,7 @@ router.post(
 
 
 router.post(
-    "/add-new-task-user/:cropId/:indexId/:userId",
+    "/add-new-task-user/:cropId/:indexId/:userId/:onCulscropID",
     authMiddleware,
     AdminEp.addNewTaskU
 )

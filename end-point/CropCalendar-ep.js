@@ -454,17 +454,17 @@ exports.allCropGroups = async (req, res) => {
 
 
   exports.updateGroup = async (req, res) => {
+
+    const { cropNameEnglish, cropNameSinhala, cropNameTamil, category, bgColor } = req.body;
+    const id = req.params.id;
     try {
-      const id = req.params.id;
-      const updates = req.body;
-      let image = null;
-      console.log('hiii',req.body);
-      if (req.file) {
-        image = req.file.buffer; // Handle file upload if present
-        updates.image = image;
-      }
+      let imageData = null;
+        if (req.file) {
+            imageData = req.file.buffer; // Store the binary image data from req.file
+        }
+      
   
-      await cropCalendarDao.updateGroup(id, updates);
+      await cropCalendarDao.updateGroup({ cropNameEnglish, cropNameSinhala, cropNameTamil, category, bgColor,  image: imageData }, id);
       res.json({ message: 'Crop group updated successfully.' });
     } catch (err) {
       console.error('Error updating crop group:', err);
@@ -492,3 +492,141 @@ exports.allCropGroups = async (req, res) => {
     }
 };
 
+
+  exports.getAllCropCalender = async (req, res) => {
+    try {
+      const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
+      console.log(fullUrl);
+      const { page, limit } =
+        await cropCalendarValidations.getAllCropCalendarSchema.validateAsync(req.query);
+      const offset = (page - 1) * limit;
+  
+      const { total, items } = await cropCalendarDao.getAllCropCalendars(limit, offset);
+  
+      console.log("Successfully fetched crop caledars");
+      res.json({
+        items,
+        total,
+      });
+    } catch (err) {
+      if (err.isJoi) {
+        // Validation error
+        return res.status(400).json({ error: err.details[0].message });
+      }
+  
+      console.error("Error executing query:", err);
+      res.status(500).send("An error occurred while fetching data.");
+    }
+  };
+
+
+
+
+  exports.editCropCalender = async (req, res) => {
+    const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
+    console.log("Request URL:", fullUrl);
+  
+    try {
+      // Validate the request body
+      const updateData = req.body;
+      const { id } = req.params;
+  
+      const affectedRows = await cropCalendarDao.updateCropCalender(
+        id,
+        updateData,
+      );
+     
+      console.log(updateData);
+  
+      if (affectedRows === 0) {
+        return res.status(404).json({ message: "Crop Calendar not found" });
+      } else {
+        console.log("Crop Calendar updated successfully");
+        return res
+          .status(200)
+          .json({ message: "Crop Calendar updated successfully" });
+      }
+    } catch (err) {
+      if (err.isJoi) {
+        return res.status(400).json({ error: err.details[0].message });
+      }
+  
+      console.error("Error updating crop calendar:", err);
+      return res
+        .status(500)
+        .json({ error: "An error occurred while updating the crop calendar" });
+    }
+  };
+
+
+
+  exports.deleteCropCalender = async (req, res) => {
+    try {
+      const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
+      console.log("Request URL:", fullUrl);
+  
+      // Validate the request parameters
+      const { id } = await cropCalendarValidations.deleteCropCalenderSchema.validateAsync(
+        req.params
+      );
+  
+      const affectedRows = await cropCalendarDao.deleteCropCalender(id);
+  
+      if (affectedRows === 0) {
+        return res.status(404).json({ message: "Crop Calendar not found" });
+      } else {
+        console.log("Crop Calendar deleted successfully");
+        return res.status(200).json({ status: true });
+      }
+    } catch (err) {
+      if (err.isJoi) {
+        // Validation error
+        return res.status(400).json({ error: err.details[0].message });
+      }
+  
+      console.error("Error deleting crop calendar:", err);
+      return res
+        .status(500)
+        .json({ error: "An error occurred while deleting crop calendar" });
+    }
+  };
+
+
+
+  exports.getAllTaskByCropId = async (req, res) => {
+    const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
+    console.log("Request URL:", fullUrl);
+  
+    const { page, limit } = req.query;
+  
+    const offset = (page - 1) * limit;
+  
+    try {
+      // Validate request parameters (cropId)
+      const validatedParams =
+        await cropCalendarValidations.getAllTaskByCropIdSchema.validateAsync(req.params);
+  
+      // Fetch the data from the DAO
+      const { total, results } = await cropCalendarDao.getAllTaskByCropId(
+        validatedParams.id,
+        limit,
+        offset
+      );
+  
+      console.log(
+        "Successfully retrieved all tasks for crop ID:",
+        validatedParams.id
+      );
+      res.json({ results, total });
+    } catch (error) {
+      // if (error.isJoi) {
+      //   // Handle validation error
+      //   return res.status(400).json({ error: error.details[0].message });
+      // }
+  
+      console.error("Error fetching tasks for crop ID:", error);
+      return res.status(500).json({
+        error: "An error occurred while fetching tasks for the crop ID",
+      });
+    }
+  };

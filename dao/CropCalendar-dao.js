@@ -354,25 +354,69 @@ exports.createCropCallender = async (
 
 
 
-  exports.updateGroup = (id, updates) => {
+  // exports.updateGroup = (updates, id) => {
+  //   return new Promise((resolve, reject) => {
+
+  //     const { cropNameEnglish, cropNameSinhala, cropNameTamil, category, bgColor, image } = newsData;
+  //     const fields = [];
+  //     const values = [];
+  
+  //     for (const [key, value] of Object.entries(updates)) {
+  //       fields.push(`${key} = ?`);
+  //       values.push(value);
+  //     }
+  
+  //     const sql = `UPDATE cropgroup SET ${fields.join(', ')} WHERE id = ?`;
+  //     values.push(id); // Add ID as the last parameter
+  
+  //     db.query(sql, values, (err, result) => {
+  //       if (err) return reject(err);
+  //       resolve(result);
+  //     });
+  //   });
+  // };
+  
+
+
+  exports.updateGroup = (newsData, id) => {
     return new Promise((resolve, reject) => {
-      const fields = [];
-      const values = [];
-  
-      for (const [key, value] of Object.entries(updates)) {
-        fields.push(`${key} = ?`);
-        values.push(value);
-      }
-  
-      const sql = `UPDATE cropgroup SET ${fields.join(', ')} WHERE id = 5`;
-      values.push(id); // Add ID as the last parameter
-  
-      db.query(sql, values, (err, result) => {
-        if (err) return reject(err);
-        resolve(result);
-      });
+        const { cropNameEnglish, cropNameSinhala, cropNameTamil, category, bgColor, image } = newsData;
+        console.log(newsData);
+        
+        let sql = `
+            UPDATE cropgroup 
+            SET 
+                cropNameEnglish = ?, 
+                cropNameSinhala = ?, 
+                cropNameTamil = ?, 
+                category = ?, 
+                bgColor = ?
+        `;
+        
+        let values = [
+          cropNameEnglish,
+          cropNameSinhala,
+          cropNameTamil,
+          category,
+          bgColor,
+        ];
+
+        if (image) {
+            sql += `, image = ?`;  // Update the image field with binary data
+            values.push(image);
+        }
+
+        sql += ` WHERE id = ?`;
+        values.push(id);
+
+        db.query(sql, values, (err, results) => {
+            if (err) {
+                return reject(err);
+            }
+            resolve(results);
+        });
     });
-  };
+};
 
   exports.updateCropVariety = (id, updates) => {
     return new Promise((resolve, reject) => {
@@ -394,5 +438,139 @@ exports.createCropCallender = async (
     });
 };
 
+
+
+
+
+
+exports.getAllCropCalendars = (limit, offset) => {
+  return new Promise((resolve, reject) => {
+    const countSql = "SELECT COUNT(*) AS total FROM cropcalender";
+    const dataSql = `
+      SELECT 
+      cropcalender.id,
+        cropcalender.method,
+        cropcalender.natOfCul,
+        cropcalender.cropDuration,
+        cropgroup.cropNameEnglish,
+        cropgroup.category,
+        cropvariety.varietyNameEnglish
+      FROM 
+        cropcalender
+      LEFT JOIN 
+        cropvariety ON cropcalender.cropVarietyId = cropvariety.id
+      LEFT JOIN 
+        cropgroup ON cropvariety.cropGroupId = cropgroup.id
+      ORDER BY 
+        cropcalender.createdAt DESC
+      LIMIT ? OFFSET ?;
+    `;
+
+    db.query(countSql, (countErr, countResults) => {
+      if (countErr) {
+        reject(countErr);
+      } else {
+        db.query(dataSql, [limit, offset], (dataErr, dataResults) => {
+          if (dataErr) {
+            reject(dataErr);
+          } else {
+            resolve({
+              total: countResults[0].total,
+              items: dataResults,
+            });
+          }
+        });
+      }
+    });
+  });
+};
+
+
+
+exports.updateCropCalender = async (id, updateData) => {
+  return new Promise((resolve, reject) => {
+    let sql = `
+            UPDATE cropcalender 
+            SET 
+                method = ?,
+                natOfCul = ?, 
+                cropDuration = ?,
+                suitableAreas = ?
+        `;
+
+    // Update the values based on the provided data
+    let values = [
+      updateData.method,
+      updateData.natOfCul,
+      updateData.cropDuration,
+      updateData.suitableAreas,
+    ];
+
+
+    // Complete the SQL query with the WHERE clause
+    sql += ` WHERE id = ?`;
+    values.push(id);
+
+    // Execute the query
+    db.query(sql, values, (err, results) => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(results.affectedRows);
+      }
+    });
+  });
+};
+
+
+
+exports.deleteCropCalender = async (id) => {
+  return new Promise((resolve, reject) => {
+    const sql = "DELETE FROM cropcalender WHERE id = ?";
+    db.query(sql, [id], (err, results) => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(results.affectedRows);
+      }
+    });
+  });
+};
   
-  
+
+
+exports.getAllTaskByCropId = (cropId, limit, offset) => {
+  return new Promise((resolve, reject) => {
+    const countSql =
+      "SELECT COUNT(*) as total FROM cropcalender cc, cropcalendardays cd WHERE cc.id = cd.cropId AND cc.id = ?";
+    const sql = `
+            SELECT * 
+            FROM cropcalender cc 
+            JOIN cropcalendardays cd ON cc.id = cd.cropId 
+            WHERE cc.id = ?
+            ORDER BY cd.taskIndex 
+            LIMIT ? OFFSET ?`;
+    const values = [cropId];
+
+    db.query(countSql, [cropId], (countErr, countResults) => {
+      if (countErr) {
+        reject(countErr);
+      } else {
+        db.query(
+          sql,
+          [cropId, parseInt(limit), parseInt(offset)],
+          (dataErr, dataResults) => {
+            if (dataErr) {
+              reject(dataErr);
+            } else {
+              resolve({
+                results: dataResults,
+                total: countResults[0].total,
+              });
+            }
+          }
+        );
+      }
+    });
+  });
+};

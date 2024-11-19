@@ -112,8 +112,14 @@ router.get(
 router.put(
     '/update-crop-group/:id', 
     authMiddleware, 
+    upload.single('image'),
     cropCalendarEp.updateGroup);
 
+router.get(
+        "/get-all-crop-calender",
+        authMiddleware,
+        cropCalendarEp.getAllCropCalender
+    );
 
 router.put(
     '/update-crop-variety/:id',
@@ -122,6 +128,26 @@ router.put(
     cropCalendarEp.updateCropVariety
 )
 
+
+router.put(
+        "/edit-cropcalender/:id",
+        authMiddleware,
+        upload.single("image"), // Handle image upload (Multer)
+        cropCalendarEp.editCropCalender
+    );
+
+router.delete(
+    "/delete-crop/:id", 
+    authMiddleware, 
+    cropCalendarEp.deleteCropCalender
+);
+
+
+router.get(
+    "/get-all-crop-task/:id",
+    authMiddleware,
+    cropCalendarEp.getAllTaskByCropId
+);
 
 
 module.exports = router;

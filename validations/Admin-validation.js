@@ -76,9 +76,7 @@ exports.getAllNewsSchema = Joi.object({
     createdAt: Joi.date().iso().optional()
 });
 
-exports.deleteCropCalenderSchema = Joi.object({
-    id: Joi.number().integer().positive().required()
-});
+
 
 exports.editCropCalenderSchema = Joi.object({
     cropName: Joi.string().required(),
@@ -322,13 +320,6 @@ exports.getCurrentAssetRecordByIdSchema = Joi.object({
     }),
 });
 
-exports.getAllTaskByCropIdSchema = Joi.object({
-    id: Joi.number().integer().required().messages({
-        'any.required': 'Crop ID is required',
-        'number.base': 'Crop ID must be a number',
-        'number.integer': 'Crop ID must be an integer',
-    }),
-});
 
 exports.deleteCropTaskSchema = Joi.object({
     id: Joi.number().integer().required().messages({

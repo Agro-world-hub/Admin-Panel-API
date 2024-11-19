@@ -169,31 +169,7 @@ exports.getAllUsers = async (req, res) => {
 
 
 
-exports.getAllCropCalender = async (req, res) => {
-  try {
-    const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
-    console.log(fullUrl);
-    const { page, limit } =
-      await ValidateSchema.getAllCropCalendarSchema.validateAsync(req.query);
-    const offset = (page - 1) * limit;
 
-    const { total, items } = await adminDao.getAllCropCalendars(limit, offset);
-
-    console.log("Successfully fetched crop caledars");
-    res.json({
-      items,
-      total,
-    });
-  } catch (err) {
-    if (err.isJoi) {
-      // Validation error
-      return res.status(400).json({ error: err.details[0].message });
-    }
-
-    console.error("Error executing query:", err);
-    res.status(500).send("An error occurred while fetching data.");
-  }
-};
 
 exports.createOngoingCultivations = async (req, res) => {
   try {
@@ -315,114 +291,10 @@ exports.getAllNews = async (req, res) => {
   }
 };
 
-exports.deleteCropCalender = async (req, res) => {
-  try {
-    const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
-    console.log("Request URL:", fullUrl);
 
-    // Validate the request parameters
-    const { id } = await ValidateSchema.deleteCropCalenderSchema.validateAsync(
-      req.params
-    );
 
-    const affectedRows = await adminDao.deleteCropCalender(id);
 
-    if (affectedRows === 0) {
-      return res.status(404).json({ message: "Crop Calendar not found" });
-    } else {
-      console.log("Crop Calendar deleted successfully");
-      return res.status(200).json({ status: true });
-    }
-  } catch (err) {
-    if (err.isJoi) {
-      // Validation error
-      return res.status(400).json({ error: err.details[0].message });
-    }
 
-    console.error("Error deleting crop calendar:", err);
-    return res
-      .status(500)
-      .json({ error: "An error occurred while deleting crop calendar" });
-  }
-};
-
-// Controller method (endpoint handler)
-exports.editCropCalender = async (req, res) => {
-  const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
-  console.log("Request URL:", fullUrl);
-
-  try {
-    // Validate the request body
-    const updateData = req.body;
-    const { id } = req.params;
-
-    let methodSinhala, methodTamil;
-    let natOfCulSinhala, natOfCulTamil;
-
-    // Cultivation Method
-    if (req.body.methodEnglish === 'Open Field') {
-      methodSinhala = 'විවෘත ක්ෂේත්රය';
-      methodTamil = 'திறந்தவெளி';
-    } else if(req.body.methodEnglish === 'Protected Field'){
-      methodSinhala = 'ආරක්ෂිත ගෘහ';
-      methodTamil = 'பாதுகாப்பான வீடுகள்';
-    }else {
-      return res.status(400).json({ error: "Invalid cultivation method" });
-    }
-
-    // Nature of Cultivation
-    if (req.body.natOfCulEnglish === 'Conventional Farming') {
-      natOfCulSinhala = 'සාම්ප්‍රදායික ගොවිතැන';
-      natOfCulTamil = 'பாரம்பரிய விவசாயம்';
-    } else if (req.body.natOfCulEnglish === 'GAP Farming') {
-      natOfCulSinhala = 'යහපත් කෘෂිකාර්මික පිලිවෙත් (GAP)';
-      natOfCulTamil = 'நல்ல விவசாய நடைமுறைகள் (GAP)';
-    } else if (req.body.natOfCulEnglish === 'Organic Farming') {
-      natOfCulSinhala = 'කාබනික ගොවිතැන';
-      natOfCulTamil = 'இயற்கை விவசாயம்';
-    } else {
-      return res.status(400).json({ error: "Invalid nature of cultivation" });
-    }
-
-    // Handle file upload if present
-    let imageData = null;
-    if (req.file) {
-      imageData = req.file.buffer; // Store the binary image data from req.file
-    }
-
-    // Update the crop calendar
-    const affectedRows = await adminDao.updateCropCalender(
-      id,
-      updateData,
-      methodSinhala,
-      methodTamil,
-      natOfCulSinhala,
-      natOfCulTamil,
-      imageData
-    );
-    id, updateData, imageData, methodSinhala, methodTamil, natOfCulSinhala, natOfCulTamil,
-
-    console.log(updateData);
-
-    if (affectedRows === 0) {
-      return res.status(404).json({ message: "Crop Calendar not found" });
-    } else {
-      console.log("Crop Calendar updated successfully");
-      return res
-        .status(200)
-        .json({ message: "Crop Calendar updated successfully" });
-    }
-  } catch (err) {
-    if (err.isJoi) {
-      return res.status(400).json({ error: err.details[0].message });
-    }
-
-    console.error("Error updating crop calendar:", err);
-    return res
-      .status(500)
-      .json({ error: "An error occurred while updating the crop calendar" });
-  }
-};
 
 exports.createCropCalenderAddTask = async (req, res) => {
   try {
@@ -1398,44 +1270,8 @@ exports.getCurrentAssetRecordById = async (req, res) => {
   }
 };
 
-//get all task of crop
-exports.getAllTaskByCropId = async (req, res) => {
-  const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
-  console.log("Request URL:", fullUrl);
 
-  const { page, limit } = req.query;
 
-  const offset = (page - 1) * limit;
-
-  try {
-    // Validate request parameters (cropId)
-    const validatedParams =
-      await ValidateSchema.getAllTaskByCropIdSchema.validateAsync(req.params);
-
-    // Fetch the data from the DAO
-    const { total, results } = await adminDao.getAllTaskByCropId(
-      validatedParams.id,
-      limit,
-      offset
-    );
-
-    console.log(
-      "Successfully retrieved all tasks for crop ID:",
-      validatedParams.id
-    );
-    res.json({ results, total });
-  } catch (error) {
-    // if (error.isJoi) {
-    //   // Handle validation error
-    //   return res.status(400).json({ error: error.details[0].message });
-    // }
-
-    console.error("Error fetching tasks for crop ID:", error);
-    return res.status(500).json({
-      error: "An error occurred while fetching tasks for the crop ID",
-    });
-  }
-};
 
 //delete crop task
 exports.deleteCropTask = async (req, res) => {
@@ -1829,6 +1665,10 @@ exports.editUserTask = async (req, res) => {
       validatedParams.taskCategoryEnglish,
       validatedParams.taskCategorySinhala,
       validatedParams.taskCategoryTamil,
+      validatedParams.startingDate,
+      validatedParams.reqImages,
+      validatedParams.imageLink,
+      validatedParams.videoLink,
       validatedParams.id
     );
 
@@ -1917,7 +1757,7 @@ exports.addNewTask = async (req, res) => {
     const addedTaskResult = await adminDao.addNewTaskDao(
       task,
       indexId + 1,
-      cropId
+      cropId,
     );
 
     if (addedTaskResult.insertId > 0) {
@@ -1936,6 +1776,8 @@ exports.addNewTask = async (req, res) => {
       .json({ error: "An error occurred while adding the task" });
   }
 };
+
+
 exports.sendMessage = async (req, res) => {
   const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
   console.log("Request URL:", fullUrl);
@@ -2001,7 +1843,9 @@ exports.addNewTaskU = async (req, res) => {
 
   const userId = req.params.userId;
   const cropId = req.params.cropId;
+  const onCulscropID = req.params.onCulscropID;
   const indexId = parseInt(req.params.indexId);
+
 
   try {
     const task = req.body;
@@ -2028,7 +1872,8 @@ exports.addNewTaskU = async (req, res) => {
       task,
       indexId + 1,
       userId,
-      cropId
+      cropId,
+      onCulscropID
     );
 
     if (addedTaskResult.insertId > 0) {

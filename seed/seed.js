@@ -56,9 +56,7 @@ const {insertRoles} = require('./adminRoles')
 
 
 const { createExpiredContentCleanupEvent} = require('./events');
-const {createExpiredXlsxHistoryCleanupEvent} = require('./events');
 const {createContentPublishingEvent} = require('./events');
-const {createMarketPricePublishingEvent} = require('./events');
 
 
 
@@ -178,12 +176,9 @@ const runSeeds = async () => {
 
     const messagecreateExpiredContentCleanupEvent = await createExpiredContentCleanupEvent();
     console.log(messagecreateExpiredContentCleanupEvent);
-    const messagecreateExpiredXlsxHistoryCleanupEvent = await createExpiredXlsxHistoryCleanupEvent();
-    console.log(messagecreateExpiredXlsxHistoryCleanupEvent);
     const messagecreateContentPublishingEvent = await createContentPublishingEvent();
     console.log(messagecreateContentPublishingEvent);
-    const messagecreateMarketPricePublishingEvent = await createMarketPricePublishingEvent();
-    console.log(messagecreateMarketPricePublishingEvent);
+
     
     
   } catch (err) {
