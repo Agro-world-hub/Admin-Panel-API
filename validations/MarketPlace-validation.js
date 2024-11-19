@@ -14,3 +14,15 @@ exports.AddProductValidation = Joi.object({
     changeby: Joi.number().integer().required(),
     cropName: Joi.string().min(3).max(50).required()
 })
+
+
+exports.CreateCoupenValidation = Joi.object({
+    code:Joi.string().required(),
+    type:Joi.string().required(),
+    percentage:Joi.number().min(0).max(100).required(),
+    status:Joi.boolean().required(),
+    checkLimit:Joi.boolean().required(),
+    startDate:Joi.date().required(),
+    endDate:Joi.date().required(),
+
+})
