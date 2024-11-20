@@ -103,9 +103,9 @@ exports.getAllCollectionOfficers = (page, limit, searchNIC) => {
             SELECT
                 collectionofficer.id,
                 collectionofficer.image,
-                collectionofficer.firstName, 
-                collectionofficer.lastName, 
-                collectionofficercompanydetails.companyName,
+                collectionofficer.firstNameEnglish, 
+                collectionofficer.lastNameEnglish, 
+                collectionofficercompanydetails.companyNameEnglish,
                 collectionofficer.phoneNumber01,
                 collectionofficer.nic,
                 collectionofficer.district
