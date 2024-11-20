@@ -1123,8 +1123,9 @@ const createCoupon = () => {
       id INT AUTO_INCREMENT PRIMARY KEY,
       code VARCHAR(25),
       type VARCHAR(25) NOT NULL,
-      percentage DECIMAL(3, 2) NOT NULL,
+      percentage DECIMAL(5, 2) NOT NULL,
       status Boolean NOT NULL,
+      checkLimit Boolean NOT NULL,
       startDate DATETIME NOT NULL,
       endDate DATETIME NOT NULL,
       createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP

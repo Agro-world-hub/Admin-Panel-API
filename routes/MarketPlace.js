@@ -24,4 +24,10 @@ router.delete(
     marketPlaceEp.deleteMarketplaceItem
 )
 
+router.post(
+    '/create-coupen',
+    authMiddleware,
+    marketPlaceEp.createCoupen
+)
+
 module.exports = router;
