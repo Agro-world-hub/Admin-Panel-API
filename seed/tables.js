@@ -277,7 +277,7 @@ const createMarketPriceTable = () => {
       id INT AUTO_INCREMENT PRIMARY KEY,
       varietyId INT(11) DEFAULT NULL,
       xlindex INT(11) DEFAULT NULL,
-      grade VARCHAR(A) NOT NULL,
+      grade VARCHAR(1) NOT NULL,
       price DECIMAL(10,2) DEFAULT NULL,
       averagePrice DECIMAL(10,2) DEFAULT NULL,
       createdAt TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
