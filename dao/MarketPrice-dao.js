@@ -24,55 +24,122 @@ exports.createxlhistory = (xlName) => {
 
 
 
+// exports.insertMarketPriceXLSXData = (xlindex, data, createdBy) => {
+//   return new Promise((resolve, reject) => {
+
+    
+//       const sql = `
+//         INSERT INTO marketprice 
+//         (varietyId , xlindex, grade, price, createdBy) 
+//         VALUES ?`;
+  
+//       const values = data.map((row) => [
+//         row["Variety Id"],
+//         xlindex,
+//         row["Grade"],
+//         row["Price"],
+//         createdBy
+//       ]);
+  
+//       db.query(sql, [values], (err, result) => {
+//         if (err) {
+//           reject(err);
+//           console.log('ttttt');
+//         } else {
+//           console.log('xxx');
+//           resolve({
+//             message: "All data validated and inserted successfully",
+//             totalRows: data.length,
+//             insertedRows: result.affectedRows
+//           });
+//         }
+//       });
+//     });
+//   };
+
 exports.insertMarketPriceXLSXData = (xlindex, data, createdBy) => {
   return new Promise((resolve, reject) => {
-    console.log('dfdfhdgh');
+    // Step 1: Insert data into the marketprice table
+    const marketPriceSQL = `
+      INSERT INTO marketprice 
+      (varietyId, xlindex, grade, price, createdBy) 
+      VALUES ?`;
 
-      // const schema = Joi.object({
-      //   'Crop Name': Joi.number().required(),
-      //   'Variety Name': Joi.string().required(),
-      //   'Variety Id': Joi.required(),
-      //   'Variety Id': Joi.required(),
-      // }).required();
-  
-      // Validate all data
-      // const validatedData = [];
-      // for (let i = 0; i < data.length; i++) {
-      //   const { error, value } = schema.validate(data[i]);
-      //   if (error) {
-      //     return reject(new Error(`Validation error in row ${i + 1}: ${error.details[0].message}`));
-      //   }
-      //   validatedData.push(value);
-      // }
-    
-      const sql = `
-        INSERT INTO marketprice 
-        (varietyId , xlindex, grade, price, createdBy) 
-        VALUES ?`;
-  
-      const values = data.map((row) => [
-        row["Variety Id"],
-        xlindex,
-        row["Grade"],
-        row["Price"],
-        createdBy
-      ]);
-  
-      db.query(sql, [values], (err, result) => {
+    const marketPriceValues = data.map((row) => [
+      row["Variety Id"],
+      xlindex,
+      row["Grade"],
+      row["Price"],
+      createdBy,
+    ]);
+
+    db.query(marketPriceSQL, [marketPriceValues], (err, marketPriceResult) => {
+      if (err) {
+        return reject(err);
+      }
+
+      console.log("Market price data inserted successfully.");
+
+      // Step 2: Fetch all collectionCenterId values
+      const fetchCentersSQL = `SELECT id FROM collectioncenter`;
+
+      db.query(fetchCentersSQL, (err, collectionCenters) => {
         if (err) {
-          reject(err);
-          console.log('ttttt');
-        } else {
-          console.log('xxx');
+          return reject(err);
+        }
+
+        if (collectionCenters.length === 0) {
+          return resolve({
+            message: "No collection centers found. Only market price data inserted.",
+            totalRows: data.length,
+            insertedRows: marketPriceResult.affectedRows,
+          });
+        }
+
+        const marketPriceIds = marketPriceResult.insertId; // Start ID of inserted rows
+        const totalInsertedRows = marketPriceResult.affectedRows;
+
+        // Generate rows for marketpriceserve
+        const marketPriceServeValues = [];
+        for (let i = 0; i < totalInsertedRows; i++) {
+          const marketPriceId = marketPriceIds + i;
+          const price = marketPriceValues[i][3]; // Fetch price from marketPriceValues
+
+          collectionCenters.forEach((center) => {
+            marketPriceServeValues.push([
+              marketPriceId,
+              xlindex,
+              price, // Use the price as newPrice
+              center.id,
+            ]);
+          });
+        }
+
+        // Step 3: Insert data into the marketpriceserve table
+        const marketPriceServeSQL = `
+          INSERT INTO marketpriceserve 
+          (marketPriceId, xlindex, price, collectionCenterId) 
+          VALUES ?`;
+
+        db.query(marketPriceServeSQL, [marketPriceServeValues], (err, marketPriceServeResult) => {
+          if (err) {
+            return reject(err);
+          }
+
+          console.log("Market price serve data inserted successfully.");
+
           resolve({
             message: "All data validated and inserted successfully",
             totalRows: data.length,
-            insertedRows: result.affectedRows
+            insertedRows: marketPriceResult.affectedRows,
+            serveInsertedRows: marketPriceServeResult.affectedRows,
           });
-        }
+        });
       });
     });
-  };
+  });
+};
+
 
 
   exports.getAllxlsxlist = (limit, offset) => {

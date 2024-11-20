@@ -311,7 +311,8 @@ const createMarketPriceServeTable = () => {
       id INT AUTO_INCREMENT PRIMARY KEY,
       marketPriceId INT(11) DEFAULT NULL,
       xlindex INT(11) DEFAULT NULL,
-      newPrice DECIMAL(10,2) DEFAULT NULL,
+      price DECIMAL(10,2) DEFAULT NULL,
+      updatedPrice DECIMAL(10,2) DEFAULT NULL,
       collectionCenterId INT(11) DEFAULT NULL,
       FOREIGN KEY (marketPriceId) REFERENCES marketprice(id)
         ON DELETE CASCADE
