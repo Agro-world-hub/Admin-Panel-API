@@ -20,7 +20,7 @@ exports.CreateCoupenValidation = Joi.object({
     code:Joi.string().required(),
     type:Joi.string().required(),
     percentage:Joi.number().min(0).max(100).required(),
-    status:Joi.boolean().required(),
+    status:Joi.string().required(),
     checkLimit:Joi.boolean().required(),
     startDate:Joi.date().required(),
     endDate:Joi.date().required(),

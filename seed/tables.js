@@ -1125,7 +1125,7 @@ const createCoupon = () => {
       code VARCHAR(25),
       type VARCHAR(25) NOT NULL,
       percentage DECIMAL(5, 2) NOT NULL,
-      status Boolean NOT NULL,
+      status VARCHAR(25) NOT NULL,
       checkLimit Boolean NOT NULL,
       startDate DATETIME NOT NULL,
       endDate DATETIME NOT NULL,

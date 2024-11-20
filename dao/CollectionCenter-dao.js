@@ -55,9 +55,9 @@ exports.GetAllComplainDAO = (page, limit, status, searchText) => {
 
     let countSql = "SELECT COUNT(*) as total FROM farmercomplains fc, collectionofficer c, users u WHERE fc.farmerId = u.id AND fc.coId = c.id  ";
     let sql = ` 
-    SELECT fc.id, fc.refNo, fc.createdAt, fc.status, fc.language, u.firstName as farmerName, c.firstNameEnglish as officerName 
-    FROM farmercomplains fc, collectionofficer c, users u 
-    WHERE fc.farmerId = u.id AND fc.coId = c.id `;
+    SELECT fc.id, fc.refNo, fc.createdAt, fc.status, fc.language, u.firstName as farmerName, c.firstNameEnglish as officerName , cc.centerName, cc.contact01
+    FROM farmercomplains fc, collectionofficer c, users u , collectioncenter cc
+    WHERE fc.farmerId = u.id AND fc.coId = c.id AND c.centerId = cc.id`;
 
     if (status) {
       countSql += " AND fc.status = ? ";
@@ -101,9 +101,9 @@ exports.GetAllComplainDAO = (page, limit, status, searchText) => {
 exports.getComplainById = (id) => {
   return new Promise((resolve, reject) => {
     const sql = ` 
-    SELECT fc.id, fc.refNo, fc.createdAt, fc.status, fc.language, fc.complain, u.firstName AS farmerName, u.phoneNumber AS farmerPhone, c.firstNameEnglish as officerName, c.phoneNumber01 AS officerPhone
-    FROM farmercomplains fc, collectionofficer c, users u 
-    WHERE fc.farmerId = u.id AND fc.coId = c.id AND fc.id = ? 
+    SELECT fc.id, fc.refNo, fc.createdAt, fc.status, fc.language, fc.complain, u.firstName AS farmerName, u.phoneNumber AS farmerPhone, c.firstNameEnglish as officerName, c.phoneNumber01 AS officerPhone, cc.centerName, cc.contact01 AS CollectionContact
+    FROM farmercomplains fc, collectionofficer c, users u , collectioncenter cc
+    WHERE fc.farmerId = u.id AND c.centerId = cc.id AND fc.coId = c.id AND fc.id = ? 
     `;
     db.query(sql, [id], (err, results) => {
       if (err) {
