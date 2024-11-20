@@ -46,11 +46,33 @@ const createContentPublishingEvent = () => {
 };
 
 
+const createTaskStatusEvent = () => {
+    const sql = `
+    CREATE EVENT IF NOT EXISTS update_task_status
+        ON SCHEDULE EVERY 1 HOUR
+        DO
+        UPDATE slavecropcalendardays
+        SET status = 'Completed'
+        WHERE status = 'Pending' AND startingDate < CURDATE();
+  `;
+    return new Promise((resolve, reject) => {
+        db.query(sql, (err, result) => {
+            if (err) {
+                reject('Error createTaskStatusEvent ' + err);
+            } else {
+                resolve('createTaskStatusEvent created successfully.');
+            }
+        });
+    });
+};
+
+
 
 
 
 module.exports = {
   createExpiredContentCleanupEvent,
-  createContentPublishingEvent
+  createContentPublishingEvent,
+  createTaskStatusEvent
 
 };

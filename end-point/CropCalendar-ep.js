@@ -452,6 +452,28 @@ exports.allCropGroups = async (req, res) => {
   };
 
 
+  exports.getVarietyById = async (req, res) => {
+    try {
+      const id = req.params.id;
+      const groups = await cropCalendarDao.getVarietyById(id);
+
+      console.log(groups?.cropGroupId);
+
+      console.log("Successfully fetched crop groups");
+      res.json({
+        groups,
+      });
+    } catch (err) {
+      if (err.isJoi) {
+        // Validation error
+        return res.status(400).json({ error: err.details[0].message });
+      }
+      console.error("Error executing query:", err);
+      res.status(500).send("An error occurred while fetching data.");
+    }
+  };
+
+
 
   exports.updateGroup = async (req, res) => {
 
@@ -628,5 +650,25 @@ exports.allCropGroups = async (req, res) => {
       return res.status(500).json({
         error: "An error occurred while fetching tasks for the crop ID",
       });
+    }
+  };
+
+
+  exports.updateVariety = async (req, res) => {
+
+    const { varietyNameEnglish, varietyNameSinhala, varietyNameTamil, descriptionEnglish, descriptionSinhala, descriptionTamil, bgColor } = req.body;
+    const id = req.params.id;
+    try {
+      let imageData = null;
+        if (req.file) {
+            imageData = req.file.buffer; // Store the binary image data from req.file
+        }
+      
+  
+      await cropCalendarDao.updateVariety({ varietyNameEnglish, varietyNameSinhala, varietyNameTamil, descriptionEnglish, descriptionSinhala, descriptionTamil, bgColor, image: imageData }, id);
+      res.json({ message: 'Crop group updated successfully.' });
+    } catch (err) {
+      console.error('Error updating crop group:', err);
+      res.status(500).send('An error occurred while updating the crop group.');
     }
   };
