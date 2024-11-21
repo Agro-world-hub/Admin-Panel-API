@@ -88,27 +88,47 @@ exports.createCropGroup = async (product) => {
 
 
 
+// exports.getMarketplaceItems = () => {
+//   return new Promise((resolve, reject) => {
+//     const dataSql = `
+//         SELECT 
+//             marketplaceitems.id AS itemId,
+//             marketplaceitems.cropId AS cropId,
+//             marketplaceitems.displayName AS itemDisplayName,
+//             marketplaceitems.normalPrice AS itemNormalPrice,
+//             marketplaceitems.discountedPrice AS itemDiscountedPrice,
+//             marketplaceitems.promo AS itemPromo,
+//             marketplaceitems.unitType AS unitType,
+//             marketplaceitems.startValue AS startValue,
+//             marketplaceitems.changeby AS changeby,
+//             cropcalender.cropVarietyId AS cropVarietyEnglish,
+//             cropcalender.suitableAreas AS cropSuitableAreas,
+//             cropgroup.cropNameEnglish AS cropNameEnglish
+//         FROM 
+//             marketplaceitems
+//         JOIN cropcalender ON marketplaceitems.cropId = cropcalender.id
+//         JOIN cropgroup ON cropcalender.id = cropgroup.id;
+//       `;
+
+//     db.query(dataSql, (error, results) => {
+//       if (error) {
+//         reject(error);
+//       } else {
+//         resolve(results);
+//       }
+//     });
+//   });
+// };
+
 exports.getMarketplaceItems = () => {
   return new Promise((resolve, reject) => {
-    const dataSql = `
-        SELECT 
-            marketplaceitems.id AS itemId,
-            marketplaceitems.cropId AS cropId,
-            marketplaceitems.displayName AS itemDisplayName,
-            marketplaceitems.normalPrice AS itemNormalPrice,
-            marketplaceitems.discountedPrice AS itemDiscountedPrice,
-            marketplaceitems.promo AS itemPromo,
-            marketplaceitems.unitType AS unitType,
-            marketplaceitems.startValue AS startValue,
-            marketplaceitems.changeby AS changeby,
-            cropcalender.varietyEnglish AS cropVarietyEnglish,
-            cropcalender.suitableAreas AS cropSuitableAreas,
-            cropgroup.cropNameEnglish AS cropNameEnglish
-        FROM 
-            marketplaceitems
-        JOIN cropcalender ON marketplaceitems.cropId = cropcalender.id
-        JOIN cropgroup ON cropcalender.id = cropgroup.id;
-      `;
+    const dataSql =`
+    SELECT m.id, m.cropId, cg.cropNameEnglish, m.displayName , c.method, cv.varietyNameEnglish, m.discountedPrice, m.startValue, m.promo, m.unitType, m.changeby
+    FROM marketplaceitems m, cropcalender c, cropgroup cg, cropvariety cv
+    WHERE m.cropId = c.id AND c.cropVarietyId = cv.id AND cv.cropGroupId = cg.id
+    `
+
+
 
     db.query(dataSql, (error, results) => {
       if (error) {
@@ -119,6 +139,7 @@ exports.getMarketplaceItems = () => {
     });
   });
 };
+
 
 exports.deleteMarketplaceItem = async (id) => {
   return new Promise((resolve, reject) => {
