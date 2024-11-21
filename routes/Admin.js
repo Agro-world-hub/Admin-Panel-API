@@ -64,7 +64,6 @@ router.post(
     AdminEp.editAdminUserWithoutId
 );
 
-router.get("/get-admin-by-id/:id", authMiddleware, AdminEp.getAdminById);
 
 router.get("/get-me", authMiddleware, AdminEp.getMe);
 
