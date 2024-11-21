@@ -109,6 +109,12 @@ router.get(
     cropCalendarEp.getGroupById
 );
 
+router.get(
+    "/crop-variety-by-id/:id", 
+    authMiddleware, 
+    cropCalendarEp.getVarietyById
+);
+
 router.put(
     '/update-crop-group/:id', 
     authMiddleware, 
@@ -148,6 +154,13 @@ router.get(
     authMiddleware,
     cropCalendarEp.getAllTaskByCropId
 );
+
+
+router.put(
+    '/update-crop-variety/:id', 
+    authMiddleware, 
+    upload.single('image'),
+    cropCalendarEp.updateVariety);
 
 
 module.exports = router;

@@ -351,6 +351,28 @@ exports.createCropCallender = async (
     });
   };
 
+  exports.getVarietyById = (id) => {
+    return new Promise((resolve, reject) => {
+      const sql = "SELECT * FROM cropvariety WHERE id = ?";
+  
+      db.query(sql,[id], (err, results) => {
+        if (err) {
+          return reject(err); // Reject promise if an error occurs
+        }
+        const processedDataResults = results.map((variety) => {
+          if (variety.image) {
+            const base64Image = Buffer.from(variety.image).toString(
+              "base64"
+            );
+            const mimeType = "image/png"; // Adjust the MIME type if needed
+            variety.image = `data:${mimeType};base64,${base64Image}`;
+          }
+          return variety;
+        });
+        resolve(processedDataResults); // No need to wrap in arrays, return results directly
+      });
+    });
+  };
 
 
 
@@ -572,5 +594,53 @@ exports.getAllTaskByCropId = (cropId, limit, offset) => {
         );
       }
     });
+  });
+};
+
+
+
+exports.updateVariety = (newsData, id) => {
+  return new Promise((resolve, reject) => {
+      const { varietyNameEnglish, varietyNameSinhala, varietyNameTamil, descriptionEnglish, descriptionSinhala, descriptionTamil, bgColor, image } = newsData;
+      console.log(newsData);
+
+  
+      
+      let sql = `
+          UPDATE cropvariety 
+          SET 
+              varietyNameEnglish = ?, 
+              varietyNameSinhala = ?, 
+              varietyNameTamil = ?, 
+               descriptionEnglish = ?, 
+              descriptionSinhala = ?, 
+              descriptionTamil = ?, 
+              bgColor = ?
+      `;
+      
+      let values = [
+        varietyNameEnglish,
+        varietyNameSinhala,
+        varietyNameTamil,
+        descriptionEnglish,
+        descriptionSinhala,
+        descriptionTamil,
+        bgColor,
+      ];
+
+      if (image) {
+          sql += `, image = ?`;  // Update the image field with binary data
+          values.push(image);
+      }
+
+      sql += ` WHERE id = ?`;
+      values.push(id);
+
+      db.query(sql, values, (err, results) => {
+          if (err) {
+              return reject(err);
+          }
+          resolve(results);
+      });
   });
 };

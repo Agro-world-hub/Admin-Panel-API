@@ -158,10 +158,6 @@ exports.createCollectionCenter = async (req, res) => {
   try {
     const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
     console.log(fullUrl);    
-
-    console.log(req.body);
-    
-
     const {
       regCode,
       centerName,
@@ -173,8 +169,17 @@ exports.createCollectionCenter = async (req, res) => {
       street,
       district,
       province
-    } = await ValidateSchema.createCollectionCenterValidation.validateAsync(req.body)
+    // } = await ValidateSchema.createCollectionCenterValidation.validateAsync(req.body)
+    }= req.body
+    console.log("Collection Centr",regCode,centerName);
     
+    
+    const existRegCode = await CollectionCenterDao.CheckRegCodeExistDAO(regCode);
+    console.log("existRegCode",existRegCode);
+    
+    if(existRegCode.length > 0){
+      return res.json({message: "This RegCode allrady exist!", status:false})
+    }
 
     const result = await CollectionCenterDao.addCollectionCenter(regCode, centerName, contact01, contact02, buildingNumber, street, district, province, contact01Code, contact02Code);
 

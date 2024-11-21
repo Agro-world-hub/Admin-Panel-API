@@ -57,6 +57,7 @@ const {insertRoles} = require('./adminRoles')
 
 const { createExpiredContentCleanupEvent} = require('./events');
 const {createContentPublishingEvent} = require('./events');
+const {createTaskStatusEvent} = require('./events');
 
 
 
@@ -178,6 +179,8 @@ const runSeeds = async () => {
     console.log(messagecreateExpiredContentCleanupEvent);
     const messagecreateContentPublishingEvent = await createContentPublishingEvent();
     console.log(messagecreateContentPublishingEvent);
+    const messageCreateTaskStatusEvent = await createTaskStatusEvent();
+    console.log(messageCreateTaskStatusEvent);
 
     
     

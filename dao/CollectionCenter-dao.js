@@ -113,3 +113,17 @@ exports.getComplainById = (id) => {
     });
   });
 };
+
+
+
+exports.CheckRegCodeExistDAO = (regCode) => {
+  return new Promise((resolve, reject) => {
+    const sql = "SELECT * FROM collectioncenter WHERE regCode = ?";
+    db.query(sql,[regCode], (err, results) => {
+      if (err) {
+        return reject(err);
+      }
+      resolve(results);
+    });
+  });
+};
