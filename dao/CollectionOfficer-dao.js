@@ -94,34 +94,41 @@ exports.createCollectionOfficerPersonal = (officerData, companyData, bankData) =
 };
 
 
-exports.getAllCollectionOfficers = (page, limit, searchNIC) => {
+exports.getAllCollectionOfficers = (page, limit, searchNIC, companyid) => {    
     return new Promise((resolve, reject) => {
         const offset = (page - 1) * limit;
 
-        let countSql = "SELECT COUNT(*) as total FROM collectionofficer";
+        let countSql = "SELECT COUNT(*) as total FROM collectionofficer Coff,collectionofficercompanydetails Ccom WHERE Coff.id  = Ccom.collectionofficerId ";
         let dataSql = `
             SELECT
-                collectionofficer.id,
-                collectionofficer.image,
-                collectionofficer.firstNameEnglish, 
-                collectionofficer.lastNameEnglish, 
-                collectionofficercompanydetails.companyNameEnglish,
-                collectionofficer.phoneNumber01,
-                collectionofficer.nic,
-                collectionofficer.district
-            FROM 
-                collectionofficer
-            JOIN 
-                collectionofficercompanydetails 
-            ON 
-                collectionofficer.id = collectionofficercompanydetails.collectionofficerId
+                Coff.id,
+                Coff.image,
+                Coff.firstNameEnglish, 
+                Coff.lastNameEnglish, 
+                Ccom.companyNameEnglish,
+                Coff.phoneNumber01,
+                Coff.nic,
+                Coff.district,
+                Coff.status,
+                Ccom.companyNameEnglish,
+                CC.centerName
+
+                FROM collectionofficer Coff , collectionofficercompanydetails Ccom, collectioncenter CC
+                WHERE Coff.id  = Ccom.collectionofficerId AND Coff.centerId = CC.id
+                
         `;
 
         const params = [];
 
+        if(companyid){
+            countSql += " AND Ccom.id = ?";
+            dataSql += " AND Ccom.id = ?";
+            params.push(companyid); 
+        }
+
         if (searchNIC) {
-            countSql += " WHERE collectionofficer.nic LIKE ?";
-            dataSql += " WHERE collectionofficer.nic LIKE ?";
+            countSql += " AND Coff.nic LIKE ?";
+            dataSql += " AND Coff.nic LIKE ?";
             params.push(`%${searchNIC}%`);
         }
 
@@ -131,6 +138,7 @@ exports.getAllCollectionOfficers = (page, limit, searchNIC) => {
         // Execute count query
         db.query(countSql, params, (countErr, countResults) => {
             if (countErr) {
+                console.log(countErr);   
                 return reject(countErr);
             }
 
@@ -234,6 +242,57 @@ exports.getCollectionOfficerProvinceReports = (province) => {
                 return reject(err); 
             }
             resolve(results);
+        });
+    });
+};
+
+
+
+exports.getAllCompanyNamesDao = (district) => {
+    return new Promise((resolve, reject) => {
+        const sql = `
+            SELECT id, companyNameEnglish
+            FROM collectionofficercompanydetails
+        `;
+        db.query(sql, [district], (err, results) => {
+            if (err) {
+                return reject(err); // Reject promise if an error occurs
+            }
+            resolve(results); // Resolve the promise with the query results
+        });
+    });
+};
+
+
+exports.UpdateCollectionOfiicerStatusDao = (params) => {
+    return new Promise((resolve, reject) => {
+        const sql = `
+            UPDATE collectionofficer
+            SET status = ?
+            WHERE id = ?
+        `;
+        db.query(sql, [params.status, parseInt(params.id)], (err, results) => {
+            if (err) {
+                return reject(err); // Reject promise if an error occurs
+            }
+            resolve(results); // Resolve the promise with the query results
+        });
+    });
+};
+
+
+
+exports.DeleteCollectionOfficerDao = (id) => {
+    return new Promise((resolve, reject) => {
+        const sql = `
+            DELETE FROM collectionofficer
+            WHERE id = ?
+        `;
+        db.query(sql, [parseInt(id)], (err, results) => {
+            if (err) {
+                return reject(err); // Reject promise if an error occurs
+            }
+            resolve(results); // Resolve the promise with the query results
         });
     });
 };
