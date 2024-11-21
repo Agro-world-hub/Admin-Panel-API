@@ -58,7 +58,9 @@ exports.getMarketplaceItems = async (req, res) => {
 
     console.log("Successfully fetched marketplace items");
 
-    res.json({items:marketplaceItems, total:10});
+    res.json({
+      items: marketplaceItems,
+    });
   } catch (error) {
     console.error("Error fetching marketplace items:", error);
     return res.status(500).json({
