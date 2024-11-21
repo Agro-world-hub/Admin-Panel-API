@@ -845,6 +845,7 @@ const createCollectionOfficer = () => {
       province VARCHAR(25) NOT NULL,
       country VARCHAR(25) NOT NULL,
       languages VARCHAR(255) NOT NULL,
+      status VARCHAR(25) NOT NULL,
       createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (centerId) REFERENCES collectioncenter(id)
 
