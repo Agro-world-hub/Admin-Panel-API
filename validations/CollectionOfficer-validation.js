@@ -64,6 +64,7 @@ exports.getAllCollectionOfficersSchema = Joi.object({
     page: Joi.number().integer().min(1).default(1).optional(),
     limit: Joi.number().integer().min(1).max(100).default(10).optional(),
     nic: Joi.string().allow('').optional(),
+    company: Joi.number().optional()
 });
 
 
@@ -79,4 +80,10 @@ exports.getDistrictProvinceSchema = Joi.object({
         'string.base': 'Province must be a string',
         'string.min': 'Province cannot be empty',
     }),
+});
+
+
+exports.UpdateCollectionOfficerStatus = Joi.object({
+    id: Joi.number().integer().required(),
+    status: Joi.string().required()
 });

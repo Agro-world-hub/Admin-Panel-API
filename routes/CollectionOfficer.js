@@ -57,9 +57,27 @@ router.get(
 //province report
 router.get(
     "/collection-officer/province-report/:province",
-    // authMiddleware,
+    authMiddleware,
     CollectionOfficerEp.getCollectionOfficerProvinceReports
 );
+
+router.get(
+    "/collection-officer/get-all-company-names",
+    authMiddleware,
+    CollectionOfficerEp.getAllCompanyNames
+)
+
+router.get(
+    "/collection-officer/update-status/:id/:status",
+    authMiddleware,
+    CollectionOfficerEp.UpdateCollectionOfficerStatus
+)
+
+router.delete(
+    "/collection-officer/delete-officer/:id",
+    authMiddleware,
+    CollectionOfficerEp.deleteCollectionOfficer
+)
 
 
 router.get(

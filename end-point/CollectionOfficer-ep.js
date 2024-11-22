@@ -43,14 +43,14 @@ exports.getAllCollectionOfficers = async (req, res) => {
     const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
     console.log(fullUrl);
 
-    try {
+    try {        
         // Validate query parameters
         const validatedQuery = await collectionofficerValidate.getAllCollectionOfficersSchema.validateAsync(req.query);
-
-        const { page, limit, nic } = validatedQuery;
+        
+        const { page, limit, nic, company } = validatedQuery;
 
         // Call the DAO to get all collection officers
-        const result = await collectionofficerDao.getAllCollectionOfficers(page, limit, nic);
+        const result = await collectionofficerDao.getAllCollectionOfficers(page, limit, nic, company);
 
         console.log("Successfully fetched collection officers");
         return res.status(200).json(result);
@@ -143,9 +143,7 @@ exports.getCollectionOfficerProvinceReports = async (req, res) => {
     try {
         const validatedParams = await collectionofficerValidate.getDistrictProvinceSchema.validateAsync(req.params);
 
-        const results = await collectionofficerDao.getCollectionOfficerProvinceReports(validatedParams.province);
-        console.log(validatedParams,results);
-        
+        const results = await collectionofficerDao.getCollectionOfficerProvinceReports(validatedParams.province);        
 
         console.log("Successfully retrieved reports");
         res.status(200).json(results);
@@ -156,6 +154,77 @@ exports.getCollectionOfficerProvinceReports = async (req, res) => {
 
         console.error("Error retrieving district reports:", error);
         return res.status(500).json({ error: "An error occurred while fetching the reports" });
+    }
+};
+
+
+
+exports.getAllCompanyNames = async (req, res) => {
+    const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
+    console.log(fullUrl);
+    try {
+        const results = await collectionofficerDao.getAllCompanyNamesDao();
+
+        console.log("Successfully retrieved reports");
+        res.status(200).json(results);
+    } catch (error) {
+        if (error.isJoi) {
+            return res.status(400).json({ error: error.details[0].message });
+        }
+
+        console.error("Error retrieving district reports:", error);
+        return res.status(500).json({ error: "An error occurred while fetching the reports" });
+    }
+};
+
+
+exports.UpdateCollectionOfficerStatus = async (req, res) => {
+    const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
+    console.log(fullUrl);
+    try {
+        const validatedParams = await collectionofficerValidate.UpdateCollectionOfficerStatus.validateAsync(req.params);
+        const results = await collectionofficerDao.UpdateCollectionOfiicerStatusDao(validatedParams);
+
+        console.log("Successfully Updated Status",results);
+        if(results.affectedRows > 0){
+            res.status(200).json({results:results, status:true});
+        }else{
+            res.json({results:results, status:false});
+
+        }
+    } catch (error) {
+        if (error.isJoi) {
+            return res.status(400).json({ error: error.details[0].message, status:false});
+        }
+
+        console.error("Error retrieving Updated Status:", error);
+        return res.status(500).json({ error: "An error occurred while Updated Statuss" });
+    }
+};
+
+
+
+exports.deleteCollectionOfficer = async (req, res) => {
+    const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
+    console.log(fullUrl);
+    try {
+        
+        const results = await collectionofficerDao.DeleteCollectionOfficerDao(req.params.id);
+
+        console.log("Successfully Delete Status");
+        if(results.affectedRows > 0){
+            res.status(200).json({results:results, status:true});
+        }else{
+            res.json({results:results, status:false});
+
+        }
+    } catch (error) {
+        if (error.isJoi) {
+            return res.status(400).json({ error: error.details[0].message, status:false});
+        }
+
+        console.error("Error retrieving Updated Status:", error);
+        return res.status(500).json({ error: "An error occurred while Updated Statuss" });
     }
 };
 

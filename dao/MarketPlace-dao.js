@@ -5,93 +5,87 @@ const path = require("path");
 
 exports.getAllCropNameDAO = () => {
   return new Promise((resolve, reject) => {
-      const sql = `
+    const sql = `
           SELECT cg.id AS cropId, cc.id AS varietyId, cg.cropNameEnglish, cc.varietyEnglish, cc.image
           FROM cropcalender cc
           JOIN cropgroup cg ON cg.id = cc.cropGroupId
       `;
 
-      db.query(sql, (err, results) => {
-          if (err) {
-              return reject(err);
-          }
+    db.query(sql, (err, results) => {
+      if (err) {
+        return reject(err);
+      }
 
-          const groupedData = {};
+      const groupedData = {};
 
-          results.forEach(item => {
-              const { cropNameEnglish, varietyEnglish, varietyId, cropId, image } = item;
+      results.forEach((item) => {
+        const { cropNameEnglish, varietyEnglish, varietyId, cropId, image } =
+          item;
 
-              // Convert image to base64 if available
-              let base64Image = null;
-              if (image) {
-                  base64Image = Buffer.from(image).toString("base64");
-                  const mimeType = "image/png"; // Set MIME type (adjust if necessary)
-                  base64Image = `data:${mimeType};base64,${base64Image}`;
-              }
+        // Convert image to base64 if available
+        let base64Image = null;
+        if (image) {
+          base64Image = Buffer.from(image).toString("base64");
+          const mimeType = "image/png"; // Set MIME type (adjust if necessary)
+          base64Image = `data:${mimeType};base64,${base64Image}`;
+        }
 
-              if (!groupedData[cropNameEnglish]) {
-                  groupedData[cropNameEnglish] = {
-                      cropId: cropId,
-                      variety: []
-                  };
-              }
+        if (!groupedData[cropNameEnglish]) {
+          groupedData[cropNameEnglish] = {
+            cropId: cropId,
+            variety: [],
+          };
+        }
 
-              groupedData[cropNameEnglish].variety.push({
-                  id: varietyId,
-                  varietyEnglish: varietyEnglish,
-                  image: base64Image  // Store the Base64 image string
-              });
-          });
-
-          // Format the final result
-          const formattedResult = Object.keys(groupedData).map(cropName => ({
-              cropId: groupedData[cropName].cropId,
-              cropNameEnglish: cropName,
-              variety: groupedData[cropName].variety
-          }));
-
-          resolve(formattedResult);
+        groupedData[cropNameEnglish].variety.push({
+          id: varietyId,
+          varietyEnglish: varietyEnglish,
+          image: base64Image, // Store the Base64 image string
+        });
       });
+
+      // Format the final result
+      const formattedResult = Object.keys(groupedData).map((cropName) => ({
+        cropId: groupedData[cropName].cropId,
+        cropNameEnglish: cropName,
+        variety: groupedData[cropName].variety,
+      }));
+
+      resolve(formattedResult);
+    });
   });
 };
 
-
-
-
-
 exports.createCropGroup = async (product) => {
-    return new Promise((resolve, reject) => {
-      const sql =
-        "INSERT INTO marketplaceitems (cropId, displayName, normalPrice, discountedPrice, promo, unitType, startValue, changeby, tags) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
-      const values = [
-        product.variety, 
-        product.cropName, 
-        product.normalPrice, 
-        product.discountedPrice, 
-        product.promo, 
-        product.unitType, 
-        product.startValue, 
-        product.changeby,
-        product.tags
-      ];
-  
-      db.query(sql, values, (err, results) => {
-        if (err) {
-          reject(err);
-        } else {
-          resolve(results.insertId);
-        }
-      });
+  return new Promise((resolve, reject) => {
+    const sql =
+      "INSERT INTO marketplaceitems (cropId, displayName, normalPrice, discountedPrice, promo, unitType, startValue, changeby, tags) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
+    const values = [
+      product.variety,
+      product.cropName,
+      product.normalPrice,
+      product.discountedPrice,
+      product.promo,
+      product.unitType,
+      product.startValue,
+      product.changeby,
+      product.tags,
+    ];
+
+    db.query(sql, values, (err, results) => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(results.insertId);
+      }
     });
-  };
-  
-
-
+  });
+};
 
 // exports.getMarketplaceItems = () => {
 //   return new Promise((resolve, reject) => {
 //     const dataSql = `
-//         SELECT 
+//         SELECT
 //             marketplaceitems.id AS itemId,
 //             marketplaceitems.cropId AS cropId,
 //             marketplaceitems.displayName AS itemDisplayName,
@@ -104,7 +98,7 @@ exports.createCropGroup = async (product) => {
 //             cropcalender.cropVarietyId AS cropVarietyEnglish,
 //             cropcalender.suitableAreas AS cropSuitableAreas,
 //             cropgroup.cropNameEnglish AS cropNameEnglish
-//         FROM 
+//         FROM
 //             marketplaceitems
 //         JOIN cropcalender ON marketplaceitems.cropId = cropcalender.id
 //         JOIN cropgroup ON cropcalender.id = cropgroup.id;
@@ -122,14 +116,11 @@ exports.createCropGroup = async (product) => {
 
 exports.getMarketplaceItems = () => {
   return new Promise((resolve, reject) => {
-    const dataSql =`
-    SELECT m.id, m.cropId, cg.cropNameEnglish, m.displayName , c.method, cv.varietyNameEnglish, m.discountedPrice, m.startValue, m.promo, m.unitType, m.changeby
+    const dataSql = `
+    SELECT m.id, m.cropId, cg.cropNameEnglish, m.displayName , c.method, cv.varietyNameEnglish, m.discountedPrice, m.startValue, m.promo, m.unitType, m.changeby, m.normalPrice
     FROM marketplaceitems m, cropcalender c, cropgroup cg, cropvariety cv
     WHERE m.cropId = c.id AND c.cropVarietyId = cv.id AND cv.cropGroupId = cg.id
-    `
-
-
-
+    `;
     db.query(dataSql, (error, results) => {
       if (error) {
         reject(error);
@@ -139,7 +130,6 @@ exports.getMarketplaceItems = () => {
     });
   });
 };
-
 
 exports.deleteMarketplaceItem = async (id) => {
   return new Promise((resolve, reject) => {
@@ -154,18 +144,17 @@ exports.deleteMarketplaceItem = async (id) => {
   });
 };
 
-
 exports.createCoupenDAO = async (coupen) => {
   return new Promise((resolve, reject) => {
     const sql =
       "INSERT INTO coupon (code, type, percentage, status, checkLimit, startDate, endDate) VALUES (?, ?, ?, ?, ?, ?, ?)";
     const values = [
-      coupen.code, 
-      coupen.type, 
-      coupen.percentage, 
-      coupen.status, 
-      coupen.checkLimit, 
-      coupen.startDate, 
+      coupen.code,
+      coupen.type,
+      coupen.percentage,
+      coupen.status,
+      coupen.checkLimit,
+      coupen.startDate,
       coupen.endDate,
     ];
 
@@ -177,5 +166,4 @@ exports.createCoupenDAO = async (coupen) => {
       }
     });
   });
-}
-
+};
