@@ -237,3 +237,98 @@ exports.getCollectionOfficerProvinceReports = (province) => {
         });
     });
 };
+
+
+
+
+
+
+
+exports.getOfficerById = (id) => {
+    return new Promise((resolve, reject) => {
+        const sql = `
+            SELECT 
+                co.*, 
+                cocd.companyNameEnglish, cocd.companyNameSinhala, cocd.companyNameTamil,
+                cocd.jobRole, cocd.IRMname, cocd.companyEmail, cocd.assignedDistrict, cocd.employeeType,
+                cobd.accHolderName, cobd.accNumber, cobd.bankName, cobd.branchName
+            FROM 
+                collectionofficer co
+            LEFT JOIN 
+                collectionofficercompanydetails cocd ON co.id = cocd.collectionOfficerId
+            LEFT JOIN 
+                collectionofficerbankdetails cobd ON co.id = cobd.collectionOfficerId
+            WHERE 
+                co.id = ?`;
+
+        db.query(sql, [id], (err, results) => {
+            if (err) {
+                return reject(err); // Reject promise if an error occurs
+            }
+
+            if (results.length === 0) {
+                return resolve(null); // No officer found
+            }
+
+            const officer = results[0];
+
+            // Process image field if present
+            if (officer.image) {
+                const base64Image = Buffer.from(officer.image).toString("base64");
+                officer.image = `data:image/png;base64,${base64Image}`;
+            }
+
+            // Process QRcode field if present
+            if (officer.QRcode) {
+                const base64QRcode = Buffer.from(officer.QRcode).toString("base64");
+                officer.QRcode = `data:image/png;base64,${base64QRcode}`;
+            }
+
+            resolve({
+                collectionOfficer: {
+                    id: officer.id,
+                    centerId: officer.centerId,
+                    firstNameEnglish: officer.firstNameEnglish,
+                    firstNameSinhala: officer.firstNameSinhala,
+                    firstNameTamil: officer.firstNameTamil,
+                    lastNameEnglish: officer.lastNameEnglish,
+                    lastNameSinhala: officer.lastNameSinhala,
+                    lastNameTamil: officer.lastNameTamil,
+                    phoneNumber01: officer.phoneNumber01,
+                    phoneNumber02: officer.phoneNumber02,
+                    image: officer.image,
+                    QRcode: officer.QRcode,
+                    nic: officer.nic,
+                    email: officer.email,
+                    passwordUpdated: officer.passwordUpdated,
+                    address: {
+                        houseNumber: officer.houseNumber,
+                        streetName: officer.streetName,
+                        city: officer.city,
+                        district: officer.district,
+                        province: officer.province,
+                        country: officer.country,
+                    },
+                    languages: officer.languages,
+                },
+                companyDetails: {
+                    companyNameEnglish: officer.companyNameEnglish,
+                    companyNameSinhala: officer.companyNameSinhala,
+                    companyNameTamil: officer.companyNameTamil,
+                    jobRole: officer.jobRole,
+                    IRMname: officer.IRMname,
+                    companyEmail: officer.companyEmail,
+                    assignedDistrict: officer.assignedDistrict,
+                    employeeType: officer.employeeType,
+                },
+                bankDetails: {
+                    accHolderName: officer.accHolderName,
+                    accNumber: officer.accNumber,
+                    bankName: officer.bankName,
+                    branchName: officer.branchName,
+                },
+            });
+        });
+    });
+};
+

@@ -62,4 +62,13 @@ router.get(
 );
 
 
+router.get(
+    "/collection-officer-by-id/:id",
+    authMiddleware,
+    CollectionOfficerEp.getOfficerById
+);
+
+
+
+
 module.exports = router;
