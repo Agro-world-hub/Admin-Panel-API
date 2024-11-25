@@ -857,26 +857,67 @@ exports.updatePlantCareUserById = (userData, id) => {
   });
 };
 
+// exports.createPlantCareUser = (userData) => {
+//   return new Promise((resolve, reject) => {
+//     const { firstName, lastName, phoneNumber, NICnumber, fileBuffer } =
+//       userData;
+
+//     const sql = `
+//             INSERT INTO users (firstName, lastName, phoneNumber, NICnumber, profileImage) 
+//             VALUES (?, ?, ?, ?, ?)
+//         `;
+//     const values = [firstName, lastName, phoneNumber, NICnumber, fileBuffer];
+
+//     db.query(sql, values, (err, results) => {
+//       if (err) {
+//         reject(err);
+//       } else {
+//         resolve(results.insertId); // Return the newly created user ID
+//       }
+//     });
+//   });
+// };
+
 exports.createPlantCareUser = (userData) => {
   return new Promise((resolve, reject) => {
-    const { firstName, lastName, phoneNumber, NICnumber, fileBuffer } =
-      userData;
+    const { firstName, lastName, phoneNumber, NICnumber, fileBuffer } = userData;
 
-    const sql = `
+    // SQL query to check if phoneNumber or NICnumber already exists
+    const checkSql = `
+            SELECT id FROM users WHERE phoneNumber = ? OR NICnumber = ?
+        `;
+    const checkValues = [phoneNumber, NICnumber];
+
+    db.query(checkSql, checkValues, (checkErr, checkResults) => {
+      if (checkErr) {
+        return reject(checkErr); // Return the database error
+      }
+
+      if (checkResults.length > 0) {
+        // If a match is found, reject with an error message
+        return reject(new Error('Phone number or NIC number already exists'));
+      }
+
+      // Proceed with the INSERT operation
+      const insertSql = `
             INSERT INTO users (firstName, lastName, phoneNumber, NICnumber, profileImage) 
             VALUES (?, ?, ?, ?, ?)
         `;
-    const values = [firstName, lastName, phoneNumber, NICnumber, fileBuffer];
+      const insertValues = [firstName, lastName, phoneNumber, NICnumber, fileBuffer];
 
-    db.query(sql, values, (err, results) => {
-      if (err) {
-        reject(err);
-      } else {
-        resolve(results.insertId); // Return the newly created user ID
-      }
+      db.query(insertSql, insertValues, (insertErr, insertResults) => {
+        if (insertErr) {
+          console.log(insertErr);
+          
+          reject(insertErr); // Return the database error
+        } else {
+          resolve(insertResults.insertId); // Return the newly created user ID
+        }
+      });
     });
   });
 };
+
 
 exports.getUserById = (userId) => {
   return new Promise((resolve, reject) => {
