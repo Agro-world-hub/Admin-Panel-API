@@ -391,3 +391,123 @@ exports.getOfficerById = (id) => {
     });
 };
 
+
+
+exports.updateOfficerDetails = (id, 
+    centerId,
+        firstNameEnglish,
+        lastNameEnglish,
+        firstNameSinhala,
+        lastNameSinhala,
+        firstNameTamil,
+        lastNameTamil,
+        nic,
+        email,
+        houseNumber,
+        streetName,
+        city,
+        district,
+        province,
+        country,
+        companyNameEnglish,
+        companyNameSinhala,
+        companyNameTamil,
+        IRMname,
+        companyEmail,
+        assignedDistrict,
+        employeeType,
+        accHolderName,
+        accNumber,
+        bankName,
+        branchName
+) => {
+    return new Promise((resolve, reject) => {
+       
+
+        db.beginTransaction((err) => {
+            if (err) return reject(err);
+
+            const updateOfficerSQL = `
+                UPDATE collectionofficer
+                SET centerId = ?, firstNameEnglish = ?, lastNameEnglish = ?, firstNameSinhala = ?, lastNameSinhala = ?,
+                    firstNameTamil = ?, lastNameTamil = ?, nic = ?, email = ?, houseNumber = ?, streetName = ?, city = ?,
+                    district = ?, province = ?, country = ?
+                WHERE id = ?
+            `;
+
+            const updateOfficerParams = [
+                centerId,
+                firstNameEnglish,
+                lastNameEnglish,
+                firstNameSinhala,
+                lastNameSinhala,
+                firstNameTamil,
+                lastNameTamil,
+                nic,
+                email,
+                houseNumber,
+                streetName,
+                city,
+                district,
+                province,
+                country,
+                id,
+            ];
+
+            const updateBankDetailsSQL = `
+                UPDATE collectionofficerbankdetails
+                SET accHolderName = ?, accNumber = ?, bankName = ?, branchName = ?
+                WHERE collectionOfficerId = ?
+            `;
+
+            const updateBankDetailsParams = [
+                accHolderName,
+                accNumber,
+                bankName,
+                branchName,
+                id,
+            ];
+
+            const updateCompanyDetailsSQL = `
+                UPDATE collectionofficercompanydetails
+                SET companyNameEnglish = ?, companyNameSinhala = ?, companyNameTamil = ?, IRMname = ?, 
+                    companyEmail = ?, assignedDistrict = ?, employeeType = ?
+                WHERE collectionOfficerId = ?
+            `;
+
+            const updateCompanyDetailsParams = [
+                companyNameEnglish,
+                companyNameSinhala,
+                companyNameTamil,
+                IRMname,
+                companyEmail,
+                assignedDistrict,
+                employeeType,
+                id,
+            ];
+
+            db.query(updateOfficerSQL, updateOfficerParams, (err, result) => {
+                if (err) {
+                    return db.rollback(() => reject(err));
+                }
+
+                db.query(updateBankDetailsSQL, updateBankDetailsParams, (err, result) => {
+                    if (err) {
+                        return db.rollback(() => reject(err));
+                    }
+
+                    db.query(updateCompanyDetailsSQL, updateCompanyDetailsParams, (err, result) => {
+                        if (err) {
+                            return db.rollback(() => reject(err));
+                        }
+
+                        db.commit((err) => {
+                            if (err) return db.rollback(() => reject(err));
+                            resolve(result);
+                        });
+                    });
+                });
+            });
+        });
+    });
+};

@@ -86,6 +86,12 @@ router.get(
     CollectionOfficerEp.getOfficerById
 );
 
+router.put(
+    '/update-officer-details/:id', 
+    authMiddleware, 
+    CollectionOfficerEp.updateCollectionOfficerDetails
+);
+
 
 
 

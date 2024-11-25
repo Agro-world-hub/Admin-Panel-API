@@ -7,6 +7,8 @@ const xlsx = require("xlsx");
 const collectionofficerDao = require("../dao/CollectionOfficer-dao");
 const collectionofficerValidate = require('../validations/CollectionOfficer-validation');
 
+const Joi = require('joi');
+
 
 exports.createCollectionOfficer = async (req, res) => {
     const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
@@ -252,3 +254,73 @@ exports.getOfficerById = async (req, res) => {
     }
 };
 
+
+
+
+exports.updateCollectionOfficerDetails = async (req, res) => {
+    const { id } = req.params;
+    const {  
+        centerId,
+        firstNameEnglish,
+        lastNameEnglish,
+        firstNameSinhala,
+        lastNameSinhala,
+        firstNameTamil,
+        lastNameTamil,
+        nic,
+        email,
+        houseNumber,
+        streetName,
+        city,
+        district,
+        province,
+        country,
+        companyNameEnglish,
+        companyNameSinhala,
+        companyNameTamil,
+        IRMname,
+        companyEmail,
+        assignedDistrict,
+        employeeType,
+        accHolderName,
+        accNumber,
+        bankName,
+        branchName
+    } = req.body;
+   
+    
+
+    try {
+        await collectionofficerDao.updateOfficerDetails(id, 
+            centerId,
+            firstNameEnglish,
+            lastNameEnglish,
+            firstNameSinhala,
+            lastNameSinhala,
+            firstNameTamil,
+            lastNameTamil,
+            nic,
+            email,
+            houseNumber,
+            streetName,
+            city,
+            district,
+            province,
+            country,
+            companyNameEnglish,
+            companyNameSinhala,
+            companyNameTamil,
+            IRMname,
+            companyEmail,
+            assignedDistrict,
+            employeeType,
+            accHolderName,
+            accNumber,
+            bankName,
+            branchName);
+        res.json({ message: 'Collection officer details updated successfully' });
+    } catch (err) {
+        console.error('Error updating collection officer details:', err);
+        res.status(500).json({ error: 'Failed to update collection officer details' });
+    }
+};
