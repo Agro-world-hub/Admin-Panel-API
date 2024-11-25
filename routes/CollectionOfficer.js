@@ -80,4 +80,19 @@ router.delete(
 )
 
 
+router.get(
+    "/collection-officer-by-id/:id",
+    authMiddleware,
+    CollectionOfficerEp.getOfficerById
+);
+
+router.put(
+    '/update-officer-details/:id', 
+    authMiddleware, 
+    CollectionOfficerEp.updateCollectionOfficerDetails
+);
+
+
+
+
 module.exports = router;

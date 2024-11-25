@@ -7,6 +7,8 @@ const xlsx = require("xlsx");
 const collectionofficerDao = require("../dao/CollectionOfficer-dao");
 const collectionofficerValidate = require('../validations/CollectionOfficer-validation');
 
+const Joi = require('joi');
+
 
 exports.createCollectionOfficer = async (req, res) => {
     const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
@@ -225,5 +227,100 @@ exports.deleteCollectionOfficer = async (req, res) => {
 
         console.error("Error retrieving Updated Status:", error);
         return res.status(500).json({ error: "An error occurred while Updated Statuss" });
+    }
+};
+
+
+
+
+
+exports.getOfficerById = async (req, res) => {
+    try {
+        const id = req.params.id;
+        const officerData = await collectionofficerDao.getOfficerById(id);
+
+        if (!officerData) {
+            return res.status(404).json({ error: "Collection Officer not found" });
+        }
+
+        console.log("Successfully fetched collection officer, company, and bank details");
+        res.json({ officerData });
+    } catch (err) {
+        if (err.isJoi) {
+            return res.status(400).json({ error: err.details[0].message });
+        }
+        console.error("Error executing query:", err);
+        res.status(500).send("An error occurred while fetching data.");
+    }
+};
+
+
+
+
+exports.updateCollectionOfficerDetails = async (req, res) => {
+    const { id } = req.params;
+    const {  
+        centerId,
+        firstNameEnglish,
+        lastNameEnglish,
+        firstNameSinhala,
+        lastNameSinhala,
+        firstNameTamil,
+        lastNameTamil,
+        nic,
+        email,
+        houseNumber,
+        streetName,
+        city,
+        district,
+        province,
+        country,
+        companyNameEnglish,
+        companyNameSinhala,
+        companyNameTamil,
+        IRMname,
+        companyEmail,
+        assignedDistrict,
+        employeeType,
+        accHolderName,
+        accNumber,
+        bankName,
+        branchName
+    } = req.body;
+   
+    
+
+    try {
+        await collectionofficerDao.updateOfficerDetails(id, 
+            centerId,
+            firstNameEnglish,
+            lastNameEnglish,
+            firstNameSinhala,
+            lastNameSinhala,
+            firstNameTamil,
+            lastNameTamil,
+            nic,
+            email,
+            houseNumber,
+            streetName,
+            city,
+            district,
+            province,
+            country,
+            companyNameEnglish,
+            companyNameSinhala,
+            companyNameTamil,
+            IRMname,
+            companyEmail,
+            assignedDistrict,
+            employeeType,
+            accHolderName,
+            accNumber,
+            bankName,
+            branchName);
+        res.json({ message: 'Collection officer details updated successfully' });
+    } catch (err) {
+        console.error('Error updating collection officer details:', err);
+        res.status(500).json({ error: 'Failed to update collection officer details' });
     }
 };
