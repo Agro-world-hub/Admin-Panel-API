@@ -2098,13 +2098,13 @@ exports.getPaymentSlipReport = async (req, res) => {
     const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
     console.log("Request URL:", fullUrl);
 
-    const payments = await adminDao.getPaymentSlipReport();
+    const payments = await adminDao.getPaymentSlipReport();    
 
     console.log("Successfully fetched farmer payments");
 
     res.json({
       total: payments.length,
-      items: payments[0],
+      items: payments,
     });
 
   } catch (error) {

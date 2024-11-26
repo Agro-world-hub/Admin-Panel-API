@@ -1659,8 +1659,8 @@ exports.getPaymentSlipReport = () => {
           users.lastName AS farmerLastName,
           users.NICnumber AS farmerNIC,
           SUM(registeredfarmerpayments.total) AS totalPaymentAmount,
-          officer.firstName AS officerFirstName,
-          officer.lastName AS officerLastName,
+          officer.firstNameEnglish AS officerFirstName,
+          officer.lastNameEnglish AS officerLastName,
           DATE(registeredfarmerpayments.createdAt) AS paymentDate
       FROM 
           registeredfarmerpayments
