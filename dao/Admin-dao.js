@@ -908,7 +908,7 @@ exports.createPlantCareUser = (userData) => {
       db.query(insertSql, insertValues, (insertErr, insertResults) => {
         if (insertErr) {
           console.log(insertErr);
-          
+
           reject(insertErr); // Return the database error
         } else {
           resolve(insertResults.insertId); // Return the newly created user ID
@@ -1480,8 +1480,8 @@ exports.getAllTaskIdDaoU = (cropId, userId) => {
 
 exports.addNewTaskDaoU = (task, indexId, userId, cropId, onCulscropID) => {
   console.log("Dao Task: ", task);
-  const defStatus= 'Pending';
-  
+  const defStatus = 'Pending';
+
 
   return new Promise((resolve, reject) => {
     const sql =
@@ -1654,20 +1654,10 @@ exports.shiftUpUserTaskIndexDao = (taskId, indexId) => {
 exports.getPaymentSlipReport = () => {
   return new Promise((resolve, reject) => {
     const dataSql = `
-      SELECT 
-          users.firstName AS farmerFirstName,
-          users.lastName AS farmerLastName,
-          users.NICnumber AS farmerNIC,
-          SUM(registeredfarmerpayments.total) AS totalPaymentAmount,
-          officer.firstNameEnglish AS officerFirstName,
-          officer.lastNameEnglish AS officerLastName,
-          DATE(registeredfarmerpayments.createdAt) AS paymentDate
-      FROM 
-          registeredfarmerpayments
-      JOIN users ON registeredfarmerpayments.userId = users.id
-      JOIN collectionofficer AS officer ON registeredfarmerpayments.collectionOfficerId = officer.id
-      GROUP BY 
-          users.id, officer.id, DATE(registeredfarmerpayments.createdAt);
+      SELECT u.firstName, u.lastName, u.NICnumber, SUM(gradeAprice)+SUM(gradeBprice)+SUM(gradeCprice) AS total
+      FROM registeredfarmerpayments rp, users u ,farmerpaymentscrops fpc
+      WHERE rp.userId = u.id AND rp.id = fpc.registerFarmerId 
+      GROUP BY u.firstName, u.lastName, u.NICnumber
     `;
 
     db.query(dataSql, (error, results) => {
@@ -1688,14 +1678,14 @@ exports.getPaymentSlipReport = () => {
 //           users.NICnumber AS farmerNIC,
 //           users.phoneNumber AS farmerPhoneNumber,
 //           SUM(registeredfarmerpayments.total) AS totalPaymentAmount,
-          
+
 //           officer.firstNameEnglish AS officerFirstName,
 //           officer.lastNameSinhala AS officerLastName,
 //           officer.phoneNumber01 AS officerPhone1,
 //           officer.phoneNumber02 AS officerPhone2,
 //           officer.email AS officerEmail,
 //           officer.image AS officerImage,  -- Added officer image column
-          
+
 //           registeredfarmerpayments.cropId AS cropName,
 //           registeredfarmerpayments.gradeAprice AS unitPriceA,
 //           registeredfarmerpayments.gradeAquan  AS quanA
@@ -1704,7 +1694,7 @@ exports.getPaymentSlipReport = () => {
 //           registeredfarmerpayments.gradeCprice AS unitPriceC,
 //           registeredfarmerpayments.gradeCquan  AS quanC,
 //           DATE(registeredfarmerpayments.createdAt) AS paymentDate,
-          
+
 //           ANY_VALUE(userBank.accHolderName) AS farmerBankAccountHolder,
 //           ANY_VALUE(userBank.accNumber) AS farmerAccountNumber,
 //           ANY_VALUE(userBank.bankName) AS farmerBankName,
@@ -1742,9 +1732,7 @@ exports.getPaymentSlipReport = () => {
 //   });
 // };
 
-// DAO function to get farmer payment report
-
-// DAO function to get farmer payment report with bank details
+// DAO function to get farmer report with farmerpaymentscrops details
 exports.getFarmerListReport = () => {
   return new Promise((resolve, reject) => {
     const dataSql = `
@@ -1776,14 +1764,15 @@ exports.getFarmerListReport = () => {
 
           -- Payment details
           registeredfarmerpayments.cropId AS cropId,
-          registeredfarmerpayments.gradeAprice AS gradeAPrice,
-          registeredfarmerpayments.gradeAquan AS gradeAQuantity,
-          registeredfarmerpayments.gradeBprice AS gradeBPrice,
-          registeredfarmerpayments.gradeBquan AS gradeBQuantity,
-          registeredfarmerpayments.gradeCprice AS gradeCPrice,
-          registeredfarmerpayments.gradeCquan AS gradeCQuantity,
-          registeredfarmerpayments.total AS totalPaymentAmount,
-          DATE(registeredfarmerpayments.createdAt) AS paymentDate
+          DATE(registeredfarmerpayments.createdAt) AS paymentDate,
+
+          -- Crop payment details
+          farmerCrops.gradeAprice AS gradeAPrice,
+          farmerCrops.gradeBprice AS gradeBPrice,
+          farmerCrops.gradeCprice AS gradeCPrice,
+          farmerCrops.gradeAquan AS gradeAQuantity,
+          farmerCrops.gradeBquan AS gradeBQuantity,
+          farmerCrops.gradeCquan AS gradeCQuantity
 
       FROM 
           registeredfarmerpayments
@@ -1793,32 +1782,34 @@ exports.getFarmerListReport = () => {
           ON users.id = userBank.userId
       JOIN collectionofficer AS officer 
           ON registeredfarmerpayments.collectionOfficerId = officer.id
+      LEFT JOIN farmerpaymentscrops AS farmerCrops
+          ON registeredfarmerpayments.id = farmerCrops.registerFarmerId
 
       GROUP BY 
           users.id, 
           userBank.id,
           officer.id, 
           registeredfarmerpayments.cropId,
-          registeredfarmerpayments.gradeAprice, 
-          registeredfarmerpayments.gradeAquan,
-          registeredfarmerpayments.gradeBprice, 
-          registeredfarmerpayments.gradeBquan,
-          registeredfarmerpayments.gradeCprice, 
-          registeredfarmerpayments.gradeCquan,
-          registeredfarmerpayments.total,
-          DATE(registeredfarmerpayments.createdAt)
+          DATE(registeredfarmerpayments.createdAt),
+          farmerCrops.gradeAprice,
+          farmerCrops.gradeBprice,
+          farmerCrops.gradeCprice,
+          farmerCrops.gradeAquan,
+          farmerCrops.gradeBquan,
+          farmerCrops.gradeCquan
     `;
 
     db.query(dataSql, (error, results) => {
       if (error) {
         reject(error);
       } else {
+        console.log(results);
+        
         resolve(results);
       }
     });
   });
 };
-
 
 
 
@@ -1859,19 +1850,19 @@ exports.insertUserXLSXData = (data) => {
 
       // Check for existing users
       const existingUsers = await new Promise((resolve, reject) => {
-        const phones = validatedData.map(row => 
-          String(row["Phone Number"]).startsWith("+") 
-            ? row["Phone Number"] 
+        const phones = validatedData.map(row =>
+          String(row["Phone Number"]).startsWith("+")
+            ? row["Phone Number"]
             : `+${row["Phone Number"]}`
         );
         const nics = validatedData.map(row => String(row["NIC Number"]));
-        
+
         const sql = `
           SELECT firstName, lastName, phoneNumber, NICnumber 
           FROM users 
           WHERE phoneNumber IN (?) OR NICnumber IN (?)
         `;
-        
+
         db.query(sql, [phones, nics], (err, results) => {
           if (err) reject(err);
           else resolve(results);
@@ -1882,10 +1873,10 @@ exports.insertUserXLSXData = (data) => {
         // Filter out existing users
         const existingPhones = new Set(existingUsers.map(user => user.phoneNumber));
         const existingNICs = new Set(existingUsers.map(user => user.NICnumber));
-        
+
         const newUsers = validatedData.filter(user => {
-          const phone = String(user["Phone Number"]).startsWith("+") 
-            ? user["Phone Number"] 
+          const phone = String(user["Phone Number"]).startsWith("+")
+            ? user["Phone Number"]
             : `+${user["Phone Number"]}`;
           const nic = String(user["NIC Number"]);
           return !existingPhones.has(phone) && !existingNICs.has(nic);
@@ -1902,8 +1893,8 @@ exports.insertUserXLSXData = (data) => {
           const values = newUsers.map(row => [
             row["First Name"],
             row["Last Name"],
-            String(row["Phone Number"]).startsWith("+") 
-              ? row["Phone Number"] 
+            String(row["Phone Number"]).startsWith("+")
+              ? row["Phone Number"]
               : `+${row["Phone Number"]}`,
             String(row["NIC Number"])
           ]);
@@ -1933,8 +1924,8 @@ exports.insertUserXLSXData = (data) => {
         const values = validatedData.map(row => [
           row["First Name"],
           row["Last Name"],
-          String(row["Phone Number"]).startsWith("+") 
-            ? row["Phone Number"] 
+          String(row["Phone Number"]).startsWith("+")
+            ? row["Phone Number"]
             : `+${row["Phone Number"]}`,
           String(row["NIC Number"])
         ]);
