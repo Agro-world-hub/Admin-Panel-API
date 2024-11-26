@@ -1942,6 +1942,91 @@ exports.addNewTaskU = async (req, res) => {
   }
 };
 
+// exports.uploadUsersXLSX = async (req, res) => {
+//   try {
+//     if (!req.file) {
+//       return res.status(400).json({ error: "No file uploaded." });
+//     }
+
+//     console.log("File details:", {
+//       fieldname: req.file.fieldname,
+//       originalname: req.file.originalname,
+//       encoding: req.file.encoding,
+//       mimetype: req.file.mimetype,
+//       size: req.file.size,
+//       path: req.file.path, // Log the path if it exists
+//       buffer: req.file.buffer ? "Buffer exists" : "Buffer is undefined",
+//     });
+
+//     // Validate file type
+//     const allowedExtensions = [".xlsx", ".xls"];
+//     const fileExtension = path.extname(req.file.originalname).toLowerCase();
+//     if (!allowedExtensions.includes(fileExtension)) {
+//       return res.status(400).json({
+//         error: "Invalid file type. Only XLSX and XLS files are allowed.",
+//       });
+//     }
+
+//     // Read the XLSX file
+//     let workbook;
+//     try {
+//       if (req.file.buffer) {
+//         // If buffer exists, read from buffer
+//         workbook = xlsx.read(req.file.buffer, { type: "buffer" });
+//       } else if (req.file.path) {
+//         // If path exists, read from file
+//         workbook = xlsx.readFile(req.file.path);
+//       } else {
+//         throw new Error("Neither file buffer nor path is available");
+//       }
+//     } catch (error) {
+//       console.error("Error reading XLSX file:", error);
+//       return res.status(400).json({
+//         error:
+//           "Unable to read the uploaded file. Please ensure it's a valid XLSX or XLS file.",
+//       });
+//     }
+
+//     if (!workbook || !workbook.SheetNames || workbook.SheetNames.length === 0) {
+//       return res
+//         .status(400)
+//         .json({ error: "The uploaded file is empty or invalid." });
+//     }
+
+//     const sheetName = workbook.SheetNames[0];
+//     const worksheet = workbook.Sheets[sheetName];
+//     const data = xlsx.utils.sheet_to_json(worksheet);
+
+//     // Validate data structure
+//     if (data.length === 0) {
+//       return res
+//         .status(400)
+//         .json({ error: "The uploaded file contains no valid data." });
+//     }
+
+//     // console.log("First row of data:", data[0]);
+
+//     // Insert data into the database via DAO
+//     const rowsAffected = await adminDao.insertUserXLSXData(data);
+
+//     // Respond with success
+//     return res.status(200).json({
+//       message: "File uploaded and data inserted successfully",
+//       rowsAffected,
+//     });
+//   } catch (error) {
+//     if (error.isJoi) {
+//       return res.status(400).json({ error: error.details[0].message });
+//     }
+//     console.error("Error processing XLSX file:", error);
+//     return res
+//       .status(500)
+//       .json({ error: "An error occurred while processing the XLSX file." });
+//   }
+// };
+
+
+
 exports.uploadUsersXLSX = async (req, res) => {
   try {
     if (!req.file) {
@@ -1954,7 +2039,7 @@ exports.uploadUsersXLSX = async (req, res) => {
       encoding: req.file.encoding,
       mimetype: req.file.mimetype,
       size: req.file.size,
-      path: req.file.path, // Log the path if it exists
+      path: req.file.path,
       buffer: req.file.buffer ? "Buffer exists" : "Buffer is undefined",
     });
 
@@ -1971,10 +2056,8 @@ exports.uploadUsersXLSX = async (req, res) => {
     let workbook;
     try {
       if (req.file.buffer) {
-        // If buffer exists, read from buffer
         workbook = xlsx.read(req.file.buffer, { type: "buffer" });
       } else if (req.file.path) {
-        // If path exists, read from file
         workbook = xlsx.readFile(req.file.path);
       } else {
         throw new Error("Neither file buffer nor path is available");
@@ -1982,48 +2065,63 @@ exports.uploadUsersXLSX = async (req, res) => {
     } catch (error) {
       console.error("Error reading XLSX file:", error);
       return res.status(400).json({
-        error:
-          "Unable to read the uploaded file. Please ensure it's a valid XLSX or XLS file.",
+        error: "Unable to read the uploaded file. Please ensure it's a valid XLSX or XLS file.",
       });
     }
 
     if (!workbook || !workbook.SheetNames || workbook.SheetNames.length === 0) {
-      return res
-        .status(400)
-        .json({ error: "The uploaded file is empty or invalid." });
+      return res.status(400).json({ error: "The uploaded file is empty or invalid." });
     }
 
     const sheetName = workbook.SheetNames[0];
     const worksheet = workbook.Sheets[sheetName];
     const data = xlsx.utils.sheet_to_json(worksheet);
 
-    // Validate data structure
     if (data.length === 0) {
-      return res
-        .status(400)
-        .json({ error: "The uploaded file contains no valid data." });
+      return res.status(400).json({ error: "The uploaded file contains no valid data." });
     }
 
-    // console.log("First row of data:", data[0]);
+    // Insert data and check for existing users
+    const result = await adminDao.insertUserXLSXData(data);
 
-    // Insert data into the database via DAO
-    const rowsAffected = await adminDao.insertUserXLSXData(data);
+    // If there are existing users, generate and send XLSX file
+    if (result.existingUsers && result.existingUsers.length > 0) {
+      // Create a new workbook for existing users
+      const wb = xlsx.utils.book_new();
+      const ws = xlsx.utils.json_to_sheet(result.existingUsers);
+      xlsx.utils.book_append_sheet(wb, ws, "Existing Users");
 
-    // Respond with success
+      // Generate buffer
+      const excelBuffer = xlsx.write(wb, { type: 'buffer', bookType: 'xlsx' });
+
+      // Set headers for file download
+      res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+      res.setHeader('Content-Disposition', 'attachment; filename=existing_users.xlsx');
+      
+      // Send both the file and JSON response
+      return res.status(200).send({
+        message: "Some users already exist in the database",
+        existingUsers: result.existingUsers,
+        newUsersInserted: result.insertedRows,
+        file: excelBuffer
+      });
+    }
+
+    // If no existing users, send success response
     return res.status(200).json({
       message: "File uploaded and data inserted successfully",
-      rowsAffected,
+      rowsAffected: result.insertedRows
     });
+
   } catch (error) {
     if (error.isJoi) {
       return res.status(400).json({ error: error.details[0].message });
     }
     console.error("Error processing XLSX file:", error);
-    return res
-      .status(500)
-      .json({ error: "An error occurred while processing the XLSX file." });
+    return res.status(500).json({ error: "An error occurred while processing the XLSX file." });
   }
 };
+
 
 exports.getAllRoles = async (req, res) => {
   try {
