@@ -68,41 +68,53 @@ exports.getAllCollectionOfficers = async (req, res) => {
 };
 
 
-exports.getCollectionOfficerReports = async (req, res) => {
-    const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
-    console.log(fullUrl);
 
-    const { id, date } = req.params;
+
+
+exports.getCollectionOfficerReports = async (req, res) => {
+    const { id: collectionOfficerId, date } = req.params;
 
     try {
-        // Validate request parameters
-        await collectionofficerValidate.getCollectionOfficerReportsSchema.validateAsync({ id, date });
+        // Validate the request parameters
+        await collectionofficerValidate.getCollectionOfficerReportsSchema.validateAsync({ id: collectionOfficerId, date });
 
-        // Call DAO to fetch the reports
-        const results = await collectionofficerDao.getCollectionOfficerReports(id, date);
+        // DAO to fetch `registeredfarmerpayments` IDs
+        const registeredFarmerPayments = await collectionofficerDao.getRegisteredFarmerPaymentsByOfficer(collectionOfficerId, date);
 
-        // Create an empty object to store the grouped data
+        // if (!registeredFarmerPayments.length) {
+        //     return res.status(404).json({ error: "No registered farmer payments found for the specified officer and date." });
+        // }
+
+        // Fetch the details for each `registeredFarmerId` from `farmerpaymentscrops`
+        const farmerPaymentsCrops = await Promise.all(
+            registeredFarmerPayments.map(payment =>
+                collectionofficerDao.getFarmerPaymentsCropsByRegisteredFarmerId(payment.id)
+                
+            )
+        );
+
+        // Flatten the results into one array
+        const cropsDetails = farmerPaymentsCrops.flat();
+
+        // Group data by cropName and quality
         const groupedData = {};
+        cropsDetails.forEach(row => {
+            const { varietyNameEnglish, totalQuantity, gradeAquan, gradeBquan, gradeCquan } = row;
 
-        // Iterate over the results and group them by cropName
-        results.forEach(row => {
-            const { cropName, quality, totalQuantity } = row;
-
-            // Initialize an entry for each crop if not already present
-            if (!groupedData[cropName]) {
-                groupedData[cropName] = { 'Grade A': 0, 'Grade B': 0, 'Grade C': 0, 'Total': 0 };
+            if (!groupedData[varietyNameEnglish]) {
+                groupedData[varietyNameEnglish] = { 'Grade A': 0, 'Grade B': 0, 'Grade C': 0, 'Total': 0 };
             }
 
-            // Assign quantity based on quality/grade
-            groupedData[cropName][quality] = parseInt(totalQuantity, 10) || 0; 
-            groupedData[cropName]['Total'] += parseInt(totalQuantity, 10) || 0; 
+            // groupedData[varietyNameEnglish][quality] = parseFloat(totalQuantity) || 0;
+            groupedData[varietyNameEnglish]['Grade A'] += parseFloat(gradeAquan) || 0;
+            groupedData[varietyNameEnglish]['Grade B'] += parseFloat(gradeBquan) || 0;
+            groupedData[varietyNameEnglish]['Grade C'] += parseFloat(gradeCquan) || 0;
+            groupedData[varietyNameEnglish]['Total'] += parseFloat(totalQuantity) || 0;
         });
 
-        // Send the formatted response
         return res.json(groupedData);
     } catch (error) {
         if (error.isJoi) {
-            // Handle validation error
             return res.status(400).json({ error: error.details[0].message });
         }
 
@@ -110,6 +122,7 @@ exports.getCollectionOfficerReports = async (req, res) => {
         return res.status(500).json({ error: "An error occurred while fetching reports" });
     }
 };
+
 
 
 

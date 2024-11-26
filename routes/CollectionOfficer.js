@@ -44,7 +44,7 @@ router.get(
 
 router.get(
     "/collection-officer/get-collection-officer-report/:id/:date",
-    authMiddleware,
+    // authMiddleware,
     CollectionOfficerEp.getCollectionOfficerReports
 );
 

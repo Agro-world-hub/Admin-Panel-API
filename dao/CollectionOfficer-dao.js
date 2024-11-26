@@ -157,15 +157,15 @@ exports.getAllCollectionOfficers = (page, limit, searchNIC, companyid) => {
 };
 
 
-exports.getCollectionOfficerReports = (collectionOfficerId, date) => {
+
+
+exports.getRegisteredFarmerPaymentsByOfficer = (collectionOfficerId, date) => {
     return new Promise((resolve, reject) => {
         const sql = `
-            SELECT cropName, quality, SUM(weight) AS totalQuantity
-            FROM registeredfarmerpayments 
+            SELECT id 
+            FROM registeredfarmerpayments
             WHERE collectionOfficerId = ? 
-            AND DATE(createdAt) = ?
-            GROUP BY cropName, quality
-            ORDER BY cropName, quality;
+            AND DATE(createdAt) = ?;
         `;
         const values = [collectionOfficerId, date];
 
@@ -177,6 +177,31 @@ exports.getCollectionOfficerReports = (collectionOfficerId, date) => {
         });
     });
 };
+
+
+exports.getFarmerPaymentsCropsByRegisteredFarmerId = (registeredFarmerId) => {
+    return new Promise((resolve, reject) => {
+        const sql = `
+            SELECT c.varietyNameEnglish, fc.gradeAprice AS 'Grade A', fc.gradeBprice AS 'Grade B', fc.gradeCprice AS 'Grade C',
+                   (fc.gradeAquan + fc.gradeBquan + fc.gradeCquan) AS totalQuantity, fc.gradeAquan, fc.gradeBquan, fc.gradeCquan
+            FROM farmerpaymentscrops fc
+            JOIN cropvariety c ON fc.cropId = c.id
+            WHERE fc.registerFarmerId = ?;
+        `;
+        const values = [registeredFarmerId];
+
+        db.query(sql, values, (err, results) => {
+            if (err) {
+                return reject(err);
+            }
+            resolve(results);
+        });
+    });
+};
+
+
+
+
 
 
 exports.createCollectionOfficerCompany = (companyData, collectionOfficerId) => {

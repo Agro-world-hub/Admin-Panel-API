@@ -926,24 +926,14 @@ const createRegisteredFarmerPayments = () => {
       id INT AUTO_INCREMENT PRIMARY KEY,
       userId INT,
       collectionOfficerId INT,
-      cropId INT,
-      gradeAprice DECIMAL(8, 2) NOT NULL,
-      gradeBprice DECIMAL(8, 2) NOT NULL,
-      gradeCprice DECIMAL(8, 2) NOT NULL,
-      gradeAquan INT(11) NOT NULL,
-      gradeBquan INT(11) NOT NULL,
-      gradeCquan INT(11) NOT NULL,
-      total DECIMAL(8, 2) NOT NULL,
       createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (userId) REFERENCES users(id)
-        ON DELETE SET NULL
+        ON DELETE CASCADE
         ON UPDATE CASCADE,
       FOREIGN KEY (collectionOfficerId) REFERENCES collectionofficer(id)
-        ON DELETE SET NULL
-        ON UPDATE CASCADE,
-      FOREIGN KEY (cropId) REFERENCES cropCalender(id)
-        ON DELETE SET NULL
+        ON DELETE CASCADE
         ON UPDATE CASCADE
+      
     )
   `;
     return new Promise((resolve, reject) => {
@@ -956,6 +946,42 @@ const createRegisteredFarmerPayments = () => {
         });
     });
 };
+
+
+const createFarmerPaymensCrops = () => {
+    const sql = `
+    CREATE TABLE IF NOT EXISTS farmerpaymentscrops (
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      registerFarmerId INT,
+      cropId INT,
+      gradeAprice DECIMAL(8, 2) NULL,
+      gradeBprice DECIMAL(8, 2) NULL,
+      gradeCprice DECIMAL(8, 2) NULL,
+      gradeAquan DECIMAL(8, 2) NULL,
+      gradeBquan DECIMAL(8, 2) NULL,
+      gradeCquan DECIMAL(8, 2) NULL,
+      createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (registerFarmerId) REFERENCES registeredfarmerpayments(id)
+        ON DELETE CASCADE
+        ON UPDATE CASCADE,
+      FOREIGN KEY (cropId) REFERENCES cropvariety(id)
+        ON DELETE CASCADE
+        ON UPDATE CASCADE
+    )
+  `;
+    return new Promise((resolve, reject) => {
+        db.query(sql, (err, result) => {
+            if (err) {
+                reject('Error creating farmerpaymentscrops table: ' + err);
+            } else {
+                resolve('farmerpaymentscrops table created successfully.');
+            }
+        });
+    });
+};
+
+
+
 
 const createUserBankDetails = () => {
     const sql = `
@@ -1319,6 +1345,7 @@ module.exports = {
     createCollectionOfficerCompanyDetails,
     createCollectionOfficerBankDetails,
     createRegisteredFarmerPayments,
+    createFarmerPaymensCrops,
     createUserBankDetails,
     createCollectionCenter,
     createCollectionCenterOfficer,

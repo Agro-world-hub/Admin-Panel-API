@@ -36,6 +36,7 @@ const { createCollectionOfficer } = require('./tables');
 const { createCollectionOfficerCompanyDetails } = require('./tables');
 const { createCollectionOfficerBankDetails } = require('./tables');
 const { createRegisteredFarmerPayments } = require('./tables');
+const { createFarmerPaymensCrops } = require('./tables');
 const { createUserBankDetails } = require('./tables');
 const { createCollectionCenter } = require('./tables');
 const { createCollectionCenterOfficer } = require('./tables');
@@ -143,6 +144,8 @@ const runSeeds = async () => {
     console.log(messagecreateCollectionOfficerBankDetails);
     const messageCreateRegisteredFarmerPayments = await createRegisteredFarmerPayments();
     console.log(messageCreateRegisteredFarmerPayments);
+    const messageCreateFarmerPaymensCrops = await createFarmerPaymensCrops();
+    console.log(messageCreateFarmerPaymensCrops);
     const messageCreateUserBankDetails = await createUserBankDetails();
     console.log(messageCreateUserBankDetails);
     
