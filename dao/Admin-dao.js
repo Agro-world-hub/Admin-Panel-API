@@ -1679,70 +1679,143 @@ exports.getPaymentSlipReport = () => {
     });
   });
 };
+// exports.getFarmerListReport = () => {
+//   return new Promise((resolve, reject) => {
+//     const dataSql = `
+//       SELECT 
+//           users.firstName AS farmerFirstName,
+//           users.lastName AS farmerLastName,
+//           users.NICnumber AS farmerNIC,
+//           users.phoneNumber AS farmerPhoneNumber,
+//           SUM(registeredfarmerpayments.total) AS totalPaymentAmount,
+          
+//           officer.firstNameEnglish AS officerFirstName,
+//           officer.lastNameSinhala AS officerLastName,
+//           officer.phoneNumber01 AS officerPhone1,
+//           officer.phoneNumber02 AS officerPhone2,
+//           officer.email AS officerEmail,
+//           officer.image AS officerImage,  -- Added officer image column
+          
+//           registeredfarmerpayments.cropId AS cropName,
+//           registeredfarmerpayments.gradeAprice AS unitPriceA,
+//           registeredfarmerpayments.gradeAquan  AS quanA
+//           registeredfarmerpayments.gradeBprice AS unitPriceB,
+//           registeredfarmerpayments.gradeBquan  AS quanB
+//           registeredfarmerpayments.gradeCprice AS unitPriceC,
+//           registeredfarmerpayments.gradeCquan  AS quanC,
+//           DATE(registeredfarmerpayments.createdAt) AS paymentDate,
+          
+//           ANY_VALUE(userBank.accHolderName) AS farmerBankAccountHolder,
+//           ANY_VALUE(userBank.accNumber) AS farmerAccountNumber,
+//           ANY_VALUE(userBank.bankName) AS farmerBankName,
+//           ANY_VALUE(userBank.branchName) AS farmerBranchName,
+//           ANY_VALUE(userBank.address) AS farmerAddress
+//       FROM 
+//           registeredfarmerpayments
+//       JOIN users ON registeredfarmerpayments.userId = users.id
+//       LEFT JOIN userbankdetails AS userBank ON users.id = userBank.userId
+//       JOIN collectionofficer AS officer ON registeredfarmerpayments.collectionOfficerId = officer.id
+//       LEFT JOIN collectionofficerbankdetails AS officerBank ON officer.id = officerBank.collectionOfficerId
+//       GROUP BY 
+//           users.id, 
+//           officer.id, 
+//           DATE(registeredfarmerpayments.createdAt), 
+//           registeredfarmerpayments.cropName, 
+//           registeredfarmerpayments.unitPriceA, 
+//           registeredfarmerpayments.weightA,
+//           registeredfarmerpayments.image, 
+//           registeredfarmerpayments.variety, 
+//           registeredfarmerpayments.weightB, 
+//           registeredfarmerpayments.weightC, 
+//           registeredfarmerpayments.unitPriceB, 
+//           registeredfarmerpayments.unitPriceC,
+//           registeredfarmerpayments.qty;
+//     `;
+
+//     db.query(dataSql, (error, results) => {
+//       if (error) {
+//         reject(error);
+//       } else {
+//         resolve(results[0]);
+//       }
+//     });
+//   });
+// };
+
+// DAO function to get farmer payment report
+
+// DAO function to get farmer payment report with bank details
 exports.getFarmerListReport = () => {
   return new Promise((resolve, reject) => {
     const dataSql = `
       SELECT 
+          -- Farmer details
           users.firstName AS farmerFirstName,
           users.lastName AS farmerLastName,
           users.NICnumber AS farmerNIC,
           users.phoneNumber AS farmerPhoneNumber,
-          SUM(registeredfarmerpayments.total) AS totalPaymentAmount,
-          
-          officer.firstName AS officerFirstName,
-          officer.lastName AS officerLastName,
-          officer.phoneNumber01 AS officerPhone1,
-          officer.phoneNumber02 AS officerPhone2,
-          officer.email AS officerEmail,
-          officer.image AS officerImage,  -- Added officer image column
-          
-          registeredfarmerpayments.cropName AS cropName,
-          registeredfarmerpayments.unitPriceA AS unitPriceA,
-          registeredfarmerpayments.weightA AS weightA,
-          registeredfarmerpayments.image AS paymentImage,
-          registeredfarmerpayments.variety AS cropVariety,
-          registeredfarmerpayments.weightB AS weightB,
-          registeredfarmerpayments.weightC AS weightC,
-          registeredfarmerpayments.unitPriceB AS unitPriceB,
-          registeredfarmerpayments.unitPriceC AS unitPriceC,
-          registeredfarmerpayments.qty AS qty,
-          DATE(registeredfarmerpayments.createdAt) AS paymentDate,
-          
-          ANY_VALUE(userBank.accHolderName) AS farmerBankAccountHolder,
-          ANY_VALUE(userBank.accNumber) AS farmerAccountNumber,
-          ANY_VALUE(userBank.bankName) AS farmerBankName,
-          ANY_VALUE(userBank.branchName) AS farmerBranchName,
-          ANY_VALUE(userBank.address) AS farmerAddress
+          users.profileImage AS farmerProfileImage,
+          users.farmerQr AS farmerQR,
+
+          -- Farmer bank details
+          userBank.accHolderName AS farmerBankAccountHolder,
+          userBank.accNumber AS farmerAccountNumber,
+          userBank.bankName AS farmerBankName,
+          userBank.branchName AS farmerBranchName,
+          userBank.address AS farmerBankAddress,
+
+          -- Collection officer details
+          officer.firstNameEnglish AS officerFirstName,
+          officer.lastNameEnglish AS officerLastName,
+          officer.phoneNumber01 AS officerPhone,
+          officer.nic AS officerNIC,
+          officer.QRcode AS officerQR,
+          officer.district AS officerDistrict,
+          officer.province AS officerProvince,
+          officer.createdAt AS officerCreatedDate,
+
+          -- Payment details
+          registeredfarmerpayments.cropId AS cropId,
+          registeredfarmerpayments.gradeAprice AS gradeAPrice,
+          registeredfarmerpayments.gradeAquan AS gradeAQuantity,
+          registeredfarmerpayments.gradeBprice AS gradeBPrice,
+          registeredfarmerpayments.gradeBquan AS gradeBQuantity,
+          registeredfarmerpayments.gradeCprice AS gradeCPrice,
+          registeredfarmerpayments.gradeCquan AS gradeCQuantity,
+          registeredfarmerpayments.total AS totalPaymentAmount,
+          DATE(registeredfarmerpayments.createdAt) AS paymentDate
+
       FROM 
           registeredfarmerpayments
-      JOIN users ON registeredfarmerpayments.userId = users.id
-      LEFT JOIN userbankdetails AS userBank ON users.id = userBank.userId
-      JOIN collectionofficer AS officer ON registeredfarmerpayments.collectionOfficerId = officer.id
-      LEFT JOIN collectionofficerbankdetails AS officerBank ON officer.id = officerBank.collectionOfficerId
+      JOIN users 
+          ON registeredfarmerpayments.userId = users.id
+      LEFT JOIN userbankdetails AS userBank 
+          ON users.id = userBank.userId
+      JOIN collectionofficer AS officer 
+          ON registeredfarmerpayments.collectionOfficerId = officer.id
+
       GROUP BY 
           users.id, 
+          userBank.id,
           officer.id, 
-          DATE(registeredfarmerpayments.createdAt), 
-          registeredfarmerpayments.cropName, 
-          registeredfarmerpayments.unitPriceA, 
-          registeredfarmerpayments.weightA,
-          registeredfarmerpayments.image, 
-          registeredfarmerpayments.variety, 
-          registeredfarmerpayments.weightB, 
-          registeredfarmerpayments.weightC, 
-          registeredfarmerpayments.unitPriceB, 
-          registeredfarmerpayments.unitPriceC,
-          registeredfarmerpayments.qty;
+          registeredfarmerpayments.cropId,
+          registeredfarmerpayments.gradeAprice, 
+          registeredfarmerpayments.gradeAquan,
+          registeredfarmerpayments.gradeBprice, 
+          registeredfarmerpayments.gradeBquan,
+          registeredfarmerpayments.gradeCprice, 
+          registeredfarmerpayments.gradeCquan,
+          registeredfarmerpayments.total,
+          DATE(registeredfarmerpayments.createdAt)
     `;
 
     db.query(dataSql, (error, results) => {
       if (error) {
         reject(error);
       } else {
-        resolve(results[0]);
+        resolve(results);
       }
     });
   });
 };
-
 
