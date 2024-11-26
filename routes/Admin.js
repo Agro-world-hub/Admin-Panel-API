@@ -327,7 +327,7 @@ router.get(
 
 router.get(
     "/farmer-payments",
-    // authMiddleware,
+    authMiddleware,
     AdminEp.getPaymentSlipReport
 );
 

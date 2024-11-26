@@ -1092,10 +1092,53 @@ exports.updatePlantCareUser = async (req, res) => {
   }
 };
 
+// exports.createPlantCareUser = async (req, res) => {
+//   try {
+//     // Validate input data
+//     const validatedBody = req.body;
+//     const { firstName, lastName, phoneNumber, NICnumber } = validatedBody;
+
+//     // Ensure a file is uploaded
+//     if (!req.file) {
+//       return res.status(400).json({ error: "No file uploaded" });
+//     }
+
+//     const fileBuffer = req.file.buffer;
+
+//     const userData = {
+//       firstName,
+//       lastName,
+//       phoneNumber,
+//       NICnumber,
+//       fileBuffer,
+//     };
+
+//     // Call DAO to create the user
+//     const userId = await adminDao.createPlantCareUser(userData);
+
+//     console.log("PlantCare user created successfully");
+//     return res.status(201).json({
+//       message: "PlantCare user created successfully",
+//       id: userId,
+//     });
+//   } catch (error) {
+//     if (error.isJoi) {
+//       // Validation error
+//       return res.status(400).json({ error: error.details[0].message });
+//     }
+
+//     console.error("Error creating PlantCare user:", error);
+//     return res
+//       .status(500)
+//       .json({ error: "An error occurred while creating PlantCare user" });
+//   }
+// };
+
 exports.createPlantCareUser = async (req, res) => {
   try {
     // Validate input data
     const validatedBody = req.body;
+    
     const { firstName, lastName, phoneNumber, NICnumber } = validatedBody;
 
     // Ensure a file is uploaded
@@ -1122,8 +1165,13 @@ exports.createPlantCareUser = async (req, res) => {
       id: userId,
     });
   } catch (error) {
+    if (error.message === "Phone number or NIC number already exists") {
+      // Handle validation error for duplicate phoneNumber or NICnumber
+      return res.status(400).json({ error: error.message });
+    }
+
     if (error.isJoi) {
-      // Validation error
+      // Handle Joi validation error
       return res.status(400).json({ error: error.details[0].message });
     }
 
@@ -1133,6 +1181,7 @@ exports.createPlantCareUser = async (req, res) => {
       .json({ error: "An error occurred while creating PlantCare user" });
   }
 };
+
 
 exports.getUserById = async (req, res) => {
   try {
@@ -2147,13 +2196,13 @@ exports.getPaymentSlipReport = async (req, res) => {
     const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
     console.log("Request URL:", fullUrl);
 
-    const payments = await adminDao.getPaymentSlipReport();
+    const payments = await adminDao.getPaymentSlipReport();    
 
     console.log("Successfully fetched farmer payments");
 
     res.json({
       total: payments.length,
-      items: payments[0],
+      items: payments,
     });
 
   } catch (error) {
