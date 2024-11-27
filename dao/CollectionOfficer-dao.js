@@ -5,15 +5,24 @@ const QRCode = require('qrcode');
 exports.getCollectionOfficerDistrictReports = (district) => {
     return new Promise((resolve, reject) => {
         const sql = `
-            SELECT rp.cropName, rp.quality, c.district, SUM(rp.total) AS totPrice, SUM(rp.weight) AS totWeight
-            FROM registeredfarmerpayments rp, collectionofficer c
-            WHERE rp.collectionOfficerId = c.id AND c.district = ?
-            GROUP BY rp.cropName, rp.quality, c.district
+            SELECT cg.cropNameEnglish AS cropName,
+             c.district, 
+             SUM(fpc.gradeAquan) AS qtyA, 
+             SUM(fpc.gradeBquan) AS qtyB, 
+             SUM(fpc.gradeCquan) AS qtyC, 
+             SUM(fpc.gradeAprice) AS priceA, 
+             SUM(fpc.gradeBprice) AS priceB, 
+             SUM(fpc.gradeCprice) AS priceC
+            FROM registeredfarmerpayments rp, collectionofficer c, cropvariety cv , cropgroup cg, farmerpaymentscrops fpc
+            WHERE rp.id = fpc.registerFarmerId AND rp.collectionOfficerId = c.id AND fpc.cropId = cv.id AND cv.cropGroupId = cg.id AND c.district = ?
+            GROUP BY cg.cropNameEnglish, c.district
         `;
         db.query(sql, [district], (err, results) => {
             if (err) {
                 return reject(err); // Reject promise if an error occurs
             }
+            console.log(results);
+            
             resolve(results); // Resolve the promise with the query results
         });
     });
@@ -231,11 +240,19 @@ exports.createCollectionOfficerBank = (bankData, collectionOfficerId) => {
 
 exports.getCollectionOfficerProvinceReports = (province) => {
     return new Promise((resolve, reject) => {
+
         const sql = `
-            SELECT rp.cropName, rp.quality, c.province, SUM(rp.total) AS totPrice, SUM(rp.weight) AS totWeight
-            FROM registeredfarmerpayments rp, collectionofficer c
-            WHERE rp.collectionOfficerId = c.id AND c.province = ?
-            GROUP BY rp.cropName, rp.quality, c.province
+            SELECT cg.cropNameEnglish AS cropName,
+             c.province, 
+             SUM(fpc.gradeAquan) AS qtyA, 
+             SUM(fpc.gradeBquan) AS qtyB, 
+             SUM(fpc.gradeCquan) AS qtyC, 
+             SUM(fpc.gradeAprice) AS priceA, 
+             SUM(fpc.gradeBprice) AS priceB, 
+             SUM(fpc.gradeCprice) AS priceC
+            FROM registeredfarmerpayments rp, collectionofficer c, cropvariety cv , cropgroup cg, farmerpaymentscrops fpc
+            WHERE rp.id = fpc.registerFarmerId AND rp.collectionOfficerId = c.id AND fpc.cropId = cv.id AND cv.cropGroupId = cg.id AND c.province = ?
+            GROUP BY cg.cropNameEnglish, c.province
         `;
         db.query(sql, [province], (err, results) => {
             if (err) {
