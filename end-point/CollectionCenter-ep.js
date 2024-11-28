@@ -195,3 +195,40 @@ exports.createCollectionCenter = async (req, res) => {
       .json({ error: "An error occurred while creating Crop Calendar tasks" });
   }
 };
+
+
+
+
+exports.getAllCollectionCenterPage = async (req, res) => {
+  try {
+
+    const { page, limit, searchItem } =
+      await ValidateSchema.getAllUsersSchema.validateAsync(req.query);
+
+      const offset = (page - 1) * limit;
+
+
+    const { total, items } = await CollectionCenterDao.getAllCenterPage(limit, offset, searchItem);
+
+    console.log(page);
+    console.log(limit);
+    console.log(searchItem);
+    res.json({
+      items,
+      total,
+    });
+  } catch (err) {
+    if (err.isJoi) {
+      // Validation error
+      return res.status(400).json({ error: err.details[0].message });
+    }
+    console.error("Error executing query:", err);
+    res.status(500).send("An error occurred while fetching data.");
+  }
+};
+
+
+
+
+
+

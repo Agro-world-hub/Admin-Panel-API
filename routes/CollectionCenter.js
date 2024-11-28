@@ -47,4 +47,12 @@ router.post(
 )
 
 
+
+router.get(
+    "/get-all-centerpage",
+    authMiddleware,
+    CollectionCenterEp.getAllCollectionCenterPage
+)
+
+
 module.exports = router;

@@ -127,3 +127,62 @@ exports.CheckRegCodeExistDAO = (regCode) => {
     });
   });
 };
+
+
+
+
+exports.getAllCenterPage = (limit, offset, searchItem) => {
+  return new Promise((resolve, reject) => {
+    let countSql = "SELECT COUNT(*) as total FROM collectioncenter";
+    let sql = "SELECT * FROM collectioncenter";
+    const searchParams = [];
+    const dataParams = [];
+
+    if (searchItem) {
+      console.log(searchItem);
+      const searchQuery = `%${searchItem}%`;
+      countSql += " WHERE regCode LIKE ? OR centerName LIKE ?";
+      sql += " WHERE regCode LIKE ? OR centerName LIKE ?";
+      searchParams.push(searchQuery, searchQuery);
+    }
+
+    sql += " ORDER BY createdAt DESC LIMIT ? OFFSET ?";
+    dataParams.push(...searchParams, limit, offset);
+
+    // Count total matching records
+    db.query(countSql, searchParams, (countErr, countResults) => {
+      if (countErr) {
+        return reject(countErr);
+      }
+
+      const total = countResults[0].total;
+
+      // Fetch the paginated records
+      db.query(sql, dataParams, (dataErr, dataResults) => {
+        if (dataErr) {
+          return reject(dataErr);
+        }
+
+        // Process results (no profileImage in collectioncenter schema)
+        const processedDataResults = dataResults.map((center) => ({
+          id: center.id,
+          regCode: center.regCode,
+          centerName: center.centerName,
+          contact01: center.contact01,
+          contact02: center.contact02,
+          buildingNumber: center.buildingNumber,
+          street: center.street,
+          district: center.district,
+          province: center.province,
+          createdAt: center.createdAt,
+        }));
+
+        // Resolve with total count and processed results
+        resolve({
+          total: total,
+          items: processedDataResults,
+        });
+      });
+    });
+  });
+};
