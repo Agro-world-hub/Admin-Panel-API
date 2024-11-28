@@ -18,3 +18,7 @@ exports.getAllUsersSchema = Joi.object({
     limit: Joi.number().integer().min(1).max(100).default(10),
     searchItem: Joi.string().allow('')
 });
+
+exports.getByIdShema = Joi.object({
+    id: Joi.number().integer().required(),
+})

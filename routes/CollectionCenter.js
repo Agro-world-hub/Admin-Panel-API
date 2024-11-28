@@ -54,5 +54,17 @@ router.get(
     CollectionCenterEp.getAllCollectionCenterPage
 )
 
+router.get(
+    "/get-center-by-id/:id",
+    authMiddleware,
+    CollectionCenterEp.getCenterById
+)
+
+router.patch(
+    "/update-center/:id/:regCode",
+    authMiddleware,
+    CollectionCenterEp.updateCollectionCenter
+)
+
 
 module.exports = router;

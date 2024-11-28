@@ -36,8 +36,7 @@ exports.allCropGroups = async (req, res) => {
       const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
       console.log("Request URL:", fullUrl);
       console.log(req.body);
-  
-      // Validate the request body
+
       const {
         cropNameEnglish,
         cropNameSinhala,
@@ -45,10 +44,18 @@ exports.allCropGroups = async (req, res) => {
         category,
         bgColor
       } = req.body;
-  
+
       if (!req.file) {
         return res.status(400).json({ error: "No file uploaded" });
       }
+
+      const checkCropName = await cropCalendarDao.checkCropGroup(cropNameEnglish)
+      console.log(checkCropName);
+      
+      if(checkCropName.length > 0 ){
+        return res.json({message:"This crop name is already exist!" , status:false})
+      }
+      
   
       // Get file buffer (binary data)
       const fileBuffer = req.file.buffer;
@@ -66,7 +73,7 @@ exports.allCropGroups = async (req, res) => {
       console.log("crop group creation success");
       return res
         .status(201)
-        .json({ message: "crop group created successfully", id: newsId });
+        .json({ message: "crop group created successfully", id: newsId , status:true});
     } catch (err) {
       if (err.isJoi) {
         // Validation error

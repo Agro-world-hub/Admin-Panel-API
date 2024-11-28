@@ -119,7 +119,7 @@ exports.getComplainById = (id) => {
 exports.CheckRegCodeExistDAO = (regCode) => {
   return new Promise((resolve, reject) => {
     const sql = "SELECT * FROM collectioncenter WHERE regCode = ?";
-    db.query(sql,[regCode], (err, results) => {
+    db.query(sql, [regCode], (err, results) => {
       if (err) {
         return reject(err);
       }
@@ -183,6 +183,46 @@ exports.getAllCenterPage = (limit, offset, searchItem) => {
           items: processedDataResults,
         });
       });
+    });
+  });
+};
+
+
+exports.getCenterByIdDAO = (id) => {
+  return new Promise((resolve, reject) => {
+    const sql = "SELECT * FROM collectioncenter WHERE id = ?";
+    db.query(sql, [id], (err, results) => {
+      if (err) {
+        return reject(err);
+      }
+      resolve(results);
+    });
+  });
+};
+
+
+exports.updateCollectionCenter = (regCode, centerName, buildingNumber, street, district, province, collectionID) => {
+  return new Promise((resolve, reject) => {
+    const sql = `
+    UPDATE collectioncenter SET 
+      regCode = ?,
+      centerName = ?,
+      buildingNumber = ?,
+      street = ?,
+      district = ?,
+      province  = ?
+     WHERE id = ?
+      `;
+
+    const values = [regCode, centerName, buildingNumber, street, district, province, collectionID];
+
+    db.query(sql, values, (err, results) => {
+      if (err) {
+        console.error("Database error details:", err);
+        return reject(err);
+      }
+      console.log("Insert successful:", results);
+      resolve(results);
     });
   });
 };
