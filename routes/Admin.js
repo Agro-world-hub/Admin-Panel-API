@@ -332,8 +332,8 @@ router.get(
 );
 
 router.get(
-    "/farmer-list-report",
-    authMiddleware, 
+    "/farmer-list-report/:id",
+    // authMiddleware, 
     AdminEp.getFarmerListReport
 );
 
