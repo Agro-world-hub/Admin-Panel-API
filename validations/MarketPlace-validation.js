@@ -26,3 +26,16 @@ exports.CreateCoupenValidation = Joi.object({
     endDate:Joi.date().required(),
 
 })
+
+
+exports.couponQuaryParamSchema = Joi.object({
+    page: Joi.number().integer().min(1).default(1),
+    limit: Joi.number().integer().min(1).max(100).default(10),
+    status: Joi.string().optional(),
+    types: Joi.string().optional(),
+    searchText: Joi.string().optional(),
+});
+
+exports.deleteCoupenSchema = Joi.object({
+    id: Joi.number().integer().positive().required()
+});
