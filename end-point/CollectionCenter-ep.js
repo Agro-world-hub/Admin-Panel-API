@@ -1,5 +1,5 @@
 const CollectionCenterDao = require('../dao/CollectionCenter-dao')
-const  ValidateSchema = require('../validations/CollectionCenter-validation')
+const ValidateSchema = require('../validations/CollectionCenter-validation')
 exports.getAllCollectionCenter = async (req, res) => {
   try {
 
@@ -157,7 +157,7 @@ exports.getComplainById = async (req, res) => {
 exports.createCollectionCenter = async (req, res) => {
   try {
     const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
-    console.log(fullUrl);    
+    console.log(fullUrl);
     const {
       regCode,
       centerName,
@@ -169,25 +169,25 @@ exports.createCollectionCenter = async (req, res) => {
       street,
       district,
       province
-    // } = await ValidateSchema.createCollectionCenterValidation.validateAsync(req.body)
-    }= req.body
-    console.log("Collection Centr",regCode,centerName);
-    
-    
+      // } = await ValidateSchema.createCollectionCenterValidation.validateAsync(req.body)
+    } = req.body
+    console.log("Collection Centr", regCode, centerName);
+
+
     const existRegCode = await CollectionCenterDao.CheckRegCodeExistDAO(regCode);
-    console.log("existRegCode",existRegCode);
-    
-    if(existRegCode.length > 0){
-      return res.json({message: "This RegCode allrady exist!", status:false})
+    console.log("existRegCode", existRegCode);
+
+    if (existRegCode.length > 0) {
+      return res.json({ message: "This RegCode allrady exist!", status: false })
     }
 
     const result = await CollectionCenterDao.addCollectionCenter(regCode, centerName, contact01, contact02, buildingNumber, street, district, province, contact01Code, contact02Code);
 
     console.log("Crop Collection Center creation success");
-    return res.status(201).json({result: result, status:true});
+    return res.status(201).json({ result: result, status: true });
   } catch (err) {
     if (err.isJoi) {
-      return res.status(400).json({ error: err.details[0].message, status:false });
+      return res.status(400).json({ error: err.details[0].message, status: false });
     }
     console.error("Error executing query:", err);
     return res
@@ -205,7 +205,7 @@ exports.getAllCollectionCenterPage = async (req, res) => {
     const { page, limit, searchItem } =
       await ValidateSchema.getAllUsersSchema.validateAsync(req.query);
 
-      const offset = (page - 1) * limit;
+    const offset = (page - 1) * limit;
 
 
     const { total, items } = await CollectionCenterDao.getAllCenterPage(limit, offset, searchItem);
@@ -228,7 +228,66 @@ exports.getAllCollectionCenterPage = async (req, res) => {
 };
 
 
+exports.getCenterById = async (req, res) => {
+  try {
+
+    const { id } = await ValidateSchema.getByIdShema.validateAsync(req.params);
+    const results = await CollectionCenterDao.getCenterByIdDAO(id);
+
+    if (results.length === 0) {
+      return res.json({ message: "No collection center availabale", status: false })
+    }
+
+    res.status(200).json({ results: results[0], status: true });
+  } catch (err) {
+    if (err.isJoi) {
+      return res.status(400).json({ error: err.details[0].message });
+    }
+    console.error("Error executing query:", err);
+    res.status(500).send("An error occurred while fetching data.");
+  }
+};
+
+
+exports.updateCollectionCenter = async (req, res) => {
+  try {
+    const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
+    console.log(fullUrl);
+
+    const collectionID = req.params.id
+    const checkRegcode = req.params.regCode
+
+    const {
+      regCode,
+      centerName,
+      buildingNumber,
+      street,
+      district,
+      province
+    } = req.body
+    console.log("Collection Centr", regCode, centerName);
+
+
+    if (regCode !== checkRegcode) {
+      const existRegCode = await CollectionCenterDao.CheckRegCodeExistDAO(regCode);
+      if (existRegCode.length > 0) {
+        return res.json({ message: "This RegCode allrady exist!", status: false })
+      }
+    }
 
 
 
+    const result = await CollectionCenterDao.updateCollectionCenter(regCode, centerName, buildingNumber, street, district, province, collectionID);
 
+    console.log("Crop Collection Center update success");
+    return res.status(201).json({ result: result, status: true });
+  } catch (err) {
+    if (err.isJoi) {
+      return res.status(400).json({ error: err.details[0].message, status: false });
+    }
+    console.error("Error executing query:", err);
+    return res
+      .status(500)
+      .json({ error: "An error occurred while creating Crop Calendar tasks" });
+  }
+};
