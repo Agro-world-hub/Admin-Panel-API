@@ -2219,16 +2219,16 @@ exports.getFarmerListReport = async (req, res) => {
     const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
     console.log("Request URL:", fullUrl);
 
+    const id = req.params.id
+
     // Fetch farmer list report data from the DAO
-    const farmerList = await adminDao.getFarmerListReport();
+    const farmerList = await adminDao.getFarmerListReport(id);
 
     console.log("Successfully fetched farmer list report");
 
     // Respond with the farmer list report data
-    res.json({
-      total: farmerList.length,
-      items: farmerList,
-    });
+    // 
+    res.json(farmerList[0])
 
   } catch (error) {
     console.error("Error fetching farmer list report:", error);
