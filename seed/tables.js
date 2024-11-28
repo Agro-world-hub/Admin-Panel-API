@@ -982,6 +982,51 @@ const createFarmerPaymensCrops = () => {
 
 
 
+exports.getPaymentSlipReport = (officerID) => {
+  return new Promise((resolve, reject) => {
+    const dataSql = `
+      SELECT 
+        u.id AS userId,
+        u.firstName,
+        u.lastName,
+        u.NICnumber,
+        co.firstNameEnglish AS officerFirstName,
+        co.lastNameEnglish AS officerLastName,
+        fpc.gradeAprice,
+        fpc.gradeBprice,
+        fpc.gradeCprice,
+        fpc.gradeAquan,
+        fpc.gradeBquan,
+        fpc.gradeCquan,
+        (fpc.gradeAprice * fpc.gradeAquan) +
+        (fpc.gradeBprice * fpc.gradeBquan) +
+        (fpc.gradeCprice * fpc.gradeCquan) AS totalAmount
+      FROM 
+        registeredfarmerpayments rp
+      JOIN 
+        users u ON rp.userId = u.id
+      JOIN 
+        farmerpaymentscrops fpc ON rp.id = fpc.registerFarmerId
+      JOIN 
+        collectionofficer co ON rp.collectionOfficerId = co.id
+      WHERE 
+        rp.collectionOfficerId = ?
+      ORDER BY 
+        u.id;
+    `;
+    db.query(dataSql, [officerID], (error, results) => {
+      if (error) {
+        reject(error);
+      } else {
+        resolve(results);
+      }
+    });
+  });
+};
+
+
+
+
 
 const createUserBankDetails = () => {
     const sql = `

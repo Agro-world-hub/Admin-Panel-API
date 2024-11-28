@@ -2196,13 +2196,31 @@ exports.getPaymentSlipReport = async (req, res) => {
     const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
     console.log("Request URL:", fullUrl);
 
-    const payments = await adminDao.getPaymentSlipReport();    
+    // Validate and parse query parameters
+    const { page , limit } = await ValidateSchema.getAllUsersRepSchema.validateAsync(req.query);
+
+    // Parse `page` and `limit` as integers to ensure proper handling
+    
+
+    // Calculate offset
+    const offset = (page - 1) * limit;
+
+    // Get officer ID from params
+    const officerID = parseInt(req.params.officerID); // Parse to integer for safety
+    console.log("Officer ID:", officerID);
+    console.log("Officer ID:", page);
+    console.log("Officer ID:", offset);
+
+    // Fetch report data from DAO
+    const { total, items } = await adminDao.getPaymentSlipReport(officerID, limit, offset);
 
     console.log("Successfully fetched farmer payments");
+    console.log(items);
 
+    // Send response
     res.json({
-      total: payments.length,
-      items: payments,
+      total,
+      items,
     });
 
   } catch (error) {
@@ -2213,6 +2231,7 @@ exports.getPaymentSlipReport = async (req, res) => {
   }
 };
 
+
 exports.getFarmerListReport = async (req, res) => {
   try {
     // Construct the full URL for logging purposes
@@ -2220,15 +2239,32 @@ exports.getFarmerListReport = async (req, res) => {
     console.log("Request URL:", fullUrl);
 
     const id = req.params.id
+    const userId = req.params.userId
+    console.log(id);
 
     // Fetch farmer list report data from the DAO
     const farmerList = await adminDao.getFarmerListReport(id);
 
+
+
+    const userdetails = await adminDao.getReportfarmerDetails(userId);
+
+
+    if (userdetails.farmerQr) {
+      const base64Image = Buffer.from(userdetails.farmerQr).toString("base64");
+      const mimeType = "image/png"; // Adjust MIME type if necessary, depending on the image type
+      userdetails.farmerQr = `data:${mimeType};base64,${base64Image}`;
+    }
+
+
+    
+
     console.log("Successfully fetched farmer list report");
+    console.log(userdetails);
 
     // Respond with the farmer list report data
     // 
-    res.json(farmerList[0])
+    res.json({ crops: [farmerList], farmer : [userdetails] });
 
   } catch (error) {
     console.error("Error fetching farmer list report:", error);

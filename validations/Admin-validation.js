@@ -24,6 +24,12 @@ exports.getAllUsersSchema = Joi.object({
     nic: Joi.string().allow('')
 });
 
+
+exports.getAllUsersRepSchema = Joi.object({
+    page: Joi.number().integer().min(1).default(1),
+    limit: Joi.number().integer().min(1).max(100).default(10)
+});
+
 exports.createCropCalenderSchema = Joi.object({
     cropName: Joi.string().required(),
     sinhalaCropName: Joi.string().required(),

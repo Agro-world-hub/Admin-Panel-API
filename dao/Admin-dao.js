@@ -1642,7 +1642,7 @@ exports.shiftUpUserTaskIndexDao = (taskId, indexId) => {
   });
 };
 
-exports.getPaymentSlipReport = () => {
+exports.getPaymentSlipReportrrrr = (officerID) => {
   return new Promise((resolve, reject) => {
     const dataSql = `
       SELECT u.id, co.firstNameEnglish AS officerFirstName, co.lastNameEnglish AS officerLastName, u.firstName, u.lastName, u.NICnumber, SUM(gradeAprice)+SUM(gradeBprice)+SUM(gradeCprice) AS total
@@ -1660,100 +1660,148 @@ exports.getPaymentSlipReport = () => {
   });
 };
 
+exports.getPaymentSlipReport = (officerID, limit, offset) => {
+  return new Promise((resolve, reject) => {
+    // SQL query to count the total number of rows
+    const countSql = `
+      SELECT COUNT(*) AS total 
+      FROM registeredfarmerpayments 
+      WHERE collectionOfficerId = ?
+    `;
+
+    // SQL query to fetch paginated results
+    const dataSql = `
+      SELECT 
+        rp.id,
+        u.id AS userId,
+        u.firstName,
+        u.lastName,
+        u.NICnumber,
+        co.firstNameEnglish AS officerFirstName,
+        co.lastNameEnglish AS officerLastName,
+        rp.createdAt
+      FROM 
+        registeredfarmerpayments rp
+      JOIN 
+        users u ON rp.userId = u.id
+      JOIN 
+        collectionofficer co ON rp.collectionOfficerId = co.id
+      WHERE 
+        rp.collectionOfficerId = ?
+      ORDER BY 
+        rp.createdAt DESC 
+      LIMIT ? 
+      OFFSET ?
+    `;
+
+    // Execute the count query
+    db.query(countSql, [officerID], (countErr, countResults) => {
+      if (countErr) {
+        return reject(countErr);
+      }
+
+      const total = countResults[0].total;
+
+      // Execute the data query
+      db.query(dataSql, [officerID, limit, offset], (dataErr, dataResults) => {
+        if (dataErr) {
+          return reject(dataErr);
+        }
+
+        // Optional: Process each user's data (if needed)
+        const processedDataResults = dataResults.map((user) => {
+          return user;
+        });
+
+        // Resolve with total count and the processed results
+        resolve({
+          total: total,
+          items: processedDataResults,
+        });
+      });
+    });
+  });
+};
+
+
+
+
 
 exports.getFarmerListReport = (id) => {
   return new Promise((resolve, reject) => {
     const dataSql = `
       SELECT 
-        rfp.id, 
-        u.firstName, 
-        u.lastName, 
-        u.NICnumber, 
-        u.phoneNumber, 
-        u.farmerQr, 
-        ub.id AS bankId, 
-        ub.address, 
-        ub.accNumber, 
-        ub.accHolderName, 
-        ub.bankName, 
-        ub.branchName, 
-        fpc.gradeAprice, 
-        fpc.gradeBprice, 
-        fpc.gradeCprice, 
-        fpc.gradeAquan, 
-        fpc.gradeBquan, 
-        fpc.gradeCquan, 
-        cv.id AS varietyId, 
-        cv.varietyNameEnglish,
-        cg.cropNameEnglish
-      FROM 
-        users u, 
-        registeredfarmerpayments rfp, 
-        farmerpaymentscrops fpc, 
-        collectionofficer coff, 
-        userbankdetails ub, 
-        cropvariety cv,
-        cropgroup cg
-      WHERE 
-        rfp.id = fpc.registerFarmerId 
-        AND fpc.cropId = cv.id 
-        AND rfp.collectionOfficerId = coff.id 
-        AND u.id = ?
-        AND cv.cropGroupId = cg.id
+  rp.id,
+  u.id AS userId,
+  u.firstName,
+  u.lastName,
+  u.NICnumber,
+  co.firstNameEnglish AS officerFirstName,
+  co.lastNameEnglish AS officerLastName
+FROM 
+  registeredfarmerpayments rp
+JOIN 
+  users u ON rp.userId = u.id
+JOIN 
+  collectionofficer co ON rp.collectionOfficerId = co.id
+WHERE 
+  rp.collectionOfficerId = ?
+ORDER BY 
+  rp.createdAt DESC
+LIMIT 10 OFFSET 2;
+
     `;
 
     db.query(dataSql,[id] ,(error, results) => {
       if (error) {
         return reject(error);
       }
-
-      // Map the results into the desired format
-      const groupedData = results.reduce((acc, row) => {
-        // Use `id` as the unique farmer identifier
-        const farmerId = row.id;
-
-        // If the farmer doesn't exist in the accumulator, initialize their data
-        if (!acc[farmerId]) {
-          acc[farmerId] = {
-            firstName: row.firstName,
-            lastName: row.lastName,
-            NICnumber: row.NICnumber,
-            phoneNumber: row.phoneNumber,
-            farmerQr: row.farmerQr,
-            id: farmerId,
-            address: row.address,
-            accNumber: row.accNumber,
-            accHolderName: row.accHolderName,
-            bankName: row.bankName,
-            branchName: row.branchName,
-            crops: [],
-          };
-        }
-
-        // Add the crop data to the `crops` array
-        acc[farmerId].crops.push({
-          gradeAprice: row.gradeAprice,
-          gradeBprice: row.gradeBprice,
-          gradeCprice: row.gradeCprice,
-          gradeAquan: row.gradeAquan,
-          gradeBquan: row.gradeBquan,
-          gradeCquan: row.gradeCquan,
-          varietyNameEnglish: row.varietyNameEnglish,
-          cropNameEnglish: row.cropNameEnglish,
-        });
-
-        return acc;
-      }, {});
-
-      // Convert grouped data back into an array
-      const formattedData = Object.values(groupedData);
-
-      console.log(formattedData);
-
-      resolve(formattedData);
+      resolve(results);
     });
   });
 };
+
+
+
+exports.getReportfarmerDetails = (userId) => {
+  return new Promise((resolve, reject) => {
+    const dataSql = `
+      SELECT 
+        u.id,
+        u.firstName,
+        u.lastName,
+        u.phoneNumber,
+        u.NICnumber,
+        u.farmerQr,
+        u.houseNo,
+        u.streetName,
+        u.city,
+        ub.accNumber,
+        ub.accHolderName,
+        ub.bankName,
+        ub.branchName
+      FROM 
+        users u
+      LEFT JOIN 
+        userbankdetails ub ON u.id = ub.userId 
+      WHERE 
+        u.id  = ?
+    `;
+
+    db.query(dataSql,[userId] ,(error, results) => {
+      if (error) {
+        return reject(error);
+      }
+
+      if (results.length === 0) {
+        return resolve(null); // No user found with the given ID
+      }
+      resolve(results[0]);
+    });
+  });
+};
+
+
 
 
 exports.insertUserXLSXData = (data) => {

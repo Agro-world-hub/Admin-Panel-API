@@ -326,13 +326,13 @@ router.get(
 
 
 router.get(
-    "/farmer-payments",
+    "/farmer-payments/:officerID",
     authMiddleware,
     AdminEp.getPaymentSlipReport
 );
 
 router.get(
-    "/farmer-list-report/:id",
+    "/farmer-list-report/:id/:userId",
     // authMiddleware, 
     AdminEp.getFarmerListReport
 );
