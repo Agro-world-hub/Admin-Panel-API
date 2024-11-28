@@ -30,4 +30,22 @@ router.post(
     marketPlaceEp.createCoupen
 )
 
+router.get(
+    '/get-all-coupen',
+    authMiddleware,
+    marketPlaceEp.getAllCoupen
+)
+
+router.delete(
+    '/delete-coupen/:id',
+    authMiddleware,
+    marketPlaceEp.deleteCoupenById
+)
+
+router.delete(
+    '/delete-all-coupen',
+    authMiddleware,
+    marketPlaceEp.deleteAllCoupen
+)
+
 module.exports = router;

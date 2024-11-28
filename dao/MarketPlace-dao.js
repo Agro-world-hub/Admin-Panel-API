@@ -167,3 +167,94 @@ exports.createCoupenDAO = async (coupen) => {
     });
   });
 };
+
+
+exports.getAllCoupenDAO = (limit, offset, status, types, searchText) => {
+  console.log(status);
+  
+  return new Promise((resolve, reject) => {
+    let countParms = []
+    let dataParms = []
+    let countSql = " SELECT COUNT(*) AS total FROM coupon WHERE 1=1  ";
+    let dataSql = `
+      SELECT *
+      FROM coupon
+      WHERE 1=1
+    `;
+
+    if(status){
+      countSql += " AND status = ? "
+      dataSql += ` AND status = ? `
+      countParms.push(status)
+      dataParms.push(status)
+    }
+
+    if(searchText){
+      countSql += " AND code = ? "
+      dataSql += ` AND code = ? `
+      countParms.push(searchText)
+      dataParms.push(searchText)
+    }
+
+
+    if(types){
+      countSql += " AND type = ? "
+      dataSql += ` AND type = ? `
+      countParms.push(types)
+      dataParms.push(types)
+    }
+
+    dataSql += ` LIMIT ? OFFSET ? `
+    dataParms.push(limit)
+    dataParms.push(offset)
+
+    db.query(countSql, countParms, (countErr, countResults) => {
+      if (countErr) {
+        console.log(countErr);
+        
+        reject(countErr);
+      } else {
+        db.query(dataSql, dataParms, (dataErr, dataResults) => {
+          if (dataErr) {
+            console.log(dataErr);
+            
+            reject(dataErr);
+          } else {
+            resolve({
+              total: countResults[0].total,
+              items: dataResults,
+            });
+          }
+        });
+      }
+    });
+  });
+};
+
+
+exports.deleteCoupenById = async (id) => {
+  return new Promise((resolve, reject) => {
+    const sql = "DELETE FROM coupon WHERE id = ?";
+    db.query(sql, [id], (err, results) => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(results.affectedRows);
+      }
+    });
+  });
+};
+
+
+exports.deleteAllCoupen = async () => {
+  return new Promise((resolve, reject) => {
+    const sql = "DELETE FROM coupon";
+    db.query(sql, (err, results) => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(results.affectedRows);
+      }
+    });
+  });
+};
