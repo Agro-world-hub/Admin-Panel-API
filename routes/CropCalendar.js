@@ -116,7 +116,7 @@ router.get(
 );
 
 router.put(
-    '/update-crop-group/:id', 
+    '/update-crop-group/:id/:name', 
     authMiddleware, 
     upload.single('image'),
     cropCalendarEp.updateGroup);
