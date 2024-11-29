@@ -184,6 +184,12 @@ exports.createCropVariety = async (req, res) => {
 
     // Get file buffer (binary data)
     const fileBuffer = req.file.buffer;
+    const checkCropVerityName = await cropCalendarDao.checkCropVerity(groupId, varietyNameEnglish)
+
+    if (checkCropVerityName.length > 0) {
+      return res.json({ message: "This crop verity name is already exist!", status: false })
+    }
+
 
     // Call DAO to save news and the image file as longblob
     const newsId = await cropCalendarDao.createCropVariety(
@@ -201,7 +207,7 @@ exports.createCropVariety = async (req, res) => {
     console.log("crop variety creation success");
     return res
       .status(201)
-      .json({ message: "crop variety created successfully", id: newsId });
+      .json({ message: "crop variety created successfully", id: newsId, status:true });
   } catch (err) {
     if (err.isJoi) {
       // Validation error
