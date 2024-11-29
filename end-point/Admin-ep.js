@@ -2191,38 +2191,67 @@ exports.deleteUserCropTask = async (req, res) => {
   }
 };
 
+// exports.getPaymentSlipReport = async (req, res) => {
+//   try {
+//     const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
+//     console.log("Request URL:", fullUrl);
+
+//     const { page , limit } = await ValidateSchema.getAllUsersRepSchema.validateAsync(req.query);
+
+//     const offset = (page - 1) * limit;
+
+//     const officerID = parseInt(req.params.officerID); 
+//     console.log("Officer ID:", officerID);
+//     console.log("Officer ID:", page);
+//     console.log("Officer ID:", offset);
+
+//     const { total, items } = await adminDao.getPaymentSlipReport(officerID, limit, offset);
+
+//     console.log("Successfully fetched farmer payments");
+//     console.log(items);
+
+//     // Send response
+//     res.json({
+//       total,
+//       items,
+//     });
+
+//   } catch (error) {
+//     console.error("Error fetching farmer payments:", error);
+//     return res.status(500).json({
+//       error: "An error occurred while fetching farmer payments",
+//     });
+//   }
+// };
+
 exports.getPaymentSlipReport = async (req, res) => {
   try {
     const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
     console.log("Request URL:", fullUrl);
 
-    // Validate and parse query parameters
-    const { page , limit } = await ValidateSchema.getAllUsersRepSchema.validateAsync(req.query);
 
-    // Parse `page` and `limit` as integers to ensure proper handling
-    
 
-    // Calculate offset
-    const offset = (page - 1) * limit;
+const date = req.query.date;
+const page = parseInt(req.query.page) || 1;  // Default to page 1 if no page is provided
+const limit = parseInt(req.query.limit) || 10;  // Default to limit of 10 if no limit is provided
+const offset = (page - 1) * limit;
+const search = req.query.search;
 
-    // Get officer ID from params
-    const officerID = parseInt(req.params.officerID); // Parse to integer for safety
+
+
+    const officerID = parseInt(req.params.officerID);
     console.log("Officer ID:", officerID);
-    console.log("Officer ID:", page);
-    console.log("Officer ID:", offset);
+    console.log("Page:", limit);
+    console.log("Offset:", offset);
+    console.log("Date Filter:", date);
 
-    // Fetch report data from DAO
-    const { total, items } = await adminDao.getPaymentSlipReport(officerID, limit, offset);
+    const { total, items } = await adminDao.getPaymentSlipReport(officerID, limit, offset, date, search);
 
     console.log("Successfully fetched farmer payments");
-    console.log(items);
-
-    // Send response
     res.json({
       total,
       items,
     });
-
   } catch (error) {
     console.error("Error fetching farmer payments:", error);
     return res.status(500).json({
@@ -2230,6 +2259,7 @@ exports.getPaymentSlipReport = async (req, res) => {
     });
   }
 };
+
 
 
 exports.getFarmerListReport = async (req, res) => {
@@ -2243,7 +2273,7 @@ exports.getFarmerListReport = async (req, res) => {
     console.log(id);
 
     // Fetch farmer list report data from the DAO
-    const farmerList = await adminDao.getFarmerListReport(id);
+    const cropList = await adminDao.getFarmerCropListReport(id);
 
 
 
@@ -2264,7 +2294,7 @@ exports.getFarmerListReport = async (req, res) => {
 
     // Respond with the farmer list report data
     // 
-    res.json({ crops: [farmerList], farmer : [userdetails] });
+    res.json({ crops: [cropList], farmer : [userdetails] });
 
   } catch (error) {
     console.error("Error fetching farmer list report:", error);

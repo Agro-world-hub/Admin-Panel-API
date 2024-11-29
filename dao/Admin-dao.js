@@ -1660,42 +1660,122 @@ exports.getPaymentSlipReportrrrr = (officerID) => {
   });
 };
 
-exports.getPaymentSlipReport = (officerID, limit, offset) => {
+// exports.getPaymentSlipReport = (officerID, limit, offset) => {
+//   return new Promise((resolve, reject) => {
+//     // SQL query to count the total number of rows
+//     const countSql = `
+//       SELECT COUNT(*) AS total 
+//       FROM registeredfarmerpayments 
+//       WHERE collectionOfficerId = ?
+//     `;
+
+//     // SQL query to fetch paginated results
+//     const dataSql = `
+//       SELECT 
+//         rp.id,
+//         u.id AS userId,
+//         u.firstName,
+//         u.lastName,
+//         u.NICnumber,
+//         co.firstNameEnglish AS officerFirstName,
+//         co.lastNameEnglish AS officerLastName,
+//         rp.createdAt
+//       FROM 
+//         registeredfarmerpayments rp
+//       JOIN 
+//         users u ON rp.userId = u.id
+//       JOIN 
+//         collectionofficer co ON rp.collectionOfficerId = co.id
+//       WHERE 
+//         rp.collectionOfficerId = ?
+//       ORDER BY 
+//         rp.createdAt DESC 
+//       LIMIT ? 
+//       OFFSET ?
+//     `;
+
+//     // Execute the count query
+//     db.query(countSql, [officerID], (countErr, countResults) => {
+//       if (countErr) {
+//         return reject(countErr);
+//       }
+
+//       const total = countResults[0].total;
+
+//       // Execute the data query
+//       db.query(dataSql, [officerID, limit, offset], (dataErr, dataResults) => {
+//         if (dataErr) {
+//           return reject(dataErr);
+//         }
+
+//         // Optional: Process each user's data (if needed)
+//         const processedDataResults = dataResults.map((user) => {
+//           return user;
+//         });
+
+//         // Resolve with total count and the processed results
+//         resolve({
+//           total: total,
+//           items: processedDataResults,
+//         });
+//       });
+//     });
+//   });
+// };
+
+
+exports.getPaymentSlipReport = (officerID, limit, offset, date = null, search) => {
   return new Promise((resolve, reject) => {
     // SQL query to count the total number of rows
+
+
+    
     const countSql = `
       SELECT COUNT(*) AS total 
       FROM registeredfarmerpayments 
-      WHERE collectionOfficerId = ?
+      WHERE collectionOfficerId = ? ${date ? "AND DATE(createdAt) = ?" : ""}
     `;
 
     // SQL query to fetch paginated results
     const dataSql = `
       SELECT 
-        rp.id,
-        u.id AS userId,
-        u.firstName,
-        u.lastName,
-        u.NICnumber,
-        co.firstNameEnglish AS officerFirstName,
-        co.lastNameEnglish AS officerLastName,
-        rp.createdAt
-      FROM 
-        registeredfarmerpayments rp
-      JOIN 
-        users u ON rp.userId = u.id
-      JOIN 
-        collectionofficer co ON rp.collectionOfficerId = co.id
-      WHERE 
-        rp.collectionOfficerId = ?
-      ORDER BY 
-        rp.createdAt DESC 
-      LIMIT ? 
-      OFFSET ?
+          rp.id,
+          u.id AS userId,
+          u.firstName,
+          u.lastName,
+          u.NICnumber,
+          co.firstNameEnglish AS officerFirstName,
+          co.lastNameEnglish AS officerLastName,
+          rp.createdAt
+        FROM 
+          registeredfarmerpayments rp
+        JOIN 
+          users u ON rp.userId = u.id
+        JOIN 
+          collectionofficer co ON rp.collectionOfficerId = co.id
+        WHERE 
+          rp.collectionOfficerId = ? 
+          AND DATE(rp.createdAt) = ? 
+        ORDER BY 
+          rp.createdAt DESC 
+        LIMIT ? 
+        OFFSET ?;
     `;
 
+
+    if (search) {
+      countSql +=
+        " WHERE u.firstName LIKE ? OR u.lastName LIKE ? OR u.NICnumber LIKE ?";
+      dataSql +=
+        " WHERE u.firstName LIKE ? OR u.lastName LIKE ? OR u.NICnumber LIKE ? ";
+      const searchQuery = `%${search}%`;
+      params.push(searchQuery, searchQuery, searchQuery);
+    }
+
+    const queryParams = [officerID, date, limit, offset] ;
+
     // Execute the count query
-    db.query(countSql, [officerID], (countErr, countResults) => {
+    db.query(countSql, queryParams.slice(0, 2), (countErr, countResults) => {
       if (countErr) {
         return reject(countErr);
       }
@@ -1703,26 +1783,19 @@ exports.getPaymentSlipReport = (officerID, limit, offset) => {
       const total = countResults[0].total;
 
       // Execute the data query
-      db.query(dataSql, [officerID, limit, offset], (dataErr, dataResults) => {
+      db.query(dataSql, queryParams, (dataErr, dataResults) => {
         if (dataErr) {
           return reject(dataErr);
         }
 
-        // Optional: Process each user's data (if needed)
-        const processedDataResults = dataResults.map((user) => {
-          return user;
-        });
-
-        // Resolve with total count and the processed results
         resolve({
           total: total,
-          items: processedDataResults,
+          items: dataResults,
         });
       });
     });
   });
 };
-
 
 
 
@@ -1750,6 +1823,40 @@ ORDER BY
   rp.createdAt DESC
 LIMIT 10 OFFSET 2;
 
+    `;
+
+    db.query(dataSql,[id] ,(error, results) => {
+      if (error) {
+        return reject(error);
+      }
+      resolve(results);
+    });
+  });
+};
+
+
+
+exports.getFarmerCropListReport = (id) => {
+  return new Promise((resolve, reject) => {
+    const dataSql = `
+SELECT 
+  fp.id,
+  cv.varietyNameEnglish,
+  cg.cropNameEnglish,
+  fp.gradeAprice,
+  fp.gradeBprice,
+  fp.gradeCprice,
+  fp.gradeAquan,
+  fp.gradeBquan,
+  fp.gradeCquan
+FROM 
+  farmerpaymentscrops fp
+JOIN 
+  cropvariety cv ON fp.cropId = cv.id
+JOIN 
+  cropgroup cg ON cv.cropGroupId  = cg.id
+WHERE 
+  fp.registerFarmerId  = ?
     `;
 
     db.query(dataSql,[id] ,(error, results) => {
