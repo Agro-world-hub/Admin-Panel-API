@@ -103,59 +103,84 @@ exports.createCollectionOfficerPersonal = (officerData, companyData, bankData) =
 };
 
 
-exports.getAllCollectionOfficers = (page, limit, searchNIC, companyid) => {    
+exports.getAllCollectionOfficers = (page, limit, searchNIC, companyid) => {
     return new Promise((resolve, reject) => {
         const offset = (page - 1) * limit;
 
-        let countSql = "SELECT COUNT(*) as total FROM collectionofficer Coff,collectionofficercompanydetails Ccom WHERE Coff.id  = Ccom.collectionofficerId ";
+        let countSql = `
+            SELECT COUNT(*) as total
+            FROM collectionofficer Coff
+            JOIN collectionofficercompanydetails Ccom ON Coff.id = Ccom.collectionofficerId
+            JOIN collectioncenter CC ON Coff.centerId = CC.id
+            WHERE 1 = 1
+        `;
+
         let dataSql = `
             SELECT
                 Coff.id,
                 Coff.image,
-                Coff.firstNameEnglish, 
-                Coff.lastNameEnglish, 
+                Coff.firstNameEnglish,
+                Coff.lastNameEnglish,
                 Ccom.companyNameEnglish,
                 Coff.phoneNumber01,
+                Coff.phoneNumber02,
                 Coff.nic,
                 Coff.district,
                 Coff.status,
-                Ccom.companyNameEnglish,
                 CC.centerName
-
-                FROM collectionofficer Coff , collectionofficercompanydetails Ccom, collectioncenter CC
-                WHERE Coff.id  = Ccom.collectionofficerId AND Coff.centerId = CC.id
-                
+            FROM collectionofficer Coff
+            JOIN collectionofficercompanydetails Ccom ON Coff.id = Ccom.collectionofficerId
+            JOIN collectioncenter CC ON Coff.centerId = CC.id
+            WHERE 1 = 1
         `;
 
-        const params = [];
+        const countParams = [];
+        const dataParams = [];
 
-        if(companyid){
+        // Apply filters for company ID
+        if (companyid) {
             countSql += " AND Ccom.id = ?";
             dataSql += " AND Ccom.id = ?";
-            params.push(companyid); 
+            countParams.push(companyid);
+            dataParams.push(companyid);
         }
 
+        // Apply search filters for NIC or related fields
         if (searchNIC) {
-            countSql += " AND Coff.nic LIKE ?";
-            dataSql += " AND Coff.nic LIKE ?";
-            params.push(`%${searchNIC}%`);
+            const searchCondition = `
+                AND (
+                    Coff.nic LIKE ?
+                    OR Coff.firstNameEnglish LIKE ?
+                    OR Ccom.companyNameEnglish LIKE ?
+                    OR Coff.phoneNumber01 LIKE ?
+                    OR Coff.phoneNumber02 LIKE ?
+                    OR Coff.district LIKE ?
+                )
+            `;
+            countSql += searchCondition;
+            dataSql += searchCondition;
+            const searchValue = `%${searchNIC}%`;
+            countParams.push(searchValue, searchValue, searchValue, searchValue, searchValue, searchValue);
+            dataParams.push(searchValue, searchValue, searchValue, searchValue, searchValue, searchValue);
         }
 
+        // Add pagination to the data query
         dataSql += " LIMIT ? OFFSET ?";
-        params.push(limit, offset);
+        dataParams.push(limit, offset);
 
         // Execute count query
-        db.query(countSql, params, (countErr, countResults) => {
+        db.query(countSql, countParams, (countErr, countResults) => {
             if (countErr) {
-                console.log(countErr);   
+                console.error('Error in count query:', countErr);
                 return reject(countErr);
             }
 
             const total = countResults[0].total;
 
             // Execute data query
-            db.query(dataSql, params, (dataErr, dataResults) => {
+            db.query(dataSql, dataParams, (dataErr, dataResults) => {
                 if (dataErr) {
+                    console.error('Error in data query:', dataErr);
                     return reject(dataErr);
                 }
 
@@ -164,6 +189,7 @@ exports.getAllCollectionOfficers = (page, limit, searchNIC, companyid) => {
         });
     });
 };
+
 
 
 

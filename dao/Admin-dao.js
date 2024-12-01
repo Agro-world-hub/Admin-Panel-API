@@ -1724,20 +1724,16 @@ exports.getPaymentSlipReportrrrr = (officerID) => {
 // };
 
 
-exports.getPaymentSlipReport = (officerID, limit, offset, date = null, search) => {
+exports.getPaymentSlipReport = (officerID, limit, offset, date = null, search = null) => {
   return new Promise((resolve, reject) => {
-    // SQL query to count the total number of rows
-
-
-    
-    const countSql = `
+    // Base SQL queries
+    let countSql = `
       SELECT COUNT(*) AS total 
-      FROM registeredfarmerpayments 
-      WHERE collectionOfficerId = ? ${date ? "AND DATE(createdAt) = ?" : ""}
+      FROM registeredfarmerpayments rp 
+      JOIN users u ON rp.userId = u.id 
+      WHERE rp.collectionOfficerId = ? 
     `;
-
-    // SQL query to fetch paginated results
-    const dataSql = `
+    let dataSql = `
       SELECT 
           rp.id,
           u.id AS userId,
@@ -1747,44 +1743,50 @@ exports.getPaymentSlipReport = (officerID, limit, offset, date = null, search) =
           co.firstNameEnglish AS officerFirstName,
           co.lastNameEnglish AS officerLastName,
           rp.createdAt
-        FROM 
+      FROM 
           registeredfarmerpayments rp
-        JOIN 
+      JOIN 
           users u ON rp.userId = u.id
-        JOIN 
+      JOIN 
           collectionofficer co ON rp.collectionOfficerId = co.id
-        WHERE 
+      WHERE 
           rp.collectionOfficerId = ? 
-          AND DATE(rp.createdAt) = ? 
-        ORDER BY 
-          rp.createdAt DESC 
-        LIMIT ? 
-        OFFSET ?;
     `;
 
+    const params = [officerID];
 
+    // Add date filter if provided
+    if (date) {
+      countSql += " AND DATE(rp.createdAt) = ?";
+      dataSql += " AND DATE(rp.createdAt) = ?";
+      params.push(date);
+    }
+
+    // Add search filter if provided
     if (search) {
-      countSql +=
-        " WHERE u.firstName LIKE ? OR u.lastName LIKE ? OR u.NICnumber LIKE ?";
-      dataSql +=
-        " WHERE u.firstName LIKE ? OR u.lastName LIKE ? OR u.NICnumber LIKE ? ";
       const searchQuery = `%${search}%`;
+      countSql += " AND (u.firstName LIKE ? OR u.lastName LIKE ? OR u.NICnumber LIKE ?)";
+      dataSql += " AND (u.firstName LIKE ? OR u.lastName LIKE ? OR u.NICnumber LIKE ?)";
       params.push(searchQuery, searchQuery, searchQuery);
     }
 
-    const queryParams = [officerID, date, limit, offset] ;
+    // Add pagination parameters
+    dataSql += " ORDER BY rp.createdAt DESC LIMIT ? OFFSET ?";
+    params.push(limit, offset);
 
     // Execute the count query
-    db.query(countSql, queryParams.slice(0, 2), (countErr, countResults) => {
+    db.query(countSql, params.slice(0, params.length - 2), (countErr, countResults) => {
       if (countErr) {
+        console.error("Error in count query:", countErr);
         return reject(countErr);
       }
 
-      const total = countResults[0].total;
+      const total = countResults[0]?.total || 0;
 
       // Execute the data query
-      db.query(dataSql, queryParams, (dataErr, dataResults) => {
+      db.query(dataSql, params, (dataErr, dataResults) => {
         if (dataErr) {
+          console.error("Error in data query:", dataErr);
           return reject(dataErr);
         }
 
@@ -1796,6 +1798,7 @@ exports.getPaymentSlipReport = (officerID, limit, offset, date = null, search) =
     });
   });
 };
+
 
 
 

@@ -2244,6 +2244,7 @@ const search = req.query.search;
     console.log("Page:", limit);
     console.log("Offset:", offset);
     console.log("Date Filter:", date);
+    console.log("search:", search);
 
     const { total, items } = await adminDao.getPaymentSlipReport(officerID, limit, offset, date, search);
 
@@ -2274,11 +2275,7 @@ exports.getFarmerListReport = async (req, res) => {
 
     // Fetch farmer list report data from the DAO
     const cropList = await adminDao.getFarmerCropListReport(id);
-
-
-
     const userdetails = await adminDao.getReportfarmerDetails(userId);
-
 
     if (userdetails.farmerQr) {
       const base64Image = Buffer.from(userdetails.farmerQr).toString("base64");
@@ -2286,8 +2283,6 @@ exports.getFarmerListReport = async (req, res) => {
       userdetails.farmerQr = `data:${mimeType};base64,${base64Image}`;
     }
 
-
-    
 
     console.log("Successfully fetched farmer list report");
     console.log(userdetails);
