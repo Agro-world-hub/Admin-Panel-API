@@ -664,3 +664,20 @@ exports.checkCropGroup = (engName) => {
     });
   });
 };
+
+
+exports.checkCropVerity = (id, engName) => {
+  return new Promise((resolve, reject) => {
+
+    const sql = "SELECT * FROM cropvariety WHERE cropGroupId = ? AND varietyNameEnglish LIKE ?";
+
+    db.query(sql, [id, engName], (err, results) => {
+      if (err) {
+        console.error('Database error:', err);
+        return reject(err);
+      }
+      console.log('Query results:', results);
+      resolve(results);
+    });
+  });
+};
