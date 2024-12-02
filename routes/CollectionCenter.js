@@ -66,5 +66,11 @@ router.patch(
     CollectionCenterEp.updateCollectionCenter
 )
 
+router.get(
+    "/get-last-emp-id/:role",
+    authMiddleware,
+    CollectionCenterEp.getForCreateId
+)
+
 
 module.exports = router;

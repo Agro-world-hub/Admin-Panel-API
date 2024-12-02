@@ -266,16 +266,17 @@ exports.getAllNews = async (req, res) => {
     // Validate query parameters
     const { page, limit, status, createdAt } =
       await ValidateSchema.getAllNewsSchema.validateAsync(req.query);
+      console.log("News:",page,limit,status,createdAt);
+      
 
     const offset = (page - 1) * limit;
 
-    const result = await adminDao.getAllNews(status, createdAt, limit, offset);
+    const result = await adminDao.getAllNews(limit, offset, status, createdAt);
 
-    if (result.items.length === 0) {
-      return res
-        .status(404)
-        .json({ message: "No news items found", data: result });
-    }
+    // if (result.items.length === 0) {
+    //   return res
+    //     .json({ message: "No news items found", data: result , status:false});
+    // }
 
     console.log("Successfully retrieved all contents");
     res.json(result);

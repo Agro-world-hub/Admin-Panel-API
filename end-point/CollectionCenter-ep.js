@@ -291,3 +291,24 @@ exports.updateCollectionCenter = async (req, res) => {
       .json({ error: "An error occurred while creating Crop Calendar tasks" });
   }
 };
+
+
+exports.getForCreateId = async (req, res) => {
+  try {
+
+    const { role } = await ValidateSchema.getRoleShema.validateAsync(req.params);
+    const results = await CollectionCenterDao.getForCreateIdDao(role);
+
+    if (results.length === 0) {
+      return res.json({ result: {empId:"00001"}, status: true })
+    }
+
+    res.status(200).json({ result: results[0], status: true });
+  } catch (err) {
+    if (err.isJoi) {
+      return res.status(400).json({ error: err.details[0].message });
+    }
+    console.error("Error executing query:", err);
+    res.status(500).send("An error occurred while fetching data.");
+  }
+};
