@@ -47,19 +47,21 @@ exports.editNews = async (req, res) => {
     const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
     console.log("Request URL:", fullUrl);
 
-    const { titleEnglish, titleSinhala, titleTamil, descriptionEnglish, descriptionSinhala, descriptionTamil } = req.body;
+    const { titleEnglish, titleSinhala, titleTamil, descriptionEnglish, descriptionSinhala, descriptionTamil, publishDate,expireDate} = req.body;
     const { id } = req.params;
 
     try {
         // Validate request body
-        await newsValidate.editNewsSchema.validateAsync(req.body);
+        // await newsValidate.editNewsSchema.validateAsync(req.body);
+        console.log(req.body);
+        
 
         let imageData = null;
         if (req.file) {
             imageData = req.file.buffer; // Store the binary image data from req.file
         }
         // Call DAO to update the news
-        const results = await newsDao.updateNews({ titleEnglish, titleSinhala, titleTamil, descriptionEnglish, descriptionSinhala, descriptionTamil, image: imageData }, id);
+        const results = await newsDao.updateNews({ titleEnglish, titleSinhala, titleTamil, descriptionEnglish, descriptionSinhala, descriptionTamil, image: imageData, publishDate,expireDate }, id);
 
         if (results.affectedRows === 0) {
             return res.status(404).json({ message: 'News not found' });

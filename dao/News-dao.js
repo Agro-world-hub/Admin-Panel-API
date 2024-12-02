@@ -14,7 +14,7 @@ exports.deleteNews = (id) => {
 
 exports.updateNews = (newsData, id) => {
     return new Promise((resolve, reject) => {
-        const { titleEnglish, titleSinhala, titleTamil, descriptionEnglish, descriptionSinhala, descriptionTamil, image } = newsData;
+        const { titleEnglish, titleSinhala, titleTamil, descriptionEnglish, descriptionSinhala, descriptionTamil, image,  publishDate, expireDate } = newsData;
         
         let sql = `
             UPDATE content 
@@ -24,7 +24,9 @@ exports.updateNews = (newsData, id) => {
                 titleTamil = ?, 
                 descriptionEnglish = ?, 
                 descriptionSinhala = ?, 
-                descriptionTamil = ?
+                descriptionTamil = ?,
+                publishDate = ?,
+                expireDate = ?
         `;
         
         let values = [
@@ -34,6 +36,8 @@ exports.updateNews = (newsData, id) => {
             descriptionEnglish,
             descriptionSinhala,
             descriptionTamil,
+            publishDate,
+            expireDate
         ];
 
         if (image) {
@@ -46,6 +50,8 @@ exports.updateNews = (newsData, id) => {
 
         db.query(sql, values, (err, results) => {
             if (err) {
+                console.log(err);
+                
                 return reject(err);
             }
             resolve(results);
