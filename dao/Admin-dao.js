@@ -69,11 +69,11 @@ exports.getAllUsers = (limit, offset, searchItem) => {
     // Add search condition for NICnumber if provided
     if (searchItem) {
       countSql +=
-        " WHERE users.NICnumber LIKE ? OR users.firstName LIKE ? OR users.lastName LIKE ?";
+        " WHERE users.NICnumber LIKE ? OR users.firstName LIKE ? OR users.lastName LIKE ? OR users.phoneNumber LIKE ?";
       dataSql +=
-        " WHERE users.NICnumber LIKE ? OR users.firstName LIKE ? OR users.lastName LIKE ? ";
+        " WHERE users.NICnumber LIKE ? OR users.firstName LIKE ? OR users.lastName LIKE ? OR users.phoneNumber LIKE ?";
       const searchQuery = `%${searchItem}%`;
-      params.push(searchQuery, searchQuery, searchQuery);
+      params.push(searchQuery, searchQuery, searchQuery, searchQuery);
     }
 
     // Add order, limit, and offset clauses
