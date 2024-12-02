@@ -1057,7 +1057,7 @@ exports.updatePlantCareUser = async (req, res) => {
     // Validate input data
     const validatedBody =
       await ValidateSchema.updatePlantCareUserSchema.validateAsync(req.body);
-    const { firstName, lastName, phoneNumber, NICnumber } = validatedBody;
+    const { firstName, lastName, phoneNumber, NICnumber, district, membership } = validatedBody;
 
     // Handle image upload if file is provided
 
@@ -1066,7 +1066,7 @@ exports.updatePlantCareUser = async (req, res) => {
       imageData = req.file.buffer; // Store the binary image data from req.file
     }
 
-    const userData = { firstName, lastName, phoneNumber, NICnumber, imageData };
+    const userData = { firstName, lastName, phoneNumber, NICnumber, district, membership, imageData };
 
     // Call DAO to update the user
     const result = await adminDao.updatePlantCareUserById(userData, id);
@@ -1139,7 +1139,7 @@ exports.createPlantCareUser = async (req, res) => {
     // Validate input data
     const validatedBody = req.body;
     
-    const { firstName, lastName, phoneNumber, NICnumber } = validatedBody;
+    const { firstName, lastName, phoneNumber, NICnumber, district, membership } = validatedBody;
 
     // Ensure a file is uploaded
     if (!req.file) {
@@ -1153,10 +1153,12 @@ exports.createPlantCareUser = async (req, res) => {
       lastName,
       phoneNumber,
       NICnumber,
+      district,
+      membership,
       fileBuffer,
     };
 
-    // Call DAO to create the user
+   console.log(userData);
     const userId = await adminDao.createPlantCareUser(userData);
 
     console.log("PlantCare user created successfully");

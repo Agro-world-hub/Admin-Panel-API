@@ -255,6 +255,14 @@ exports.updatePlantCareUserSchema = Joi.object({
         'any.required': 'NIC number is required',
         'string.empty': 'NIC number cannot be empty'
     }),
+    district: Joi.string().min(1).max(50).required().messages({
+        'any.required': 'district name is required',
+        'string.empty': 'district name cannot be empty'
+    }),
+    membership: Joi.string().min(1).max(50).required().messages({
+        'any.required': 'membership name is required',
+        'string.empty': 'membership name cannot be empty'
+    }),
     file: Joi.any().optional() // Optional file for image upload
 });
 

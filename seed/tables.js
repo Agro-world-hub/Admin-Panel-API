@@ -10,6 +10,11 @@ const createUsersTable = () => {
       NICnumber VARCHAR(12) NOT NULL,
       profileImage LONGBLOB,
       farmerQr LONGBLOB,
+      membership VARCHAR(25) NOT NULL,
+      houseNo VARCHAR(10) NOT NULL,
+      streetName VARCHAR(25) NULL,
+      city VARCHAR(25) NOT NULL,
+      district VARCHAR(25) NOT NULL,
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     )
   `;

@@ -817,7 +817,7 @@ exports.deletePlantCareUserById = (id) => {
 
 exports.updatePlantCareUserById = (userData, id) => {
   return new Promise((resolve, reject) => {
-    const { firstName, lastName, phoneNumber, NICnumber, imageData } = userData;
+    const { firstName, lastName, phoneNumber, NICnumber, district, membership, imageData } = userData;
 
     let sql = `
             UPDATE users 
@@ -825,9 +825,11 @@ exports.updatePlantCareUserById = (userData, id) => {
                 firstName = ?, 
                 lastName = ?, 
                 phoneNumber = ?, 
-                NICnumber = ?
+                NICnumber = ?,
+                district = ?, 
+                membership = ?
         `;
-    let values = [firstName, lastName, phoneNumber, NICnumber];
+    let values = [firstName, lastName, phoneNumber, NICnumber, district, membership];
 
     if (imageData) {
       sql += `, profileImage = ?`;
@@ -870,7 +872,7 @@ exports.updatePlantCareUserById = (userData, id) => {
 
 exports.createPlantCareUser = (userData) => {
   return new Promise((resolve, reject) => {
-    const { firstName, lastName, phoneNumber, NICnumber, fileBuffer } =
+    const { firstName, lastName, phoneNumber, NICnumber, district, membership, fileBuffer } =
       userData;
 
     // SQL query to check if phoneNumber or NICnumber already exists
@@ -891,14 +893,16 @@ exports.createPlantCareUser = (userData) => {
 
       // Proceed with the INSERT operation
       const insertSql = `
-            INSERT INTO users (firstName, lastName, phoneNumber, NICnumber, profileImage) 
-            VALUES (?, ?, ?, ?, ?)
+            INSERT INTO users (firstName, lastName, phoneNumber, NICnumber, district, membership, profileImage) 
+            VALUES (?, ?, ?, ?, ?, ?, ?)
         `;
       const insertValues = [
         firstName,
         lastName,
         phoneNumber,
         NICnumber,
+        district,
+        membership,
         fileBuffer,
       ];
 
