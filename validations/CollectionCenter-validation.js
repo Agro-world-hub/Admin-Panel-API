@@ -22,3 +22,7 @@ exports.getAllUsersSchema = Joi.object({
 exports.getByIdShema = Joi.object({
     id: Joi.number().integer().required(),
 })
+
+exports.getRoleShema = Joi.object({
+    role: Joi.string().required(),
+})

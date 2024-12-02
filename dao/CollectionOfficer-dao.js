@@ -60,8 +60,8 @@ exports.createCollectionOfficerPersonal = (officerData, companyData, bankData) =
                 INSERT INTO collectionofficer (
                     centerId, firstNameEnglish, firstNameSinhala, firstNameTamil, lastNameEnglish, lastNameSinhala, lastNameTamil,
                     phoneNumber01, phoneNumber02, image, QRcode, nic, email, houseNumber, streetName, city, district,
-                    province, country, languages
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    province, country, languages, status
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,'Not Approved')
             `;
 
             // Database query with QR image data added
@@ -242,7 +242,7 @@ exports.getFarmerPaymentsCropsByRegisteredFarmerId = (registeredFarmerId) => {
 exports.createCollectionOfficerCompany = (companyData, collectionOfficerId) => {
     return new Promise((resolve, reject) => {
         const sql =
-            "INSERT INTO collectionofficercompanydetails (collectionOfficerId, companyNameEnglish, companyNameSinhala, companyNameTamil, jobRole, IRMname, companyEmail, assignedDistrict, employeeType) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
+            "INSERT INTO collectionofficercompanydetails (collectionOfficerId, companyNameEnglish, companyNameSinhala, companyNameTamil, jobRole, IRMname, companyEmail, assignedDistrict, employeeType, empId) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
         db.query(
             sql,
@@ -256,6 +256,7 @@ exports.createCollectionOfficerCompany = (companyData, collectionOfficerId) => {
                 companyData.companyEmail,
                 companyData.assignedDistrict,
                 companyData.employeeType,
+                companyData.empId
 
             ], (err, results) => {
                 if (err) {
@@ -499,7 +500,7 @@ exports.updateOfficerDetails = (id,
                 UPDATE collectionofficer
                 SET centerId = ?, firstNameEnglish = ?, lastNameEnglish = ?, firstNameSinhala = ?, lastNameSinhala = ?,
                     firstNameTamil = ?, lastNameTamil = ?, nic = ?, email = ?, houseNumber = ?, streetName = ?, city = ?,
-                    district = ?, province = ?, country = ?
+                    district = ?, province = ?, country = ? , status = 'Not Approved'
                 WHERE id = ?
             `;
 
