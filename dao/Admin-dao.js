@@ -172,7 +172,7 @@ exports.createNews = async (
   });
 };
 
-exports.getAllNews = async (status, createdAt, limit, offset) => {
+exports.getAllNews = async (limit, offset, status, createdAt) => {
   return new Promise((resolve, reject) => {
     let countsSql = "SELECT COUNT(*) as total FROM content";
     let dataSql = "SELECT * FROM content";
