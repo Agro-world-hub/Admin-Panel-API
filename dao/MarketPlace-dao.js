@@ -147,13 +147,15 @@ exports.deleteMarketplaceItem = async (id) => {
 exports.createCoupenDAO = async (coupen) => {
   return new Promise((resolve, reject) => {
     const sql =
-      "INSERT INTO coupon (code, type, percentage, status, checkLimit, startDate, endDate) VALUES (?, ?, ?, ?, ?, ?, ?)";
+      "INSERT INTO coupon (code, type, percentage, status, checkLimit, priceLimit, fixDiscount, startDate, endDate) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
     const values = [
       coupen.code,
       coupen.type,
       coupen.percentage,
       coupen.status,
       coupen.checkLimit,
+      coupen.priceLimit,
+      coupen.fixDiscount,
       coupen.startDate,
       coupen.endDate,
     ];
