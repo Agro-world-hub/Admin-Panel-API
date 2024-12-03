@@ -6,9 +6,9 @@ const path = require("path");
 exports.getAllCropNameDAO = () => {
   return new Promise((resolve, reject) => {
     const sql = `
-          SELECT cg.id AS cropId, cc.id AS varietyId, cg.cropNameEnglish, cc.varietyEnglish, cc.image
-          FROM cropcalender cc
-          JOIN cropgroup cg ON cg.id = cc.cropGroupId
+          SELECT cg.id AS cropId, cv.id AS varietyId, cg.cropNameEnglish, cv.varietyNameEnglish AS varietyEnglish, cv.image
+          FROM cropvariety cv, cropgroup cg
+          WHERE cg.id = cv.cropGroupId
       `;
 
     db.query(sql, (err, results) => {
