@@ -260,3 +260,58 @@ exports.deleteAllCoupen = async () => {
     });
   });
 };
+
+
+
+exports.getAllProductCropCatogoryDAO = () => {
+  return new Promise((resolve, reject) => {
+      const sql = `
+          SELECT mpi.id AS cropId, cv.id AS varietyId, cg.cropNameEnglish, mpi.displayName
+          FROM marketplaceitems mpi, cropvariety cv, cropgroup cg
+          WHERE mpi.cropId = cv.id AND cv.cropGroupId = cg.id
+      `;
+
+    db.query(sql, (err, results) => {
+      if (err) {
+        return reject(err);
+      }
+
+      const groupedData = {};
+
+      results.forEach((item) => {
+        const { cropNameEnglish, displayName, varietyId, cropId, image } =
+          item;
+
+        // Convert image to base64 if available
+        let base64Image = null;
+        // if (image) {
+        //   base64Image = Buffer.from(image).toString("base64");
+        //   const mimeType = "image/png"; // Set MIME type (adjust if necessary)
+        //   base64Image = `data:${mimeType};base64,${base64Image}`;
+        // }
+
+        if (!groupedData[cropNameEnglish]) {
+          groupedData[cropNameEnglish] = {
+            cropId: cropId,
+            variety: [],
+          };
+        }
+
+        groupedData[cropNameEnglish].variety.push({
+          id: varietyId,
+          displayName: displayName,
+          // image: base64Image, // Store the Base64 image string
+        });
+      });
+
+      // Format the final result
+      const formattedResult = Object.keys(groupedData).map((cropName) => ({
+        cropId: groupedData[cropName].cropId,
+        cropNameEnglish: cropName,
+        variety: groupedData[cropName].variety,
+      }));
+
+      resolve(formattedResult);
+    });
+  });
+};

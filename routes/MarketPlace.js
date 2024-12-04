@@ -48,4 +48,11 @@ router.delete(
     marketPlaceEp.deleteAllCoupen
 )
 
+
+router.get(
+    '/get-product-category',
+    // authMiddleware,
+    marketPlaceEp.getAllProductCropCatogory
+
+)
 module.exports = router;
