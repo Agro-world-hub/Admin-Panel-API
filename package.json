@@ -27,6 +27,8 @@
     "mysql2": "^3.11.0",
     "path-to-regexp": "^8.2.0",
     "qrcode": "^1.5.4",
+    "run": "^1.5.0",
+    "seed": "^0.4.4",
     "xlsx": "^0.18.5"
   },
   "devDependencies": {
