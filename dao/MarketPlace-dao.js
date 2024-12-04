@@ -266,7 +266,7 @@ exports.deleteAllCoupen = async () => {
 exports.getAllProductCropCatogoryDAO = () => {
   return new Promise((resolve, reject) => {
       const sql = `
-          SELECT mpi.id AS cropId, cv.id AS varietyId, cg.cropNameEnglish, mpi.displayName
+          SELECT mpi.id AS cropId, mpi.normalPrice, mpi.discountedPrice, cv.id AS varietyId, cg.cropNameEnglish, mpi.displayName
           FROM marketplaceitems mpi, cropvariety cv, cropgroup cg
           WHERE mpi.cropId = cv.id AND cv.cropGroupId = cg.id
       `;
@@ -279,7 +279,7 @@ exports.getAllProductCropCatogoryDAO = () => {
       const groupedData = {};
 
       results.forEach((item) => {
-        const { cropNameEnglish, displayName, varietyId, cropId, image } =
+        const { cropNameEnglish, displayName, varietyId, cropId, normalPrice, discountedPrice} =
           item;
 
         // Convert image to base64 if available
@@ -300,7 +300,8 @@ exports.getAllProductCropCatogoryDAO = () => {
         groupedData[cropNameEnglish].variety.push({
           id: varietyId,
           displayName: displayName,
-          // image: base64Image, // Store the Base64 image string
+          normalPrice:normalPrice,
+          discountedPrice:discountedPrice
         });
       });
 
