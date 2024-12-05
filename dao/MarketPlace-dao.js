@@ -59,7 +59,7 @@ exports.getAllCropNameDAO = () => {
 exports.createCropGroup = async (product) => {
   return new Promise((resolve, reject) => {
     const sql =
-      "INSERT INTO marketplaceitems (cropId, displayName, normalPrice, discountedPrice, promo, unitType, startValue, changeby, tags) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
+      "INSERT INTO marketplaceitems (cropId, displayName, normalPrice, discountedPrice, promo, unitType, startValue, changeby, tags, category) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
     const values = [
       product.variety,
       product.cropName,
@@ -70,6 +70,7 @@ exports.createCropGroup = async (product) => {
       product.startValue,
       product.changeby,
       product.tags,
+      product.category
     ];
 
     db.query(sql, values, (err, results) => {
@@ -117,9 +118,9 @@ exports.createCropGroup = async (product) => {
 exports.getMarketplaceItems = () => {
   return new Promise((resolve, reject) => {
     const dataSql = `
-    SELECT m.id, m.cropId, cg.cropNameEnglish, m.displayName , c.method, cv.varietyNameEnglish, m.discountedPrice, m.startValue, m.promo, m.unitType, m.changeby, m.normalPrice
-    FROM marketplaceitems m, cropcalender c, cropgroup cg, cropvariety cv
-    WHERE m.cropId = c.id AND c.cropVarietyId = cv.id AND cv.cropGroupId = cg.id
+    SELECT m.id, m.cropId, cg.cropNameEnglish, m.displayName , cv.varietyNameEnglish, m.discountedPrice, m.startValue, m.promo, m.unitType, m.changeby, m.normalPrice, m.category
+    FROM marketplaceitems m, cropgroup cg, cropvariety cv
+    WHERE m.cropId = cv.id AND cv.cropGroupId = cg.id
     `;
     db.query(dataSql, (error, results) => {
       if (error) {
