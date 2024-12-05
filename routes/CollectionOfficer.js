@@ -31,7 +31,7 @@ const uploadfile = multer({
 
 router.post(
     "/collection-officer/create-collection-officer",
-    // authMiddleware,
+    authMiddleware,
     CollectionOfficerEp.createCollectionOfficer
 );
 

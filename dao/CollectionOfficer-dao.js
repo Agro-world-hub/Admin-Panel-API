@@ -94,6 +94,8 @@ exports.createCollectionOfficerPersonal = (officerData, companyData, bankData) =
                 ],
                 (err, results) => {
                     if (err) {
+                        console.log(err);
+                        
                         return reject(err); // Reject promise if an error occurs
                     }
                     resolve(results); // Resolve the promise with the query results
