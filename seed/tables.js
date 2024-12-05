@@ -1181,6 +1181,8 @@ const createMarketPlacePackages = () => {
     CREATE TABLE IF NOT EXISTS marketplacepackages (
       id INT AUTO_INCREMENT PRIMARY KEY,
       name VARCHAR(50) NOT NULL,
+      status VARCHAR(10)  NOT NULL,
+      total DECIMAL(8, 2) NOT NULL,
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     )
   `;
@@ -1261,6 +1263,8 @@ const createPackageDetails = () => {
       packageId INT,
       mpItemId INT,
       quantity INT(11) NOT NULL,
+      quantityType VARCHAR(5) NOT NULL,
+      discountedPrice DECIMAL(8, 2) NOT NULL,
       createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (packageId) REFERENCES marketplacepackages(id)
         ON DELETE SET NULL

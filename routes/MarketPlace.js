@@ -51,8 +51,13 @@ router.delete(
 
 router.get(
     '/get-product-category',
-    // authMiddleware,
+    authMiddleware,
     marketPlaceEp.getAllProductCropCatogory
+)
 
+router.post(
+    '/add-product',
+    authMiddleware,
+    marketPlaceEp.createPackage
 )
 module.exports = router;

@@ -173,7 +173,7 @@ exports.createCoupenDAO = async (coupen) => {
 
 exports.getAllCoupenDAO = (limit, offset, status, types, searchText) => {
   console.log(status);
-  
+
   return new Promise((resolve, reject) => {
     let countParms = []
     let dataParms = []
@@ -184,14 +184,14 @@ exports.getAllCoupenDAO = (limit, offset, status, types, searchText) => {
       WHERE 1=1
     `;
 
-    if(status){
+    if (status) {
       countSql += " AND status = ? "
       dataSql += ` AND status = ? `
       countParms.push(status)
       dataParms.push(status)
     }
 
-    if(searchText){
+    if (searchText) {
       countSql += " AND code = ? "
       dataSql += ` AND code = ? `
       countParms.push(searchText)
@@ -199,7 +199,7 @@ exports.getAllCoupenDAO = (limit, offset, status, types, searchText) => {
     }
 
 
-    if(types){
+    if (types) {
       countSql += " AND type = ? "
       dataSql += ` AND type = ? `
       countParms.push(types)
@@ -213,13 +213,13 @@ exports.getAllCoupenDAO = (limit, offset, status, types, searchText) => {
     db.query(countSql, countParms, (countErr, countResults) => {
       if (countErr) {
         console.log(countErr);
-        
+
         reject(countErr);
       } else {
         db.query(dataSql, dataParms, (dataErr, dataResults) => {
           if (dataErr) {
             console.log(dataErr);
-            
+
             reject(dataErr);
           } else {
             resolve({
@@ -265,8 +265,8 @@ exports.deleteAllCoupen = async () => {
 
 exports.getAllProductCropCatogoryDAO = () => {
   return new Promise((resolve, reject) => {
-      const sql = `
-          SELECT mpi.id AS cropId, mpi.normalPrice, mpi.discountedPrice, cv.id AS varietyId, cg.cropNameEnglish, mpi.displayName
+    const sql = `
+          SELECT cg.id AS cropId, mpi.normalPrice, mpi.discountedPrice, mpi.id AS varietyId, cg.cropNameEnglish, mpi.displayName
           FROM marketplaceitems mpi, cropvariety cv, cropgroup cg
           WHERE mpi.cropId = cv.id AND cv.cropGroupId = cg.id
       `;
@@ -279,16 +279,7 @@ exports.getAllProductCropCatogoryDAO = () => {
       const groupedData = {};
 
       results.forEach((item) => {
-        const { cropNameEnglish, displayName, varietyId, cropId, normalPrice, discountedPrice} =
-          item;
-
-        // Convert image to base64 if available
-        let base64Image = null;
-        // if (image) {
-        //   base64Image = Buffer.from(image).toString("base64");
-        //   const mimeType = "image/png"; // Set MIME type (adjust if necessary)
-        //   base64Image = `data:${mimeType};base64,${base64Image}`;
-        // }
+        const { cropNameEnglish, displayName, varietyId, cropId, normalPrice, discountedPrice } = item;
 
         if (!groupedData[cropNameEnglish]) {
           groupedData[cropNameEnglish] = {
@@ -300,8 +291,8 @@ exports.getAllProductCropCatogoryDAO = () => {
         groupedData[cropNameEnglish].variety.push({
           id: varietyId,
           displayName: displayName,
-          normalPrice:normalPrice,
-          discountedPrice:discountedPrice
+          normalPrice: parseFloat(normalPrice),
+          discountedPrice: parseFloat(discountedPrice)
         });
       });
 
@@ -313,6 +304,51 @@ exports.getAllProductCropCatogoryDAO = () => {
       }));
 
       resolve(formattedResult);
+    });
+  });
+};
+
+
+exports.creatPackageDAO = async (data) => {
+  return new Promise((resolve, reject) => {
+    const sql =
+      "INSERT INTO marketplacepackages (name, status, total) VALUES (?, ?, ?)";
+    const values = [
+      data.name,
+      data.status,
+      data.total
+    ];
+
+    db.query(sql, values, (err, results) => {
+      if (err) {
+        console.log(err);
+        reject(err);
+      } else {
+        resolve(results.insertId);
+      }
+    });
+  });
+};
+
+
+exports.creatPackageDetailsDAO = async (data, packageId) => {
+  return new Promise((resolve, reject) => {
+    const sql =
+      "INSERT INTO packagedetails (packageId, mpItemId, quantity, quantityType, discountedPrice) VALUES (?, ?, ?, ?, ?)";
+    const values = [
+      packageId,
+      parseInt(data.mpItemId),
+      data.quantity,
+      data.qtytype,
+      parseInt(data.discountedPrice),
+    ];
+
+    db.query(sql, values, (err, results) => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(results.insertId);
+      }
     });
   });
 };

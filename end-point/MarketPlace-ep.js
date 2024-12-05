@@ -25,14 +25,14 @@ exports.getAllCropCatogory = async (req, res) => {
 
 
 exports.createMarketProduct = async (req, res) => {
-  try {  
+  try {
     const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
     console.log("Request URL:", fullUrl);
     // const product = await MarketPriceValidate.AddProductValidation.validateAsync(req.body)
 
     const result = await MarketPlaceDao.createCropGroup(req.body)
     console.log(result);
-    
+
     console.log("marcket product creation success");
     return res
       .status(201)
@@ -232,3 +232,41 @@ exports.getAllProductCropCatogory = async (req, res) => {
   }
 };
 
+
+
+exports.createPackage = async (req, res) => {
+  try {
+    const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
+    console.log("Request URL:", fullUrl);
+    console.log(req.body);
+    const package = req.body
+
+    // const coupen = await MarketPriceValidate.CreateCoupenValidation.validateAsync(req.body)
+    // console.log(coupen);
+    // const result = await MarketPlaceDao.createCoupenDAO(coupen)
+
+    const packageResult = await MarketPlaceDao.creatPackageDAO(package)
+    console.log(packageResult);
+    for (let i = 0; i < package.Items.length; i++) {
+      console.log(i);
+      await MarketPlaceDao.creatPackageDetailsDAO(package.Items[i], packageResult);
+    }
+
+
+
+    console.log("coupen creation success");
+    return res
+      .status(201)
+      .json({ message: "coupen created successfully", result: packageResult, status: true });
+  } catch (err) {
+    if (err.isJoi) {
+      // Validation error
+      return res.status(400).json({ error: err.details[0].message, status: false });
+    }
+
+    console.error("Error executing query:", err);
+    return res
+      .status(500)
+      .json({ error: "An error occurred while creating marcket product", status: false });
+  }
+}
