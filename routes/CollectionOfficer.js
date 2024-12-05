@@ -70,7 +70,7 @@ router.get(
 router.get(
     "/collection-officer/update-status/:id/:status",
     authMiddleware,
-    CollectionOfficerEp.UpdateCollectionOfficerStatus
+    CollectionOfficerEp.UpdateStatusAndSendPassword
 )
 
 router.delete(

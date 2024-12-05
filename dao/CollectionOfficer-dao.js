@@ -1,5 +1,8 @@
 const db = require("../startup/database");
 const QRCode = require('qrcode');
+const nodemailer = require('nodemailer');
+const PDFDocument = require('pdfkit');
+const fs = require('fs');
 
 
 exports.getCollectionOfficerDistrictReports = (district) => {
@@ -331,6 +334,174 @@ exports.getAllCompanyNamesDao = (district) => {
         });
     });
 };
+
+
+
+exports.getCollectionOfficerEmailDao = (id) => {
+    return new Promise((resolve, reject) => {
+        const sql = `
+            SELECT c.email, c.firstNameEnglish, ccd.empId AS empId
+            FROM collectionofficer c
+            LEFT JOIN collectionofficercompanydetails ccd ON c.id = ccd.collectionOfficerId
+            WHERE c.id = ?
+        `;
+        db.query(sql, [id], (err, results) => {
+            if (err) {
+                return reject(err); // Reject promise if an error occurs
+            }
+            if (results.length > 0) {
+                resolve({
+                    email: results[0].email, // Resolve with email
+                    firstNameEnglish: results[0].firstNameEnglish,
+                    empId: results[0].empId, // Resolve with employeeType (empId)
+                });
+            } else {
+                resolve(null); // Resolve with null if no record is found
+            }
+        });
+    });
+};
+
+
+exports.SendGeneratedPasswordDao = async (email, password, empId, firstNameEnglish) => {
+    try {
+        
+        const doc = new PDFDocument();
+
+        const pdfPath = `./uploads/register_details_${empId}.pdf`;
+
+        doc.pipe(fs.createWriteStream(pdfPath));
+
+        const watermarkPath = './assets/bg.png';
+        doc.opacity(0.2) 
+           .image(watermarkPath, 100, 300, { width: 400 }) 
+           .opacity(1);
+
+        doc.fontSize(20)
+           .fillColor('#071a51')
+           .text('Welcome to AgroWorld (Pvt) Ltd - Registration Confirmation', {
+               align: 'center',
+           });
+        
+        doc.moveDown();
+
+        const lineY = doc.y; 
+
+        doc.moveTo(50, lineY)
+        .lineTo(550, lineY)
+        .stroke();
+
+        doc.moveDown();
+
+        doc.fontSize(12).text(`Dear ${firstNameEnglish},`);
+
+        doc.moveDown();
+
+        doc.fontSize(12).text('Thank you for registering with us! We are excited to have you on board.');
+
+        doc.moveDown();
+
+        doc.fontSize(12)
+        .text(
+            'You have successfully created an account with AgroWorld (Pvt) Ltd. Our platform will help you with all your agricultural needs, providing guidance, weather reports, asset management tools, and much more. We are committed to helping farmers like you grow and succeed.',
+            {
+                align: 'justify',
+            }
+        );
+
+        doc.moveDown();
+
+        doc.fontSize(12).text(`Your User Name/ID: ${empId}`);
+        doc.fontSize(12).text(`Your Password: ${password}`);
+
+        doc.moveDown();
+
+        doc.fontSize(12)
+        .text(
+            'If you have any questions or need assistance, feel free to reach out to our support team at info@agroworld.lk',
+            {
+                align: 'justify',
+            }
+        );
+
+        doc.moveDown();
+        
+        doc.fontSize(12)
+        .text(
+            'We are here to support you every step of the way!',
+            {
+                align: 'justify',
+            }
+        );
+
+        doc.moveDown();
+        doc.fontSize(12).text(`Best Regards,`);
+        doc.fontSize(12).text(`The AgroWorld Team`);
+        doc.fontSize(12).text(`AgroWorld (Pvt) Ltd. | All rights reserved.`);
+        doc.moveDown();
+        doc.fontSize(12).text(`Address: No:14,`);
+        doc.fontSize(12).text(`            Sir Baron Jayathilake Mawatha,`);
+        doc.fontSize(12).text(`            Colombo 01.`);
+        doc.moveDown();
+        doc.fontSize(12).text(`Email: info@agroworld.lk`);
+
+        doc.end();
+
+        const transporter = nodemailer.createTransport({
+            host: 'smtp.gmail.com',
+            port: 465,  // or 587 for TLS
+            secure: true,
+            auth: {
+                user: process.env.EMAIL_USER,
+                pass: process.env.EMAIL_PASS,
+            },
+            tls: {
+                family: 4,
+            },
+        });
+
+        const mailOptions = {
+            from: process.env.EMAIL_USER,
+            to: email,
+            subject: 'Welcome to AgroWorld (Pvt) Ltd - Registration Confirmation',
+            text: `Dear ${firstNameEnglish},\n\nYour registration details are attached in the PDF.`,
+            attachments: [
+                {
+                    filename: `password_${empId}.pdf`,  // PDF file name
+                    path: pdfPath,  // Path to the generated PDF
+                },
+            ],
+        };
+
+        const info = await transporter.sendMail(mailOptions);
+        console.log('Email sent:', info.response);
+
+        return { success: true, message: 'Email sent successfully!' };
+
+    } catch (error) {
+        console.error('Error sending email:', error);
+        
+        return { success: false, message: 'Failed to send email.', error };
+    }
+};
+
+exports.UpdateCollectionOfficerStatusAndPasswordDao = (params) => {
+    return new Promise((resolve, reject) => {
+        const sql = `
+            UPDATE collectionofficer
+            SET status = ?, password = ?
+            WHERE id = ?
+        `;
+        db.query(sql, [params.status, params.password, parseInt(params.id)], (err, results) => {
+            if (err) {
+                return reject(err); // Reject promise if an error occurs
+            }
+            resolve(results); // Resolve with the query results
+        });
+    });
+};
+
+
 
 
 exports.UpdateCollectionOfiicerStatusDao = (params) => {
