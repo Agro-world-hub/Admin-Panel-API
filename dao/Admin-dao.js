@@ -1093,7 +1093,7 @@ exports.editTask = (
 
 exports.getAllPost = () => {
   return new Promise((resolve, reject) => {
-    const sql = `SELECT * FROM publicforumposts `;
+    const sql = `SELECT * FROM publicforumposts ORDER BY createdAt DESC `;
 
     db.query(sql, (err, results) => {
       if (err) {
