@@ -1231,6 +1231,7 @@ const createMarketPlaceItems = () => {
       id INT AUTO_INCREMENT PRIMARY KEY,
       cropId INT,
       displayName VARCHAR(50) NOT NULL,
+      category VARCHAR(25) NOT NULL,
       normalPrice DECIMAL(8, 2) NOT NULL,
       discountedPrice DECIMAL(8, 2) NOT NULL,
       promo BOOLEAN  NOT NULL,
@@ -1239,7 +1240,7 @@ const createMarketPlaceItems = () => {
       changeby DECIMAL(8, 2) NOT NULL,
       tags TEXT NOT NULL,
       createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-      FOREIGN KEY (cropId) REFERENCES cropcalender(id)
+      FOREIGN KEY (cropId) REFERENCES cropvariety(id)
         ON DELETE SET NULL
         ON UPDATE CASCADE
     )
