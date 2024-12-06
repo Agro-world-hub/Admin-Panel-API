@@ -681,3 +681,17 @@ exports.checkCropVerity = (id, engName) => {
     });
   });
 };
+
+
+exports.checkExistanceCropCalander = async (id) => {
+  return new Promise((resolve, reject) => {
+    const sql = "SELECT * FROM cropcalender WHERE cropVarietyId = ?";
+    db.query(sql, [id], (err, results) => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(results);
+      }
+    });
+  });
+};
