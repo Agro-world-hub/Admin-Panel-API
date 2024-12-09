@@ -93,6 +93,21 @@ router.put(
 );
 
 
+router.get(
+    "/officer-details-monthly/:id",
+    authMiddleware,
+    CollectionOfficerEp.getOfficerByIdMonthly
+);
+
+// Define the new route to fetch daily data for a specific collection officer
+router.get(
+    "/get-daily-report",
+     authMiddleware,
+     CollectionOfficerEp.getDailyReport
+    );
+
+
+
 
 
 module.exports = router;

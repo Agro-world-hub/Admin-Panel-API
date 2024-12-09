@@ -754,3 +754,141 @@ exports.updateOfficerDetails = (id,
         });
     });
 };
+
+
+
+
+exports.getOfficerByIdMonthly = (id) => {
+    return new Promise((resolve, reject) => {
+        const sql = `
+            SELECT 
+                co.*, 
+                cocd.companyNameEnglish, cocd.companyNameSinhala, cocd.companyNameTamil,
+                cocd.jobRole, cocd.IRMname, cocd.companyEmail, cocd.assignedDistrict, cocd.employeeType, cocd.empId,
+                cobd.accHolderName, cobd.accNumber, cobd.bankName, cobd.branchName
+            FROM 
+                collectionofficer co
+            LEFT JOIN 
+                collectionofficercompanydetails cocd ON co.id = cocd.collectionOfficerId
+            LEFT JOIN 
+                collectionofficerbankdetails cobd ON co.id = cobd.collectionOfficerId
+            WHERE 
+                co.id = ?`;
+
+        db.query(sql, [id], (err, results) => {
+            if (err) {
+                return reject(err); // Reject promise if an error occurs
+            }
+
+            if (results.length === 0) {
+                return resolve(null); // No officer found
+            }
+
+            const officer = results[0];
+
+            // Process image field if present
+            if (officer.image) {
+                const base64Image = Buffer.from(officer.image).toString("base64");
+                officer.image = `data:image/png;base64,${base64Image}`;
+            }
+
+            // Process QRcode field if present
+            if (officer.QRcode) {
+                const base64QRcode = Buffer.from(officer.QRcode).toString("base64");
+                officer.QRcode = `data:image/png;base64,${base64QRcode}`;
+            }
+
+            resolve({
+                collectionOfficer: {
+                    id: officer.id,
+                    centerId: officer.centerId,
+                    firstNameEnglish: officer.firstNameEnglish,
+                    firstNameSinhala: officer.firstNameSinhala,
+                    firstNameTamil: officer.firstNameTamil,
+                    lastNameEnglish: officer.lastNameEnglish,
+                    lastNameSinhala: officer.lastNameSinhala,
+                    lastNameTamil: officer.lastNameTamil,
+                    phoneNumber01: officer.phoneNumber01,
+                    phoneNumber02: officer.phoneNumber02,
+                    image: officer.image,
+                    QRcode: officer.QRcode,
+                    nic: officer.nic,
+                    email: officer.email,
+                    passwordUpdated: officer.passwordUpdated,
+                    address: {
+                        houseNumber: officer.houseNumber,
+                        streetName: officer.streetName,
+                        city: officer.city,
+                        district: officer.district,
+                        province: officer.province,
+                        country: officer.country,
+                    },
+                    languages: officer.languages,
+                },
+                companyDetails: {
+                    companyNameEnglish: officer.companyNameEnglish,
+                    companyNameSinhala: officer.companyNameSinhala,
+                    companyNameTamil: officer.companyNameTamil,
+                    jobRole: officer.jobRole,
+                    IRMname: officer.IRMname,
+                    companyEmail: officer.companyEmail,
+                    assignedDistrict: officer.assignedDistrict,
+                    employeeType: officer.employeeType,
+                    employeeId: officer.empId,
+                },
+                bankDetails: {
+                    accHolderName: officer.accHolderName,
+                    accNumber: officer.accNumber,
+                    bankName: officer.bankName,
+                    branchName: officer.branchName,
+                },
+            });
+        });
+    });
+};
+
+
+
+
+
+// DAO function to fetch the daily report
+exports.getDailyReport = (collectionOfficerId, fromDate, toDate) => {
+    return new Promise((resolve, reject) => {
+      const query = `
+        SELECT 
+          DATE(rfp.createdAt) AS date,
+          COUNT(DISTINCT rfp.id) AS totalPayments,
+          SUM(IFNULL(fpc.gradeAquan, 0) + IFNULL(fpc.gradeBquan, 0) + IFNULL(fpc.gradeCquan, 0)) AS totalWeight
+        FROM 
+          registeredfarmerpayments rfp
+        LEFT JOIN 
+          farmerpaymentscrops fpc ON rfp.id = fpc.registerFarmerId
+        WHERE 
+          rfp.collectionOfficerId = ? 
+          AND rfp.createdAt BETWEEN ? AND ?
+        GROUP BY 
+          DATE(rfp.createdAt)
+        ORDER BY 
+          date ASC;
+      `;
+      
+      // Parameters: collectionOfficerId, fromDate, toDate
+      const params = [collectionOfficerId, fromDate, toDate];
+  
+      db.query(query, params, (err, results) => {
+        if (err) {
+          return reject(err);
+        }
+        
+        // Format results as needed
+        const reportData = results.map(row => ({
+          date: row.date,
+          totalPayments: row.totalPayments,
+          totalWeight: row.totalWeight ? parseFloat(row.totalWeight) : 0,
+        }));
+  
+        resolve(reportData);
+      });
+    });
+  };
+  

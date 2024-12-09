@@ -375,3 +375,50 @@ exports.updateCollectionOfficerDetails = async (req, res) => {
         res.status(500).json({ error: 'Failed to update collection officer details' });
     }
 };
+
+
+
+exports.getOfficerByIdMonthly = async (req, res) => {
+    try {
+        const id = req.params.id;
+        const officerData = await collectionofficerDao.getOfficerByIdMonthly(id);
+
+        if (!officerData) {
+            return res.status(404).json({ error: "Collection Officer not found" });
+        }
+
+        console.log("Successfully fetched collection officer, company, and bank details");
+        res.json({ officerData });
+    } catch (err) {
+        if (err.isJoi) {
+            return res.status(400).json({ error: err.details[0].message });
+        }
+        console.error("Error executing query:", err);
+        res.status(500).send("An error occurred while fetching data.");
+    }
+};
+
+
+
+// Controller to handle the logic for fetching the daily report
+exports.getDailyReport = async (req, res) => {
+    try {
+      const { collectionOfficerId, fromDate, toDate } = req.query;
+  
+      // Validate and format the inputs
+      const { error } = collectionofficerValidate.getDailyReportSchema.validate({ collectionOfficerId, fromDate, toDate });
+      if (error) {
+        return res.status(400).json({ error: error.details[0].message });
+      }
+  
+      // Call the DAO to fetch the required data
+      const reportData = await collectionofficerDao.getDailyReport(collectionOfficerId, fromDate, toDate);
+  
+      // Return the data
+      res.json(reportData);
+    } catch (err) {
+      console.error("Error fetching daily report:", err);
+      res.status(500).send("An error occurred while fetching the report.");
+    }
+  };
+  
