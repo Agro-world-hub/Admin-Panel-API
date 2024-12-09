@@ -552,7 +552,7 @@ exports.getOfficerById = (id) => {
             SELECT 
                 co.*, 
                 cocd.companyNameEnglish, cocd.companyNameSinhala, cocd.companyNameTamil,
-                cocd.jobRole, cocd.IRMname, cocd.companyEmail, cocd.assignedDistrict, cocd.employeeType,
+                cocd.jobRole, cocd.empId, cocd.IRMname, cocd.companyEmail, cocd.assignedDistrict, cocd.employeeType,
                 cobd.accHolderName, cobd.accNumber, cobd.bankName, cobd.branchName
             FROM 
                 collectionofficer co
@@ -586,6 +586,9 @@ exports.getOfficerById = (id) => {
                 officer.QRcode = `data:image/png;base64,${base64QRcode}`;
             }
 
+            // Remove the first 3 characters from empId if it exists
+            const empIdWithoutPrefix = officer.empId ? officer.empId.substring(3) : null;
+
             resolve({
                 collectionOfficer: {
                     id: officer.id,
@@ -618,6 +621,7 @@ exports.getOfficerById = (id) => {
                     companyNameSinhala: officer.companyNameSinhala,
                     companyNameTamil: officer.companyNameTamil,
                     jobRole: officer.jobRole,
+                    empId: empIdWithoutPrefix, // Updated to exclude first 3 characters
                     IRMname: officer.IRMname,
                     companyEmail: officer.companyEmail,
                     assignedDistrict: officer.assignedDistrict,
@@ -633,6 +637,7 @@ exports.getOfficerById = (id) => {
         });
     });
 };
+
 
 
 
@@ -662,7 +667,9 @@ exports.updateOfficerDetails = (id,
         accHolderName,
         accNumber,
         bankName,
-        branchName
+        branchName,
+        jobRole,
+        empId
 ) => {
     return new Promise((resolve, reject) => {
        
@@ -711,11 +718,10 @@ exports.updateOfficerDetails = (id,
                 id,
             ];
 
-            const updateCompanyDetailsSQL = `
+            let updateCompanyDetailsSQL = `
                 UPDATE collectionofficercompanydetails
                 SET companyNameEnglish = ?, companyNameSinhala = ?, companyNameTamil = ?, IRMname = ?, 
-                    companyEmail = ?, assignedDistrict = ?, employeeType = ?
-                WHERE collectionOfficerId = ?
+                    companyEmail = ?, assignedDistrict = ?, employeeType = ? , 
             `;
 
             const updateCompanyDetailsParams = [
@@ -726,8 +732,19 @@ exports.updateOfficerDetails = (id,
                 companyEmail,
                 assignedDistrict,
                 employeeType,
-                id,
             ];
+
+            if(empId){
+                updateCompanyDetailsSQL += ` jobRole = ?, empId = ? `
+                updateCompanyDetailsParams.push(jobRole)
+                updateCompanyDetailsParams.push(empId)
+            }
+
+            updateCompanyDetailsSQL += ` WHERE collectionOfficerId = ? `
+            updateCompanyDetailsParams.push(id)
+
+
+            
 
             db.query(updateOfficerSQL, updateOfficerParams, (err, result) => {
                 if (err) {

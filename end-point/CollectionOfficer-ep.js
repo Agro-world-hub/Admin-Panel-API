@@ -336,8 +336,12 @@ exports.updateCollectionOfficerDetails = async (req, res) => {
         accHolderName,
         accNumber,
         bankName,
-        branchName
+        branchName,
+        jobRole,
+        empId
     } = req.body;
+    console.log(empId);
+    
    
     
 
@@ -368,7 +372,10 @@ exports.updateCollectionOfficerDetails = async (req, res) => {
             accHolderName,
             accNumber,
             bankName,
-            branchName);
+            branchName,
+            jobRole,
+            empId
+        );
         res.json({ message: 'Collection officer details updated successfully' });
     } catch (err) {
         console.error('Error updating collection officer details:', err);
