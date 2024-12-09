@@ -508,9 +508,12 @@ exports.editMarketPrice = (id, data) => {
 exports.getAllOngoingCultivations = (searchItem, limit, offset) => {
   return new Promise((resolve, reject) => {
     let countSql = `
-            SELECT COUNT(*) as total 
-            FROM ongoingcultivations 
-            JOIN users ON ongoingCultivations.userId = users.id
+            SELECT 
+                COUNT(*) as total 
+            FROM 
+                ongoingcultivations OC , users U , ongoingcultivationscrops OCC
+            WHERE 
+                OC.userId = U.id AND OC.id = OCC.ongoingCultivationId
         `;
     let dataSql = `
             SELECT 
