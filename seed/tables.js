@@ -884,6 +884,7 @@ const createCollectionOfficerCompanyDetails = () => {
       companyEmail VARCHAR(50) NOT NULL,
       assignedDistrict VARCHAR(25) NOT NULL,
       employeeType VARCHAR(25) NOT NULL,
+      empId VARCHAR(10) NOT NULL,
       FOREIGN KEY (collectionOfficerId) REFERENCES collectionofficer(id)
         ON DELETE SET NULL
         ON UPDATE CASCADE
