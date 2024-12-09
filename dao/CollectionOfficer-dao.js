@@ -127,6 +127,7 @@ exports.getAllCollectionOfficers = (page, limit, searchNIC, companyid) => {
                 Coff.firstNameEnglish,
                 Coff.lastNameEnglish,
                 Ccom.companyNameEnglish,
+                Ccom.empId,
                 Coff.phoneNumber01,
                 Coff.phoneNumber02,
                 Coff.nic,

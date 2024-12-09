@@ -310,6 +310,9 @@ const createMarketPriceTable = () => {
 };
 
 
+
+
+
 const createMarketPriceServeTable = () => {
     const sql = `
     CREATE TABLE IF NOT EXISTS marketpriceserve (
@@ -1363,6 +1366,41 @@ const createCartItems = () => {
 };
 
 
+
+
+const createMarketPriceRequestTable = () => {
+    const sql = `
+    CREATE TABLE IF NOT EXISTS marketpricerequest (
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      marketPriceId INT(11) DEFAULT NULL,
+      centerId INT(11) DEFAULT NULL,
+      requestPrice DECIMAL(10,2) DEFAULT NULL,
+      status VARCHAR(20) NOT NULL,
+      empId INT(11) DEFAULT NULL,
+      createdAt TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (marketPriceId) REFERENCES marketprice(id)
+        ON DELETE CASCADE
+        ON UPDATE CASCADE,
+      FOREIGN KEY (centerId) REFERENCES collectioncenter(id)
+        ON DELETE CASCADE
+        ON UPDATE CASCADE,
+      FOREIGN KEY (empId) REFERENCES collectionofficercompanydetails(id)
+        ON DELETE CASCADE
+        ON UPDATE CASCADE
+    )
+  `;
+    return new Promise((resolve, reject) => {
+        db.query(sql, (err, result) => {
+            if (err) {
+                reject('Error creating market-price request table: ' + err);
+            } else {
+                resolve('market-price table created request successfully.');
+            }
+        });
+    });
+};
+
+
 module.exports = {
     createUsersTable,
     createAdminUserRolesTable,
@@ -1415,5 +1453,6 @@ module.exports = {
     createPackageDetails,
     createPromoItems,
     createCart,
-    createCartItems
+    createCartItems,
+    createMarketPriceRequestTable
 };

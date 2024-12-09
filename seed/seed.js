@@ -51,9 +51,11 @@ const { createPackageDetails } = require('./tables');
 const { createPromoItems } = require('./tables');
 const { createCart } = require('./tables');
 const { createCartItems } = require('./tables');
+const {createMarketPriceRequestTable} = require('./tables')
 
 const {createSuperAdmin} = require('./admin')
 const {insertRoles} = require('./adminRoles')
+
 
 
 const { createExpiredContentCleanupEvent} = require('./events');
@@ -176,6 +178,8 @@ const runSeeds = async () => {
     console.log(messageCreateCart);
     const messageCreateCartItems = await createCartItems();
     console.log(messageCreateCartItems);
+    const messageCreateMarketPriceRequestTable = await createMarketPriceRequestTable();
+    console.log(messageCreateMarketPriceRequestTable);
 
 
     const messagecreateExpiredContentCleanupEvent = await createExpiredContentCleanupEvent();
