@@ -137,7 +137,7 @@ exports.getAllCollectionOfficers = (page, limit, searchNIC, companyid) => {
             FROM collectionofficer Coff
             JOIN collectionofficercompanydetails Ccom ON Coff.id = Ccom.collectionofficerId
             JOIN collectioncenter CC ON Coff.centerId = CC.id
-            WHERE 1 = 1
+            WHERE Coff.status = 'Approved'
         `;
 
         const countParams = [];
