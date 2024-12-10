@@ -283,8 +283,8 @@ const createMarketPriceTable = () => {
       varietyId INT(11) DEFAULT NULL,
       xlindex INT(11) DEFAULT NULL,
       grade VARCHAR(1) NOT NULL,
-      price DECIMAL(10,2) DEFAULT NULL,
-      averagePrice DECIMAL(10,2) DEFAULT NULL,
+      price DECIMAL(15,2) DEFAULT NULL,
+      averagePrice DECIMAL(15,2) DEFAULT NULL,
       createdAt TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
       createdBy INT(11) DEFAULT NULL,
       FOREIGN KEY (varietyId) REFERENCES cropvariety(id)
@@ -319,8 +319,8 @@ const createMarketPriceServeTable = () => {
       id INT AUTO_INCREMENT PRIMARY KEY,
       marketPriceId INT(11) DEFAULT NULL,
       xlindex INT(11) DEFAULT NULL,
-      price DECIMAL(10,2) DEFAULT NULL,
-      updatedPrice DECIMAL(10,2) DEFAULT NULL,
+      price DECIMAL(15,2) DEFAULT NULL,
+      updatedPrice DECIMAL(15,2) DEFAULT NULL,
       collectionCenterId INT(11) DEFAULT NULL,
       FOREIGN KEY (marketPriceId) REFERENCES marketprice(id)
         ON DELETE CASCADE
@@ -350,7 +350,9 @@ const createOngoingCultivationsCropsTable = () => {
       ongoingCultivationId INT,
       cropCalendar INT,
       startedAt DATE DEFAULT NULL,
-      extent DECIMAL(8, 2) NOT NULL,
+      extentha DECIMAL(15, 2) NOT NULL,
+      extentac DECIMAL(15, 2) NOT NULL,
+      extentp DECIMAL(15, 2) NOT NULL,
       createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (ongoingCultivationId) REFERENCES ongoingCultivations(id)
         ON DELETE CASCADE
@@ -383,9 +385,9 @@ const createCurrentAssetTable = () => {
       batchNum VARCHAR(50) NOT NULL,
       unit VARCHAR(10) NOT NULL,
       unitVolume INT,
-      numOfUnit DECIMAL(8, 2) NOT NULL,
-      unitPrice DECIMAL(8, 2) NOT NULL,
-      total DECIMAL(8, 2) NOT NULL,
+      numOfUnit DECIMAL(15, 2) NOT NULL,
+      unitPrice DECIMAL(15, 2) NOT NULL,
+      total DECIMAL(15, 2) NOT NULL,
       purchaseDate DATETIME NOT NULL,
       expireDate DATETIME NOT NULL,
       status VARCHAR(255) NOT NULL,
@@ -438,7 +440,7 @@ const createBuldingFixedAsset = () => {
       id INT AUTO_INCREMENT PRIMARY KEY,
       fixedAssetId INT,
       type VARCHAR(50) NOT NULL,
-      floorArea DECIMAL(8, 2) NOT NULL,
+      floorArea DECIMAL(15, 2) NOT NULL,
       ownership VARCHAR(50) NOT NULL,
       generalCondition VARCHAR(50) NOT NULL,
       district VARCHAR(15) NOT NULL,
@@ -466,13 +468,13 @@ const createLandFixedAsset = () => {
     CREATE TABLE IF NOT EXISTS landfixedasset (
       id INT AUTO_INCREMENT PRIMARY KEY,
       fixedAssetId INT,
-      extentha DECIMAL(8, 2) NOT NULL,
-      extentac DECIMAL(8, 2) NOT NULL,
-      extentp DECIMAL(8, 2) NOT NULL,
+      extentha DECIMAL(15, 2) NOT NULL,
+      extentac DECIMAL(15, 2) NOT NULL,
+      extentp DECIMAL(15, 2) NOT NULL,
       ownership VARCHAR(50) NOT NULL,
       district VARCHAR(15) NOT NULL,
-      landFenced BOOLEAN  NOT NULL,
-      perennialCrop BOOLEAN  NOT NULL,
+      landFenced VARCHAR(15) NOT NULL,
+      perennialCrop VARCHAR(15)  NOT NULL,
       FOREIGN KEY (fixedAssetId) REFERENCES fixedasset(id)
         ON DELETE SET NULL
         ON UPDATE CASCADE
@@ -502,8 +504,8 @@ const createMachToolsFixedAsset = () => {
       mentionOther VARCHAR(50) NOT NULL,
       brand VARCHAR(25) NOT NULL,
       numberOfUnits INT NOT NULL,
-      unitPrice DECIMAL(8, 2) NOT NULL,
-      totalPrice DECIMAL(8, 2) NOT NULL,
+      unitPrice DECIMAL(15, 2) NOT NULL,
+      totalPrice DECIMAL(15, 2) NOT NULL,
       warranty VARCHAR(20) NOT NULL,
       FOREIGN KEY (fixedAssetId) REFERENCES fixedasset(id)
         ON DELETE SET NULL
@@ -556,12 +558,12 @@ const createOwnershipOwnerFixedAsset = () => {
       buildingAssetId INT NULL,
       landAssetId INT NULL,
       issuedDate DATETIME NOT NULL,
-      estimateValue DECIMAL(8, 2) NOT NULL,
+      estimateValue DECIMAL(15, 2) NOT NULL,
       FOREIGN KEY (buildingAssetId) REFERENCES buildingfixedasset(id)
-        ON DELETE SET NULL
+        ON DELETE CASCADE
         ON UPDATE CASCADE,
      FOREIGN KEY (landAssetId) REFERENCES landfixedasset(id)
-        ON DELETE SET NULL
+        ON DELETE CASCADE
         ON UPDATE CASCADE
     )
   `;
@@ -587,7 +589,7 @@ const createOwnershipLeastFixedAsset = () => {
       startDate DATETIME NOT NULL,
       durationYears INT(8) NOT NULL,
       durationMonths INT(8) NOT NULL,
-      leastAmountAnnually DECIMAL(8, 2) NOT NULL,
+      leastAmountAnnually DECIMAL(15, 2) NOT NULL,
       FOREIGN KEY (buildingAssetId) REFERENCES buildingfixedasset(id)
         ON DELETE CASCADE
         ON UPDATE CASCADE,
@@ -616,7 +618,7 @@ const createOwnershipPermitFixedAsset = () => {
       buildingAssetId INT NULL,
       landAssetId INT NULL,
       issuedDate DATETIME NOT NULL,
-      permitFeeAnnually DECIMAL(8, 2) NOT NULL,
+      permitFeeAnnually DECIMAL(15, 2) NOT NULL,
       FOREIGN KEY (buildingAssetId) REFERENCES buildingfixedasset(id)
         ON DELETE CASCADE
         ON UPDATE CASCADE,
@@ -643,7 +645,7 @@ const createOwnershipSharedFixedAsset = () => {
       id INT AUTO_INCREMENT PRIMARY KEY,
       buildingAssetId INT NULL,
       landAssetId INT NULL,
-      paymentAnnually DECIMAL(8, 2) NOT NULL,
+      paymentAnnually DECIMAL(15, 2) NOT NULL,
       FOREIGN KEY (buildingAssetId) REFERENCES buildingfixedasset(id)
         ON DELETE CASCADE
         ON UPDATE CASCADE,
@@ -669,9 +671,9 @@ const createCurrentAssetRecord = () => {
     CREATE TABLE IF NOT EXISTS currentassetrecord (
     id INT AUTO_INCREMENT PRIMARY KEY,
     currentAssetId INT(5) NOT NULL,
-    numOfPlusUnit DECIMAL(8, 2) NULL,
-    numOfMinUnit DECIMAL(8, 2) NULL,
-    totalPrice DECIMAL(8, 2) NULL,
+    numOfPlusUnit DECIMAL(15, 2) NULL,
+    numOfMinUnit DECIMAL(15, 2) NULL,
+    totalPrice DECIMAL(15, 2) NULL,
     createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
    FOREIGN KEY (currentAssetId) REFERENCES currentasset(id)
         ON DELETE CASCADE
@@ -844,8 +846,8 @@ const createCollectionOfficer = () => {
       QRcode LONGBLOB,
       nic VARCHAR(12) NOT NULL,
       email VARCHAR(50) NOT NULL,
-      password VARCHAR(20) NOT NULL,
-      passwordUpdated  VARCHAR(20) NOT NULL,
+      password VARCHAR(20) NULL,
+      passwordUpdated  BOOLEAN NULL,
       houseNumber VARCHAR(10) NOT NULL,
       streetName VARCHAR(50) NOT NULL,
       city VARCHAR(50) NOT NULL,
@@ -963,12 +965,13 @@ const createFarmerPaymensCrops = () => {
       id INT AUTO_INCREMENT PRIMARY KEY,
       registerFarmerId INT,
       cropId INT,
-      gradeAprice DECIMAL(8, 2) NULL,
-      gradeBprice DECIMAL(8, 2) NULL,
-      gradeCprice DECIMAL(8, 2) NULL,
-      gradeAquan DECIMAL(8, 2) NULL,
-      gradeBquan DECIMAL(8, 2) NULL,
-      gradeCquan DECIMAL(8, 2) NULL,
+      gradeAprice DECIMAL(15, 2) NULL,
+      gradeBprice DECIMAL(15, 2) NULL,
+      gradeCprice DECIMAL(15, 2) NULL,
+      gradeAquan DECIMAL(15, 2) NULL,
+      gradeBquan DECIMAL(15, 2) NULL,
+      gradeCquan DECIMAL(15, 2) NULL,
+      image LONGBLOB,
       createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (registerFarmerId) REFERENCES registeredfarmerpayments(id)
         ON DELETE CASCADE
@@ -1128,7 +1131,9 @@ const createFarmerComplains  = () => {
     coId INT,
     refNo VARCHAR(20) NOT NULL,
     language VARCHAR(50) NOT NULL,
+    complainCategory VARCHAR(50) NOT NULL,
     complain TEXT NOT NULL,
+    reply TEXT NOT NULL,
     status VARCHAR(20) NOT NULL,
     createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (farmerId) REFERENCES users(id)
@@ -1186,7 +1191,7 @@ const createMarketPlacePackages = () => {
       id INT AUTO_INCREMENT PRIMARY KEY,
       name VARCHAR(50) NOT NULL,
       status VARCHAR(10)  NOT NULL,
-      total DECIMAL(8, 2) NOT NULL,
+      total DECIMAL(15, 2) NOT NULL,
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     )
   `;
@@ -1207,11 +1212,11 @@ const createCoupon = () => {
       id INT AUTO_INCREMENT PRIMARY KEY,
       code VARCHAR(25),
       type VARCHAR(25) NOT NULL,
-      percentage DECIMAL(5, 2),
+      percentage DECIMAL(15, 2),
       status VARCHAR(25) NOT NULL,
       checkLimit Boolean NOT NULL,
-      priceLimit DECIMAL(8,2),
-      fixDiscount DECIMAL(8,2),
+      priceLimit DECIMAL(15,2),
+      fixDiscount DECIMAL(15,2),
       startDate DATETIME NOT NULL,
       endDate DATETIME NOT NULL,
       createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP
@@ -1236,12 +1241,12 @@ const createMarketPlaceItems = () => {
       cropId INT,
       displayName VARCHAR(50) NOT NULL,
       category VARCHAR(25) NOT NULL,
-      normalPrice DECIMAL(8, 2) NOT NULL,
-      discountedPrice DECIMAL(8, 2) NOT NULL,
+      normalPrice DECIMAL(15, 2) NOT NULL,
+      discountedPrice DECIMAL(15, 2) NOT NULL,
       promo BOOLEAN  NOT NULL,
       unitType VARCHAR(5) NOT NULL,
-      startValue DECIMAL(8, 2) NOT NULL,
-      changeby DECIMAL(8, 2) NOT NULL,
+      startValue DECIMAL(15, 2) NOT NULL,
+      changeby DECIMAL(15, 2) NOT NULL,
       tags TEXT NOT NULL,
       createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (cropId) REFERENCES cropvariety(id)
@@ -1269,7 +1274,7 @@ const createPackageDetails = () => {
       mpItemId INT,
       quantity INT(11) NOT NULL,
       quantityType VARCHAR(5) NOT NULL,
-      discountedPrice DECIMAL(8, 2) NOT NULL,
+      discountedPrice DECIMAL(15, 2) NOT NULL,
       createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (packageId) REFERENCES marketplacepackages(id)
         ON DELETE SET NULL
@@ -1296,7 +1301,7 @@ const createPromoItems = () => {
     CREATE TABLE IF NOT EXISTS promoitems (
       id INT AUTO_INCREMENT PRIMARY KEY,
       mpItemId INT,
-      discount DECIMAL(8, 2) NOT NULL,
+      discount DECIMAL(15, 2) NOT NULL,
       createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (mpItemId) REFERENCES marketplaceitems(id)
         ON DELETE SET NULL
@@ -1346,7 +1351,7 @@ const createCartItems = () => {
       cartId INT,
       mpItemId INT,
       quantity DECIMAL(8, 2) NOT NULL,
-      total DECIMAL(8, 2) NOT NULL,
+      total DECIMAL(15, 2) NOT NULL,
       createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (cartId) REFERENCES cart(id)
         ON DELETE SET NULL
