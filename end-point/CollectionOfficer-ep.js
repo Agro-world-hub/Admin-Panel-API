@@ -70,6 +70,35 @@ exports.getAllCollectionOfficers = async (req, res) => {
 
 
 
+exports.getAllCollectionOfficersStatus = async (req, res) => {
+    const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
+    console.log(fullUrl);
+
+    try {        
+        // Validate query parameters
+        const validatedQuery = await collectionofficerValidate.getAllCollectionOfficersSchema.validateAsync(req.query);
+        
+        const { page, limit, nic, company } = validatedQuery;
+
+        // Call the DAO to get all collection officers
+        const result = await collectionofficerDao.getAllCollectionOfficersStatus(page, limit, nic, company);
+
+        console.log("Successfully fetched collection officers");
+        return res.status(200).json(result);
+    } catch (error) {
+        if (error.isJoi) {
+            // Handle validation error
+            return res.status(400).json({ error: error.details[0].message });
+        }
+
+        console.error("Error fetching collection officers:", error);
+        return res.status(500).json({ error: "An error occurred while fetching collection officers" });
+    }
+};
+
+
+
+
 
 exports.getCollectionOfficerReports = async (req, res) => {
     const { id: collectionOfficerId, date } = req.params;

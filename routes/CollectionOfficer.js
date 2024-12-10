@@ -41,6 +41,12 @@ router.get(
     CollectionOfficerEp.getAllCollectionOfficers
 );
 
+router.get(
+    "/collection-officer/get-all-collection-officers-status",
+    authMiddleware,
+    CollectionOfficerEp.getAllCollectionOfficersStatus
+);
+
 
 router.get(
     "/collection-officer/get-collection-officer-report/:id/:date",

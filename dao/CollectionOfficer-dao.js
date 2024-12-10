@@ -137,7 +137,7 @@ exports.getAllCollectionOfficers = (page, limit, searchNIC, companyid) => {
             FROM collectionofficer Coff
             JOIN collectionofficercompanydetails Ccom ON Coff.id = Ccom.collectionofficerId
             JOIN collectioncenter CC ON Coff.centerId = CC.id
-            WHERE Coff.status = 'Approved'
+            WHERE 1 = 1
         `;
 
         const countParams = [];
@@ -196,6 +196,95 @@ exports.getAllCollectionOfficers = (page, limit, searchNIC, companyid) => {
     });
 };
 
+
+
+exports.getAllCollectionOfficersStatus = (page, limit, searchNIC, companyid) => {
+    return new Promise((resolve, reject) => {
+        const offset = (page - 1) * limit;
+
+        let countSql = `
+            SELECT COUNT(*) as total
+            FROM collectionofficer Coff
+            JOIN collectionofficercompanydetails Ccom ON Coff.id = Ccom.collectionofficerId
+            JOIN collectioncenter CC ON Coff.centerId = CC.id
+            WHERE Coff.status = 'Approved'
+        `;
+
+        let dataSql = `
+            SELECT
+                Coff.id,
+                Coff.image,
+                Coff.firstNameEnglish,
+                Coff.lastNameEnglish,
+                Ccom.companyNameEnglish,
+                Ccom.empId,
+                Coff.phoneNumber01,
+                Coff.phoneNumber02,
+                Coff.nic,
+                Coff.district,
+                Coff.status,
+                CC.centerName
+            FROM collectionofficer Coff
+            JOIN collectionofficercompanydetails Ccom ON Coff.id = Ccom.collectionofficerId
+            JOIN collectioncenter CC ON Coff.centerId = CC.id
+            WHERE Coff.status = 'Approved'
+        `;
+
+        const countParams = [];
+        const dataParams = [];
+
+        // Apply filters for company ID
+        if (companyid) {
+            countSql += " AND Ccom.id = ?";
+            dataSql += " AND Ccom.id = ?";
+            countParams.push(companyid);
+            dataParams.push(companyid);
+        }
+
+        // Apply search filters for NIC or related fields
+        if (searchNIC) {
+            const searchCondition = `
+                AND (
+                    Coff.nic LIKE ?
+                    OR Coff.firstNameEnglish LIKE ?
+                    OR Ccom.companyNameEnglish LIKE ?
+                    OR Coff.phoneNumber01 LIKE ?
+                    OR Coff.phoneNumber02 LIKE ?
+                    OR Coff.district LIKE ?
+                )
+            `;
+            countSql += searchCondition;
+            dataSql += searchCondition;
+            const searchValue = `%${searchNIC}%`;
+            countParams.push(searchValue, searchValue, searchValue, searchValue, searchValue, searchValue);
+            dataParams.push(searchValue, searchValue, searchValue, searchValue, searchValue, searchValue);
+        }
+
+        // Add pagination to the data query
+        dataSql += " LIMIT ? OFFSET ?";
+        dataParams.push(limit, offset);
+
+        // Execute count query
+        db.query(countSql, countParams, (countErr, countResults) => {
+            if (countErr) {
+                console.error('Error in count query:', countErr);
+                return reject(countErr);
+            }
+
+            const total = countResults[0].total;
+
+            // Execute data query
+            db.query(dataSql, dataParams, (dataErr, dataResults) => {
+                if (dataErr) {
+                    console.error('Error in data query:', dataErr);
+                    return reject(dataErr);
+                }
+
+                resolve({ items: dataResults, total });
+            });
+        });
+    });
+};
 
 
 
