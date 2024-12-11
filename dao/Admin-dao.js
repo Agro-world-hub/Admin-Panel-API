@@ -26,7 +26,7 @@ exports.getAllAdminUsers = (limit, offset, role, search) => {
 
     const dataParms = [];
     let dataSql = `
-      SELECT DISTINCT AU.id, AU.mail, AU.userName, AR.role  
+      SELECT AU.id, AU.mail, AU.userName, AR.role  
       FROM adminusers AU 
       JOIN adminroles AR ON AU.role = AR.id 
       WHERE 1=1
