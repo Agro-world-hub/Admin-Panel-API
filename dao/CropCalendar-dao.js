@@ -683,10 +683,10 @@ exports.checkCropVerity = (id, engName) => {
 };
 
 
-exports.checkExistanceCropCalander = async (id) => {
+exports.checkExistanceCropCalander = async (id, cultivationMethod, natureOfCultivation) => {
   return new Promise((resolve, reject) => {
-    const sql = "SELECT * FROM cropcalender WHERE cropVarietyId = ?";
-    db.query(sql, [id], (err, results) => {
+    const sql = "SELECT * FROM cropcalender WHERE cropVarietyId = ? AND method = ? AND natOfCul = ? ";
+    db.query(sql, [id, cultivationMethod, natureOfCultivation], (err, results) => {
       if (err) {
         reject(err);
       } else {
