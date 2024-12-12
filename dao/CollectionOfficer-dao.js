@@ -223,7 +223,8 @@ exports.getAllCollectionOfficersStatus = (page, limit, searchNIC, companyid) => 
                 Coff.nic,
                 Coff.district,
                 Coff.status,
-                CC.centerName
+                CC.centerName,
+                Coff.QRcode
             FROM collectionofficer Coff
             JOIN collectionofficercompanydetails Ccom ON Coff.id = Ccom.collectionofficerId
             JOIN collectioncenter CC ON Coff.centerId = CC.id
@@ -280,11 +281,20 @@ exports.getAllCollectionOfficersStatus = (page, limit, searchNIC, companyid) => 
                     return reject(dataErr);
                 }
 
-                resolve({ items: dataResults, total });
+                // Convert QRcode to Base64
+                const processedResults = dataResults.map(item => {
+                    if (item.QRcode) {
+                        item.QRcode = `data:image/png;base64,${Buffer.from(item.QRcode).toString('base64')}`;
+                    }
+                    return item;
+                });
+
+                resolve({ items: processedResults, total });
             });
         });
     });
 };
+
 
 
 
