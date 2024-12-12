@@ -208,9 +208,10 @@ const createCropCalenderDaysTable = () => {
     taskDescriptionEnglish TEXT COLLATE latin1_swedish_ci NOT NULL,
     taskDescriptionSinhala TEXT COLLATE utf8_unicode_ci NOT NULL,
     taskDescriptionTamil TEXT COLLATE utf8_unicode_ci NOT NULL,
-    imageLink TEXT NOT NULL,
-    videoLink TEXT NOT NULL,
+    imageLink TEXT NULL,
+    videoLink TEXT NULL,
     reqImages INT(11) NULL,
+    reqGeo BOOLEAN NULL,
     createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (cropId) REFERENCES cropCalender(id)
         ON DELETE CASCADE
@@ -227,6 +228,13 @@ const createCropCalenderDaysTable = () => {
         });
     });
 };
+
+
+
+
+
+
+
 
 const createOngoingCultivationsTable = () => {
     const sql = `
@@ -372,6 +380,10 @@ const createOngoingCultivationsCropsTable = () => {
         });
     });
 };
+
+
+
+
 
 
 const createCurrentAssetTable = () => {
@@ -721,6 +733,7 @@ const createSlaveCropCalenderDaysTable = () => {
       imageLink TEXT,
       videoLink TEXT,
       reqImages INT(11) NULL,
+      reqGeo BOOLEAN NULL,
       createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (userId) REFERENCES users(id)
           ON DELETE CASCADE
@@ -739,6 +752,31 @@ const createSlaveCropCalenderDaysTable = () => {
                 reject('Error creating slave crop Calender Days table: ' + err);
             } else {
                 resolve('slave crop   table created successfully.');
+            }
+        });
+    });
+};
+
+
+const createCropGeoTable = () => {
+    const sql = `
+    CREATE TABLE IF NOT EXISTS cropGeo (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    taskId INT(11) NOT NULL,
+    longitude DECIMAL(20,15) NOT NULL,
+    latitude DECIMAL(20,15) NOT NULL,
+    createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (taskId) REFERENCES slavecropcalendardays(id)
+        ON DELETE CASCADE
+        ON UPDATE CASCADE
+);
+  `;
+    return new Promise((resolve, reject) => {
+        db.query(sql, (err, result) => {
+            if (err) {
+                reject('Error creating cropGeo table: ' + err);
+            } else {
+                resolve('cropGeo table created successfully.');
             }
         });
     });
@@ -1439,6 +1477,7 @@ module.exports = {
 
 
     createSlaveCropCalenderDaysTable,
+    createCropGeoTable,
     createTaskImages,
 
     //collection officer

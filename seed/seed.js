@@ -30,6 +30,7 @@ const { createCurrentAssetRecord } = require('./tables');
 
 const { createCurrentAssetTable } = require('./tables');
 const { createSlaveCropCalenderDaysTable } = require('./tables');
+const { createCropGeoTable } = require('./tables');
 const { createTaskImages } = require('./tables');
 
 const { createCollectionOfficer } = require('./tables');
@@ -130,6 +131,8 @@ const runSeeds = async () => {
 
     const messageSlaveCropCalenderDaysTable = await createSlaveCropCalenderDaysTable();
     console.log(messageSlaveCropCalenderDaysTable);
+    const messageCreateCropGeoTable = await createCropGeoTable();
+    console.log(messageCreateCropGeoTable);
     const messageCreateTaskImages= await createTaskImages();
     console.log(messageCreateTaskImages);
 

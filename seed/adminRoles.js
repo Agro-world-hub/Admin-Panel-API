@@ -18,7 +18,7 @@ const insertRoles = async () => {
   `;
 
   try {
-    await new Promise((resolve, reject) => {
+    return new Promise((resolve, reject) => {
       db.query(sql, roles, (err, result) => {
         if (err) {
           reject('Error inserting roles: ' + err);
