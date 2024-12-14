@@ -839,7 +839,7 @@ const createpublicforumreplies = () => {
       CREATE TABLE IF NOT EXISTS publicforumreplies (
         id int AUTO_INCREMENT PRIMARY KEY,
         chatId int NOT NULL,
-        replyId int NOT NULL,
+        replyId int NULL,
         replyMessage text NOT NULL,
         createdAt timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
         FOREIGN KEY (replyId) REFERENCES users(id)
