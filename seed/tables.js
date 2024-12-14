@@ -896,6 +896,8 @@ const createCollectionOfficer = () => {
       status VARCHAR(25) NOT NULL,
       createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (centerId) REFERENCES collectioncenter(id)
+        ON DELETE CASCADE
+        ON UPDATE CASCADE
 
     )
   `;

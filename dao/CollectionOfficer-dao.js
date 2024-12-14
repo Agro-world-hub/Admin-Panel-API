@@ -170,6 +170,8 @@ exports.getAllCollectionOfficers = (page, limit, searchNIC, companyid) => {
             dataParams.push(searchValue, searchValue, searchValue, searchValue, searchValue, searchValue);
         }
 
+        dataSql += " ORDER BY Coff.createdAt DESC";
+
         // Add pagination to the data query
         dataSql += " LIMIT ? OFFSET ?";
         dataParams.push(limit, offset);
@@ -756,6 +758,7 @@ exports.updateOfficerDetails = (id,
         district,
         province,
         country,
+        languages,
         companyNameEnglish,
         companyNameSinhala,
         companyNameTamil,
@@ -780,7 +783,7 @@ exports.updateOfficerDetails = (id,
                 UPDATE collectionofficer
                 SET centerId = ?, firstNameEnglish = ?, lastNameEnglish = ?, firstNameSinhala = ?, lastNameSinhala = ?,
                     firstNameTamil = ?, lastNameTamil = ?, nic = ?, email = ?, houseNumber = ?, streetName = ?, city = ?,
-                    district = ?, province = ?, country = ? , status = 'Not Approved'
+                    district = ?, province = ?, country = ? , languages = ? , status = 'Not Approved'
                 WHERE id = ?
             `;
 
@@ -800,6 +803,7 @@ exports.updateOfficerDetails = (id,
                 district,
                 province,
                 country,
+                languages,
                 id,
             ];
 
@@ -820,7 +824,7 @@ exports.updateOfficerDetails = (id,
             let updateCompanyDetailsSQL = `
                 UPDATE collectionofficercompanydetails
                 SET companyNameEnglish = ?, companyNameSinhala = ?, companyNameTamil = ?, IRMname = ?, 
-                    companyEmail = ?, assignedDistrict = ?, employeeType = ? , 
+                    companyEmail = ?, assignedDistrict = ?, employeeType = ?
             `;
 
             const updateCompanyDetailsParams = [
