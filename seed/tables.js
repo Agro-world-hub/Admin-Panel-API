@@ -90,7 +90,7 @@ const createContentTable = () => {
       createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       createdBy INT,
       FOREIGN KEY (createdBy) REFERENCES adminusers(id)
-        ON DELETE SET NULL
+        ON DELETE CASCADE
         ON UPDATE CASCADE
     )
   `;
@@ -405,7 +405,7 @@ const createCurrentAssetTable = () => {
       status VARCHAR(255) NOT NULL,
       createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (userId) REFERENCES users(id)
-        ON DELETE SET NULL
+        ON DELETE CASCADE
         ON UPDATE CASCADE
     )
   `;
@@ -429,7 +429,7 @@ const createFixedAsset = () => {
       category VARCHAR(50) NOT NULL,
       createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (userId) REFERENCES users(id)
-        ON DELETE SET NULL
+        ON DELETE CASCADE
         ON UPDATE CASCADE
     )
   `;
@@ -457,7 +457,7 @@ const createBuldingFixedAsset = () => {
       generalCondition VARCHAR(50) NOT NULL,
       district VARCHAR(15) NOT NULL,
       FOREIGN KEY (fixedAssetId) REFERENCES fixedasset(id)
-        ON DELETE SET NULL
+        ON DELETE CASCADE
         ON UPDATE CASCADE
     )
   `;
@@ -488,7 +488,7 @@ const createLandFixedAsset = () => {
       landFenced VARCHAR(15) NOT NULL,
       perennialCrop VARCHAR(15)  NOT NULL,
       FOREIGN KEY (fixedAssetId) REFERENCES fixedasset(id)
-        ON DELETE SET NULL
+        ON DELETE CASCADE
         ON UPDATE CASCADE
     )
   `;
@@ -520,7 +520,7 @@ const createMachToolsFixedAsset = () => {
       totalPrice DECIMAL(15, 2) NOT NULL,
       warranty VARCHAR(20) NOT NULL,
       FOREIGN KEY (fixedAssetId) REFERENCES fixedasset(id)
-        ON DELETE SET NULL
+        ON DELETE CASCADE
         ON UPDATE CASCADE
     )
   `;
@@ -546,7 +546,7 @@ const createMachToolsWarrantyFixedAsset = () => {
       expireDate DATETIME NOT NULL,
       warrantystatus VARCHAR(20) NOT NULL,
       FOREIGN KEY (machToolsId) REFERENCES machtoolsfixedasset(id)
-        ON DELETE SET NULL
+        ON DELETE CASCADE
         ON UPDATE CASCADE
     )
   `;
@@ -928,7 +928,7 @@ const createCollectionOfficerCompanyDetails = () => {
       employeeType VARCHAR(25) NOT NULL,
       empId VARCHAR(10) NOT NULL,
       FOREIGN KEY (collectionOfficerId) REFERENCES collectionofficer(id)
-        ON DELETE SET NULL
+        ON DELETE CASCADE
         ON UPDATE CASCADE
     )
   `;
@@ -955,7 +955,7 @@ const createCollectionOfficerBankDetails = () => {
       bankName VARCHAR(25) NOT NULL,
       branchName VARCHAR(25) NOT NULL,
       FOREIGN KEY (collectionOfficerId) REFERENCES collectionofficer(id)
-        ON DELETE SET NULL
+        ON DELETE CASCADE
         ON UPDATE CASCADE
     )
   `;
@@ -1092,7 +1092,7 @@ const createUserBankDetails = () => {
       branchName VARCHAR(50) NOT NULL,
       createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (userId) REFERENCES users(id)
-        ON DELETE SET NULL
+        ON DELETE CASCADE
         ON UPDATE CASCADE
     )
   `;
@@ -1148,7 +1148,7 @@ const createCollectionCenterOfficer = () => {
       contact02 VARCHAR(50) NOT NULL,
       createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (centerId) REFERENCES collectioncenter(id)
-        ON DELETE SET NULL
+        ON DELETE CASCADE
         ON UPDATE CASCADE
     )
   `;
@@ -1177,10 +1177,10 @@ const createFarmerComplains  = () => {
     status VARCHAR(20) NOT NULL,
     createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (farmerId) REFERENCES users(id)
-        ON DELETE SET NULL
+        ON DELETE CASCADE
         ON UPDATE CASCADE,
     FOREIGN KEY (coId) REFERENCES collectionofficer(id)
-        ON DELETE SET NULL
+        ON DELETE CASCADE
         ON UPDATE CASCADE
 )
   `;
@@ -1290,7 +1290,7 @@ const createMarketPlaceItems = () => {
       tags TEXT NOT NULL,
       createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (cropId) REFERENCES cropvariety(id)
-        ON DELETE SET NULL
+        ON DELETE CASCADE
         ON UPDATE CASCADE
     )
   `;
@@ -1317,10 +1317,10 @@ const createPackageDetails = () => {
       discountedPrice DECIMAL(15, 2) NOT NULL,
       createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (packageId) REFERENCES marketplacepackages(id)
-        ON DELETE SET NULL
+        ON DELETE CASCADE
         ON UPDATE CASCADE,
       FOREIGN KEY (mpItemId) REFERENCES marketplaceitems(id)
-        ON DELETE SET NULL
+        ON DELETE CASCADE
         ON UPDATE CASCADE
     )
   `;
@@ -1344,7 +1344,7 @@ const createPromoItems = () => {
       discount DECIMAL(15, 2) NOT NULL,
       createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (mpItemId) REFERENCES marketplaceitems(id)
-        ON DELETE SET NULL
+        ON DELETE CASCADE
         ON UPDATE CASCADE
     )
   `;
@@ -1368,7 +1368,7 @@ const createCart = () => {
       status VARCHAR(13) NOT NULL,
       createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (userId) REFERENCES users(id)
-        ON DELETE SET NULL
+        ON DELETE CASCADE
         ON UPDATE CASCADE
     )
   `;
@@ -1394,10 +1394,10 @@ const createCartItems = () => {
       total DECIMAL(15, 2) NOT NULL,
       createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (cartId) REFERENCES cart(id)
-        ON DELETE SET NULL
+        ON DELETE CASCADE
         ON UPDATE CASCADE,
       FOREIGN KEY (mpItemId) REFERENCES marketplaceitems(id)
-        ON DELETE SET NULL
+        ON DELETE CASCADE
         ON UPDATE CASCADE
     )
   `;

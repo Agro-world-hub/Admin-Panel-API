@@ -593,7 +593,7 @@ exports.UpdateCollectionOfficerStatusAndPasswordDao = (params) => {
     return new Promise((resolve, reject) => {
         const sql = `
             UPDATE collectionofficer
-            SET status = ?, password = ?
+            SET status = ?, password = ?, passwordUpdated = 0
             WHERE id = ?
         `;
         db.query(sql, [params.status, params.password, parseInt(params.id)], (err, results) => {
