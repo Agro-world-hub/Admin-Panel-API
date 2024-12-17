@@ -53,12 +53,36 @@ exports.GetAllComplainDAO = (page, limit, status, searchText) => {
     const Counterparams = [];
     const offset = (page - 1) * limit;
 
-    let countSql = "SELECT COUNT(*) as total FROM farmercomplains fc, collectionofficer c, users u WHERE fc.farmerId = u.id AND fc.coId = c.id  ";
-    let sql = ` 
-    SELECT fc.id, fc.refNo, fc.createdAt, fc.status, fc.language, u.firstName as farmerName, c.firstNameEnglish as officerName , cc.centerName, cc.contact01
-    FROM farmercomplains fc, collectionofficer c, users u , collectioncenter cc
-    WHERE fc.farmerId = u.id AND fc.coId = c.id AND c.centerId = cc.id`;
+    // SQL to count total records
+    let countSql = `
+      SELECT COUNT(*) AS total
+      FROM farmercomplains fc
+      LEFT JOIN collectionofficer cf ON fc.coId = cf.id
+      LEFT JOIN collectioncenter cc ON cf.centerId = cc.id
+      LEFT JOIN users u ON fc.farmerId = u.id
+      WHERE 1 = 1
+    `;
 
+    // SQL to fetch paginated data
+    let sql = `
+      SELECT 
+        fc.id, 
+        fc.refNo, 
+        fc.createdAt, 
+        fc.status, 
+        fc.language, 
+        u.firstName AS farmerName, 
+        cf.id AS officerId, 
+        cf.firstNameEnglish AS officerName, 
+        cc.centerName AS centerName
+      FROM farmercomplains fc
+      LEFT JOIN collectionofficer cf ON fc.coId = cf.id
+      LEFT JOIN collectioncenter cc ON cf.centerId = cc.id
+      LEFT JOIN users u ON fc.farmerId = u.id
+      WHERE 1 = 1
+    `;
+
+    // Add filter for status
     if (status) {
       countSql += " AND fc.status = ? ";
       sql += " AND fc.status = ? ";
@@ -66,29 +90,35 @@ exports.GetAllComplainDAO = (page, limit, status, searchText) => {
       Counterparams.push(status);
     }
 
+    // Add search functionality
     if (searchText) {
-      countSql += " AND fc.refNo LIKE ? OR c.firstNameEnglish LIKE ? OR u.firstName LIKE ? ";
-      sql += " AND fc.refNo LIKE ? OR c.firstNameEnglish LIKE ? OR u.firstName LIKE ? ";
+      countSql += `
+        AND (fc.refNo LIKE ? OR cc.centerName LIKE ? OR u.firstName LIKE ? OR cf.firstNameEnglish LIKE ?)
+      `;
+      sql += `
+        AND (fc.refNo LIKE ? OR cc.centerName LIKE ? OR u.firstName LIKE ? OR cf.firstNameEnglish LIKE ?)
+      `;
       const searchQuery = `%${searchText}%`;
-      Sqlparams.push(searchQuery, searchQuery, searchQuery);
-      Counterparams.push(searchQuery, searchQuery, searchQuery);
-
+      Sqlparams.push(searchQuery, searchQuery, searchQuery, searchQuery);
+      Counterparams.push(searchQuery, searchQuery, searchQuery, searchQuery);
     }
 
+    // Add pagination
     sql += " LIMIT ? OFFSET ?";
-    Sqlparams.push(parseInt(limit));
-    Sqlparams.push(parseInt(offset));
+    Sqlparams.push(parseInt(limit), parseInt(offset));
 
+    // Execute count query to get total records
     db.query(countSql, Counterparams, (countErr, countResults) => {
       if (countErr) {
-        return reject(countErr);
+        return reject(countErr); // Handle count query error
       }
 
-      const total = countResults[0].total;
+      const total = countResults[0]?.total || 0;
 
+      // Execute main query to get paginated results
       db.query(sql, Sqlparams, (dataErr, results) => {
         if (dataErr) {
-          return reject(dataErr);
+          return reject(dataErr); // Handle data query error
         }
 
         resolve({ results, total });
@@ -98,10 +128,11 @@ exports.GetAllComplainDAO = (page, limit, status, searchText) => {
 };
 
 
+
 exports.getComplainById = (id) => {
   return new Promise((resolve, reject) => {
     const sql = ` 
-    SELECT fc.id, fc.refNo, fc.createdAt, fc.status, fc.language, fc.complain, u.firstName AS farmerName, u.phoneNumber AS farmerPhone, c.firstNameEnglish as officerName, c.phoneNumber01 AS officerPhone, cc.centerName, cc.contact01 AS CollectionContact
+    SELECT fc.id, fc.refNo, fc.createdAt, fc.status, fc.language, fc.complain, fc.reply, u.firstName AS farmerName, u.phoneNumber AS farmerPhone, c.firstNameEnglish as officerName, c.phoneNumber01 AS officerPhone, cc.centerName, cc.contact01 AS CollectionContact
     FROM farmercomplains fc, collectionofficer c, users u , collectioncenter cc
     WHERE fc.farmerId = u.id AND c.centerId = cc.id AND fc.coId = c.id AND fc.id = ? 
     `;
@@ -226,6 +257,50 @@ exports.updateCollectionCenter = (regCode, centerName, buildingNumber, street, d
     });
   });
 };
+
+
+
+exports.sendComplainReply = (complainId, reply) => {
+  return new Promise((resolve, reject) => {
+    // Input validation
+    if (!complainId) {
+      return reject(new Error("Complain ID is required"));
+    }
+
+    if (reply === undefined || reply === null || reply.trim() === "") {
+      return reject(new Error("Reply cannot be empty"));
+    }
+
+    const sql = `
+      UPDATE farmercomplains 
+      SET reply = ?, status = ? 
+      WHERE id = ?
+    `;
+
+    const status = 'Answered';
+    const values = [reply, status, complainId];
+
+    db.query(sql, values, (err, results) => {
+      if (err) {
+        console.error("Database error details:", err);
+        return reject(err);
+      }
+
+      if (results.affectedRows === 0) {
+        console.warn(`No record found with id: ${complainId}`);
+        return reject(new Error(`No record found with id: ${complainId}`));
+      }
+
+      console.log("Update successful:", results);
+      resolve({
+        message: "Reply sent successfully",
+        affectedRows: results.affectedRows
+      });
+    });
+  });
+};
+
+
 
 
 

@@ -66,6 +66,12 @@ router.patch(
     CollectionCenterEp.updateCollectionCenter
 )
 
+router.put(
+    "/reply-complain/:id/",
+    authMiddleware,
+    CollectionCenterEp.sendComplainReply
+)
+
 router.get(
     "/get-last-emp-id/:role",
     authMiddleware,
