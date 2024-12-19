@@ -9,7 +9,8 @@ const insertRoles = async () => {
     'Demand Supply Manager', 
     'System Admin', 
     'Transport and Logistic Executive', 
-    'Call Centre Officer'];
+    'Call Centre Officer',
+    'Colection Center Admin'];
 
   // Construct the SQL query for inserting multiple roles
   const sql = `
