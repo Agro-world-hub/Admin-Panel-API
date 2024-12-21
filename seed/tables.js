@@ -8,13 +8,13 @@ const createUsersTable = () => {
       lastName VARCHAR(50) NOT NULL,
       phoneNumber VARCHAR(12) NOT NULL,
       NICnumber VARCHAR(12) NOT NULL,
-      profileImage LONGBLOB,
+      profileImage LONGBLOB NULL,
       farmerQr LONGBLOB,
-      membership VARCHAR(25) NOT NULL,
-      houseNo VARCHAR(10) NOT NULL,
+      membership VARCHAR(25) NULL,
+      houseNo VARCHAR(10) NULL,
       streetName VARCHAR(25) NULL,
-      city VARCHAR(25) NOT NULL,
-      district VARCHAR(25) NOT NULL,
+      city VARCHAR(25) NULL,
+      district VARCHAR(25) NULL,
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     )
   `;
@@ -53,7 +53,7 @@ const createAdminUsersTable = () => {
       id INT AUTO_INCREMENT PRIMARY KEY,
       mail VARCHAR(50) NOT NULL,
       userName VARCHAR(30) NOT NULL,
-      password VARCHAR(255) NOT NULL,
+      password TEXT NOT NULL,
       role INT,
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (role) REFERENCES adminroles(id)
@@ -865,6 +865,45 @@ const createpublicforumreplies = () => {
 
 
 
+
+const createCompany = () => {
+    const sql = `
+    CREATE TABLE IF NOT EXISTS company (
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      regNumber VARCHAR(50) NOT NULL,
+      companyNameEnglish VARCHAR(50) NOT NULL,
+      companyNameSinhala VARCHAR(50) NOT NULL,
+      companyNameTamil VARCHAR(50) NOT NULL,
+      email VARCHAR(50) NOT NULL,
+      oicName VARCHAR(50) NOT NULL,
+      oicEmail VARCHAR(50) NOT NULL,
+      oicConCode1 VARCHAR(5) NOT NULL,
+      oicConNum1 VARCHAR(12) NOT NULL,
+      oicConCode2 VARCHAR(5) NULL,
+      oicConNum2 VARCHAR(12) NULL,
+      accHolderName VARCHAR(50) NOT NULL,
+      accNumber VARCHAR(30) NOT NULL,
+      bankName VARCHAR(30) NOT NULL,
+      branchName VARCHAR(30) NOT NULL,
+      foName VARCHAR(50) NOT NULL,
+      foConCode VARCHAR(5) NOT NULL,
+      foConNum VARCHAR(12) NOT NULL,
+      foEmail VARCHAR(50) NOT NULL
+      )
+  `;
+    return new Promise((resolve, reject) => {
+        db.query(sql, (err, result) => {
+            if (err) {
+                reject('Error creating ccompany: ' + err);
+            } else {
+                resolve('company table created successfully.');
+            }
+        });
+    });
+};
+
+
+
 //Collection officer tables
 
 const createCollectionOfficer = () => {
@@ -872,20 +911,24 @@ const createCollectionOfficer = () => {
     CREATE TABLE IF NOT EXISTS collectionofficer (
       id INT AUTO_INCREMENT PRIMARY KEY,
       centerId INT NOT NULL,
+      companyId INT NOT NULL,
+      irmId INT NULL,
       firstNameEnglish VARCHAR(50) NOT NULL,
       firstNameSinhala VARCHAR(50) NOT NULL,
       firstNameTamil VARCHAR(50) NOT NULL,
       lastNameEnglish VARCHAR(50) NOT NULL,
       lastNameSinhala VARCHAR(50) NOT NULL,
       lastNameTamil VARCHAR(50) NOT NULL,
+      jobRole VARCHAR(50) NOT NULL,
+      empId VARCHAR(10) NOT NULL,
+      phoneCode01 VARCHAR(5) NOT NULL,
       phoneNumber01 VARCHAR(12) NOT NULL,
-      phoneNumber02 VARCHAR(12) NOT NULL,
-      image LONGBLOB,
-      QRcode LONGBLOB,
+      phoneCode02 VARCHAR(5) NULL,
+      phoneNumber02 VARCHAR(12) NULL,
       nic VARCHAR(12) NOT NULL,
       email VARCHAR(50) NOT NULL,
       password VARCHAR(20) NULL,
-      passwordUpdated  BOOLEAN NULL,
+      passwordUpdated BOOLEAN NULL,
       houseNumber VARCHAR(10) NOT NULL,
       streetName VARCHAR(50) NOT NULL,
       city VARCHAR(50) NOT NULL,
@@ -893,12 +936,23 @@ const createCollectionOfficer = () => {
       province VARCHAR(25) NOT NULL,
       country VARCHAR(25) NOT NULL,
       languages VARCHAR(255) NOT NULL,
-      status VARCHAR(25) NOT NULL,
+      accHolderName VARCHAR(75) NOT NULL,
+      accNumber VARCHAR(25) NOT NULL,
+      bankName VARCHAR(25) NOT NULL,
+      branchName VARCHAR(25) NOT NULL,
+      image LONGBLOB NULL,
+      QRcode LONGBLOB,
+      status VARCHAR(25) NULL,
       createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (centerId) REFERENCES collectioncenter(id)
         ON DELETE CASCADE
+        ON UPDATE CASCADE,
+      FOREIGN KEY (companyId) REFERENCES company(id)
+        ON DELETE CASCADE
+        ON UPDATE CASCADE,
+      FOREIGN KEY (irmId) REFERENCES collectionofficer(id)
+        ON DELETE CASCADE
         ON UPDATE CASCADE
-
     )
   `;
     return new Promise((resolve, reject) => {
@@ -913,62 +967,7 @@ const createCollectionOfficer = () => {
 };
 
 
-const createCollectionOfficerCompanyDetails = () => {
-    const sql = `
-    CREATE TABLE IF NOT EXISTS collectionofficercompanydetails (
-      id INT AUTO_INCREMENT PRIMARY KEY,
-      collectionOfficerId INT,
-      companyNameEnglish VARCHAR(255) NOT NULL,
-      companyNameSinhala VARCHAR(255) NOT NULL,
-      companyNameTamil VARCHAR(255) NOT NULL,
-      jobRole VARCHAR(50) NOT NULL,
-      IRMname VARCHAR(75) NOT NULL,
-      companyEmail VARCHAR(50) NOT NULL,
-      assignedDistrict VARCHAR(25) NOT NULL,
-      employeeType VARCHAR(25) NOT NULL,
-      empId VARCHAR(10) NOT NULL,
-      FOREIGN KEY (collectionOfficerId) REFERENCES collectionofficer(id)
-        ON DELETE CASCADE
-        ON UPDATE CASCADE
-    )
-  `;
-    return new Promise((resolve, reject) => {
-        db.query(sql, (err, result) => {
-            if (err) {
-                reject('Error creating collection officer company details table: ' + err);
-            } else {
-                resolve('collection officer company details table created successfully.');
-            }
-        });
-    });
-};
 
-
-
-const createCollectionOfficerBankDetails = () => {
-    const sql = `
-    CREATE TABLE IF NOT EXISTS collectionofficerbankdetails (
-      id INT AUTO_INCREMENT PRIMARY KEY,
-      collectionOfficerId INT,
-      accHolderName VARCHAR(75) NOT NULL,
-      accNumber VARCHAR(25) NOT NULL,
-      bankName VARCHAR(25) NOT NULL,
-      branchName VARCHAR(25) NOT NULL,
-      FOREIGN KEY (collectionOfficerId) REFERENCES collectionofficer(id)
-        ON DELETE CASCADE
-        ON UPDATE CASCADE
-    )
-  `;
-    return new Promise((resolve, reject) => {
-        db.query(sql, (err, result) => {
-            if (err) {
-                reject('Error creating collection bank details officer table: ' + err);
-            } else {
-                resolve('collection officer bank details table created successfully.');
-            }
-        });
-    });
-};
 
 
 const createRegisteredFarmerPayments = () => {
@@ -1137,31 +1136,7 @@ const createCollectionCenter = () => {
 
 
 
-const createCollectionCenterOfficer = () => {
-    const sql = `
-    CREATE TABLE IF NOT EXISTS collectioncenterofficer (
-      id INT AUTO_INCREMENT PRIMARY KEY,
-      centerId INT,
-      name VARCHAR(30) NOT NULL,
-      role VARCHAR(13) NOT NULL,
-      contact01 VARCHAR(13) NOT NULL,
-      contact02 VARCHAR(50) NOT NULL,
-      createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-      FOREIGN KEY (centerId) REFERENCES collectioncenter(id)
-        ON DELETE CASCADE
-        ON UPDATE CASCADE
-    )
-  `;
-    return new Promise((resolve, reject) => {
-        db.query(sql, (err, result) => {
-            if (err) {
-                reject('Error creating collectioncenterofficer table: ' + err);
-            } else {
-                resolve('collectioncenterofficer table created successfully.');
-            }
-        });
-    });
-};
+
 
 const createFarmerComplains  = () => {
     const sql = `
@@ -1431,7 +1406,7 @@ const createMarketPriceRequestTable = () => {
       FOREIGN KEY (centerId) REFERENCES collectioncenter(id)
         ON DELETE CASCADE
         ON UPDATE CASCADE,
-      FOREIGN KEY (empId) REFERENCES collectionofficercompanydetails(id)
+      FOREIGN KEY (empId) REFERENCES collectionofficer(id)
         ON DELETE CASCADE
         ON UPDATE CASCADE
     )
@@ -1483,14 +1458,13 @@ module.exports = {
     createTaskImages,
 
     //collection officer
+    createCompany,
     createCollectionOfficer,
-    createCollectionOfficerCompanyDetails,
-    createCollectionOfficerBankDetails,
+    
     createRegisteredFarmerPayments,
     createFarmerPaymensCrops,
     createUserBankDetails,
     createCollectionCenter,
-    createCollectionCenterOfficer,
     createFarmerComplains,
 
     //Seed for market Place Application
