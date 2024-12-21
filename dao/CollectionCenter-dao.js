@@ -327,3 +327,64 @@ exports.getForCreateIdDao = (role) => {
   });
 };
 
+
+
+
+
+
+
+exports.createCompany = async (
+  regNumber,
+  companyNameEnglish,
+  companyNameSinhala,
+  companyNameTamil,
+  email,
+  oicName,
+  oicEmail,
+  oicConCode1,
+  oicConNum1,
+  oicConCode2,
+  oicConNum2,
+  accHolderName,
+  accNumber,
+  bankName,
+  branchName,
+  foName,
+  foConCode,
+  foConNum,
+  foEmail
+) => {
+  return new Promise((resolve, reject) => {
+    const sql =
+      "INSERT INTO company (regNumber, companyNameEnglish, companyNameSinhala, companyNameTamil, email, oicName, oicEmail, oicConCode1, oicConNum1, oicConCode2, oicConNum2, accHolderName, accNumber, bankName, branchName, foName, foConCode, foConNum, foEmail) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
+    const values = [
+      regNumber,
+      companyNameEnglish,
+      companyNameSinhala,
+      companyNameTamil,
+      email,
+      oicName,
+      oicEmail,
+      oicConCode1,
+      oicConNum1,
+      oicConCode2,
+      oicConNum2,
+      accHolderName,
+      accNumber,
+      bankName,
+      branchName,
+      foName,
+      foConCode,
+      foConNum,
+      foEmail
+    ];
+
+    db.query(sql, values, (err, results) => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(results.insertId);
+      }
+    });
+  });
+};

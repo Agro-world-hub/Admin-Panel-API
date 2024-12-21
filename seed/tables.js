@@ -888,7 +888,8 @@ const createCompany = () => {
       foName VARCHAR(50) NOT NULL,
       foConCode VARCHAR(5) NOT NULL,
       foConNum VARCHAR(12) NOT NULL,
-      foEmail VARCHAR(50) NOT NULL
+      foEmail VARCHAR(50) NOT NULL,
+      createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       )
   `;
     return new Promise((resolve, reject) => {
@@ -1441,15 +1442,15 @@ module.exports = {
     createpublicforumposts,
     createpublicforumreplies,
 
-    createFixedAsset, //1
-    createBuldingFixedAsset, //2
-    createLandFixedAsset, //3
-    createMachToolsFixedAsset, //4
-    createMachToolsWarrantyFixedAsset, //5
-    createOwnershipOwnerFixedAsset, //6
-    createOwnershipLeastFixedAsset, //7
-    createOwnershipPermitFixedAsset, //8
-    createOwnershipSharedFixedAsset, //9
+    createFixedAsset,
+    createBuldingFixedAsset, 
+    createLandFixedAsset,
+    createMachToolsFixedAsset,
+    createMachToolsWarrantyFixedAsset,
+    createOwnershipOwnerFixedAsset,
+    createOwnershipLeastFixedAsset,
+    createOwnershipPermitFixedAsset,
+    createOwnershipSharedFixedAsset,
     createCurrentAssetRecord,
 
 

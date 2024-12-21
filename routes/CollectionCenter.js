@@ -79,4 +79,11 @@ router.get(
 )
 
 
+router.post(
+    "/create-company",
+    authMiddleware,
+    CollectionCenterEp.createCompany
+);
+
+
 module.exports = router;
