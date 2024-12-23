@@ -54,6 +54,7 @@ const {createMarketPriceRequestTable} = require('./tables')
 
 const {createSuperAdmin} = require('./admin')
 const {insertRoles} = require('./adminRoles')
+const {createAgroWorld} = require('./agroworldCompany')
 
 
 
@@ -191,6 +192,9 @@ const runSeeds = async () => {
     console.log(messagecreateContentPublishingEvent);
     const messageCreateTaskStatusEvent = await createTaskStatusEvent();
     console.log(messageCreateTaskStatusEvent);
+
+    const messageCreateAgroWorld = await createAgroWorld();
+    console.log(messageCreateAgroWorld);
 
     
     

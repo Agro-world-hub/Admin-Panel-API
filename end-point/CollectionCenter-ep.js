@@ -1,8 +1,10 @@
 const CollectionCenterDao = require('../dao/CollectionCenter-dao')
 const ValidateSchema = require('../validations/CollectionCenter-validation')
 exports.getAllCollectionCenter = async (req, res) => {
+  
   try {
-
+    const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
+    console.log("Request URL:", fullUrl);
     const result = await CollectionCenterDao.GetAllCenterDAO()
 
     if (result.length === 0) {
@@ -328,7 +330,7 @@ exports.getForCreateId = async (req, res) => {
   try {
 
     const { role } = await ValidateSchema.getRoleShema.validateAsync(req.params);
-    const results = await CollectionCenterDao.getForCreateIdDao(role);
+    const results = await CollectionCenterDao.getForCreateId(role);
 
     if (results.length === 0) {
       return res.json({ result: {empId:"00001"}, status: true })
@@ -415,5 +417,36 @@ exports.createCompany = async (req, res) => {
     return res
       .status(500)
       .json({ error: "An error occurred while creating company" });
+  }
+};
+
+
+
+
+exports.getAllCompanyList = async (req, res) => {
+  const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
+    console.log("Request URL:", fullUrl);
+  try {
+    
+
+    const result = await CollectionCenterDao.GetAllCompanyList()
+
+    if (result.length === 0) {
+      return res
+        .status(404)
+        .json({ message: "No news items found", data: result });
+    }
+
+    console.log("Successfully retrieved all collection center");
+    res.json(result);
+  } catch (err) {
+    if (err.isJoi) {
+      // Validation error
+      console.error("Validation error:", err.details[0].message);
+      return res.status(400).json({ error: err.details[0].message });
+    }
+
+    console.error("Error fetching news:", err);
+    res.status(500).json({ error: "An error occurred while fetching news" });
   }
 };

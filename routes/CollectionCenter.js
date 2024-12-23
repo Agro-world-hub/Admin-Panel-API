@@ -86,4 +86,11 @@ router.post(
 );
 
 
+router.get(
+    "/get-all-company-list",
+    authMiddleware,
+    CollectionCenterEp.getAllCompanyList
+)
+
+
 module.exports = router;

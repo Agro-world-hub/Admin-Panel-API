@@ -304,9 +304,9 @@ exports.sendComplainReply = (complainId, reply) => {
 
 
 
-exports.getForCreateIdDao = (role) => {
+exports.getForCreateId = (role) => {
   return new Promise((resolve, reject) => {
-    const sql = "SELECT empId FROM collectionofficercompanydetails WHERE empId LIKE ? ORDER BY empId DESC LIMIT 1";
+    const sql = "SELECT empId FROM collectionofficer WHERE empId LIKE ? ORDER BY empId DESC LIMIT 1";
     db.query(sql, [`${role}%`], (err, results) => {
       if (err) {
         return reject(err);
@@ -385,6 +385,21 @@ exports.createCompany = async (
       } else {
         resolve(results.insertId);
       }
+    });
+  });
+};
+
+
+
+
+exports.GetAllCompanyList = () => {
+  return new Promise((resolve, reject) => {
+    const sql = "SELECT id, companyNameEnglish FROM company";
+    db.query(sql, (err, results) => {
+      if (err) {
+        return reject(err);
+      }
+      resolve(results);
     });
   });
 };
