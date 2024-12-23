@@ -403,3 +403,17 @@ exports.GetAllCompanyList = () => {
     });
   });
 };
+
+
+
+exports.GetAllManagerList = (companyId, centerId) => {
+  return new Promise((resolve, reject) => {
+    const sql = "SELECT id, firstNameEnglish FROM collectionofficer WHERE companyId=? AND centerId=?";
+    db.query(sql,[companyId, centerId], (err, results) => {
+      if (err) {
+        return reject(err);
+      }
+      resolve(results);
+    });
+  });
+};

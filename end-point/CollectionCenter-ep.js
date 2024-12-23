@@ -450,3 +450,34 @@ exports.getAllCompanyList = async (req, res) => {
     res.status(500).json({ error: "An error occurred while fetching news" });
   }
 };
+
+
+
+exports.getAllManagerList = async (req, res) => {
+  const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
+    console.log("Request URL:", fullUrl);
+  try {
+    const companyId = req.params.companyId
+    const centerId = req.params.centerId
+
+    const result = await CollectionCenterDao.GetAllManagerList(companyId, centerId)
+
+    if (result.length === 0) {
+      return res
+        .status(404)
+        .json({ message: "No collection Managers found", data: result });
+    }
+
+    console.log("Successfully retrieved all collection Managers");
+    res.json(result);
+  } catch (err) {
+    if (err.isJoi) {
+      // Validation error
+      console.error("Validation error:", err.details[0].message);
+      return res.status(400).json({ error: err.details[0].message });
+    }
+
+    console.error("Error fetching news:", err);
+    res.status(500).json({ error: "An error occurred while fetching news" });
+  }
+};

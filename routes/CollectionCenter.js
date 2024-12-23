@@ -93,4 +93,11 @@ router.get(
 )
 
 
+router.get(
+    "/get-all-manager-list/:companyId/:centerId",
+    authMiddleware,
+    CollectionCenterEp.getAllManagerList
+)
+
+
 module.exports = router;
