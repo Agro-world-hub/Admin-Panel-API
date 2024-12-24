@@ -31,24 +31,13 @@ exports.getCollectionOfficerDistrictReports = (district) => {
     });
 };
 
-exports.createCollectionOfficerPersonal = (officerData, companyData, bankData) => {
+exports.createCollectionOfficerPersonal = (officerData) => {
     return new Promise(async (resolve, reject) => {
         try {
             // Prepare data for QR code generation
             const qrData = `
             {
-                "centerId": ${officerData.centerId},
-                "firstNameEnglish": "${officerData.firstNameEnglish}",
-                "firstNameEnglish": "${officerData.lastNameEnglish}",
-                "phoneNumber01": ${officerData.phoneNumber01Code + officerData.phoneNumber01},
-                "phoneNumber01": ${officerData.phoneNumber02Code + officerData.phoneNumber02},
-                "nic": "${officerData.nic}",
-                "companyNameEnglish": "${companyData.companyNameEnglish}",
-                "jobRole": "${companyData.jobRole}",
-                "accHolderName": "${bankData.accHolderName}",
-                "accNumber": "${bankData.accNumber}",
-                "bankName": "${bankData.bankName}",
-                "branchName": "${bankData.branchName}",
+                "empId": "${officerData.empId}",
             }
             `;
 
@@ -61,10 +50,13 @@ exports.createCollectionOfficerPersonal = (officerData, companyData, bankData) =
 
             const sql = `
                 INSERT INTO collectionofficer (
-                    centerId, firstNameEnglish, firstNameSinhala, firstNameTamil, lastNameEnglish, lastNameSinhala, lastNameTamil,
-                    phoneNumber01, phoneNumber02, image, QRcode, nic, email, houseNumber, streetName, city, district,
-                    province, country, languages, status
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,'Not Approved')
+                    centerId, companyId ,irmId ,firstNameEnglish, firstNameSinhala, firstNameTamil, lastNameEnglish,
+                    lastNameSinhala, lastNameTamil, jobRole, empId, enpType, phoneCode01, phoneNumber01, phoneCode02, phoneNumber02,
+                    nic, email, houseNumber, streetName, city, district, province, country,
+                    languages, accHolderName, accNumber, bankName, branchName, status
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?,
+                         ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,
+                         ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Not Approved')
             `;
 
             // Database query with QR image data added
@@ -72,16 +64,21 @@ exports.createCollectionOfficerPersonal = (officerData, companyData, bankData) =
                 sql,
                 [
                     officerData.centerId,
+                    officerData.companyId ,
+                    officerData.irmId,
                     officerData.firstNameEnglish,
                     officerData.firstNameSinhala,
                     officerData.firstNameTamil,
                     officerData.lastNameEnglish,
                     officerData.lastNameSinhala,
                     officerData.lastNameTamil,
-                    officerData.phoneNumber01Code + officerData.phoneNumber01,
-                    officerData.phoneNumber02Code + officerData.phoneNumber02,
-                    officerData.image,
-                    qrCodeBuffer,
+                    officerData.jobRole,
+                    officerData.empId,
+                    officerData.enpType,
+                    officerData.phoneCode01,
+                    officerData.phoneNumber01,
+                    officerData.phoneCode02,
+                    officerData.phoneNumber02,
                     officerData.nic,
                     officerData.email,
                     officerData.houseNumber,
@@ -91,6 +88,10 @@ exports.createCollectionOfficerPersonal = (officerData, companyData, bankData) =
                     officerData.province,
                     officerData.country,
                     officerData.languages,
+                    officerData.accHolderName,
+                    officerData.accNumber,
+                    officerData.bankName,
+                    officerData.branchName
                 ],
                 (err, results) => {
                     if (err) {
@@ -114,29 +115,28 @@ exports.getAllCollectionOfficers = (page, limit, searchNIC, companyid) => {
 
         let countSql = `
             SELECT COUNT(*) as total
-            FROM collectionofficer Coff
-            JOIN collectionofficercompanydetails Ccom ON Coff.id = Ccom.collectionofficerId
-            JOIN collectioncenter CC ON Coff.centerId = CC.id
+            FROM collectionofficer coff
+            JOIN company cm ON coff.companyId  = cm.id
+            JOIN collectioncenter cc ON coff.centerId = cc.id
             WHERE 1 = 1
         `;
 
         let dataSql = `
             SELECT
-                Coff.id,
-                Coff.image,
-                Coff.firstNameEnglish,
-                Coff.lastNameEnglish,
-                Ccom.companyNameEnglish,
-                Ccom.empId,
-                Coff.phoneNumber01,
-                Coff.phoneNumber02,
-                Coff.nic,
-                Coff.district,
-                Coff.status,
-                CC.centerName
-            FROM collectionofficer Coff
-            JOIN collectionofficercompanydetails Ccom ON Coff.id = Ccom.collectionofficerId
-            JOIN collectioncenter CC ON Coff.centerId = CC.id
+                coff.id,
+                coff.image,
+                coff.firstNameEnglish,
+                coff.lastNameEnglish,
+                coff.empId,
+                coff.status,
+                coff.phoneCode01,
+                coff.phoneNumber01,
+                coff.nic,
+                cm.companyNameEnglish,
+                cc.centerName
+            FROM collectionofficer coff
+            JOIN company cm ON coff.companyId  = cm.id
+            JOIN collectioncenter cc ON coff.centerId = cc.id
             WHERE 1 = 1
         `;
 
@@ -145,8 +145,8 @@ exports.getAllCollectionOfficers = (page, limit, searchNIC, companyid) => {
 
         // Apply filters for company ID
         if (companyid) {
-            countSql += " AND Ccom.id = ?";
-            dataSql += " AND Ccom.id = ?";
+            countSql += " AND cm.id = ?";
+            dataSql += " AND cm.id = ?";
             countParams.push(companyid);
             dataParams.push(companyid);
         }
@@ -155,12 +155,12 @@ exports.getAllCollectionOfficers = (page, limit, searchNIC, companyid) => {
         if (searchNIC) {
             const searchCondition = `
                 AND (
-                    Coff.nic LIKE ?
-                    OR Coff.firstNameEnglish LIKE ?
-                    OR Ccom.companyNameEnglish LIKE ?
-                    OR Coff.phoneNumber01 LIKE ?
-                    OR Coff.phoneNumber02 LIKE ?
-                    OR Coff.district LIKE ?
+                    coff.nic LIKE ?
+                    OR coff.firstNameEnglish LIKE ?
+                    OR cm.companyNameEnglish LIKE ?
+                    OR coff.phoneNumber01 LIKE ?
+                    OR coff.phoneNumber02 LIKE ?
+                    OR coff.district LIKE ?
                 )
             `;
             countSql += searchCondition;
@@ -170,7 +170,7 @@ exports.getAllCollectionOfficers = (page, limit, searchNIC, companyid) => {
             dataParams.push(searchValue, searchValue, searchValue, searchValue, searchValue, searchValue);
         }
 
-        dataSql += " ORDER BY Coff.createdAt DESC";
+        dataSql += " ORDER BY coff.createdAt DESC";
 
         // Add pagination to the data query
         dataSql += " LIMIT ? OFFSET ?";
@@ -346,55 +346,9 @@ exports.getFarmerPaymentsCropsByRegisteredFarmerId = (registeredFarmerId) => {
 
 
 
-exports.createCollectionOfficerCompany = (companyData, collectionOfficerId) => {
-    return new Promise((resolve, reject) => {
-        const sql =
-            "INSERT INTO collectionofficercompanydetails (collectionOfficerId, companyNameEnglish, companyNameSinhala, companyNameTamil, jobRole, IRMname, companyEmail, assignedDistrict, employeeType, empId) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
-        db.query(
-            sql,
-            [
-                collectionOfficerId,
-                companyData.companyNameEnglish,
-                companyData.companyNameSinhala,
-                companyData.companyNameTamil,
-                companyData.jobRole,
-                companyData.IRMname,
-                companyData.companyEmail,
-                companyData.assignedDistrict,
-                companyData.employeeType,
-                companyData.empId
 
-            ], (err, results) => {
-                if (err) {
-                    return reject(err); // Reject promise if an error occurs
-                }
-                resolve(results); // Resolve the promise with the query results
-            });
-    });
-};
 
-exports.createCollectionOfficerBank = (bankData, collectionOfficerId) => {
-    return new Promise((resolve, reject) => {
-        const sql =
-            "INSERT INTO collectionofficerbankdetails (collectionOfficerId, accHolderName, accNumber, bankName, branchName) VALUES (?, ?, ?, ?, ?)";
-
-        db.query(
-            sql,
-            [
-                collectionOfficerId,
-                bankData.accHolderName,
-                bankData.accNumber,
-                bankData.bankName,
-                bankData.branchName,
-            ], (err, results) => {
-                if (err) {
-                    return reject(err); // Reject promise if an error occurs
-                }
-                resolve(results); // Resolve the promise with the query results
-            });
-    });
-};
 
 
 exports.getCollectionOfficerProvinceReports = (province) => {
@@ -428,7 +382,7 @@ exports.getAllCompanyNamesDao = (district) => {
     return new Promise((resolve, reject) => {
         const sql = `
             SELECT id, companyNameEnglish
-            FROM collectionofficercompanydetails
+            FROM company
         `;
         db.query(sql, [district], (err, results) => {
             if (err) {

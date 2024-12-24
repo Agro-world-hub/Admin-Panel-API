@@ -17,18 +17,17 @@ exports.createCollectionOfficer = async (req, res) => {
     try {
         // Validate the request body
         // const validatedData = req.body;
-        const {officerData, companyData, bankData} = req.body   
+        const {officerData} = req.body   
         console.log(req.body);
              
 
         // Call the DAO to create the collection officer
         // const results = await collectionofficerDao.createCollectionOfficerPersonal(Object.values(validatedData));
-        const resultsPersonal = await collectionofficerDao.createCollectionOfficerPersonal(officerData, companyData, bankData);
-        const resultCompany = await collectionofficerDao.createCollectionOfficerCompany(companyData,resultsPersonal.insertId);
-        const resultBank = await collectionofficerDao.createCollectionOfficerBank(bankData,resultsPersonal.insertId);
+        const resultsPersonal = await collectionofficerDao.createCollectionOfficerPersonal(officerData);
+   
         
         console.log("Collection Officer created successfully");
-        return res.status(201).json({ message: "Collection Officer created successfully", id: resultBank.insertId, status:true });
+        return res.status(201).json({ message: "Collection Officer created successfully", id: resultsPersonal.insertId, status:true });
     } catch (error) {
         if (error.isJoi) {
             // Handle validation error
