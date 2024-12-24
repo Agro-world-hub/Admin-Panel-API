@@ -85,5 +85,11 @@ router.post(
     CollectionCenterEp.createCompany
 );
 
+router.get(
+    "/get-all-company",
+    // authMiddleware,
+    CollectionCenterEp.getAllCompanies
+)
+
 
 module.exports = router;

@@ -388,3 +388,15 @@ exports.createCompany = async (
     });
   });
 };
+
+exports.GetAllCompanyDAO = () => {
+  return new Promise((resolve, reject) => {
+    const sql = "SELECT * FROM company";
+    db.query(sql, (err, results) => {
+      if (err) {
+        return reject(err);
+      }
+      resolve(results);
+    });
+  });
+};
