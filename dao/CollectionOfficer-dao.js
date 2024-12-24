@@ -161,13 +161,14 @@ exports.getAllCollectionOfficers = (page, limit, searchNIC, companyid) => {
                     OR coff.phoneNumber01 LIKE ?
                     OR coff.phoneNumber02 LIKE ?
                     OR coff.district LIKE ?
+                    OR coff.empId LIKE ?
                 )
             `;
             countSql += searchCondition;
             dataSql += searchCondition;
             const searchValue = `%${searchNIC}%`;
-            countParams.push(searchValue, searchValue, searchValue, searchValue, searchValue, searchValue);
-            dataParams.push(searchValue, searchValue, searchValue, searchValue, searchValue, searchValue);
+            countParams.push(searchValue, searchValue, searchValue, searchValue, searchValue, searchValue, searchValue);
+            dataParams.push(searchValue, searchValue, searchValue, searchValue, searchValue, searchValue, searchValue);
         }
 
         dataSql += " ORDER BY coff.createdAt DESC";
