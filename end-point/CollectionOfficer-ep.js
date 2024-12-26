@@ -8,7 +8,7 @@ const collectionofficerDao = require("../dao/CollectionOfficer-dao");
 const collectionofficerValidate = require('../validations/CollectionOfficer-validation');
 
 const Joi = require('joi');
-
+const bcrypt = require("bcryptjs");
 
 exports.createCollectionOfficer = async (req, res) => {
     const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
@@ -246,11 +246,14 @@ exports.UpdateStatusAndSendPassword = async (req, res) => {
         // Generate a new random password
         const generatedPassword = Math.random().toString(36).slice(-8); // Example: 8-character random password
 
+
+        const hashedPassword = await bcrypt.hash(generatedPassword, 10);
+
         // Update status and password in the database
         const updateResult = await collectionofficerDao.UpdateCollectionOfficerStatusAndPasswordDao({
             id,
             status,
-            password: generatedPassword,
+            password: hashedPassword,
         });
 
         if (updateResult.affectedRows === 0) {

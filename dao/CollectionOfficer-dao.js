@@ -399,9 +399,8 @@ exports.getAllCompanyNamesDao = (district) => {
 exports.getCollectionOfficerEmailDao = (id) => {
     return new Promise((resolve, reject) => {
         const sql = `
-            SELECT c.email, c.firstNameEnglish, ccd.empId AS empId
+            SELECT c.email, c.firstNameEnglish, c.empId AS empId
             FROM collectionofficer c
-            LEFT JOIN collectionofficercompanydetails ccd ON c.id = ccd.collectionOfficerId
             WHERE c.id = ?
         `;
         db.query(sql, [id], (err, results) => {
