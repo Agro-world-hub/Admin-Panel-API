@@ -391,7 +391,7 @@ exports.createCompany = async (
 
 exports.GetAllCompanyDAO = () => {
   return new Promise((resolve, reject) => {
-    const sql = "SELECT * FROM company";
+    const sql = "SELECT c.companyNameEnglish, c.email, c.oicName, c.oicEmail, c.oicConCode1, c.oicConNum1, c.oicConCode2, c.oicConNum2  FROM company c";
     db.query(sql, (err, results) => {
       if (err) {
         return reject(err);
