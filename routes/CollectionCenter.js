@@ -61,7 +61,7 @@ router.get(
 )
 
 router.patch(
-    "/update-center/:id/:regCode",
+    "/update-center/:id",
     authMiddleware,
     CollectionCenterEp.updateCollectionCenter
 )
@@ -98,6 +98,13 @@ router.get(
     authMiddleware,
     CollectionCenterEp.getAllManagerList
 )
+
+
+
+router.post(
+    '/generate-regcode', 
+    CollectionCenterEp.generateRegCode
+);
 
 
 module.exports = router;

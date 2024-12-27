@@ -1,13 +1,13 @@
 const db = require("../startup/database")
 const Joi = require('joi')
 
-exports.addCollectionCenter = (regCode, centerName, contact01, contact02, buildingNumber, street, district, province, contact01Code, contact02Code) => {
+exports.addCollectionCenter = (regCode, centerName, contact01, contact02, buildingNumber, street, city, district, province, country, contact01Code, contact02Code, companies) => {
   return new Promise((resolve, reject) => {
     const sql = `INSERT INTO collectioncenter 
-      (regCode, centerName, contact01, contact02, buildingNumber, street, district, province) 
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?)`;
+      (regCode, centerName,code1, contact01, code2, contact02, buildingNumber, street, city, district, province, country, companies) 
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?,?,?)`;
 
-    const values = [regCode, centerName, contact01Code + contact01, contact02Code + contact02, buildingNumber, street, district, province];
+    const values = [regCode, centerName, contact01Code , contact01, contact02Code , contact02, buildingNumber, street, city, district, province, country, companies];
 
     db.query(sql, values, (err, results) => {
       if (err) {
@@ -232,20 +232,27 @@ exports.getCenterByIdDAO = (id) => {
 };
 
 
-exports.updateCollectionCenter = (regCode, centerName, buildingNumber, street, district, province, collectionID) => {
+exports.updateCollectionCenter = (regCode, centerName,  code1, contact01, code2, contact02, buildingNumber, street, city, district, province, country, companies, collectionID) => {
   return new Promise((resolve, reject) => {
     const sql = `
     UPDATE collectioncenter SET 
       regCode = ?,
       centerName = ?,
+      code1 = ?,
+      contact01 = ?,
+      code2 = ?,
+      contact02 = ?,
       buildingNumber = ?,
       street = ?,
+      city	 = ?,
       district = ?,
-      province  = ?
+      province  = ?,
+      country = ?,
+      companies = ?
      WHERE id = ?
       `;
 
-    const values = [regCode, centerName, buildingNumber, street, district, province, collectionID];
+    const values = [regCode, centerName,  code1, contact01, code2, contact02, buildingNumber, street, city, district, province, country, companies, collectionID];
 
     db.query(sql, values, (err, results) => {
       if (err) {
@@ -415,5 +422,36 @@ exports.GetAllManagerList = (companyId, centerId) => {
       }
       resolve(results);
     });
+  });
+};
+
+
+
+exports.generateRegCode = (province, district, city, callback) => {
+  // Generate the prefix based on province and district
+  const prefix = province.slice(0, 2).toUpperCase() + district.slice(0, 1).toUpperCase() + city.slice(0, 1).toUpperCase();
+
+  // SQL query to get the latest regCode
+  const query = `SELECT regCode FROM collectioncenter WHERE regCode LIKE ? ORDER BY regCode DESC LIMIT 1`;
+
+  // Execute the query
+  db.execute(query, [`${prefix}-%`], (err, results) => {
+    if (err) {
+      console.error("Error executing query:", err);
+      return callback(err);
+    }
+
+    let newRegCode = `${prefix}-01`; // Default to 01 if no regCode found
+
+    if (results.length > 0) {
+      // Get the last regCode and extract the number
+      const lastRegCode = results[0].regCode;
+      const lastNumber = parseInt(lastRegCode.split('-')[1]);
+      const newNumber = lastNumber + 1;
+      newRegCode = `${prefix}-${String(newNumber).padStart(2, '0')}`;
+    }
+
+    // Return the new regCode
+    callback(null, newRegCode);
   });
 };

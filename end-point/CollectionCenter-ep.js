@@ -165,8 +165,11 @@ exports.createCollectionCenter = async (req, res) => {
       contact02Code,
       buildingNumber,
       street,
+      city,
       district,
-      province
+      province,
+      country,
+      companies
       // } = await ValidateSchema.createCollectionCenterValidation.validateAsync(req.body)
     } = req.body
     console.log("Collection Centr", regCode, centerName);
@@ -179,7 +182,7 @@ exports.createCollectionCenter = async (req, res) => {
       return res.json({ message: "This RegCode allrady exist!", status: false })
     }
 
-    const result = await CollectionCenterDao.addCollectionCenter(regCode, centerName, contact01, contact02, buildingNumber, street, district, province, contact01Code, contact02Code);
+    const result = await CollectionCenterDao.addCollectionCenter(regCode, centerName, contact01, contact02, buildingNumber, street, city, district, province, country, contact01Code, contact02Code, companies);
 
     console.log("Crop Collection Center creation success");
     return res.status(201).json({ result: result, status: true });
@@ -252,21 +255,27 @@ exports.updateCollectionCenter = async (req, res) => {
     const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
     console.log(fullUrl);
 
-    const collectionID = req.params.id
-    const checkRegcode = req.params.regCode
+    const collectionID = req.params.id;
 
     const {
       regCode,
       centerName,
+      code1,
+      contact01,
+      code2,
+      contact02,
       buildingNumber,
       street,
+      city,
       district,
-      province
+      province,
+      country,
+      companies
     } = req.body
-    console.log("Collection Centr", regCode, centerName);
+    
 
 
-    if (regCode !== checkRegcode) {
+    if (regCode) {
       const existRegCode = await CollectionCenterDao.CheckRegCodeExistDAO(regCode);
       if (existRegCode.length > 0) {
         return res.json({ message: "This RegCode allrady exist!", status: false })
@@ -275,7 +284,7 @@ exports.updateCollectionCenter = async (req, res) => {
 
 
 
-    const result = await CollectionCenterDao.updateCollectionCenter(regCode, centerName, buildingNumber, street, district, province, collectionID);
+    const result = await CollectionCenterDao.updateCollectionCenter(regCode, centerName,  code1, contact01, code2, contact02, buildingNumber, street, city, district, province, country, companies, collectionID);
 
     console.log("Crop Collection Center update success");
     return res.status(201).json({ result: result, status: true });
@@ -480,4 +489,21 @@ exports.getAllManagerList = async (req, res) => {
     console.error("Error fetching news:", err);
     res.status(500).json({ error: "An error occurred while fetching news" });
   }
+};
+
+
+
+exports.generateRegCode = (req, res) => {
+  const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
+  console.log("Request URL:", fullUrl);
+  const { province, district, city } = req.body;
+
+  // Call DAO to generate the regCode
+  CollectionCenterDao.generateRegCode(province, district, city, (err, regCode) => {
+    if (err) {
+      return res.status(500).json({ error: 'Error generating regCode' });
+    }
+
+    res.json({ regCode });
+  });
 };
