@@ -66,6 +66,7 @@ const {createAgroWorld} = require('./agroworldCompany')
 const { createExpiredContentCleanupEvent} = require('./events');
 const {createContentPublishingEvent} = require('./events');
 const {createTaskStatusEvent} = require('./events');
+const {createUserActiveStatusEvent} = require('./events');
 
 
 
@@ -205,6 +206,8 @@ const runSeeds = async () => {
     console.log(messagecreateContentPublishingEvent);
     const messageCreateTaskStatusEvent = await createTaskStatusEvent();
     console.log(messageCreateTaskStatusEvent);
+    const messageCreateUserActiveStatusEvent = await createUserActiveStatusEvent();
+    console.log(messageCreateUserActiveStatusEvent);
 
     const messageCreateAgroWorld = await createAgroWorld();
     console.log(messageCreateAgroWorld);

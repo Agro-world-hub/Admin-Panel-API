@@ -69,10 +69,65 @@ const createTaskStatusEvent = () => {
 
 
 
+const createUserActiveStatusEvent = () => {
+    const sql = `
+    CREATE EVENT IF NOT EXISTS update_user_active_status
+        ON SCHEDULE EVERY 1 HOUR
+        DO
+        BEGIN
+            -- Update activeStatus to 'active' for users with a recent task
+            UPDATE users u
+            SET activeStatus = 'active'
+            WHERE EXISTS (
+                SELECT 1
+                FROM slavecropcalendardays s
+                WHERE s.userId = u.id
+                AND s.createdAt = (
+                    SELECT MAX(createdAt)
+                    FROM slavecropcalendardays
+                    WHERE userId = s.userId
+                    AND status = 'completed'
+                )
+                AND s.createdAt >= DATE_SUB(CURDATE(), INTERVAL 1 MONTH)
+            );
+
+            -- Update activeStatus to 'inactive' for users without a recent task
+            UPDATE users u
+            SET activeStatus = 'inactive'
+            WHERE NOT EXISTS (
+                SELECT 1
+                FROM slavecropcalendardays s
+                WHERE s.userId = u.id
+                AND s.createdAt = (
+                    SELECT MAX(createdAt)
+                    FROM slavecropcalendardays
+                    WHERE userId = s.userId
+                    AND status = 'completed'
+                )
+                AND s.createdAt >= DATE_SUB(CURDATE(), INTERVAL 1 MONTH)
+            );
+        END;
+    `;
+    return new Promise((resolve, reject) => {
+        db.query(sql, (err, result) => {
+            if (err) {
+                reject('Error createUserActiveStatusEvent: ' + err);
+            } else {
+                resolve('createUserActiveStatusEvent created successfully.');
+            }
+        });
+    });
+};
+
+
+
+
+
 
 module.exports = {
   createExpiredContentCleanupEvent,
   createContentPublishingEvent,
-  createTaskStatusEvent
+  createTaskStatusEvent,
+  createUserActiveStatusEvent
 
 };

@@ -53,10 +53,10 @@ exports.createCollectionOfficerPersonal = (officerData) => {
                     centerId, companyId ,irmId ,firstNameEnglish, firstNameSinhala, firstNameTamil, lastNameEnglish,
                     lastNameSinhala, lastNameTamil, jobRole, empId, enpType, phoneCode01, phoneNumber01, phoneCode02, phoneNumber02,
                     nic, email, houseNumber, streetName, city, district, province, country,
-                    languages, accHolderName, accNumber, bankName, branchName, status
+                    languages, accHolderName, accNumber, bankName, branchName,QRcode, status
                 ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?,
                          ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,
-                         ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Not Approved')
+                         ?, ?, ?, ?, ?, ?, ?, ?, ?,?, 'Not Approved')
             `;
 
             // Database query with QR image data added
@@ -91,7 +91,8 @@ exports.createCollectionOfficerPersonal = (officerData) => {
                     officerData.accHolderName,
                     officerData.accNumber,
                     officerData.bankName,
-                    officerData.branchName
+                    officerData.branchName,
+                    qrCodeBuffer
                 ],
                 (err, results) => {
                     if (err) {
