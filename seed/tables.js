@@ -945,6 +945,7 @@ const createCollectionOfficer = () => {
       image LONGBLOB NULL,
       QRcode LONGBLOB,
       status VARCHAR(25) NULL,
+      claimStatus BOOLEAN DEFAULT 0,
       createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (centerId) REFERENCES collectioncenter(id)
         ON DELETE CASCADE
@@ -1115,12 +1116,17 @@ const createCollectionCenter = () => {
       id INT AUTO_INCREMENT PRIMARY KEY,
       regCode VARCHAR(30) NOT NULL,
       centerName VARCHAR(30) NOT NULL,
+      code1 VARCHAR(5) NOT NULL,
       contact01 VARCHAR(13) NOT NULL,
+      code2 VARCHAR(5) NOT NULL,
       contact02 VARCHAR(13) NOT NULL,
       buildingNumber VARCHAR(50) NOT NULL,
       street VARCHAR(50) NOT NULL,
+      city VARCHAR(50) NOT NULL,
       district VARCHAR(30) NOT NULL,
       province VARCHAR(30) NOT NULL,
+      country VARCHAR(30) NOT NULL,
+      companies VARCHAR(30) NOT NULL,
       createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     )
   `;
@@ -1425,6 +1431,79 @@ const createMarketPriceRequestTable = () => {
 };
 
 
+
+
+const createSalesAgentTable = () => {
+    const sql = `
+    CREATE TABLE salesagent (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    firstName VARCHAR(100) NOT NULL,
+    lastName VARCHAR(100) NOT NULL,
+    empType VARCHAR(50) NOT NULL,
+    empId VARCHAR(50) NOT NULL UNIQUE,
+    phoneCode1 VARCHAR(10) NOT NULL,
+    phoneNumber1 VARCHAR(15) NOT NULL,
+    phoneCode2 VARCHAR(10),
+    phoneNumber2 VARCHAR(15),
+    nic VARCHAR(50) NOT NULL UNIQUE,
+    email VARCHAR(100) NOT NULL UNIQUE,
+    houseNumber VARCHAR(50),
+    streetName VARCHAR(100),
+    city VARCHAR(100),
+    district VARCHAR(100),
+    province VARCHAR(100),
+    country VARCHAR(100) NOT NULL,
+    accHolderName VARCHAR(100) NOT NULL,
+    accNumber VARCHAR(50) NOT NULL UNIQUE,
+    bankName VARCHAR(100) NOT NULL,
+    branchName VARCHAR(100),
+    status VARCHAR(50) DEFAULT 'pending', 
+    password VARCHAR(255),
+    passwordUpdate BOOLEAN DEFAULT 0,
+    createdAt TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+)
+
+  `;
+    return new Promise((resolve, reject) => {
+        db.query(sql, (err, result) => {
+            if (err) {
+                reject('Error creating salesagent table: ' + err);
+            } else {
+                resolve('salesagent table created request successfully.');
+            }
+        });
+    });
+};
+
+
+
+const createSalesAgentStarTable = () => {
+    const sql = `
+    CREATE TABLE salesagentstars (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    salesagentId INT NOT NULL,
+    date DATE NOT NULL,
+    target INT NOT NULL,
+    completed INT NOT NULL,
+    numOfStars BOOLEAN NOT NULL DEFAULT 0, 
+    createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (salesagentId) REFERENCES salesagent(id)
+        ON DELETE CASCADE
+        ON UPDATE CASCADE
+)
+  `;
+    return new Promise((resolve, reject) => {
+        db.query(sql, (err, result) => {
+            if (err) {
+                reject('Error creating salesagentstars table: ' + err);
+            } else {
+                resolve('ssalesagentstars table created request successfully.');
+            }
+        });
+    });
+};
+
+
 module.exports = {
     createUsersTable,
     createAdminUserRolesTable,
@@ -1478,5 +1557,9 @@ module.exports = {
     createPromoItems,
     createCart,
     createCartItems,
-    createMarketPriceRequestTable
+    createMarketPriceRequestTable,
+
+
+    createSalesAgentTable,
+    createSalesAgentStarTable
 };
