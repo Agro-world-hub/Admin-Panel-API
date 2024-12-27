@@ -1,5 +1,5 @@
-const db = require("../startup/database")
-const Joi = require('joi')
+const db = require("../startup/database");
+const Joi = require("joi");
 
 exports.addCollectionCenter = (regCode, centerName, contact01, contact02, buildingNumber, street, city, district, province, country, contact01Code, contact02Code, companies) => {
   return new Promise((resolve, reject) => {
@@ -19,7 +19,6 @@ exports.addCollectionCenter = (regCode, centerName, contact01, contact02, buildi
     });
   });
 };
-
 
 exports.GetAllCenterDAO = () => {
   return new Promise((resolve, reject) => {
@@ -127,8 +126,6 @@ exports.GetAllComplainDAO = (page, limit, status, searchText) => {
   });
 };
 
-
-
 exports.getComplainById = (id) => {
   return new Promise((resolve, reject) => {
     const sql = ` 
@@ -145,8 +142,6 @@ exports.getComplainById = (id) => {
   });
 };
 
-
-
 exports.CheckRegCodeExistDAO = (regCode) => {
   return new Promise((resolve, reject) => {
     const sql = "SELECT * FROM collectioncenter WHERE regCode = ?";
@@ -158,9 +153,6 @@ exports.CheckRegCodeExistDAO = (regCode) => {
     });
   });
 };
-
-
-
 
 exports.getAllCenterPage = (limit, offset, searchItem) => {
   return new Promise((resolve, reject) => {
@@ -218,7 +210,6 @@ exports.getAllCenterPage = (limit, offset, searchItem) => {
   });
 };
 
-
 exports.getCenterByIdDAO = (id) => {
   return new Promise((resolve, reject) => {
     const sql = "SELECT * FROM collectioncenter WHERE id = ?";
@@ -265,8 +256,6 @@ exports.updateCollectionCenter = (regCode, centerName,  code1, contact01, code2,
   });
 };
 
-
-
 exports.sendComplainReply = (complainId, reply) => {
   return new Promise((resolve, reject) => {
     // Input validation
@@ -284,7 +273,7 @@ exports.sendComplainReply = (complainId, reply) => {
       WHERE id = ?
     `;
 
-    const status = 'Answered';
+    const status = "Answered";
     const values = [reply, status, complainId];
 
     db.query(sql, values, (err, results) => {
@@ -301,7 +290,7 @@ exports.sendComplainReply = (complainId, reply) => {
       console.log("Update successful:", results);
       resolve({
         message: "Reply sent successfully",
-        affectedRows: results.affectedRows
+        affectedRows: results.affectedRows,
       });
     });
   });
@@ -318,27 +307,19 @@ exports.getForCreateId = (role) => {
       if (err) {
         return reject(err);
       }
-      
+
       if (results.length > 0) {
         const numericPart = parseInt(results[0].empId.substring(3), 10);
-      
+
         const incrementedValue = numericPart + 1;
-      
-        results[0].empId = incrementedValue.toString().padStart(5, '0');
+
+        results[0].empId = incrementedValue.toString().padStart(5, "0");
       }
-      
-      
 
       resolve(results);
     });
   });
 };
-
-
-
-
-
-
 
 exports.createCompany = async (
   regNumber,
@@ -383,7 +364,7 @@ exports.createCompany = async (
       foName,
       foConCode,
       foConNum,
-      foEmail
+      foEmail,
     ];
 
     db.query(sql, values, (err, results) => {
@@ -453,5 +434,17 @@ exports.generateRegCode = (province, district, city, callback) => {
 
     // Return the new regCode
     callback(null, newRegCode);
+  });
+};
+
+exports.GetAllCompanyDAO = () => {
+  return new Promise((resolve, reject) => {
+    const sql = `SELECT c.id, c.companyNameEnglish, c.email, c.status, c.oicName, c.oicEmail, c.oicConCode1, c.oicConNum1, c.oicConCode2, c.oicConNum2, co.jobRole, COUNT(co.jobRole) as jobRoleCount FROM company c LEFT JOIN collectionofficer co ON c.id = co.companyId GROUP BY  c.id, co.jobRole`;
+    db.query(sql, (err, results) => {
+      if (err) {
+        return reject(err);
+      }
+      resolve(results);
+    });
   });
 };

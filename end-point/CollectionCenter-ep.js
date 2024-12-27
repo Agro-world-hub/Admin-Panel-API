@@ -507,3 +507,26 @@ exports.generateRegCode = (req, res) => {
     res.json({ regCode });
   });
 };
+
+
+exports.getAllCompanies = async (req, res) => {
+  try {
+    console.log(req.query);
+    const { status = null, searchText = "" } = req.query;
+
+    // Call the DAO function
+    const results = await CollectionCenterDao.GetAllCompanyDAO(status, searchText);
+
+    console.log("Successfully retrieved all companies");
+    res.json({ results, total: results.length }); // Provide total as the length of results
+  } catch (err) {
+    if (err.isJoi) {
+      // Validation error
+      console.error("Validation error:", err.details[0].message);
+      return res.status(400).json({ error: err.details[0].message });
+    }
+
+    console.error("Error fetching companies:", err);
+    res.status(500).json({ error: "An error occurred while fetching companies" });
+  }
+};
