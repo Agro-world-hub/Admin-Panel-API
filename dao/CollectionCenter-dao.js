@@ -1,13 +1,33 @@
-const db = require("../startup/database")
-const Joi = require('joi')
+const db = require("../startup/database");
+const Joi = require("joi");
 
-exports.addCollectionCenter = (regCode, centerName, contact01, contact02, buildingNumber, street, district, province, contact01Code, contact02Code) => {
+exports.addCollectionCenter = (
+  regCode,
+  centerName,
+  contact01,
+  contact02,
+  buildingNumber,
+  street,
+  district,
+  province,
+  contact01Code,
+  contact02Code
+) => {
   return new Promise((resolve, reject) => {
     const sql = `INSERT INTO collectioncenter 
       (regCode, centerName, contact01, contact02, buildingNumber, street, district, province) 
       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`;
 
-    const values = [regCode, centerName, contact01Code + contact01, contact02Code + contact02, buildingNumber, street, district, province];
+    const values = [
+      regCode,
+      centerName,
+      contact01Code + contact01,
+      contact02Code + contact02,
+      buildingNumber,
+      street,
+      district,
+      province,
+    ];
 
     db.query(sql, values, (err, results) => {
       if (err) {
@@ -19,7 +39,6 @@ exports.addCollectionCenter = (regCode, centerName, contact01, contact02, buildi
     });
   });
 };
-
 
 exports.GetAllCenterDAO = () => {
   return new Promise((resolve, reject) => {
@@ -127,8 +146,6 @@ exports.GetAllComplainDAO = (page, limit, status, searchText) => {
   });
 };
 
-
-
 exports.getComplainById = (id) => {
   return new Promise((resolve, reject) => {
     const sql = ` 
@@ -145,8 +162,6 @@ exports.getComplainById = (id) => {
   });
 };
 
-
-
 exports.CheckRegCodeExistDAO = (regCode) => {
   return new Promise((resolve, reject) => {
     const sql = "SELECT * FROM collectioncenter WHERE regCode = ?";
@@ -158,9 +173,6 @@ exports.CheckRegCodeExistDAO = (regCode) => {
     });
   });
 };
-
-
-
 
 exports.getAllCenterPage = (limit, offset, searchItem) => {
   return new Promise((resolve, reject) => {
@@ -218,7 +230,6 @@ exports.getAllCenterPage = (limit, offset, searchItem) => {
   });
 };
 
-
 exports.getCenterByIdDAO = (id) => {
   return new Promise((resolve, reject) => {
     const sql = "SELECT * FROM collectioncenter WHERE id = ?";
@@ -231,8 +242,15 @@ exports.getCenterByIdDAO = (id) => {
   });
 };
 
-
-exports.updateCollectionCenter = (regCode, centerName, buildingNumber, street, district, province, collectionID) => {
+exports.updateCollectionCenter = (
+  regCode,
+  centerName,
+  buildingNumber,
+  street,
+  district,
+  province,
+  collectionID
+) => {
   return new Promise((resolve, reject) => {
     const sql = `
     UPDATE collectioncenter SET 
@@ -245,7 +263,15 @@ exports.updateCollectionCenter = (regCode, centerName, buildingNumber, street, d
      WHERE id = ?
       `;
 
-    const values = [regCode, centerName, buildingNumber, street, district, province, collectionID];
+    const values = [
+      regCode,
+      centerName,
+      buildingNumber,
+      street,
+      district,
+      province,
+      collectionID,
+    ];
 
     db.query(sql, values, (err, results) => {
       if (err) {
@@ -257,8 +283,6 @@ exports.updateCollectionCenter = (regCode, centerName, buildingNumber, street, d
     });
   });
 };
-
-
 
 exports.sendComplainReply = (complainId, reply) => {
   return new Promise((resolve, reject) => {
@@ -277,7 +301,7 @@ exports.sendComplainReply = (complainId, reply) => {
       WHERE id = ?
     `;
 
-    const status = 'Answered';
+    const status = "Answered";
     const values = [reply, status, complainId];
 
     db.query(sql, values, (err, results) => {
@@ -294,44 +318,33 @@ exports.sendComplainReply = (complainId, reply) => {
       console.log("Update successful:", results);
       resolve({
         message: "Reply sent successfully",
-        affectedRows: results.affectedRows
+        affectedRows: results.affectedRows,
       });
     });
   });
 };
 
-
-
-
-
 exports.getForCreateIdDao = (role) => {
   return new Promise((resolve, reject) => {
-    const sql = "SELECT empId FROM collectionofficercompanydetails WHERE empId LIKE ? ORDER BY empId DESC LIMIT 1";
+    const sql =
+      "SELECT empId FROM collectionofficercompanydetails WHERE empId LIKE ? ORDER BY empId DESC LIMIT 1";
     db.query(sql, [`${role}%`], (err, results) => {
       if (err) {
         return reject(err);
       }
-      
+
       if (results.length > 0) {
         const numericPart = parseInt(results[0].empId.substring(3), 10);
-      
+
         const incrementedValue = numericPart + 1;
-      
-        results[0].empId = incrementedValue.toString().padStart(5, '0');
+
+        results[0].empId = incrementedValue.toString().padStart(5, "0");
       }
-      
-      
 
       resolve(results);
     });
   });
 };
-
-
-
-
-
-
 
 exports.createCompany = async (
   regNumber,
@@ -376,7 +389,7 @@ exports.createCompany = async (
       foName,
       foConCode,
       foConNum,
-      foEmail
+      foEmail,
     ];
 
     db.query(sql, values, (err, results) => {
@@ -391,7 +404,7 @@ exports.createCompany = async (
 
 exports.GetAllCompanyDAO = () => {
   return new Promise((resolve, reject) => {
-    const sql = "SELECT c.companyNameEnglish, c.email, c.oicName, c.oicEmail, c.oicConCode1, c.oicConNum1, c.oicConCode2, c.oicConNum2  FROM company c";
+    const sql = `SELECT c.id, c.companyNameEnglish, c.email, c.status, c.oicName, c.oicEmail, c.oicConCode1, c.oicConNum1, c.oicConCode2, c.oicConNum2, co.jobRole, COUNT(co.jobRole) as jobRoleCount FROM company c LEFT JOIN collectionofficer co ON c.id = co.companyId GROUP BY  c.id, co.jobRole`;
     db.query(sql, (err, results) => {
       if (err) {
         return reject(err);
