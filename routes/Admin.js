@@ -1,5 +1,5 @@
 const express = require("express");
-const db = require("../startup/database");
+
 const AdminEp = require("../end-point/Admin-ep");
 const bodyParser = require("body-parser");
 const authMiddleware = require("../middlewares/authMiddleware");

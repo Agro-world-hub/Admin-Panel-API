@@ -1,4 +1,4 @@
-const db = require("../startup/database");
+const { plantcare, collectionofficer, marketPlace, dash } = require('../startup/database');
 const Joi = require("joi");
 
 exports.addCollectionCenter = (regCode, centerName, contact01, contact02, buildingNumber, street, city, district, province, country, contact01Code, contact02Code, companies) => {
@@ -9,7 +9,7 @@ exports.addCollectionCenter = (regCode, centerName, contact01, contact02, buildi
 
     const values = [regCode, centerName, contact01Code , contact01, contact02Code , contact02, buildingNumber, street, city, district, province, country, companies];
 
-    db.query(sql, values, (err, results) => {
+    collectionofficer.query(sql, values, (err, results) => {
       if (err) {
         console.error("Database error details:", err);
         return reject(err);
@@ -23,7 +23,7 @@ exports.addCollectionCenter = (regCode, centerName, contact01, contact02, buildi
 exports.GetAllCenterDAO = () => {
   return new Promise((resolve, reject) => {
     const sql = "SELECT * FROM collectioncenter";
-    db.query(sql, (err, results) => {
+    collectionofficer.query(sql, (err, results) => {
       if (err) {
         return reject(err);
       }
@@ -36,7 +36,7 @@ exports.GetAllCenterDAO = () => {
 exports.deleteCollectionCenterDAo = async (id) => {
   return new Promise((resolve, reject) => {
     const sql = "DELETE FROM collectioncenter WHERE id = ?";
-    db.query(sql, [id], (err, results) => {
+    collectionofficer.query(sql, [id], (err, results) => {
       if (err) {
         reject(err);
       } else {
@@ -58,7 +58,7 @@ exports.GetAllComplainDAO = (page, limit, status, searchText) => {
       FROM farmercomplains fc
       LEFT JOIN collectionofficer cf ON fc.coId = cf.id
       LEFT JOIN collectioncenter cc ON cf.centerId = cc.id
-      LEFT JOIN users u ON fc.farmerId = u.id
+      LEFT JOIN plant_care.users u ON fc.farmerId = u.id
       WHERE 1 = 1
     `;
 
@@ -77,7 +77,7 @@ exports.GetAllComplainDAO = (page, limit, status, searchText) => {
       FROM farmercomplains fc
       LEFT JOIN collectionofficer cf ON fc.coId = cf.id
       LEFT JOIN collectioncenter cc ON cf.centerId = cc.id
-      LEFT JOIN users u ON fc.farmerId = u.id
+      LEFT JOIN plant_care.users u ON fc.farmerId = u.id
       WHERE 1 = 1
     `;
 
@@ -107,7 +107,7 @@ exports.GetAllComplainDAO = (page, limit, status, searchText) => {
     Sqlparams.push(parseInt(limit), parseInt(offset));
 
     // Execute count query to get total records
-    db.query(countSql, Counterparams, (countErr, countResults) => {
+    collectionofficer.query(countSql, Counterparams, (countErr, countResults) => {
       if (countErr) {
         return reject(countErr); // Handle count query error
       }
@@ -115,7 +115,7 @@ exports.GetAllComplainDAO = (page, limit, status, searchText) => {
       const total = countResults[0]?.total || 0;
 
       // Execute main query to get paginated results
-      db.query(sql, Sqlparams, (dataErr, results) => {
+      collectionofficer.query(sql, Sqlparams, (dataErr, results) => {
         if (dataErr) {
           return reject(dataErr); // Handle data query error
         }
@@ -130,10 +130,10 @@ exports.getComplainById = (id) => {
   return new Promise((resolve, reject) => {
     const sql = ` 
     SELECT fc.id, fc.refNo, fc.createdAt, fc.status, fc.language, fc.complain, fc.reply, u.firstName AS farmerName, u.phoneNumber AS farmerPhone, c.firstNameEnglish as officerName, c.phoneNumber01 AS officerPhone, cc.centerName, cc.contact01 AS CollectionContact
-    FROM farmercomplains fc, collectionofficer c, users u , collectioncenter cc
+    FROM farmercomplains fc, collectionofficer c, plant_care.users u , collectioncenter cc
     WHERE fc.farmerId = u.id AND c.centerId = cc.id AND fc.coId = c.id AND fc.id = ? 
     `;
-    db.query(sql, [id], (err, results) => {
+    collectionofficer.query(sql, [id], (err, results) => {
       if (err) {
         return reject(err);
       }
@@ -145,7 +145,7 @@ exports.getComplainById = (id) => {
 exports.CheckRegCodeExistDAO = (regCode) => {
   return new Promise((resolve, reject) => {
     const sql = "SELECT * FROM collectioncenter WHERE regCode = ?";
-    db.query(sql, [regCode], (err, results) => {
+    collectionofficer.query(sql, [regCode], (err, results) => {
       if (err) {
         return reject(err);
       }
@@ -173,7 +173,7 @@ exports.getAllCenterPage = (limit, offset, searchItem) => {
     dataParams.push(...searchParams, limit, offset);
 
     // Count total matching records
-    db.query(countSql, searchParams, (countErr, countResults) => {
+    collectionofficer.query(countSql, searchParams, (countErr, countResults) => {
       if (countErr) {
         return reject(countErr);
       }
@@ -181,7 +181,7 @@ exports.getAllCenterPage = (limit, offset, searchItem) => {
       const total = countResults[0].total;
 
       // Fetch the paginated records
-      db.query(sql, dataParams, (dataErr, dataResults) => {
+      collectionofficer.query(sql, dataParams, (dataErr, dataResults) => {
         if (dataErr) {
           return reject(dataErr);
         }
@@ -213,7 +213,7 @@ exports.getAllCenterPage = (limit, offset, searchItem) => {
 exports.getCenterByIdDAO = (id) => {
   return new Promise((resolve, reject) => {
     const sql = "SELECT * FROM collectioncenter WHERE id = ?";
-    db.query(sql, [id], (err, results) => {
+    collectionofficer.query(sql, [id], (err, results) => {
       if (err) {
         return reject(err);
       }
@@ -245,7 +245,7 @@ exports.updateCollectionCenter = (regCode, centerName,  code1, contact01, code2,
 
     const values = [regCode, centerName,  code1, contact01, code2, contact02, buildingNumber, street, city, district, province, country, companies, collectionID];
 
-    db.query(sql, values, (err, results) => {
+    collectionofficer.query(sql, values, (err, results) => {
       if (err) {
         console.error("Database error details:", err);
         return reject(err);
@@ -276,7 +276,7 @@ exports.sendComplainReply = (complainId, reply) => {
     const status = "Answered";
     const values = [reply, status, complainId];
 
-    db.query(sql, values, (err, results) => {
+    collectionofficer.query(sql, values, (err, results) => {
       if (err) {
         console.error("Database error details:", err);
         return reject(err);
@@ -303,7 +303,7 @@ exports.sendComplainReply = (complainId, reply) => {
 exports.getForCreateId = (role) => {
   return new Promise((resolve, reject) => {
     const sql = "SELECT empId FROM collectionofficer WHERE empId LIKE ? ORDER BY empId DESC LIMIT 1";
-    db.query(sql, [`${role}%`], (err, results) => {
+    collectionofficer.query(sql, [`${role}%`], (err, results) => {
       if (err) {
         return reject(err);
       }
@@ -367,7 +367,7 @@ exports.createCompany = async (
       foEmail,
     ];
 
-    db.query(sql, values, (err, results) => {
+    collectionofficer.query(sql, values, (err, results) => {
       if (err) {
         reject(err);
       } else {
@@ -383,7 +383,7 @@ exports.createCompany = async (
 exports.GetAllCompanyList = () => {
   return new Promise((resolve, reject) => {
     const sql = "SELECT id, companyNameEnglish FROM company";
-    db.query(sql, (err, results) => {
+    collectionofficer.query(sql, (err, results) => {
       if (err) {
         return reject(err);
       }
@@ -397,7 +397,7 @@ exports.GetAllCompanyList = () => {
 exports.GetAllManagerList = (companyId, centerId) => {
   return new Promise((resolve, reject) => {
     const sql = "SELECT id, firstNameEnglish FROM collectionofficer WHERE companyId=? AND centerId=?";
-    db.query(sql,[companyId, centerId], (err, results) => {
+    collectionofficer.query(sql,[companyId, centerId], (err, results) => {
       if (err) {
         return reject(err);
       }
@@ -416,7 +416,7 @@ exports.generateRegCode = (province, district, city, callback) => {
   const query = `SELECT regCode FROM collectioncenter WHERE regCode LIKE ? ORDER BY regCode DESC LIMIT 1`;
 
   // Execute the query
-  db.execute(query, [`${prefix}-%`], (err, results) => {
+  collectionofficer.execute(query, [`${prefix}-%`], (err, results) => {
     if (err) {
       console.error("Error executing query:", err);
       return callback(err);
@@ -440,7 +440,7 @@ exports.generateRegCode = (province, district, city, callback) => {
 exports.GetAllCompanyDAO = () => {
   return new Promise((resolve, reject) => {
     const sql = `SELECT c.id, c.companyNameEnglish, c.email, c.status, c.oicName, c.oicEmail, c.oicConCode1, c.oicConNum1, c.oicConCode2, c.oicConNum2, co.jobRole, COUNT(co.jobRole) as jobRoleCount FROM company c LEFT JOIN collectionofficer co ON c.id = co.companyId GROUP BY  c.id, co.jobRole`;
-    db.query(sql, (err, results) => {
+    collectionofficer.query(sql, (err, results) => {
       if (err) {
         return reject(err);
       }

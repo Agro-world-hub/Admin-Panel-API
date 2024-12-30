@@ -1,4 +1,4 @@
-const db = require("../startup/database");
+const { plantcare, collectionofficer, marketPlace, dash } = require('../startup/database');
 const { error } = require("console");
 const Joi = require("joi");
 const path = require("path");
@@ -11,7 +11,7 @@ exports.getAllCropNameDAO = () => {
           WHERE cg.id = cv.cropGroupId
       `;
 
-    db.query(sql, (err, results) => {
+      plantcare.query(sql, (err, results) => {
       if (err) {
         return reject(err);
       }
@@ -73,7 +73,7 @@ exports.createCropGroup = async (product) => {
       product.category
     ];
 
-    db.query(sql, values, (err, results) => {
+    marketPlace.query(sql, values, (err, results) => {
       if (err) {
         reject(err);
       } else {
@@ -119,10 +119,10 @@ exports.getMarketplaceItems = () => {
   return new Promise((resolve, reject) => {
     const dataSql = `
     SELECT m.id, m.cropId, cg.cropNameEnglish, m.displayName , cv.varietyNameEnglish, m.discountedPrice, m.startValue, m.promo, m.unitType, m.changeby, m.normalPrice, m.category
-    FROM marketplaceitems m, cropgroup cg, cropvariety cv
+    FROM marketplaceitems m, plantcare.cropgroup cg, plantcare.cropvariety cv
     WHERE m.cropId = cv.id AND cv.cropGroupId = cg.id
     `;
-    db.query(dataSql, (error, results) => {
+    marketPlace.query(dataSql, (error, results) => {
       if (error) {
         reject(error);
       } else {
@@ -135,7 +135,7 @@ exports.getMarketplaceItems = () => {
 exports.deleteMarketplaceItem = async (id) => {
   return new Promise((resolve, reject) => {
     const sql = "DELETE FROM marketplaceitems WHERE id = ?";
-    db.query(sql, [id], (err, results) => {
+    marketPlace.query(sql, [id], (err, results) => {
       if (err) {
         reject(err);
       } else {
@@ -161,7 +161,7 @@ exports.createCoupenDAO = async (coupen) => {
       coupen.endDate,
     ];
 
-    db.query(sql, values, (err, results) => {
+    marketPlace.query(sql, values, (err, results) => {
       if (err) {
         reject(err);
       } else {
@@ -211,13 +211,13 @@ exports.getAllCoupenDAO = (limit, offset, status, types, searchText) => {
     dataParms.push(limit)
     dataParms.push(offset)
 
-    db.query(countSql, countParms, (countErr, countResults) => {
+    marketPlace.query(countSql, countParms, (countErr, countResults) => {
       if (countErr) {
         console.log(countErr);
 
         reject(countErr);
       } else {
-        db.query(dataSql, dataParms, (dataErr, dataResults) => {
+        marketPlace.query(dataSql, dataParms, (dataErr, dataResults) => {
           if (dataErr) {
             console.log(dataErr);
 
@@ -238,7 +238,7 @@ exports.getAllCoupenDAO = (limit, offset, status, types, searchText) => {
 exports.deleteCoupenById = async (id) => {
   return new Promise((resolve, reject) => {
     const sql = "DELETE FROM coupon WHERE id = ?";
-    db.query(sql, [id], (err, results) => {
+    marketPlace.query(sql, [id], (err, results) => {
       if (err) {
         reject(err);
       } else {
@@ -252,7 +252,7 @@ exports.deleteCoupenById = async (id) => {
 exports.deleteAllCoupen = async () => {
   return new Promise((resolve, reject) => {
     const sql = "DELETE FROM coupon";
-    db.query(sql, (err, results) => {
+    marketPlace.query(sql, (err, results) => {
       if (err) {
         reject(err);
       } else {
@@ -268,11 +268,11 @@ exports.getAllProductCropCatogoryDAO = () => {
   return new Promise((resolve, reject) => {
     const sql = `
           SELECT cg.id AS cropId, mpi.normalPrice, mpi.discountedPrice, mpi.id AS varietyId, cg.cropNameEnglish, mpi.displayName
-          FROM marketplaceitems mpi, cropvariety cv, cropgroup cg
+          FROM marketplaceitems mpi, plantcare.cropvariety cv, plantcare.cropgroup cg
           WHERE mpi.cropId = cv.id AND cv.cropGroupId = cg.id
       `;
 
-    db.query(sql, (err, results) => {
+      marketPlace.query(sql, (err, results) => {
       if (err) {
         return reject(err);
       }
@@ -320,7 +320,7 @@ exports.creatPackageDAO = async (data) => {
       data.total
     ];
 
-    db.query(sql, values, (err, results) => {
+    marketPlace.query(sql, values, (err, results) => {
       if (err) {
         console.log(err);
         reject(err);
@@ -344,7 +344,7 @@ exports.creatPackageDetailsDAO = async (data, packageId) => {
       parseInt(data.discountedPrice),
     ];
 
-    db.query(sql, values, (err, results) => {
+    marketPlace.query(sql, values, (err, results) => {
       if (err) {
         reject(err);
       } else {

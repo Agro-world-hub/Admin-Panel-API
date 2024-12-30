@@ -1,5 +1,5 @@
 const express = require('express');
-const db = require('./startup/database'); 
+const {  plantcare, collectionofficer, marketPlace, dash } = require('./startup/database');
 const routes = require('./routes/Admin');
 const collectionOfficerRoutes = require('./routes/CollectionOfficer');
 const routesNewws = require('./routes/News');
@@ -14,19 +14,50 @@ const cors = require('cors');
 
 const app = express();
 const port = process.env.PORT || 3000;
+
 app.use(cors({
   origin:'*'
 })); // Enable CORS for all routes
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-db.connect(err => {
+
+
+
+plantcare.connect(err => {
   if (err) {
-    console.error('Error connecting to the database in index.js:', err);
+    console.error('Error connecting to the database in index.js (plantcare):', err);
     return;
   }
-  console.log('Connected to the MySQL database in server.js.');
+  console.log('Connected to the MySQL database in server.js.(plantcare)');
 });
+
+collectionofficer.connect(err => {
+  if (err) {
+    console.error('Error connecting to the database in index.js (collectionofficer):', err);
+    return;
+  }
+  console.log('Connected to the MySQL database in server.js.(collectionofficer)');
+});
+
+marketPlace.connect(err => {
+  if (err) {
+    console.error('Error connecting to the database in index.js (marketPlace):', err);
+    return;
+  }
+  console.log('Connected to the MySQL database in server.js.(marketPlace)');
+});
+
+dash.connect(err => {
+  if (err) {
+    console.error('Error connecting to the database in index.js (dash):', err);
+    return;
+  }
+  console.log('Connected to the MySQL database in server.js.(dash)');
+});
+
+
 
 
 

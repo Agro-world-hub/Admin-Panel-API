@@ -1,4 +1,4 @@
-const db = require("../startup/database");
+const { plantcare, collectionofficer, marketPlace, dash } = require('../startup/database');
 const path = require("path");
 const { Upload } = require("@aws-sdk/lib-storage");
 const Joi = require("joi");
@@ -6,7 +6,7 @@ const Joi = require("joi");
 exports.loginAdmin = (email) => {
   return new Promise((resolve, reject) => {
     const sql = "SELECT * FROM adminusers WHERE mail = ?";
-    db.query(sql, [email], (err, results) => {
+    plantcare.query(sql, [email], (err, results) => {
       if (err) {
         reject(err);
       } else {
@@ -47,11 +47,11 @@ exports.getAllAdminUsers = (limit, offset, role, search) => {
     dataSql += ` ORDER BY AU.created_at DESC LIMIT ? OFFSET ? `;
     dataParms.push(limit, offset);
 
-    db.query(countSql, dataParms, (countErr, countResults) => {
+    plantcare.query(countSql, dataParms, (countErr, countResults) => {
       if (countErr) {
         reject(countErr);
       } else {
-        db.query(dataSql, dataParms, (dataErr, dataResults) => {
+        plantcare.query(dataSql, dataParms, (dataErr, dataResults) => {
           if (dataErr) {
             reject(dataErr);
           } else {
@@ -73,7 +73,7 @@ exports.adminCreateUser = (firstName, lastName, phoneNumber, NICnumber) => {
       "INSERT INTO users (`firstName`, `lastName`, `phoneNumber`, `NICnumber`) VALUES (?)";
     const values = [firstName, lastName, phoneNumber, NICnumber];
 
-    db.query(sql, [values], (err, results) => {
+    plantcare.query(sql, [values], (err, results) => {
       if (err) {
         reject(err);
       } else {
@@ -104,7 +104,7 @@ exports.getAllUsers = (limit, offset, searchItem) => {
     params.push(limit, offset);
 
     // Execute the count query
-    db.query(countSql, params, (countErr, countResults) => {
+    plantcare.query(countSql, params, (countErr, countResults) => {
       if (countErr) {
         return reject(countErr);
       }
@@ -112,7 +112,7 @@ exports.getAllUsers = (limit, offset, searchItem) => {
       const total = countResults[0].total;
 
       // Execute the data query
-      db.query(dataSql, params, (dataErr, dataResults) => {
+      plantcare.query(dataSql, params, (dataErr, dataResults) => {
         if (dataErr) {
           return reject(dataErr);
         }
@@ -145,7 +145,7 @@ exports.createOngoingCultivations = (userId, cropCalenderId) => {
       "INSERT INTO ongoingcultivations (`userId`, `cropCalenderId`) VALUES (?)";
     const values = [userId, cropCalenderId];
 
-    db.query(sql, [values], (err, results) => {
+    plantcare.query(sql, [values], (err, results) => {
       if (err) {
         reject(err);
       } else {
@@ -185,7 +185,7 @@ exports.createNews = async (
       expireDate,
     ];
 
-    db.query(sql, values, (err, results) => {
+    plantcare.query(sql, values, (err, results) => {
       if (err) {
         reject(err);
       } else {
@@ -231,7 +231,7 @@ exports.getAllNews = async (limit, offset, status, createdAt) => {
       "with params:",
       queryParams.slice(0, -2)
     );
-    db.query(countsSql, queryParams.slice(0, -2), (countErr, countResults) => {
+    plantcare.query(countsSql, queryParams.slice(0, -2), (countErr, countResults) => {
       if (countErr) {
         console.error("Error in count query:", countErr);
         reject(countErr);
@@ -252,7 +252,7 @@ exports.getAllNews = async (limit, offset, status, createdAt) => {
         "with params:",
         queryParams
       );
-      db.query(dataSql, queryParams, (dataErr, dataResults) => {
+      plantcare.query(dataSql, queryParams, (dataErr, dataResults) => {
         if (dataErr) {
           console.error("Error in data query:", dataErr);
           reject(dataErr);
@@ -280,7 +280,7 @@ exports.getAllNews = async (limit, offset, status, createdAt) => {
 exports.getNewsById = (id) => {
   return new Promise((resolve, reject) => {
     const sql = "SELECT * FROM content WHERE id = ?";
-    db.query(sql, [id], (err, results) => {
+    plantcare.query(sql, [id], (err, results) => {
       if (err) {
         reject(err);
       } else {
@@ -293,7 +293,7 @@ exports.getNewsById = (id) => {
 exports.getCropCalenderById = (id) => {
   return new Promise((resolve, reject) => {
     const sql = "SELECT * FROM cropcalender WHERE id = ?";
-    db.query(sql, [id], (err, results) => {
+    plantcare.query(sql, [id], (err, results) => {
       if (err) {
         reject(err);
       } else {
@@ -306,7 +306,7 @@ exports.getCropCalenderById = (id) => {
 exports.getNewsStatusById = (id) => {
   return new Promise((resolve, reject) => {
     const sql = "SELECT status FROM content WHERE id = ?";
-    db.query(sql, [id], (err, results) => {
+    plantcare.query(sql, [id], (err, results) => {
       if (err) {
         reject(err);
       } else {
@@ -319,7 +319,7 @@ exports.getNewsStatusById = (id) => {
 exports.updateNewsStatusById = (id, status) => {
   return new Promise((resolve, reject) => {
     const sql = "UPDATE content SET status = ? WHERE id = ?";
-    db.query(sql, [status, id], (err, results) => {
+    plantcare.query(sql, [status, id], (err, results) => {
       if (err) {
         reject(err);
       } else {
@@ -357,7 +357,7 @@ exports.createMarketPrice = (
       createdBy,
     ];
 
-    db.query(sql, values, (err, results) => {
+    collectionofficer.query(sql, values, (err, results) => {
       if (err) {
         reject(err);
       } else {
@@ -399,14 +399,14 @@ exports.getAllMarketPrice = (status, createdAt, limit, offset) => {
     dataSql += " LIMIT ? OFFSET ?";
     queryParams.push(limit, offset);
 
-    db.query(countsSql, queryParams.slice(0, -2), (countErr, countResults) => {
+    collectionofficer.query(countsSql, queryParams.slice(0, -2), (countErr, countResults) => {
       if (countErr) {
         return reject(countErr);
       }
 
       const total = countResults[0].total;
 
-      db.query(dataSql, queryParams, (dataErr, dataResults) => {
+      collectionofficer.query(dataSql, queryParams, (dataErr, dataResults) => {
         if (dataErr) {
           return reject(dataErr);
         }
@@ -420,7 +420,7 @@ exports.getAllMarketPrice = (status, createdAt, limit, offset) => {
 exports.deleteMarketPriceById = (id) => {
   return new Promise((resolve, reject) => {
     const sql = "DELETE FROM marketprice WHERE id = ?";
-    db.query(sql, [id], (err, results) => {
+    collectionofficer.query(sql, [id], (err, results) => {
       if (err) {
         return reject(err);
       }
@@ -432,7 +432,7 @@ exports.deleteMarketPriceById = (id) => {
 exports.getMarketPriceStatusById = (id) => {
   return new Promise((resolve, reject) => {
     const sql = "SELECT status FROM marketprice WHERE id = ?";
-    db.query(sql, [id], (err, results) => {
+    collectionofficer.query(sql, [id], (err, results) => {
       if (err) {
         return reject(err);
       }
@@ -444,7 +444,7 @@ exports.getMarketPriceStatusById = (id) => {
 exports.updateMarketPriceStatusById = (id, newStatus) => {
   return new Promise((resolve, reject) => {
     const sql = "UPDATE marketprice SET status = ? WHERE id = ?";
-    db.query(sql, [newStatus, id], (err, results) => {
+    collectionofficer.query(sql, [newStatus, id], (err, results) => {
       if (err) {
         return reject(err);
       }
@@ -456,7 +456,7 @@ exports.updateMarketPriceStatusById = (id, newStatus) => {
 exports.getMarketPriceById = (id) => {
   return new Promise((resolve, reject) => {
     const sql = "SELECT * FROM marketprice WHERE id = ?";
-    db.query(sql, [id], (err, results) => {
+    collectionofficer.query(sql, [id], (err, results) => {
       if (err) {
         return reject(err);
       }
@@ -496,7 +496,7 @@ exports.editMarketPrice = (id, data) => {
     sql += ` WHERE id = ?`;
     values.push(id);
 
-    db.query(sql, values, (err, results) => {
+    collectionofficer.query(sql, values, (err, results) => {
       if (err) {
         return reject(err);
       }
@@ -545,7 +545,7 @@ exports.getAllOngoingCultivations = (searchItem, limit, offset) => {
     params.push(limit, offset);
 
     // Fetch total count
-    db.query(countSql, params.slice(0, -2), (countErr, countResults) => {
+    plantcare.query(countSql, params.slice(0, -2), (countErr, countResults) => {
       if (countErr) {
         return reject(countErr);
       }
@@ -553,7 +553,7 @@ exports.getAllOngoingCultivations = (searchItem, limit, offset) => {
       const total = countResults[0].total;
 
       // Fetch paginated data
-      db.query(dataSql, params, (dataErr, dataResults) => {
+      plantcare.query(dataSql, params, (dataErr, dataResults) => {
         if (dataErr) {
           return reject(dataErr);
         }
@@ -576,7 +576,7 @@ exports.getOngoingCultivationsWithUserDetails = () => {
     `;
 
   return new Promise((resolve, reject) => {
-    db.query(sql, (err, results) => {
+    plantcare.query(sql, (err, results) => {
       if (err) {
         reject("Error fetching ongoing cultivations: " + err);
       } else {
@@ -609,7 +609,7 @@ exports.getOngoingCultivationsById = (id) => {
             ongoingcultivationscrops.ongoingCultivationId = ?`;
 
   return new Promise((resolve, reject) => {
-    db.query(sql, [id], (err, results) => {
+    plantcare.query(sql, [id], (err, results) => {
       if (err) {
         reject("Error fetching cultivation crops by ID: " + err);
       } else {
@@ -705,7 +705,7 @@ exports.getFixedAssetsByCategory = (userId, category) => {
   }
 
   return new Promise((resolve, reject) => {
-    db.query(sql, [userId], (err, results) => {
+    plantcare.query(sql, [userId], (err, results) => {
       if (err) {
         reject("Error fetching assets: " + err);
       } else {
@@ -720,7 +720,7 @@ exports.getCurrentAssetsByCategory = (userId, category) => {
   const values = [userId, category];
 
   return new Promise((resolve, reject) => {
-    db.query(sql, values, (err, results) => {
+    plantcare.query(sql, values, (err, results) => {
       if (err) {
         reject("Error fetching current assets: " + err);
       } else {
@@ -734,7 +734,7 @@ exports.deleteAdminUserById = (id) => {
   const sql = "DELETE FROM adminusers WHERE id = ?";
 
   return new Promise((resolve, reject) => {
-    db.query(sql, [id], (err, results) => {
+    plantcare.query(sql, [id], (err, results) => {
       if (err) {
         reject("Error executing delete query: " + err);
       } else {
@@ -754,7 +754,7 @@ exports.updateAdminUserById = (id, mail, userName, role) => {
         WHERE id = ?`;
 
   return new Promise((resolve, reject) => {
-    db.query(sql, [mail, userName, role, id], (err, results) => {
+    plantcare.query(sql, [mail, userName, role, id], (err, results) => {
       if (err) {
         reject("Error executing update query: " + err);
       } else {
@@ -777,7 +777,7 @@ exports.updateAdminUser = (id, mail, userName, role) => {
 
     const values = [mail, userName, role, id];
 
-    db.query(sql, values, (err, results) => {
+    plantcare.query(sql, values, (err, results) => {
       if (err) {
         reject(err);
       } else {
@@ -791,7 +791,7 @@ exports.getAdminUserById = (id) => {
   return new Promise((resolve, reject) => {
     const sql = "SELECT * FROM adminusers WHERE id = ?";
 
-    db.query(sql, [id], (err, results) => {
+    plantcare.query(sql, [id], (err, results) => {
       if (err) {
         reject(err);
       } else {
@@ -804,7 +804,7 @@ exports.getAdminUserById = (id) => {
 exports.getAdminPasswordById = (id) => {
   return new Promise((resolve, reject) => {
     const sql = "SELECT password FROM adminusers WHERE id = ?";
-    db.query(sql, [id], (err, results) => {
+    plantcare.query(sql, [id], (err, results) => {
       if (err) {
         reject(err);
       } else {
@@ -818,7 +818,7 @@ exports.getAdminPasswordById = (id) => {
 exports.updateAdminPasswordById = (id, newPassword) => {
   return new Promise((resolve, reject) => {
     const sql = "UPDATE adminusers SET password = ? WHERE id = ?";
-    db.query(sql, [newPassword, id], (err, results) => {
+    plantcare.query(sql, [newPassword, id], (err, results) => {
       if (err) {
         reject(err);
       } else {
@@ -831,7 +831,7 @@ exports.updateAdminPasswordById = (id, newPassword) => {
 exports.deletePlantCareUserById = (id) => {
   return new Promise((resolve, reject) => {
     const sql = "DELETE FROM users WHERE id = ?";
-    db.query(sql, [id], (err, results) => {
+    plantcare.query(sql, [id], (err, results) => {
       if (err) {
         reject(err);
       } else {
@@ -865,7 +865,7 @@ exports.updatePlantCareUserById = (userData, id) => {
     sql += ` WHERE id = ?`;
     values.push(id);
 
-    db.query(sql, values, (err, results) => {
+    plantcare.query(sql, values, (err, results) => {
       if (err) {
         reject(err);
       } else {
@@ -907,7 +907,7 @@ exports.createPlantCareUser = (userData) => {
         `;
     const checkValues = [phoneNumber, NICnumber];
 
-    db.query(checkSql, checkValues, (checkErr, checkResults) => {
+    plantcare.query(checkSql, checkValues, (checkErr, checkResults) => {
       if (checkErr) {
         return reject(checkErr); // Return the database error
       }
@@ -932,7 +932,7 @@ exports.createPlantCareUser = (userData) => {
         fileBuffer,
       ];
 
-      db.query(insertSql, insertValues, (insertErr, insertResults) => {
+      plantcare.query(insertSql, insertValues, (insertErr, insertResults) => {
         if (insertErr) {
           console.log(insertErr);
 
@@ -948,7 +948,7 @@ exports.createPlantCareUser = (userData) => {
 exports.getUserById = (userId) => {
   return new Promise((resolve, reject) => {
     const sql = "SELECT * FROM users WHERE id = ?";
-    db.query(sql, [userId], (err, results) => {
+    plantcare.query(sql, [userId], (err, results) => {
       if (err) {
         return reject(err);
       }
@@ -980,7 +980,7 @@ exports.createAdmin = (adminData, hashedPassword) => {
       hashedPassword,
     ];
 
-    db.query(sql, values, (err, results) => {
+    plantcare.query(sql, values, (err, results) => {
       if (err) {
         return reject(err); // Pass the error back if it occurs
       }
@@ -999,7 +999,7 @@ exports.getCurrentAssetGroup = (userId) => {
         `;
     const values = [userId];
 
-    db.query(sql, values, (err, results) => {
+    plantcare.query(sql, values, (err, results) => {
       if (err) {
         return reject(err); // Reject promise on error
       }
@@ -1020,7 +1020,7 @@ exports.getCurrentAssetRecordById = (currentAssetId) => {
         `;
     const values = [currentAssetId];
 
-    db.query(sql, values, (err, results) => {
+    plantcare.query(sql, values, (err, results) => {
       if (err) {
         return reject(err); // Reject promise if an error occurs
       }
@@ -1034,7 +1034,7 @@ exports.deleteCropTask = (taskId) => {
     const sql = "DELETE FROM cropcalendardays WHERE id = ?";
     const values = [taskId];
 
-    db.query(sql, values, (err, results) => {
+    plantcare.query(sql, values, (err, results) => {
       if (err) {
         return reject(err); // Reject promise if an error occurs
       }
@@ -1048,7 +1048,7 @@ exports.getCropCalendarDayById = (taskId) => {
     const sql = "SELECT * FROM cropcalendardays WHERE id = ?";
     const values = [taskId];
 
-    db.query(sql, values, (err, results) => {
+    plantcare.query(sql, values, (err, results) => {
       if (err) {
         return reject(err); // Reject promise if an error occurs
       }
@@ -1107,7 +1107,7 @@ exports.editTask = (
       id,
     ];
 
-    db.query(sql, values, (err, results) => {
+    plantcare.query(sql, values, (err, results) => {
       if (err) {
         return reject(err); // Reject the promise on error
       }
@@ -1121,7 +1121,7 @@ exports.getAllPost = () => {
   return new Promise((resolve, reject) => {
     const sql = `SELECT * FROM publicforumposts ORDER BY createdAt DESC `;
 
-    db.query(sql, (err, results) => {
+    plantcare.query(sql, (err, results) => {
       if (err) {
         return reject(err);
       }
@@ -1193,13 +1193,13 @@ exports.getAllUserTaskByCropId = (cropId, userId, limit, offset) => {
     const values = [cropId, userId, limit, offset];
 
     // First, query the total count of the tasks
-    db.query(countSql, [cropId, userId], (countErr, countResults) => {
+    plantcare.query(countSql, [cropId, userId], (countErr, countResults) => {
       if (countErr) {
         return reject(countErr);
       }
 
       // Next, query the task data with pagination (limit and offset)
-      db.query(dataSql, values, (dataErr, dataResults) => {
+      plantcare.query(dataSql, values, (dataErr, dataResults) => {
         if (dataErr) {
           return reject(dataErr);
         }
@@ -1217,7 +1217,7 @@ exports.getAllUserTaskByCropId = (cropId, userId, limit, offset) => {
 exports.getUserTaskStatusById = (id) => {
   return new Promise((resolve, reject) => {
     const sql = "SELECT status FROM slavecropcalendardays WHERE id = ?";
-    db.query(sql, [id], (err, results) => {
+    plantcare.query(sql, [id], (err, results) => {
       if (err) {
         return reject(err);
       }
@@ -1229,7 +1229,7 @@ exports.getUserTaskStatusById = (id) => {
 exports.updateUserTaskStatusById = (id, newStatus) => {
   return new Promise((resolve, reject) => {
     const sql = "UPDATE slavecropcalendardays SET status = ? WHERE id = ?";
-    db.query(sql, [newStatus, id], (err, results) => {
+    plantcare.query(sql, [newStatus, id], (err, results) => {
       if (err) {
         return reject(err);
       }
@@ -1243,7 +1243,7 @@ exports.getSlaveCropCalendarDayById = (id) => {
     const sql = "SELECT * FROM slavecropcalendardays WHERE id = ?";
     const values = [id];
 
-    db.query(sql, values, (err, results) => {
+    plantcare.query(sql, values, (err, results) => {
       if (err) {
         return reject(err); // Reject promise if an error occurs
       }
@@ -1298,7 +1298,7 @@ exports.editUserTask = (
       id,
     ];
 
-    db.query(sql, values, (err, results) => {
+    plantcare.query(sql, values, (err, results) => {
       if (err) {
         return reject(err); // Reject the promise on error
       }
@@ -1315,7 +1315,7 @@ exports.getAllPostReplyDao = (postid) => {
       "SELECT p.id, p.replyMessage, p.createdAt, u.firstName, u.lastName FROM publicforumreplies p LEFT JOIN users u ON p.replyId = u.id WHERE p.chatId = ?";
     const values = [postid];
 
-    db.query(sql, values, (err, results) => {
+    plantcare.query(sql, values, (err, results) => {
       if (err) {
         return reject(err);
       }
@@ -1336,7 +1336,7 @@ exports.getReplyCount = () => {
     const sql =
       "SELECT chatId, COUNT(id) AS replyCount FROM publicforumreplies GROUP BY chatId";
 
-    db.query(sql, (err, results) => {
+      plantcare.query(sql, (err, results) => {
       if (err) {
         return reject(err); // Handle error in the promise
       }
@@ -1351,7 +1351,7 @@ exports.deleteReply = (id) => {
   const sql = "DELETE FROM publicforumreplies WHERE id = ?";
 
   return new Promise((resolve, reject) => {
-    db.query(sql, [id], (err, results) => {
+    plantcare.query(sql, [id], (err, results) => {
       if (err) {
         reject("Error executing delete query: " + err);
       } else {
@@ -1366,7 +1366,7 @@ exports.shiftUpTaskIndexDao = (taskId, indexId) => {
     const sql = "UPDATE  cropcalendardays SET taskIndex = ? WHERE id = ?";
     const values = [indexId, taskId];
 
-    db.query(sql, values, (err, results) => {
+    plantcare.query(sql, values, (err, results) => {
       if (err) {
         return reject(err); // Reject promise if an error occurs
       }
@@ -1381,7 +1381,7 @@ exports.getAllTaskIdDao = (cropId) => {
     const sql = "SELECT id, taskIndex FROM cropcalendardays WHERE cropId = ?";
     const values = [cropId];
 
-    db.query(sql, values, (err, results) => {
+    plantcare.query(sql, values, (err, results) => {
       if (err) {
         return reject(err); // Reject promise if an error occurs
       }
@@ -1426,7 +1426,7 @@ exports.addNewTaskDao = (task, indexId, cropId) => {
       );
     }
 
-    db.query(sql, values, (err, results) => {
+    plantcare.query(sql, values, (err, results) => {
       if (err) {
         reject(err);
       } else {
@@ -1444,7 +1444,7 @@ exports.addNewReplyDao = (chatId, replyId, replyMessage) => {
       "INSERT INTO publicforumreplies (chatId, replyMessage) VALUES (?, ?)";
     const values = [chatId, replyMessage];
 
-    db.query(sql, values, (err, results) => {
+    plantcare.query(sql, values, (err, results) => {
       if (err) {
         console.error("Error executing query:", err); // Improved error logging
         return reject(err);
@@ -1460,7 +1460,7 @@ exports.deletePublicForumPost = (id) => {
   const sql = "DELETE FROM publicforumposts WHERE id = ?";
 
   return new Promise((resolve, reject) => {
-    db.query(sql, [id], (err, results) => {
+    plantcare.query(sql, [id], (err, results) => {
       if (err) {
         reject("Error executing delete query: " + err);
       } else {
@@ -1476,7 +1476,7 @@ exports.shiftUpTaskIndexDaoU = (taskId, indexId) => {
     const sql = "UPDATE  slavecropcalendardays SET taskIndex = ? WHERE id = ?";
     const values = [indexId, taskId];
 
-    db.query(sql, values, (err, results) => {
+    plantcare.query(sql, values, (err, results) => {
       if (err) {
         return reject(err); // Reject promise if an error occurs
       }
@@ -1492,7 +1492,7 @@ exports.getAllTaskIdDaoU = (cropId, userId) => {
       "SELECT id, taskIndex FROM slavecropcalendardays WHERE cropCalendarId  = ? AND userId = ?";
     const values = [cropId, userId];
 
-    db.query(sql, values, (err, results) => {
+    plantcare.query(sql, values, (err, results) => {
       if (err) {
         return reject(err); // Reject promise if an error occurs
       }
@@ -1541,7 +1541,7 @@ exports.addNewTaskDaoU = (task, indexId, userId, cropId, onCulscropID) => {
       );
     }
 
-    db.query(sql, values, (err, results) => {
+    plantcare.query(sql, values, (err, results) => {
       if (err) {
         reject(err);
       } else {
@@ -1599,7 +1599,7 @@ exports.insertUserXLSXData = (data) => {
       String(row["NIC Number"]),
     ]);
 
-    db.query(sql, [values], (err, result) => {
+    plantcare.query(sql, [values], (err, result) => {
       if (err) {
         reject(err);
       } else {
@@ -1617,7 +1617,7 @@ exports.getAllRoles = () => {
   return new Promise((resolve, reject) => {
     const sql = "SELECT * FROM adminroles";
 
-    db.query(sql, (err, results) => {
+    plantcare.query(sql, (err, results) => {
       if (err) {
         return reject(err); // Reject promise if an error occurs
       }
@@ -1632,7 +1632,7 @@ exports.deleteUserCropTask = (taskId) => {
     const sql = "DELETE FROM slavecropcalendardays WHERE id = ?";
     const values = [taskId];
 
-    db.query(sql, values, (err, results) => {
+    plantcare.query(sql, values, (err, results) => {
       if (err) {
         return reject(err); // Reject promise if an error occurs
       }
@@ -1647,7 +1647,7 @@ exports.getAllUserTaskIdDao = (cropId, userId) => {
       "SELECT id, taskIndex FROM slavecropcalendardays WHERE cropCalendarId = ? AND userId = ?";
     const values = [cropId, userId];
 
-    db.query(sql, values, (err, results) => {
+    plantcare.query(sql, values, (err, results) => {
       if (err) {
         return reject(err); // Reject promise if an error occurs
       }
@@ -1662,7 +1662,7 @@ exports.shiftUpUserTaskIndexDao = (taskId, indexId) => {
     const sql = "UPDATE  slavecropcalendardays SET taskIndex = ? WHERE id = ?";
     const values = [indexId, taskId];
 
-    db.query(sql, values, (err, results) => {
+    plantcare.query(sql, values, (err, results) => {
       if (err) {
         return reject(err); // Reject promise if an error occurs
       }
@@ -1676,11 +1676,11 @@ exports.getPaymentSlipReportrrrr = (officerID) => {
   return new Promise((resolve, reject) => {
     const dataSql = `
       SELECT u.id, co.firstNameEnglish AS officerFirstName, co.lastNameEnglish AS officerLastName, u.firstName, u.lastName, u.NICnumber, SUM(gradeAprice)+SUM(gradeBprice)+SUM(gradeCprice) AS total
-      FROM registeredfarmerpayments rp, users u ,farmerpaymentscrops fpc, collectionofficer co
+      FROM registeredfarmerpayments rp, plantcare.users u ,farmerpaymentscrops fpc, collectionofficer co
       WHERE rp.userId = u.id AND rp.id = fpc.registerFarmerId 
       GROUP BY u.id, co.firstNameEnglish, co.lastNameEnglish, u.firstName, u.lastName, u.NICnumber
     `;
-    db.query(dataSql, (error, results) => {
+    collectionofficer.query(dataSql, (error, results) => {
       if (error) {
         reject(error);
       } else {
@@ -1760,7 +1760,7 @@ exports.getPaymentSlipReport = (officerID, limit, offset, date = null, search = 
     let countSql = `
       SELECT COUNT(*) AS total 
       FROM registeredfarmerpayments rp 
-      JOIN users u ON rp.userId = u.id 
+      JOIN plant_care.users u ON rp.userId = u.id 
       WHERE rp.collectionOfficerId = ? 
     `;
     let dataSql = `
@@ -1776,7 +1776,7 @@ exports.getPaymentSlipReport = (officerID, limit, offset, date = null, search = 
       FROM 
           registeredfarmerpayments rp
       JOIN 
-          users u ON rp.userId = u.id
+          plant_care.users u ON rp.userId = u.id
       JOIN 
           collectionofficer co ON rp.collectionOfficerId = co.id
       WHERE 
@@ -1805,7 +1805,7 @@ exports.getPaymentSlipReport = (officerID, limit, offset, date = null, search = 
     params.push(limit, offset);
 
     // Execute the count query
-    db.query(countSql, params.slice(0, params.length - 2), (countErr, countResults) => {
+    collectionofficer.query(countSql, params.slice(0, params.length - 2), (countErr, countResults) => {
       if (countErr) {
         console.error("Error in count query:", countErr);
         return reject(countErr);
@@ -1814,7 +1814,7 @@ exports.getPaymentSlipReport = (officerID, limit, offset, date = null, search = 
       const total = countResults[0]?.total || 0;
 
       // Execute the data query
-      db.query(dataSql, params, (dataErr, dataResults) => {
+      collectionofficer.query(dataSql, params, (dataErr, dataResults) => {
         if (dataErr) {
           console.error("Error in data query:", dataErr);
           return reject(dataErr);
@@ -1847,7 +1847,7 @@ exports.getFarmerListReport = (id) => {
 FROM 
   registeredfarmerpayments rp
 JOIN 
-  users u ON rp.userId = u.id
+  plant_care.users u ON rp.userId = u.id
 JOIN 
   collectionofficer co ON rp.collectionOfficerId = co.id
 WHERE 
@@ -1858,7 +1858,7 @@ LIMIT 10 OFFSET 2;
 
     `;
 
-    db.query(dataSql,[id] ,(error, results) => {
+    collectionofficer.query(dataSql,[id] ,(error, results) => {
       if (error) {
         return reject(error);
       }
@@ -1885,14 +1885,14 @@ SELECT
 FROM 
   farmerpaymentscrops fp
 JOIN 
-  cropvariety cv ON fp.cropId = cv.id
+  plant_care.cropvariety cv ON fp.cropId = cv.id
 JOIN 
-  cropgroup cg ON cv.cropGroupId  = cg.id
+  plant_care.cropgroup cg ON cv.cropGroupId  = cg.id
 WHERE 
   fp.registerFarmerId  = ?
     `;
 
-    db.query(dataSql,[id] ,(error, results) => {
+    collectionofficer.query(dataSql,[id] ,(error, results) => {
       if (error) {
         return reject(error);
       }
@@ -1928,7 +1928,7 @@ exports.getReportfarmerDetails = (userId) => {
         u.id  = ?
     `;
 
-    db.query(dataSql,[userId] ,(error, results) => {
+    plantcare.query(dataSql,[userId] ,(error, results) => {
       if (error) {
         return reject(error);
       }
@@ -1995,7 +1995,7 @@ exports.insertUserXLSXData = (data) => {
           WHERE phoneNumber IN (?) OR NICnumber IN (?)
         `;
 
-        db.query(sql, [phones, nics], (err, results) => {
+        plantcare.query(sql, [phones, nics], (err, results) => {
           if (err) reject(err);
           else resolve(results);
         });
@@ -2036,7 +2036,7 @@ exports.insertUserXLSXData = (data) => {
           ]);
 
           await new Promise((resolve, reject) => {
-            db.query(sql, [values], (err, result) => {
+            plantcare.query(sql, [values], (err, result) => {
               if (err) reject(err);
               else resolve(result);
             });
@@ -2067,7 +2067,7 @@ exports.insertUserXLSXData = (data) => {
         ]);
 
         const result = await new Promise((resolve, reject) => {
-          db.query(sql, [values], (err, result) => {
+          plantcare.query(sql, [values], (err, result) => {
             if (err) reject(err);
             else resolve(result);
           });

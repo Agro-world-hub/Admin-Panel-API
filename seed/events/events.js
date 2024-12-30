@@ -1,4 +1,4 @@
-const db = require('../startup/database');
+const { db, plantcare, collectionofficer, dash } = require('../../startup/database');
 
 
 const createExpiredContentCleanupEvent = () => {
@@ -11,7 +11,7 @@ const createExpiredContentCleanupEvent = () => {
         AND expireDate < NOW();
   `;
     return new Promise((resolve, reject) => {
-        db.query(sql, (err, result) => {
+        plantcare.query(sql, (err, result) => {
             if (err) {
                 reject('Error createExpiredContentCleanupEvent ' + err);
             } else {
@@ -35,7 +35,7 @@ const createContentPublishingEvent = () => {
         AND status != 'Published';
   `;
     return new Promise((resolve, reject) => {
-        db.query(sql, (err, result) => {
+        plantcare.query(sql, (err, result) => {
             if (err) {
                 reject('Error createContentPublishingEvent ' + err);
             } else {
@@ -44,6 +44,8 @@ const createContentPublishingEvent = () => {
         });
     });
 };
+
+
 
 
 const createTaskStatusEvent = () => {
@@ -56,7 +58,7 @@ const createTaskStatusEvent = () => {
         WHERE status = 'Pending' AND startingDate < CURDATE();
   `;
     return new Promise((resolve, reject) => {
-        db.query(sql, (err, result) => {
+        plantcare.query(sql, (err, result) => {
             if (err) {
                 reject('Error createTaskStatusEvent ' + err);
             } else {
@@ -109,7 +111,7 @@ const createUserActiveStatusEvent = () => {
         END;
     `;
     return new Promise((resolve, reject) => {
-        db.query(sql, (err, result) => {
+        plantcare.query(sql, (err, result) => {
             if (err) {
                 reject('Error createUserActiveStatusEvent: ' + err);
             } else {
