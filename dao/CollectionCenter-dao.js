@@ -1,13 +1,13 @@
-const db = require("../startup/database")
-const Joi = require('joi')
+const db = require("../startup/database");
+const Joi = require("joi");
 
-exports.addCollectionCenter = (regCode, centerName, contact01, contact02, buildingNumber, street, district, province, contact01Code, contact02Code) => {
+exports.addCollectionCenter = (regCode, centerName, contact01, contact02, buildingNumber, street, city, district, province, country, contact01Code, contact02Code, companies) => {
   return new Promise((resolve, reject) => {
     const sql = `INSERT INTO collectioncenter 
-      (regCode, centerName, contact01, contact02, buildingNumber, street, district, province) 
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?)`;
+      (regCode, centerName,code1, contact01, code2, contact02, buildingNumber, street, city, district, province, country, companies) 
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?,?,?)`;
 
-    const values = [regCode, centerName, contact01Code + contact01, contact02Code + contact02, buildingNumber, street, district, province];
+    const values = [regCode, centerName, contact01Code , contact01, contact02Code , contact02, buildingNumber, street, city, district, province, country, companies];
 
     db.query(sql, values, (err, results) => {
       if (err) {
@@ -19,7 +19,6 @@ exports.addCollectionCenter = (regCode, centerName, contact01, contact02, buildi
     });
   });
 };
-
 
 exports.GetAllCenterDAO = () => {
   return new Promise((resolve, reject) => {
@@ -53,12 +52,36 @@ exports.GetAllComplainDAO = (page, limit, status, searchText) => {
     const Counterparams = [];
     const offset = (page - 1) * limit;
 
-    let countSql = "SELECT COUNT(*) as total FROM farmercomplains fc, collectionofficer c, users u WHERE fc.farmerId = u.id AND fc.coId = c.id  ";
-    let sql = ` 
-    SELECT fc.id, fc.refNo, fc.createdAt, fc.status, fc.language, u.firstName as farmerName, c.firstNameEnglish as officerName , cc.centerName, cc.contact01
-    FROM farmercomplains fc, collectionofficer c, users u , collectioncenter cc
-    WHERE fc.farmerId = u.id AND fc.coId = c.id AND c.centerId = cc.id`;
+    // SQL to count total records
+    let countSql = `
+      SELECT COUNT(*) AS total
+      FROM farmercomplains fc
+      LEFT JOIN collectionofficer cf ON fc.coId = cf.id
+      LEFT JOIN collectioncenter cc ON cf.centerId = cc.id
+      LEFT JOIN users u ON fc.farmerId = u.id
+      WHERE 1 = 1
+    `;
 
+    // SQL to fetch paginated data
+    let sql = `
+      SELECT 
+        fc.id, 
+        fc.refNo, 
+        fc.createdAt, 
+        fc.status, 
+        fc.language, 
+        u.firstName AS farmerName, 
+        cf.id AS officerId, 
+        cf.firstNameEnglish AS officerName, 
+        cc.centerName AS centerName
+      FROM farmercomplains fc
+      LEFT JOIN collectionofficer cf ON fc.coId = cf.id
+      LEFT JOIN collectioncenter cc ON cf.centerId = cc.id
+      LEFT JOIN users u ON fc.farmerId = u.id
+      WHERE 1 = 1
+    `;
+
+    // Add filter for status
     if (status) {
       countSql += " AND fc.status = ? ";
       sql += " AND fc.status = ? ";
@@ -66,29 +89,35 @@ exports.GetAllComplainDAO = (page, limit, status, searchText) => {
       Counterparams.push(status);
     }
 
+    // Add search functionality
     if (searchText) {
-      countSql += " AND fc.refNo LIKE ? OR c.firstNameEnglish LIKE ? OR u.firstName LIKE ? ";
-      sql += " AND fc.refNo LIKE ? OR c.firstNameEnglish LIKE ? OR u.firstName LIKE ? ";
+      countSql += `
+        AND (fc.refNo LIKE ? OR cc.centerName LIKE ? OR u.firstName LIKE ? OR cf.firstNameEnglish LIKE ?)
+      `;
+      sql += `
+        AND (fc.refNo LIKE ? OR cc.centerName LIKE ? OR u.firstName LIKE ? OR cf.firstNameEnglish LIKE ?)
+      `;
       const searchQuery = `%${searchText}%`;
-      Sqlparams.push(searchQuery, searchQuery, searchQuery);
-      Counterparams.push(searchQuery, searchQuery, searchQuery);
-
+      Sqlparams.push(searchQuery, searchQuery, searchQuery, searchQuery);
+      Counterparams.push(searchQuery, searchQuery, searchQuery, searchQuery);
     }
 
+    // Add pagination
     sql += " LIMIT ? OFFSET ?";
-    Sqlparams.push(parseInt(limit));
-    Sqlparams.push(parseInt(offset));
+    Sqlparams.push(parseInt(limit), parseInt(offset));
 
+    // Execute count query to get total records
     db.query(countSql, Counterparams, (countErr, countResults) => {
       if (countErr) {
-        return reject(countErr);
+        return reject(countErr); // Handle count query error
       }
 
-      const total = countResults[0].total;
+      const total = countResults[0]?.total || 0;
 
+      // Execute main query to get paginated results
       db.query(sql, Sqlparams, (dataErr, results) => {
         if (dataErr) {
-          return reject(dataErr);
+          return reject(dataErr); // Handle data query error
         }
 
         resolve({ results, total });
@@ -97,11 +126,10 @@ exports.GetAllComplainDAO = (page, limit, status, searchText) => {
   });
 };
 
-
 exports.getComplainById = (id) => {
   return new Promise((resolve, reject) => {
     const sql = ` 
-    SELECT fc.id, fc.refNo, fc.createdAt, fc.status, fc.language, fc.complain, u.firstName AS farmerName, u.phoneNumber AS farmerPhone, c.firstNameEnglish as officerName, c.phoneNumber01 AS officerPhone, cc.centerName, cc.contact01 AS CollectionContact
+    SELECT fc.id, fc.refNo, fc.createdAt, fc.status, fc.language, fc.complain, fc.reply, u.firstName AS farmerName, u.phoneNumber AS farmerPhone, c.firstNameEnglish as officerName, c.phoneNumber01 AS officerPhone, cc.centerName, cc.contact01 AS CollectionContact
     FROM farmercomplains fc, collectionofficer c, users u , collectioncenter cc
     WHERE fc.farmerId = u.id AND c.centerId = cc.id AND fc.coId = c.id AND fc.id = ? 
     `;
@@ -114,8 +142,6 @@ exports.getComplainById = (id) => {
   });
 };
 
-
-
 exports.CheckRegCodeExistDAO = (regCode) => {
   return new Promise((resolve, reject) => {
     const sql = "SELECT * FROM collectioncenter WHERE regCode = ?";
@@ -127,9 +153,6 @@ exports.CheckRegCodeExistDAO = (regCode) => {
     });
   });
 };
-
-
-
 
 exports.getAllCenterPage = (limit, offset, searchItem) => {
   return new Promise((resolve, reject) => {
@@ -187,7 +210,6 @@ exports.getAllCenterPage = (limit, offset, searchItem) => {
   });
 };
 
-
 exports.getCenterByIdDAO = (id) => {
   return new Promise((resolve, reject) => {
     const sql = "SELECT * FROM collectioncenter WHERE id = ?";
@@ -201,20 +223,27 @@ exports.getCenterByIdDAO = (id) => {
 };
 
 
-exports.updateCollectionCenter = (regCode, centerName, buildingNumber, street, district, province, collectionID) => {
+exports.updateCollectionCenter = (regCode, centerName,  code1, contact01, code2, contact02, buildingNumber, street, city, district, province, country, companies, collectionID) => {
   return new Promise((resolve, reject) => {
     const sql = `
     UPDATE collectioncenter SET 
       regCode = ?,
       centerName = ?,
+      code1 = ?,
+      contact01 = ?,
+      code2 = ?,
+      contact02 = ?,
       buildingNumber = ?,
       street = ?,
+      city	 = ?,
       district = ?,
-      province  = ?
+      province  = ?,
+      country = ?,
+      companies = ?
      WHERE id = ?
       `;
 
-    const values = [regCode, centerName, buildingNumber, street, district, province, collectionID];
+    const values = [regCode, centerName,  code1, contact01, code2, contact02, buildingNumber, street, city, district, province, country, companies, collectionID];
 
     db.query(sql, values, (err, results) => {
       if (err) {
@@ -227,28 +256,195 @@ exports.updateCollectionCenter = (regCode, centerName, buildingNumber, street, d
   });
 };
 
-
-
-exports.getForCreateIdDao = (role) => {
+exports.sendComplainReply = (complainId, reply) => {
   return new Promise((resolve, reject) => {
-    const sql = "SELECT empId FROM collectionofficercompanydetails WHERE empId LIKE ? ORDER BY empId DESC LIMIT 1";
+    // Input validation
+    if (!complainId) {
+      return reject(new Error("Complain ID is required"));
+    }
+
+    if (reply === undefined || reply === null || reply.trim() === "") {
+      return reject(new Error("Reply cannot be empty"));
+    }
+
+    const sql = `
+      UPDATE farmercomplains 
+      SET reply = ?, status = ? 
+      WHERE id = ?
+    `;
+
+    const status = "Answered";
+    const values = [reply, status, complainId];
+
+    db.query(sql, values, (err, results) => {
+      if (err) {
+        console.error("Database error details:", err);
+        return reject(err);
+      }
+
+      if (results.affectedRows === 0) {
+        console.warn(`No record found with id: ${complainId}`);
+        return reject(new Error(`No record found with id: ${complainId}`));
+      }
+
+      console.log("Update successful:", results);
+      resolve({
+        message: "Reply sent successfully",
+        affectedRows: results.affectedRows,
+      });
+    });
+  });
+};
+
+
+
+
+
+exports.getForCreateId = (role) => {
+  return new Promise((resolve, reject) => {
+    const sql = "SELECT empId FROM collectionofficer WHERE empId LIKE ? ORDER BY empId DESC LIMIT 1";
     db.query(sql, [`${role}%`], (err, results) => {
       if (err) {
         return reject(err);
       }
-      
+
       if (results.length > 0) {
         const numericPart = parseInt(results[0].empId.substring(3), 10);
-      
+
         const incrementedValue = numericPart + 1;
-      
-        results[0].empId = incrementedValue.toString().padStart(5, '0');
+
+        results[0].empId = incrementedValue.toString().padStart(5, "0");
       }
-      
-      
 
       resolve(results);
     });
   });
 };
 
+exports.createCompany = async (
+  regNumber,
+  companyNameEnglish,
+  companyNameSinhala,
+  companyNameTamil,
+  email,
+  oicName,
+  oicEmail,
+  oicConCode1,
+  oicConNum1,
+  oicConCode2,
+  oicConNum2,
+  accHolderName,
+  accNumber,
+  bankName,
+  branchName,
+  foName,
+  foConCode,
+  foConNum,
+  foEmail
+) => {
+  return new Promise((resolve, reject) => {
+    const sql =
+      "INSERT INTO company (regNumber, companyNameEnglish, companyNameSinhala, companyNameTamil, email, oicName, oicEmail, oicConCode1, oicConNum1, oicConCode2, oicConNum2, accHolderName, accNumber, bankName, branchName, foName, foConCode, foConNum, foEmail) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
+    const values = [
+      regNumber,
+      companyNameEnglish,
+      companyNameSinhala,
+      companyNameTamil,
+      email,
+      oicName,
+      oicEmail,
+      oicConCode1,
+      oicConNum1,
+      oicConCode2,
+      oicConNum2,
+      accHolderName,
+      accNumber,
+      bankName,
+      branchName,
+      foName,
+      foConCode,
+      foConNum,
+      foEmail,
+    ];
+
+    db.query(sql, values, (err, results) => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(results.insertId);
+      }
+    });
+  });
+};
+
+
+
+
+exports.GetAllCompanyList = () => {
+  return new Promise((resolve, reject) => {
+    const sql = "SELECT id, companyNameEnglish FROM company";
+    db.query(sql, (err, results) => {
+      if (err) {
+        return reject(err);
+      }
+      resolve(results);
+    });
+  });
+};
+
+
+
+exports.GetAllManagerList = (companyId, centerId) => {
+  return new Promise((resolve, reject) => {
+    const sql = "SELECT id, firstNameEnglish FROM collectionofficer WHERE companyId=? AND centerId=?";
+    db.query(sql,[companyId, centerId], (err, results) => {
+      if (err) {
+        return reject(err);
+      }
+      resolve(results);
+    });
+  });
+};
+
+
+
+exports.generateRegCode = (province, district, city, callback) => {
+  // Generate the prefix based on province and district
+  const prefix = province.slice(0, 2).toUpperCase() + district.slice(0, 1).toUpperCase() + city.slice(0, 1).toUpperCase();
+
+  // SQL query to get the latest regCode
+  const query = `SELECT regCode FROM collectioncenter WHERE regCode LIKE ? ORDER BY regCode DESC LIMIT 1`;
+
+  // Execute the query
+  db.execute(query, [`${prefix}-%`], (err, results) => {
+    if (err) {
+      console.error("Error executing query:", err);
+      return callback(err);
+    }
+
+    let newRegCode = `${prefix}-01`; // Default to 01 if no regCode found
+
+    if (results.length > 0) {
+      // Get the last regCode and extract the number
+      const lastRegCode = results[0].regCode;
+      const lastNumber = parseInt(lastRegCode.split('-')[1]);
+      const newNumber = lastNumber + 1;
+      newRegCode = `${prefix}-${String(newNumber).padStart(2, '0')}`;
+    }
+
+    // Return the new regCode
+    callback(null, newRegCode);
+  });
+};
+
+exports.GetAllCompanyDAO = () => {
+  return new Promise((resolve, reject) => {
+    const sql = `SELECT c.id, c.companyNameEnglish, c.email, c.status, c.oicName, c.oicEmail, c.oicConCode1, c.oicConNum1, c.oicConCode2, c.oicConNum2, co.jobRole, COUNT(co.jobRole) as jobRoleCount FROM company c LEFT JOIN collectionofficer co ON c.id = co.companyId GROUP BY  c.id, co.jobRole`;
+    db.query(sql, (err, results) => {
+      if (err) {
+        return reject(err);
+      }
+      resolve(results);
+    });
+  });
+};

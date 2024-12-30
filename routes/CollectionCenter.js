@@ -61,9 +61,15 @@ router.get(
 )
 
 router.patch(
-    "/update-center/:id/:regCode",
+    "/update-center/:id",
     authMiddleware,
     CollectionCenterEp.updateCollectionCenter
+)
+
+router.put(
+    "/reply-complain/:id/",
+    authMiddleware,
+    CollectionCenterEp.sendComplainReply
 )
 
 router.get(
@@ -71,6 +77,40 @@ router.get(
     authMiddleware,
     CollectionCenterEp.getForCreateId
 )
+
+
+router.post(
+    "/create-company",
+    authMiddleware,
+    CollectionCenterEp.createCompany
+);
+
+router.get(
+    "/get-all-company",
+    // authMiddleware,
+    CollectionCenterEp.getAllCompanies
+)
+
+
+router.get(
+    "/get-all-company-list",
+    authMiddleware,
+    CollectionCenterEp.getAllCompanyList
+)
+
+
+router.get(
+    "/get-all-manager-list/:companyId/:centerId",
+    authMiddleware,
+    CollectionCenterEp.getAllManagerList
+)
+
+
+
+router.post(
+    '/generate-regcode', 
+    CollectionCenterEp.generateRegCode
+);
 
 
 module.exports = router;

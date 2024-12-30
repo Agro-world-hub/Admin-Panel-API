@@ -8,13 +8,14 @@ const createUsersTable = () => {
       lastName VARCHAR(50) NOT NULL,
       phoneNumber VARCHAR(12) NOT NULL,
       NICnumber VARCHAR(12) NOT NULL,
-      profileImage LONGBLOB,
+      profileImage LONGBLOB NULL,
       farmerQr LONGBLOB,
-      membership VARCHAR(25) NOT NULL,
-      houseNo VARCHAR(10) NOT NULL,
+      membership VARCHAR(25) NULL,
+      activeStatus VARCHAR(25) NULL,
+      houseNo VARCHAR(10) NULL,
       streetName VARCHAR(25) NULL,
-      city VARCHAR(25) NOT NULL,
-      district VARCHAR(25) NOT NULL,
+      city VARCHAR(25) NULL,
+      district VARCHAR(25) NULL,
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     )
   `;
@@ -53,7 +54,7 @@ const createAdminUsersTable = () => {
       id INT AUTO_INCREMENT PRIMARY KEY,
       mail VARCHAR(50) NOT NULL,
       userName VARCHAR(30) NOT NULL,
-      password VARCHAR(255) NOT NULL,
+      password TEXT NOT NULL,
       role INT,
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (role) REFERENCES adminroles(id)
@@ -90,7 +91,7 @@ const createContentTable = () => {
       createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       createdBy INT,
       FOREIGN KEY (createdBy) REFERENCES adminusers(id)
-        ON DELETE SET NULL
+        ON DELETE CASCADE
         ON UPDATE CASCADE
     )
   `;
@@ -193,24 +194,25 @@ const createCropCalenderDaysTable = () => {
     const sql = `
     CREATE TABLE IF NOT EXISTS cropcalendardays (
     id INT AUTO_INCREMENT PRIMARY KEY,
-    cropId INT(11) NULL,
-    taskIndex INT(255) NULL,
-    days INT(11) NULL,
-    taskTypeEnglish TEXT COLLATE latin1_swedish_ci NULL,
-    taskTypeSinhala TEXT COLLATE utf8_unicode_ci NULL,
-    taskTypeTamil TEXT COLLATE utf8_unicode_ci NULL,
-    taskCategoryEnglish TEXT COLLATE latin1_swedish_ci NULL,
-    taskCategorySinhala TEXT COLLATE utf8_unicode_ci NULL,
-    taskCategoryTamil TEXT COLLATE utf8_unicode_ci NULL,
-    taskEnglish TEXT COLLATE latin1_swedish_ci NULL,
-    taskSinhala TEXT COLLATE utf8_unicode_ci NULL,
-    taskTamil TEXT COLLATE utf8_unicode_ci NULL,
-    taskDescriptionEnglish TEXT COLLATE latin1_swedish_ci NULL,
-    taskDescriptionSinhala TEXT COLLATE utf8_unicode_ci NULL,
-    taskDescriptionTamil TEXT COLLATE utf8_unicode_ci NULL,
-    imageLink TEXT NOT NULL,
-    videoLink TEXT NOT NULL,
+    cropId INT(11) NOT NULL,
+    taskIndex INT(255) NOT NULL,
+    days INT(11) NOT NULL,
+    taskTypeEnglish TEXT COLLATE latin1_swedish_ci NOT NULL,
+    taskTypeSinhala TEXT COLLATE utf8_unicode_ci NOT NULL,
+    taskTypeTamil TEXT COLLATE utf8_unicode_ci NOT NULL,
+    taskCategoryEnglish TEXT COLLATE latin1_swedish_ci NOT NULL,
+    taskCategorySinhala TEXT COLLATE utf8_unicode_ci NOT NULL,
+    taskCategoryTamil TEXT COLLATE utf8_unicode_ci NOT NULL,
+    taskEnglish TEXT COLLATE latin1_swedish_ci NOT NULL,
+    taskSinhala TEXT COLLATE utf8_unicode_ci NOT NULL,
+    taskTamil TEXT COLLATE utf8_unicode_ci NOT NULL,
+    taskDescriptionEnglish TEXT COLLATE latin1_swedish_ci NOT NULL,
+    taskDescriptionSinhala TEXT COLLATE utf8_unicode_ci NOT NULL,
+    taskDescriptionTamil TEXT COLLATE utf8_unicode_ci NOT NULL,
+    imageLink TEXT NULL,
+    videoLink TEXT NULL,
     reqImages INT(11) NULL,
+    reqGeo BOOLEAN NULL,
     createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (cropId) REFERENCES cropCalender(id)
         ON DELETE CASCADE
@@ -227,6 +229,13 @@ const createCropCalenderDaysTable = () => {
         });
     });
 };
+
+
+
+
+
+
+
 
 const createOngoingCultivationsTable = () => {
     const sql = `
@@ -283,8 +292,8 @@ const createMarketPriceTable = () => {
       varietyId INT(11) DEFAULT NULL,
       xlindex INT(11) DEFAULT NULL,
       grade VARCHAR(1) NOT NULL,
-      price DECIMAL(10,2) DEFAULT NULL,
-      averagePrice DECIMAL(10,2) DEFAULT NULL,
+      price DECIMAL(15,2) DEFAULT NULL,
+      averagePrice DECIMAL(15,2) DEFAULT NULL,
       createdAt TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
       createdBy INT(11) DEFAULT NULL,
       FOREIGN KEY (varietyId) REFERENCES cropvariety(id)
@@ -310,14 +319,17 @@ const createMarketPriceTable = () => {
 };
 
 
+
+
+
 const createMarketPriceServeTable = () => {
     const sql = `
     CREATE TABLE IF NOT EXISTS marketpriceserve (
       id INT AUTO_INCREMENT PRIMARY KEY,
       marketPriceId INT(11) DEFAULT NULL,
       xlindex INT(11) DEFAULT NULL,
-      price DECIMAL(10,2) DEFAULT NULL,
-      updatedPrice DECIMAL(10,2) DEFAULT NULL,
+      price DECIMAL(15,2) DEFAULT NULL,
+      updatedPrice DECIMAL(15,2) DEFAULT NULL,
       collectionCenterId INT(11) DEFAULT NULL,
       FOREIGN KEY (marketPriceId) REFERENCES marketprice(id)
         ON DELETE CASCADE
@@ -347,7 +359,9 @@ const createOngoingCultivationsCropsTable = () => {
       ongoingCultivationId INT,
       cropCalendar INT,
       startedAt DATE DEFAULT NULL,
-      extent DECIMAL(8, 2) NOT NULL,
+      extentha DECIMAL(15, 2) NOT NULL,
+      extentac DECIMAL(15, 2) NOT NULL,
+      extentp DECIMAL(15, 2) NOT NULL,
       createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (ongoingCultivationId) REFERENCES ongoingCultivations(id)
         ON DELETE CASCADE
@@ -369,6 +383,10 @@ const createOngoingCultivationsCropsTable = () => {
 };
 
 
+
+
+
+
 const createCurrentAssetTable = () => {
     const sql = `
     CREATE TABLE IF NOT EXISTS currentasset (
@@ -380,15 +398,15 @@ const createCurrentAssetTable = () => {
       batchNum VARCHAR(50) NOT NULL,
       unit VARCHAR(10) NOT NULL,
       unitVolume INT,
-      numOfUnit DECIMAL(8, 2) NOT NULL,
-      unitPrice DECIMAL(8, 2) NOT NULL,
-      total DECIMAL(8, 2) NOT NULL,
+      numOfUnit DECIMAL(15, 2) NOT NULL,
+      unitPrice DECIMAL(15, 2) NOT NULL,
+      total DECIMAL(15, 2) NOT NULL,
       purchaseDate DATETIME NOT NULL,
       expireDate DATETIME NOT NULL,
       status VARCHAR(255) NOT NULL,
       createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (userId) REFERENCES users(id)
-        ON DELETE SET NULL
+        ON DELETE CASCADE
         ON UPDATE CASCADE
     )
   `;
@@ -412,7 +430,7 @@ const createFixedAsset = () => {
       category VARCHAR(50) NOT NULL,
       createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (userId) REFERENCES users(id)
-        ON DELETE SET NULL
+        ON DELETE CASCADE
         ON UPDATE CASCADE
     )
   `;
@@ -435,12 +453,12 @@ const createBuldingFixedAsset = () => {
       id INT AUTO_INCREMENT PRIMARY KEY,
       fixedAssetId INT,
       type VARCHAR(50) NOT NULL,
-      floorArea DECIMAL(8, 2) NOT NULL,
+      floorArea DECIMAL(15, 2) NOT NULL,
       ownership VARCHAR(50) NOT NULL,
       generalCondition VARCHAR(50) NOT NULL,
       district VARCHAR(15) NOT NULL,
       FOREIGN KEY (fixedAssetId) REFERENCES fixedasset(id)
-        ON DELETE SET NULL
+        ON DELETE CASCADE
         ON UPDATE CASCADE
     )
   `;
@@ -463,15 +481,15 @@ const createLandFixedAsset = () => {
     CREATE TABLE IF NOT EXISTS landfixedasset (
       id INT AUTO_INCREMENT PRIMARY KEY,
       fixedAssetId INT,
-      extentha DECIMAL(8, 2) NOT NULL,
-      extentac DECIMAL(8, 2) NOT NULL,
-      extentp DECIMAL(8, 2) NOT NULL,
+      extentha DECIMAL(15, 2) NOT NULL,
+      extentac DECIMAL(15, 2) NOT NULL,
+      extentp DECIMAL(15, 2) NOT NULL,
       ownership VARCHAR(50) NOT NULL,
       district VARCHAR(15) NOT NULL,
-      landFenced BOOLEAN  NOT NULL,
-      perennialCrop BOOLEAN  NOT NULL,
+      landFenced VARCHAR(15) NOT NULL,
+      perennialCrop VARCHAR(15)  NOT NULL,
       FOREIGN KEY (fixedAssetId) REFERENCES fixedasset(id)
-        ON DELETE SET NULL
+        ON DELETE CASCADE
         ON UPDATE CASCADE
     )
   `;
@@ -499,11 +517,11 @@ const createMachToolsFixedAsset = () => {
       mentionOther VARCHAR(50) NOT NULL,
       brand VARCHAR(25) NOT NULL,
       numberOfUnits INT NOT NULL,
-      unitPrice DECIMAL(8, 2) NOT NULL,
-      totalPrice DECIMAL(8, 2) NOT NULL,
+      unitPrice DECIMAL(15, 2) NOT NULL,
+      totalPrice DECIMAL(15, 2) NOT NULL,
       warranty VARCHAR(20) NOT NULL,
       FOREIGN KEY (fixedAssetId) REFERENCES fixedasset(id)
-        ON DELETE SET NULL
+        ON DELETE CASCADE
         ON UPDATE CASCADE
     )
   `;
@@ -529,7 +547,7 @@ const createMachToolsWarrantyFixedAsset = () => {
       expireDate DATETIME NOT NULL,
       warrantystatus VARCHAR(20) NOT NULL,
       FOREIGN KEY (machToolsId) REFERENCES machtoolsfixedasset(id)
-        ON DELETE SET NULL
+        ON DELETE CASCADE
         ON UPDATE CASCADE
     )
   `;
@@ -553,12 +571,12 @@ const createOwnershipOwnerFixedAsset = () => {
       buildingAssetId INT NULL,
       landAssetId INT NULL,
       issuedDate DATETIME NOT NULL,
-      estimateValue DECIMAL(8, 2) NOT NULL,
+      estimateValue DECIMAL(15, 2) NOT NULL,
       FOREIGN KEY (buildingAssetId) REFERENCES buildingfixedasset(id)
-        ON DELETE SET NULL
+        ON DELETE CASCADE
         ON UPDATE CASCADE,
      FOREIGN KEY (landAssetId) REFERENCES landfixedasset(id)
-        ON DELETE SET NULL
+        ON DELETE CASCADE
         ON UPDATE CASCADE
     )
   `;
@@ -584,7 +602,7 @@ const createOwnershipLeastFixedAsset = () => {
       startDate DATETIME NOT NULL,
       durationYears INT(8) NOT NULL,
       durationMonths INT(8) NOT NULL,
-      leastAmountAnnually DECIMAL(8, 2) NOT NULL,
+      leastAmountAnnually DECIMAL(15, 2) NOT NULL,
       FOREIGN KEY (buildingAssetId) REFERENCES buildingfixedasset(id)
         ON DELETE CASCADE
         ON UPDATE CASCADE,
@@ -613,7 +631,7 @@ const createOwnershipPermitFixedAsset = () => {
       buildingAssetId INT NULL,
       landAssetId INT NULL,
       issuedDate DATETIME NOT NULL,
-      permitFeeAnnually DECIMAL(8, 2) NOT NULL,
+      permitFeeAnnually DECIMAL(15, 2) NOT NULL,
       FOREIGN KEY (buildingAssetId) REFERENCES buildingfixedasset(id)
         ON DELETE CASCADE
         ON UPDATE CASCADE,
@@ -640,7 +658,7 @@ const createOwnershipSharedFixedAsset = () => {
       id INT AUTO_INCREMENT PRIMARY KEY,
       buildingAssetId INT NULL,
       landAssetId INT NULL,
-      paymentAnnually DECIMAL(8, 2) NOT NULL,
+      paymentAnnually DECIMAL(15, 2) NOT NULL,
       FOREIGN KEY (buildingAssetId) REFERENCES buildingfixedasset(id)
         ON DELETE CASCADE
         ON UPDATE CASCADE,
@@ -666,9 +684,9 @@ const createCurrentAssetRecord = () => {
     CREATE TABLE IF NOT EXISTS currentassetrecord (
     id INT AUTO_INCREMENT PRIMARY KEY,
     currentAssetId INT(5) NOT NULL,
-    numOfPlusUnit DECIMAL(8, 2) NULL,
-    numOfMinUnit DECIMAL(8, 2) NULL,
-    totalPrice DECIMAL(8, 2) NULL,
+    numOfPlusUnit DECIMAL(15, 2) NULL,
+    numOfMinUnit DECIMAL(15, 2) NULL,
+    totalPrice DECIMAL(15, 2) NULL,
     createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
    FOREIGN KEY (currentAssetId) REFERENCES currentasset(id)
         ON DELETE CASCADE
@@ -716,6 +734,7 @@ const createSlaveCropCalenderDaysTable = () => {
       imageLink TEXT,
       videoLink TEXT,
       reqImages INT(11) NULL,
+      reqGeo BOOLEAN NULL,
       createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (userId) REFERENCES users(id)
           ON DELETE CASCADE
@@ -734,6 +753,31 @@ const createSlaveCropCalenderDaysTable = () => {
                 reject('Error creating slave crop Calender Days table: ' + err);
             } else {
                 resolve('slave crop   table created successfully.');
+            }
+        });
+    });
+};
+
+
+const createCropGeoTable = () => {
+    const sql = `
+    CREATE TABLE IF NOT EXISTS cropGeo (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    taskId INT(11) NOT NULL,
+    longitude DECIMAL(20,15) NOT NULL,
+    latitude DECIMAL(20,15) NOT NULL,
+    createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (taskId) REFERENCES slavecropcalendardays(id)
+        ON DELETE CASCADE
+        ON UPDATE CASCADE
+);
+  `;
+    return new Promise((resolve, reject) => {
+        db.query(sql, (err, result) => {
+            if (err) {
+                reject('Error creating cropGeo table: ' + err);
+            } else {
+                resolve('cropGeo table created successfully.');
             }
         });
     });
@@ -796,7 +840,7 @@ const createpublicforumreplies = () => {
       CREATE TABLE IF NOT EXISTS publicforumreplies (
         id int AUTO_INCREMENT PRIMARY KEY,
         chatId int NOT NULL,
-        replyId int NOT NULL,
+        replyId int NULL,
         replyMessage text NOT NULL,
         createdAt timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
         FOREIGN KEY (replyId) REFERENCES users(id)
@@ -822,6 +866,46 @@ const createpublicforumreplies = () => {
 
 
 
+
+const createCompany = () => {
+    const sql = `
+    CREATE TABLE IF NOT EXISTS company (
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      regNumber VARCHAR(50) NOT NULL,
+      companyNameEnglish VARCHAR(50) NOT NULL,
+      companyNameSinhala VARCHAR(50) NOT NULL,
+      companyNameTamil VARCHAR(50) NOT NULL,
+      email VARCHAR(50) NOT NULL,
+      oicName VARCHAR(50) NULL,
+      oicEmail VARCHAR(50) NULL,
+      oicConCode1 VARCHAR(5) NULL,
+      oicConNum1 VARCHAR(12) NULL,
+      oicConCode2 VARCHAR(5) NULL,
+      oicConNum2 VARCHAR(12) NULL,
+      accHolderName VARCHAR(50) NULL,
+      accNumber VARCHAR(30) NULL,
+      bankName VARCHAR(30) NULL,
+      branchName VARCHAR(30) NULL,
+      foName VARCHAR(50) NULL,
+      foConCode VARCHAR(5) NULL,
+      foConNum VARCHAR(12) NULL,
+      foEmail VARCHAR(50) NULL,
+      createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+  `;
+    return new Promise((resolve, reject) => {
+        db.query(sql, (err, result) => {
+            if (err) {
+                reject('Error creating ccompany: ' + err);
+            } else {
+                resolve('company table created successfully.');
+            }
+        });
+    });
+};
+
+
+
 //Collection officer tables
 
 const createCollectionOfficer = () => {
@@ -829,20 +913,25 @@ const createCollectionOfficer = () => {
     CREATE TABLE IF NOT EXISTS collectionofficer (
       id INT AUTO_INCREMENT PRIMARY KEY,
       centerId INT NOT NULL,
+      companyId INT NOT NULL,
+      irmId INT NULL,
       firstNameEnglish VARCHAR(50) NOT NULL,
       firstNameSinhala VARCHAR(50) NOT NULL,
       firstNameTamil VARCHAR(50) NOT NULL,
       lastNameEnglish VARCHAR(50) NOT NULL,
       lastNameSinhala VARCHAR(50) NOT NULL,
       lastNameTamil VARCHAR(50) NOT NULL,
+      jobRole VARCHAR(50) NULL,
+      empId VARCHAR(10) NOT NULL,
+      enpType VARCHAR(10) NOT NULL,
+      phoneCode01 VARCHAR(5) NOT NULL,
       phoneNumber01 VARCHAR(12) NOT NULL,
-      phoneNumber02 VARCHAR(12) NOT NULL,
-      image LONGBLOB,
-      QRcode LONGBLOB,
+      phoneCode02 VARCHAR(5) NULL,
+      phoneNumber02 VARCHAR(12) NULL,
       nic VARCHAR(12) NOT NULL,
       email VARCHAR(50) NOT NULL,
-      password VARCHAR(20) NOT NULL,
-      passwordUpdated  VARCHAR(20) NOT NULL,
+      password VARCHAR(20) NULL,
+      passwordUpdated BOOLEAN NULL,
       houseNumber VARCHAR(10) NOT NULL,
       streetName VARCHAR(50) NOT NULL,
       city VARCHAR(50) NOT NULL,
@@ -850,10 +939,24 @@ const createCollectionOfficer = () => {
       province VARCHAR(25) NOT NULL,
       country VARCHAR(25) NOT NULL,
       languages VARCHAR(255) NOT NULL,
-      status VARCHAR(25) NOT NULL,
+      accHolderName VARCHAR(75) NOT NULL,
+      accNumber VARCHAR(25) NOT NULL,
+      bankName VARCHAR(25) NOT NULL,
+      branchName VARCHAR(25) NOT NULL,
+      image LONGBLOB NULL,
+      QRcode LONGBLOB,
+      status VARCHAR(25) NULL,
+      claimStatus BOOLEAN DEFAULT 0,
       createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (centerId) REFERENCES collectioncenter(id)
-
+        ON DELETE CASCADE
+        ON UPDATE CASCADE,
+      FOREIGN KEY (companyId) REFERENCES company(id)
+        ON DELETE CASCADE
+        ON UPDATE CASCADE,
+      FOREIGN KEY (irmId) REFERENCES collectionofficer(id)
+        ON DELETE CASCADE
+        ON UPDATE CASCADE
     )
   `;
     return new Promise((resolve, reject) => {
@@ -868,61 +971,7 @@ const createCollectionOfficer = () => {
 };
 
 
-const createCollectionOfficerCompanyDetails = () => {
-    const sql = `
-    CREATE TABLE IF NOT EXISTS collectionofficercompanydetails (
-      id INT AUTO_INCREMENT PRIMARY KEY,
-      collectionOfficerId INT,
-      companyNameEnglish VARCHAR(255) NOT NULL,
-      companyNameSinhala VARCHAR(255) NOT NULL,
-      companyNameTamil VARCHAR(255) NOT NULL,
-      jobRole VARCHAR(50) NOT NULL,
-      IRMname VARCHAR(75) NOT NULL,
-      companyEmail VARCHAR(50) NOT NULL,
-      assignedDistrict VARCHAR(25) NOT NULL,
-      employeeType VARCHAR(25) NOT NULL,
-      FOREIGN KEY (collectionOfficerId) REFERENCES collectionofficer(id)
-        ON DELETE SET NULL
-        ON UPDATE CASCADE
-    )
-  `;
-    return new Promise((resolve, reject) => {
-        db.query(sql, (err, result) => {
-            if (err) {
-                reject('Error creating collection officer company details table: ' + err);
-            } else {
-                resolve('collection officer company details table created successfully.');
-            }
-        });
-    });
-};
 
-
-
-const createCollectionOfficerBankDetails = () => {
-    const sql = `
-    CREATE TABLE IF NOT EXISTS collectionofficerbankdetails (
-      id INT AUTO_INCREMENT PRIMARY KEY,
-      collectionOfficerId INT,
-      accHolderName VARCHAR(75) NOT NULL,
-      accNumber VARCHAR(25) NOT NULL,
-      bankName VARCHAR(25) NOT NULL,
-      branchName VARCHAR(25) NOT NULL,
-      FOREIGN KEY (collectionOfficerId) REFERENCES collectionofficer(id)
-        ON DELETE SET NULL
-        ON UPDATE CASCADE
-    )
-  `;
-    return new Promise((resolve, reject) => {
-        db.query(sql, (err, result) => {
-            if (err) {
-                reject('Error creating collection bank details officer table: ' + err);
-            } else {
-                resolve('collection officer bank details table created successfully.');
-            }
-        });
-    });
-};
 
 
 const createRegisteredFarmerPayments = () => {
@@ -959,12 +1008,13 @@ const createFarmerPaymensCrops = () => {
       id INT AUTO_INCREMENT PRIMARY KEY,
       registerFarmerId INT,
       cropId INT,
-      gradeAprice DECIMAL(8, 2) NULL,
-      gradeBprice DECIMAL(8, 2) NULL,
-      gradeCprice DECIMAL(8, 2) NULL,
-      gradeAquan DECIMAL(8, 2) NULL,
-      gradeBquan DECIMAL(8, 2) NULL,
-      gradeCquan DECIMAL(8, 2) NULL,
+      gradeAprice DECIMAL(15, 2) NULL,
+      gradeBprice DECIMAL(15, 2) NULL,
+      gradeCprice DECIMAL(15, 2) NULL,
+      gradeAquan DECIMAL(15, 2) NULL,
+      gradeBquan DECIMAL(15, 2) NULL,
+      gradeCquan DECIMAL(15, 2) NULL,
+      image LONGBLOB,
       createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (registerFarmerId) REFERENCES registeredfarmerpayments(id)
         ON DELETE CASCADE
@@ -1045,7 +1095,7 @@ const createUserBankDetails = () => {
       branchName VARCHAR(50) NOT NULL,
       createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (userId) REFERENCES users(id)
-        ON DELETE SET NULL
+        ON DELETE CASCADE
         ON UPDATE CASCADE
     )
   `;
@@ -1067,12 +1117,17 @@ const createCollectionCenter = () => {
       id INT AUTO_INCREMENT PRIMARY KEY,
       regCode VARCHAR(30) NOT NULL,
       centerName VARCHAR(30) NOT NULL,
+      code1 VARCHAR(5) NOT NULL,
       contact01 VARCHAR(13) NOT NULL,
+      code2 VARCHAR(5) NOT NULL,
       contact02 VARCHAR(13) NOT NULL,
       buildingNumber VARCHAR(50) NOT NULL,
       street VARCHAR(50) NOT NULL,
+      city VARCHAR(50) NOT NULL,
       district VARCHAR(30) NOT NULL,
       province VARCHAR(30) NOT NULL,
+      country VARCHAR(30) NOT NULL,
+      companies VARCHAR(30) NOT NULL,
       createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     )
   `;
@@ -1090,31 +1145,7 @@ const createCollectionCenter = () => {
 
 
 
-const createCollectionCenterOfficer = () => {
-    const sql = `
-    CREATE TABLE IF NOT EXISTS collectioncenterofficer (
-      id INT AUTO_INCREMENT PRIMARY KEY,
-      centerId INT,
-      name VARCHAR(30) NOT NULL,
-      role VARCHAR(13) NOT NULL,
-      contact01 VARCHAR(13) NOT NULL,
-      contact02 VARCHAR(50) NOT NULL,
-      createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-      FOREIGN KEY (centerId) REFERENCES collectioncenter(id)
-        ON DELETE SET NULL
-        ON UPDATE CASCADE
-    )
-  `;
-    return new Promise((resolve, reject) => {
-        db.query(sql, (err, result) => {
-            if (err) {
-                reject('Error creating collectioncenterofficer table: ' + err);
-            } else {
-                resolve('collectioncenterofficer table created successfully.');
-            }
-        });
-    });
-};
+
 
 const createFarmerComplains  = () => {
     const sql = `
@@ -1124,14 +1155,16 @@ const createFarmerComplains  = () => {
     coId INT,
     refNo VARCHAR(20) NOT NULL,
     language VARCHAR(50) NOT NULL,
+    complainCategory VARCHAR(50) NOT NULL,
     complain TEXT NOT NULL,
+    reply TEXT NOT NULL,
     status VARCHAR(20) NOT NULL,
     createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (farmerId) REFERENCES users(id)
-        ON DELETE SET NULL
+        ON DELETE CASCADE
         ON UPDATE CASCADE,
     FOREIGN KEY (coId) REFERENCES collectionofficer(id)
-        ON DELETE SET NULL
+        ON DELETE CASCADE
         ON UPDATE CASCADE
 )
   `;
@@ -1181,6 +1214,8 @@ const createMarketPlacePackages = () => {
     CREATE TABLE IF NOT EXISTS marketplacepackages (
       id INT AUTO_INCREMENT PRIMARY KEY,
       name VARCHAR(50) NOT NULL,
+      status VARCHAR(10)  NOT NULL,
+      total DECIMAL(15, 2) NOT NULL,
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     )
   `;
@@ -1201,9 +1236,11 @@ const createCoupon = () => {
       id INT AUTO_INCREMENT PRIMARY KEY,
       code VARCHAR(25),
       type VARCHAR(25) NOT NULL,
-      percentage DECIMAL(5, 2) NOT NULL,
+      percentage DECIMAL(15, 2),
       status VARCHAR(25) NOT NULL,
       checkLimit Boolean NOT NULL,
+      priceLimit DECIMAL(15,2),
+      fixDiscount DECIMAL(15,2),
       startDate DATETIME NOT NULL,
       endDate DATETIME NOT NULL,
       createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP
@@ -1227,16 +1264,17 @@ const createMarketPlaceItems = () => {
       id INT AUTO_INCREMENT PRIMARY KEY,
       cropId INT,
       displayName VARCHAR(50) NOT NULL,
-      normalPrice DECIMAL(8, 2) NOT NULL,
-      discountedPrice DECIMAL(8, 2) NOT NULL,
+      category VARCHAR(25) NOT NULL,
+      normalPrice DECIMAL(15, 2) NOT NULL,
+      discountedPrice DECIMAL(15, 2) NOT NULL,
       promo BOOLEAN  NOT NULL,
       unitType VARCHAR(5) NOT NULL,
-      startValue DECIMAL(8, 2) NOT NULL,
-      changeby DECIMAL(8, 2) NOT NULL,
+      startValue DECIMAL(15, 2) NOT NULL,
+      changeby DECIMAL(15, 2) NOT NULL,
       tags TEXT NOT NULL,
       createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-      FOREIGN KEY (cropId) REFERENCES cropcalender(id)
-        ON DELETE SET NULL
+      FOREIGN KEY (cropId) REFERENCES cropvariety(id)
+        ON DELETE CASCADE
         ON UPDATE CASCADE
     )
   `;
@@ -1259,12 +1297,14 @@ const createPackageDetails = () => {
       packageId INT,
       mpItemId INT,
       quantity INT(11) NOT NULL,
+      quantityType VARCHAR(5) NOT NULL,
+      discountedPrice DECIMAL(15, 2) NOT NULL,
       createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (packageId) REFERENCES marketplacepackages(id)
-        ON DELETE SET NULL
+        ON DELETE CASCADE
         ON UPDATE CASCADE,
       FOREIGN KEY (mpItemId) REFERENCES marketplaceitems(id)
-        ON DELETE SET NULL
+        ON DELETE CASCADE
         ON UPDATE CASCADE
     )
   `;
@@ -1285,10 +1325,10 @@ const createPromoItems = () => {
     CREATE TABLE IF NOT EXISTS promoitems (
       id INT AUTO_INCREMENT PRIMARY KEY,
       mpItemId INT,
-      discount DECIMAL(8, 2) NOT NULL,
+      discount DECIMAL(15, 2) NOT NULL,
       createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (mpItemId) REFERENCES marketplaceitems(id)
-        ON DELETE SET NULL
+        ON DELETE CASCADE
         ON UPDATE CASCADE
     )
   `;
@@ -1312,7 +1352,7 @@ const createCart = () => {
       status VARCHAR(13) NOT NULL,
       createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (userId) REFERENCES users(id)
-        ON DELETE SET NULL
+        ON DELETE CASCADE
         ON UPDATE CASCADE
     )
   `;
@@ -1335,13 +1375,13 @@ const createCartItems = () => {
       cartId INT,
       mpItemId INT,
       quantity DECIMAL(8, 2) NOT NULL,
-      total DECIMAL(8, 2) NOT NULL,
+      total DECIMAL(15, 2) NOT NULL,
       createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (cartId) REFERENCES cart(id)
-        ON DELETE SET NULL
+        ON DELETE CASCADE
         ON UPDATE CASCADE,
       FOREIGN KEY (mpItemId) REFERENCES marketplaceitems(id)
-        ON DELETE SET NULL
+        ON DELETE CASCADE
         ON UPDATE CASCADE
     )
   `;
@@ -1351,6 +1391,114 @@ const createCartItems = () => {
                 reject('Error creating cart table: ' + err);
             } else {
                 resolve('cart table created successfully.');
+            }
+        });
+    });
+};
+
+
+
+
+const createMarketPriceRequestTable = () => {
+    const sql = `
+    CREATE TABLE IF NOT EXISTS marketpricerequest (
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      marketPriceId INT(11) DEFAULT NULL,
+      centerId INT(11) DEFAULT NULL,
+      requestPrice DECIMAL(10,2) DEFAULT NULL,
+      status VARCHAR(20) NOT NULL,
+      empId INT(11) DEFAULT NULL,
+      createdAt TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (marketPriceId) REFERENCES marketprice(id)
+        ON DELETE CASCADE
+        ON UPDATE CASCADE,
+      FOREIGN KEY (centerId) REFERENCES collectioncenter(id)
+        ON DELETE CASCADE
+        ON UPDATE CASCADE,
+      FOREIGN KEY (empId) REFERENCES collectionofficer(id)
+        ON DELETE CASCADE
+        ON UPDATE CASCADE
+    )
+  `;
+    return new Promise((resolve, reject) => {
+        db.query(sql, (err, result) => {
+            if (err) {
+                reject('Error creating market-price request table: ' + err);
+            } else {
+                resolve('market-price table created request successfully.');
+            }
+        });
+    });
+};
+
+
+
+
+const createSalesAgentTable = () => {
+    const sql = `
+    CREATE TABLE salesagent (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    firstName VARCHAR(100) NOT NULL,
+    lastName VARCHAR(100) NOT NULL,
+    empType VARCHAR(50) NOT NULL,
+    empId VARCHAR(50) NOT NULL UNIQUE,
+    phoneCode1 VARCHAR(10) NOT NULL,
+    phoneNumber1 VARCHAR(15) NOT NULL,
+    phoneCode2 VARCHAR(10),
+    phoneNumber2 VARCHAR(15),
+    nic VARCHAR(50) NOT NULL UNIQUE,
+    email VARCHAR(100) NOT NULL UNIQUE,
+    houseNumber VARCHAR(50),
+    streetName VARCHAR(100),
+    city VARCHAR(100),
+    district VARCHAR(100),
+    province VARCHAR(100),
+    country VARCHAR(100) NOT NULL,
+    accHolderName VARCHAR(100) NOT NULL,
+    accNumber VARCHAR(50) NOT NULL UNIQUE,
+    bankName VARCHAR(100) NOT NULL,
+    branchName VARCHAR(100),
+    status VARCHAR(50) DEFAULT 'pending', 
+    password VARCHAR(255),
+    passwordUpdate BOOLEAN DEFAULT 0,
+    createdAt TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+)
+
+  `;
+    return new Promise((resolve, reject) => {
+        db.query(sql, (err, result) => {
+            if (err) {
+                reject('Error creating salesagent table: ' + err);
+            } else {
+                resolve('salesagent table created request successfully.');
+            }
+        });
+    });
+};
+
+
+
+const createSalesAgentStarTable = () => {
+    const sql = `
+    CREATE TABLE salesagentstars (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    salesagentId INT NOT NULL,
+    date DATE NOT NULL,
+    target INT NOT NULL,
+    completed INT NOT NULL,
+    numOfStars BOOLEAN NOT NULL DEFAULT 0, 
+    createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (salesagentId) REFERENCES salesagent(id)
+        ON DELETE CASCADE
+        ON UPDATE CASCADE
+)
+  `;
+    return new Promise((resolve, reject) => {
+        db.query(sql, (err, result) => {
+            if (err) {
+                reject('Error creating salesagentstars table: ' + err);
+            } else {
+                resolve('ssalesagentstars table created request successfully.');
             }
         });
     });
@@ -1375,30 +1523,30 @@ module.exports = {
     createpublicforumposts,
     createpublicforumreplies,
 
-    createFixedAsset, //1
-    createBuldingFixedAsset, //2
-    createLandFixedAsset, //3
-    createMachToolsFixedAsset, //4
-    createMachToolsWarrantyFixedAsset, //5
-    createOwnershipOwnerFixedAsset, //6
-    createOwnershipLeastFixedAsset, //7
-    createOwnershipPermitFixedAsset, //8
-    createOwnershipSharedFixedAsset, //9
+    createFixedAsset,
+    createBuldingFixedAsset, 
+    createLandFixedAsset,
+    createMachToolsFixedAsset,
+    createMachToolsWarrantyFixedAsset,
+    createOwnershipOwnerFixedAsset,
+    createOwnershipLeastFixedAsset,
+    createOwnershipPermitFixedAsset,
+    createOwnershipSharedFixedAsset,
     createCurrentAssetRecord,
 
 
     createSlaveCropCalenderDaysTable,
+    createCropGeoTable,
     createTaskImages,
 
     //collection officer
+    createCompany,
     createCollectionOfficer,
-    createCollectionOfficerCompanyDetails,
-    createCollectionOfficerBankDetails,
+    
     createRegisteredFarmerPayments,
     createFarmerPaymensCrops,
     createUserBankDetails,
     createCollectionCenter,
-    createCollectionCenterOfficer,
     createFarmerComplains,
 
     //Seed for market Place Application
@@ -1409,5 +1557,10 @@ module.exports = {
     createPackageDetails,
     createPromoItems,
     createCart,
-    createCartItems
+    createCartItems,
+    createMarketPriceRequestTable,
+
+
+    createSalesAgentTable,
+    createSalesAgentStarTable
 };

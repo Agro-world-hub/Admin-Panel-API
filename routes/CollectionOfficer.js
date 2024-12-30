@@ -31,7 +31,7 @@ const uploadfile = multer({
 
 router.post(
     "/collection-officer/create-collection-officer",
-    // authMiddleware,
+    authMiddleware,
     CollectionOfficerEp.createCollectionOfficer
 );
 
@@ -39,6 +39,12 @@ router.get(
     "/collection-officer/get-all-collection-officers",
     authMiddleware,
     CollectionOfficerEp.getAllCollectionOfficers
+);
+
+router.get(
+    "/collection-officer/get-all-collection-officers-status",
+    authMiddleware,
+    CollectionOfficerEp.getAllCollectionOfficersStatus
 );
 
 
@@ -70,7 +76,7 @@ router.get(
 router.get(
     "/collection-officer/update-status/:id/:status",
     authMiddleware,
-    CollectionOfficerEp.UpdateCollectionOfficerStatus
+    CollectionOfficerEp.UpdateStatusAndSendPassword
 )
 
 router.delete(
@@ -91,6 +97,21 @@ router.put(
     authMiddleware, 
     CollectionOfficerEp.updateCollectionOfficerDetails
 );
+
+
+router.get(
+    "/officer-details-monthly/:id",
+    authMiddleware,
+    CollectionOfficerEp.getOfficerByIdMonthly
+);
+
+// Define the new route to fetch daily data for a specific collection officer
+router.get(
+    "/get-daily-report",
+     authMiddleware,
+     CollectionOfficerEp.getDailyReport
+    );
+
 
 
 

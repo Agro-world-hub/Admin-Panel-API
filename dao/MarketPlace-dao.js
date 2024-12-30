@@ -6,9 +6,9 @@ const path = require("path");
 exports.getAllCropNameDAO = () => {
   return new Promise((resolve, reject) => {
     const sql = `
-          SELECT cg.id AS cropId, cc.id AS varietyId, cg.cropNameEnglish, cc.varietyEnglish, cc.image
-          FROM cropcalender cc
-          JOIN cropgroup cg ON cg.id = cc.cropGroupId
+          SELECT cg.id AS cropId, cv.id AS varietyId, cg.cropNameEnglish, cv.varietyNameEnglish AS varietyEnglish, cv.image
+          FROM cropvariety cv, cropgroup cg
+          WHERE cg.id = cv.cropGroupId
       `;
 
     db.query(sql, (err, results) => {
@@ -59,7 +59,7 @@ exports.getAllCropNameDAO = () => {
 exports.createCropGroup = async (product) => {
   return new Promise((resolve, reject) => {
     const sql =
-      "INSERT INTO marketplaceitems (cropId, displayName, normalPrice, discountedPrice, promo, unitType, startValue, changeby, tags) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
+      "INSERT INTO marketplaceitems (cropId, displayName, normalPrice, discountedPrice, promo, unitType, startValue, changeby, tags, category) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
     const values = [
       product.variety,
       product.cropName,
@@ -70,6 +70,7 @@ exports.createCropGroup = async (product) => {
       product.startValue,
       product.changeby,
       product.tags,
+      product.category
     ];
 
     db.query(sql, values, (err, results) => {
@@ -117,9 +118,9 @@ exports.createCropGroup = async (product) => {
 exports.getMarketplaceItems = () => {
   return new Promise((resolve, reject) => {
     const dataSql = `
-    SELECT m.id, m.cropId, cg.cropNameEnglish, m.displayName , c.method, cv.varietyNameEnglish, m.discountedPrice, m.startValue, m.promo, m.unitType, m.changeby, m.normalPrice
-    FROM marketplaceitems m, cropcalender c, cropgroup cg, cropvariety cv
-    WHERE m.cropId = c.id AND c.cropVarietyId = cv.id AND cv.cropGroupId = cg.id
+    SELECT m.id, m.cropId, cg.cropNameEnglish, m.displayName , cv.varietyNameEnglish, m.discountedPrice, m.startValue, m.promo, m.unitType, m.changeby, m.normalPrice, m.category
+    FROM marketplaceitems m, cropgroup cg, cropvariety cv
+    WHERE m.cropId = cv.id AND cv.cropGroupId = cg.id
     `;
     db.query(dataSql, (error, results) => {
       if (error) {
@@ -147,13 +148,15 @@ exports.deleteMarketplaceItem = async (id) => {
 exports.createCoupenDAO = async (coupen) => {
   return new Promise((resolve, reject) => {
     const sql =
-      "INSERT INTO coupon (code, type, percentage, status, checkLimit, startDate, endDate) VALUES (?, ?, ?, ?, ?, ?, ?)";
+      "INSERT INTO coupon (code, type, percentage, status, checkLimit, priceLimit, fixDiscount, startDate, endDate) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
     const values = [
       coupen.code,
       coupen.type,
       coupen.percentage,
       coupen.status,
       coupen.checkLimit,
+      coupen.priceLimit,
+      coupen.fixDiscount,
       coupen.startDate,
       coupen.endDate,
     ];
@@ -171,7 +174,7 @@ exports.createCoupenDAO = async (coupen) => {
 
 exports.getAllCoupenDAO = (limit, offset, status, types, searchText) => {
   console.log(status);
-  
+
   return new Promise((resolve, reject) => {
     let countParms = []
     let dataParms = []
@@ -182,14 +185,14 @@ exports.getAllCoupenDAO = (limit, offset, status, types, searchText) => {
       WHERE 1=1
     `;
 
-    if(status){
+    if (status) {
       countSql += " AND status = ? "
       dataSql += ` AND status = ? `
       countParms.push(status)
       dataParms.push(status)
     }
 
-    if(searchText){
+    if (searchText) {
       countSql += " AND code = ? "
       dataSql += ` AND code = ? `
       countParms.push(searchText)
@@ -197,7 +200,7 @@ exports.getAllCoupenDAO = (limit, offset, status, types, searchText) => {
     }
 
 
-    if(types){
+    if (types) {
       countSql += " AND type = ? "
       dataSql += ` AND type = ? `
       countParms.push(types)
@@ -211,13 +214,13 @@ exports.getAllCoupenDAO = (limit, offset, status, types, searchText) => {
     db.query(countSql, countParms, (countErr, countResults) => {
       if (countErr) {
         console.log(countErr);
-        
+
         reject(countErr);
       } else {
         db.query(dataSql, dataParms, (dataErr, dataResults) => {
           if (dataErr) {
             console.log(dataErr);
-            
+
             reject(dataErr);
           } else {
             resolve({
@@ -254,6 +257,98 @@ exports.deleteAllCoupen = async () => {
         reject(err);
       } else {
         resolve(results.affectedRows);
+      }
+    });
+  });
+};
+
+
+
+exports.getAllProductCropCatogoryDAO = () => {
+  return new Promise((resolve, reject) => {
+    const sql = `
+          SELECT cg.id AS cropId, mpi.normalPrice, mpi.discountedPrice, mpi.id AS varietyId, cg.cropNameEnglish, mpi.displayName
+          FROM marketplaceitems mpi, cropvariety cv, cropgroup cg
+          WHERE mpi.cropId = cv.id AND cv.cropGroupId = cg.id
+      `;
+
+    db.query(sql, (err, results) => {
+      if (err) {
+        return reject(err);
+      }
+
+      const groupedData = {};
+
+      results.forEach((item) => {
+        const { cropNameEnglish, displayName, varietyId, cropId, normalPrice, discountedPrice } = item;
+
+        if (!groupedData[cropNameEnglish]) {
+          groupedData[cropNameEnglish] = {
+            cropId: cropId,
+            variety: [],
+          };
+        }
+
+        groupedData[cropNameEnglish].variety.push({
+          id: varietyId,
+          displayName: displayName,
+          normalPrice: parseFloat(normalPrice),
+          discountedPrice: parseFloat(discountedPrice)
+        });
+      });
+
+      // Format the final result
+      const formattedResult = Object.keys(groupedData).map((cropName) => ({
+        cropId: groupedData[cropName].cropId,
+        cropNameEnglish: cropName,
+        variety: groupedData[cropName].variety,
+      }));
+
+      resolve(formattedResult);
+    });
+  });
+};
+
+
+exports.creatPackageDAO = async (data) => {
+  return new Promise((resolve, reject) => {
+    const sql =
+      "INSERT INTO marketplacepackages (name, status, total) VALUES (?, ?, ?)";
+    const values = [
+      data.name,
+      data.status,
+      data.total
+    ];
+
+    db.query(sql, values, (err, results) => {
+      if (err) {
+        console.log(err);
+        reject(err);
+      } else {
+        resolve(results.insertId);
+      }
+    });
+  });
+};
+
+
+exports.creatPackageDetailsDAO = async (data, packageId) => {
+  return new Promise((resolve, reject) => {
+    const sql =
+      "INSERT INTO packagedetails (packageId, mpItemId, quantity, quantityType, discountedPrice) VALUES (?, ?, ?, ?, ?)";
+    const values = [
+      packageId,
+      parseInt(data.mpItemId),
+      data.quantity,
+      data.qtytype,
+      parseInt(data.discountedPrice),
+    ];
+
+    db.query(sql, values, (err, results) => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(results.insertId);
       }
     });
   });

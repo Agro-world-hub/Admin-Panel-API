@@ -66,11 +66,11 @@ exports.loginAdmin = async (req, res) => {
 
 exports.getAllAdminUsers = async (req, res) => {
   try {
-    const { page, limit } =
+    const { page, limit, role, search } =
       await ValidateSchema.getAllAdminUsersSchema.validateAsync(req.query);
     const offset = (page - 1) * limit;
 
-    const { total, items } = await adminDao.getAllAdminUsers(limit, offset);
+    const { total, items } = await adminDao.getAllAdminUsers(limit, offset, role, search);
 
     console.log("Successfully fetched admin users");
     res.json({
@@ -266,8 +266,8 @@ exports.getAllNews = async (req, res) => {
     // Validate query parameters
     const { page, limit, status, createdAt } =
       await ValidateSchema.getAllNewsSchema.validateAsync(req.query);
-      console.log("News:",page,limit,status,createdAt);
-      
+    console.log("News:", page, limit, status, createdAt);
+
 
     const offset = (page - 1) * limit;
 
@@ -1139,7 +1139,7 @@ exports.createPlantCareUser = async (req, res) => {
   try {
     // Validate input data
     const validatedBody = req.body;
-    
+
     const { firstName, lastName, phoneNumber, NICnumber, district, membership } = validatedBody;
 
     // Ensure a file is uploaded
@@ -1159,7 +1159,7 @@ exports.createPlantCareUser = async (req, res) => {
       fileBuffer,
     };
 
-   console.log(userData);
+    console.log(userData);
     const userId = await adminDao.createPlantCareUser(userData);
 
     console.log("PlantCare user created successfully");
@@ -2100,7 +2100,7 @@ exports.uploadUsersXLSX = async (req, res) => {
       // Set headers for file download
       res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
       res.setHeader('Content-Disposition', 'attachment; filename=existing_users.xlsx');
-      
+
       // Send both the file and JSON response
       return res.status(200).send({
         message: "Some users already exist in the database",
@@ -2234,11 +2234,11 @@ exports.getPaymentSlipReport = async (req, res) => {
 
 
 
-const date = req.query.date;
-const page = parseInt(req.query.page) || 1;  // Default to page 1 if no page is provided
-const limit = parseInt(req.query.limit) || 10;  // Default to limit of 10 if no limit is provided
-const offset = (page - 1) * limit;
-const search = req.query.search;
+    const date = req.query.date;
+    const page = parseInt(req.query.page) || 1;  // Default to page 1 if no page is provided
+    const limit = parseInt(req.query.limit) || 10;  // Default to limit of 10 if no limit is provided
+    const offset = (page - 1) * limit;
+    const search = req.query.search;
 
 
 
@@ -2292,7 +2292,7 @@ exports.getFarmerListReport = async (req, res) => {
 
     // Respond with the farmer list report data
     // 
-    res.json({ crops: [cropList], farmer : [userdetails] });
+    res.json({ crops: [cropList], farmer: [userdetails] });
 
   } catch (error) {
     console.error("Error fetching farmer list report:", error);

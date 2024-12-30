@@ -225,6 +225,7 @@ exports.insertXLSXData = (cropId, data) => {
       "Image Link": Joi.string().required(),
       "Video Link": Joi.string().required(),
       "Required Images": Joi.number().required(),
+      "Require Geo": Joi.number().required(),
     }).required();
 
     // Validate all data
@@ -246,7 +247,7 @@ exports.insertXLSXData = (cropId, data) => {
         (cropId, taskIndex, days, taskTypeEnglish, taskTypeSinhala, taskTypeTamil, 
         taskCategoryEnglish, taskCategorySinhala, taskCategoryTamil, 
         taskEnglish, taskSinhala, taskTamil, 
-        taskDescriptionEnglish, taskDescriptionSinhala, taskDescriptionTamil, imageLink, videoLink, reqImages) 
+        taskDescriptionEnglish, taskDescriptionSinhala, taskDescriptionTamil, imageLink, videoLink, reqImages, reqGeo) 
         VALUES ?`;
 
     const values = validatedData.map((row) => [
@@ -268,6 +269,7 @@ exports.insertXLSXData = (cropId, data) => {
       row["Image Link"],
       row["Video Link"],
       row["Required Images"],
+      row["Require Geo"],
     ]);
 
     db.query(sql, [values], (err, result) => {
@@ -678,6 +680,20 @@ exports.checkCropVerity = (id, engName) => {
       }
       console.log('Query results:', results);
       resolve(results);
+    });
+  });
+};
+
+
+exports.checkExistanceCropCalander = async (id, cultivationMethod, natureOfCultivation) => {
+  return new Promise((resolve, reject) => {
+    const sql = "SELECT * FROM cropcalender WHERE cropVarietyId = ? AND method = ? AND natOfCul = ? ";
+    db.query(sql, [id, cultivationMethod, natureOfCultivation], (err, results) => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(results);
+      }
     });
   });
 };

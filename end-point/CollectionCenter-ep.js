@@ -1,8 +1,10 @@
 const CollectionCenterDao = require('../dao/CollectionCenter-dao')
 const ValidateSchema = require('../validations/CollectionCenter-validation')
 exports.getAllCollectionCenter = async (req, res) => {
+  
   try {
-
+    const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
+    console.log("Request URL:", fullUrl);
     const result = await CollectionCenterDao.GetAllCenterDAO()
 
     if (result.length === 0) {
@@ -105,11 +107,7 @@ exports.getAllComplains = async (req, res) => {
 
     const { results, total } = await CollectionCenterDao.GetAllComplainDAO(page, limit, status, searchText)
 
-    if (results.length === 0) {
-      return res
-        .status(404)
-        .json({ message: "No news items found", data: results });
-    }
+   
 
     console.log("Successfully retrieved all collection center");
     res.json({ results, total });
@@ -167,8 +165,11 @@ exports.createCollectionCenter = async (req, res) => {
       contact02Code,
       buildingNumber,
       street,
+      city,
       district,
-      province
+      province,
+      country,
+      companies
       // } = await ValidateSchema.createCollectionCenterValidation.validateAsync(req.body)
     } = req.body
     console.log("Collection Centr", regCode, centerName);
@@ -181,7 +182,7 @@ exports.createCollectionCenter = async (req, res) => {
       return res.json({ message: "This RegCode allrady exist!", status: false })
     }
 
-    const result = await CollectionCenterDao.addCollectionCenter(regCode, centerName, contact01, contact02, buildingNumber, street, district, province, contact01Code, contact02Code);
+    const result = await CollectionCenterDao.addCollectionCenter(regCode, centerName, contact01, contact02, buildingNumber, street, city, district, province, country, contact01Code, contact02Code, companies);
 
     console.log("Crop Collection Center creation success");
     return res.status(201).json({ result: result, status: true });
@@ -254,21 +255,27 @@ exports.updateCollectionCenter = async (req, res) => {
     const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
     console.log(fullUrl);
 
-    const collectionID = req.params.id
-    const checkRegcode = req.params.regCode
+    const collectionID = req.params.id;
 
     const {
       regCode,
       centerName,
+      code1,
+      contact01,
+      code2,
+      contact02,
       buildingNumber,
       street,
+      city,
       district,
-      province
+      province,
+      country,
+      companies
     } = req.body
-    console.log("Collection Centr", regCode, centerName);
+    
 
 
-    if (regCode !== checkRegcode) {
+    if (regCode) {
       const existRegCode = await CollectionCenterDao.CheckRegCodeExistDAO(regCode);
       if (existRegCode.length > 0) {
         return res.json({ message: "This RegCode allrady exist!", status: false })
@@ -277,7 +284,7 @@ exports.updateCollectionCenter = async (req, res) => {
 
 
 
-    const result = await CollectionCenterDao.updateCollectionCenter(regCode, centerName, buildingNumber, street, district, province, collectionID);
+    const result = await CollectionCenterDao.updateCollectionCenter(regCode, centerName,  code1, contact01, code2, contact02, buildingNumber, street, city, district, province, country, companies, collectionID);
 
     console.log("Crop Collection Center update success");
     return res.status(201).json({ result: result, status: true });
@@ -293,11 +300,46 @@ exports.updateCollectionCenter = async (req, res) => {
 };
 
 
+
+
+exports.sendComplainReply = async (req, res) => {
+  try {
+    const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
+    console.log(fullUrl);
+
+    const complaignId = req.params.id
+
+    const reply = req.body.reply
+    console.log("Collection Centr", complaignId, reply);
+
+
+    if (reply == null) {
+      return res.status(401).json({ error: "Reply can not be empty" });
+    }
+
+
+
+    const result = await CollectionCenterDao.sendComplainReply(complaignId, reply);
+
+    console.log("Send Reply Success");
+    return res.status(201).json({ result: result, status: true });
+  } catch (err) {
+    if (err.isJoi) {
+      return res.status(400).json({ error: err.details[0].message, status: false });
+    }
+    console.error("Error executing query:", err);
+    return res
+      .status(500)
+      .json({ error: "An error occurred while creating Reply tasks" });
+  }
+};
+
+
 exports.getForCreateId = async (req, res) => {
   try {
 
     const { role } = await ValidateSchema.getRoleShema.validateAsync(req.params);
-    const results = await CollectionCenterDao.getForCreateIdDao(role);
+    const results = await CollectionCenterDao.getForCreateId(role);
 
     if (results.length === 0) {
       return res.json({ result: {empId:"00001"}, status: true })
@@ -310,5 +352,181 @@ exports.getForCreateId = async (req, res) => {
     }
     console.error("Error executing query:", err);
     res.status(500).send("An error occurred while fetching data.");
+  }
+};
+
+
+
+
+
+
+exports.createCompany = async (req, res) => {
+  try {
+    const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
+    console.log("Request URL:", fullUrl);
+    console.log(req.body);
+
+    // Validate the request body
+    const {
+      regNumber,
+      companyNameEnglish,
+      companyNameSinhala,
+      companyNameTamil,
+      email,
+      oicName,
+      oicEmail,
+      oicConCode1,
+      oicConNum1,
+      oicConCode2,
+      oicConNum2,
+      accHolderName,
+      accNumber,
+      bankName,
+      branchName,
+      foName,
+      foConCode,
+      foConNum,
+      foEmail
+    } =  req.body
+
+
+    const newsId = await CollectionCenterDao.createCompany(
+      regNumber,
+      companyNameEnglish,
+      companyNameSinhala,
+      companyNameTamil,
+      email,
+      oicName,
+      oicEmail,
+      oicConCode1,
+      oicConNum1,
+      oicConCode2,
+      oicConNum2,
+      accHolderName,
+      accNumber,
+      bankName,
+      branchName,
+      foName,
+      foConCode,
+      foConNum,
+      foEmail
+    );
+
+    console.log("company creation success");
+    return res
+      .status(201)
+      .json({ message: "company created successfully", id: newsId });
+  } catch (err) {
+    if (err.isJoi) {
+      // Validation error
+      return res.status(400).json({ error: err.details[0].message });
+    }
+
+    console.error("Error executing query:", err);
+    return res
+      .status(500)
+      .json({ error: "An error occurred while creating company" });
+  }
+};
+
+
+
+
+exports.getAllCompanyList = async (req, res) => {
+  const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
+    console.log("Request URL:", fullUrl);
+  try {
+    
+
+    const result = await CollectionCenterDao.GetAllCompanyList()
+
+    if (result.length === 0) {
+      return res
+        .status(404)
+        .json({ message: "No news items found", data: result });
+    }
+
+    console.log("Successfully retrieved all collection center");
+    res.json(result);
+  } catch (err) {
+    if (err.isJoi) {
+      // Validation error
+      console.error("Validation error:", err.details[0].message);
+      return res.status(400).json({ error: err.details[0].message });
+    }
+
+    console.error("Error fetching news:", err);
+    res.status(500).json({ error: "An error occurred while fetching news" });
+  }
+};
+
+
+
+exports.getAllManagerList = async (req, res) => {
+  const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
+    console.log("Request URL:", fullUrl);
+  try {
+    const companyId = req.params.companyId
+    const centerId = req.params.centerId
+
+    const result = await CollectionCenterDao.GetAllManagerList(companyId, centerId)
+
+    if (result.length === 0) {
+      return res
+        .status(404)
+        .json({ message: "No collection Managers found", data: result });
+    }
+
+    console.log("Successfully retrieved all collection Managers");
+    res.json(result);
+  } catch (err) {
+    if (err.isJoi) {
+      // Validation error
+      console.error("Validation error:", err.details[0].message);
+      return res.status(400).json({ error: err.details[0].message });
+    }
+
+    console.error("Error fetching news:", err);
+    res.status(500).json({ error: "An error occurred while fetching news" });
+  }
+};
+
+
+
+exports.generateRegCode = (req, res) => {
+  const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
+  console.log("Request URL:", fullUrl);
+  const { province, district, city } = req.body;
+
+  // Call DAO to generate the regCode
+  CollectionCenterDao.generateRegCode(province, district, city, (err, regCode) => {
+    if (err) {
+      return res.status(500).json({ error: 'Error generating regCode' });
+    }
+
+    res.json({ regCode });
+  });
+};
+
+
+exports.getAllCompanies = async (req, res) => {
+  try {
+    console.log(req.query);
+    const { status = null, searchText = "" } = req.query;
+
+    // Call the DAO function
+    const results = await CollectionCenterDao.GetAllCompanyDAO(status, searchText);
+
+    console.log("Successfully retrieved all companies");
+    res.json({ results, total: results.length }); // Provide total as the length of results
+  } catch (err) {
+    if (err.isJoi) {
+      // Validation error
+      console.error("Validation error:", err.details[0].message);
+      return res.status(400).json({ error: err.details[0].message });
+    }
+
+    console.error("Error fetching companies:", err);
+    res.status(500).json({ error: "An error occurred while fetching companies" });
   }
 };

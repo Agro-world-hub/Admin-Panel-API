@@ -87,3 +87,10 @@ exports.UpdateCollectionOfficerStatus = Joi.object({
     id: Joi.number().integer().required(),
     status: Joi.string().required()
 });
+
+
+exports.getDailyReportSchema = Joi.object({
+    collectionOfficerId: Joi.number().integer().required(),
+    fromDate: Joi.date().iso().required(),
+    toDate: Joi.date().iso().required()
+  });

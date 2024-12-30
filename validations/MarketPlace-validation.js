@@ -19,11 +19,13 @@ exports.AddProductValidation = Joi.object({
 exports.CreateCoupenValidation = Joi.object({
     code:Joi.string().required(),
     type:Joi.string().required(),
-    percentage:Joi.number().min(0).max(100).required(),
+    percentage:Joi.number().min(0).max(100).optional(),
     status:Joi.string().required(),
     checkLimit:Joi.boolean().required(),
     startDate:Joi.date().required(),
     endDate:Joi.date().required(),
+    priceLimit:Joi.number().min(0).optional(),
+    fixDiscount:Joi.number().min(0).optional()
 
 })
 

@@ -260,6 +260,11 @@ exports.createCropCallender = async (req, res) => {
       suitableAreas
     } = req.body;
 
+    const checkExist = await cropCalendarDao.checkExistanceCropCalander(varietyId, cultivationMethod, natureOfCultivation);
+    if(checkExist.length > 0){
+      return res.json({message:"This crop calander allready exist !", status:false})
+    }
+
     const cropId = await cropCalendarDao.createCropCallender(
       varietyId,
       cultivationMethod,
@@ -269,7 +274,7 @@ exports.createCropCallender = async (req, res) => {
     );
 
     console.log("Crop Calendar creation success");
-    return res.status(200).json({ cropId });
+    return res.status(200).json({ cropId , status:true});
   } catch (err) {
     if (err.isJoi) {
       return res.status(400).json({ error: err.details[0].message });

@@ -16,20 +16,42 @@ exports.loginAdmin = (email) => {
   });
 };
 
-exports.getAllAdminUsers = (limit, offset) => {
+exports.getAllAdminUsers = (limit, offset, role, search) => {
   return new Promise((resolve, reject) => {
-    const countSql = "SELECT COUNT(*) as total FROM adminusers";
-    const dataSql = `SELECT adminusers.id, adminusers.mail, adminusers.userName, adminroles.role 
-FROM adminusers 
-JOIN adminroles ON adminusers.role = adminroles.id 
-ORDER BY adminusers.created_at DESC 
-LIMIT ? OFFSET ?`;
+    let countSql = `
+      SELECT COUNT(DISTINCT AU.id) as total 
+      FROM adminusers AU 
+      JOIN adminroles AR ON AU.role = AR.id
+    `;
 
-    db.query(countSql, (countErr, countResults) => {
+    const dataParms = [];
+    let dataSql = `
+      SELECT AU.id, AU.mail, AU.userName, AR.role  
+      FROM adminusers AU 
+      JOIN adminroles AR ON AU.role = AR.id 
+      WHERE 1=1
+    `;
+
+    if (role) {
+      dataSql += ` AND AR.id = ? `;
+      countSql += ` AND AR.id = ? `;
+      dataParms.push(role);
+    }
+
+    if (search) {
+      dataSql += ` AND (AU.mail LIKE ? OR AU.userName LIKE ?) `;
+      countSql += ` AND (AU.mail LIKE ? OR AU.userName LIKE ?) `;
+      dataParms.push(`%${search}%`, `%${search}%`);
+    }
+
+    dataSql += ` ORDER BY AU.created_at DESC LIMIT ? OFFSET ? `;
+    dataParms.push(limit, offset);
+
+    db.query(countSql, dataParms, (countErr, countResults) => {
       if (countErr) {
         reject(countErr);
       } else {
-        db.query(dataSql, [limit, offset], (dataErr, dataResults) => {
+        db.query(dataSql, dataParms, (dataErr, dataResults) => {
           if (dataErr) {
             reject(dataErr);
           } else {
@@ -43,6 +65,7 @@ LIMIT ? OFFSET ?`;
     });
   });
 };
+
 
 exports.adminCreateUser = (firstName, lastName, phoneNumber, NICnumber) => {
   return new Promise((resolve, reject) => {
@@ -485,9 +508,12 @@ exports.editMarketPrice = (id, data) => {
 exports.getAllOngoingCultivations = (searchItem, limit, offset) => {
   return new Promise((resolve, reject) => {
     let countSql = `
-            SELECT COUNT(*) as total 
-            FROM ongoingcultivations 
-            JOIN users ON ongoingCultivations.userId = users.id
+            SELECT 
+                COUNT(*) as total 
+            FROM 
+                ongoingcultivations OC , users U , ongoingcultivationscrops OCC
+            WHERE 
+                OC.userId = U.id AND OC.id = OCC.ongoingCultivationId
         `;
     let dataSql = `
             SELECT 
@@ -1093,7 +1119,7 @@ exports.editTask = (
 
 exports.getAllPost = () => {
   return new Promise((resolve, reject) => {
-    const sql = `SELECT * FROM publicforumposts `;
+    const sql = `SELECT * FROM publicforumposts ORDER BY createdAt DESC `;
 
     db.query(sql, (err, results) => {
       if (err) {

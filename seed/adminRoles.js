@@ -9,7 +9,8 @@ const insertRoles = async () => {
     'Demand Supply Manager', 
     'System Admin', 
     'Transport and Logistic Executive', 
-    'Call Centre Officer'];
+    'Call Centre Officer',
+    'Colection Center Admin'];
 
   // Construct the SQL query for inserting multiple roles
   const sql = `
@@ -18,7 +19,7 @@ const insertRoles = async () => {
   `;
 
   try {
-    await new Promise((resolve, reject) => {
+    return new Promise((resolve, reject) => {
       db.query(sql, roles, (err, result) => {
         if (err) {
           reject('Error inserting roles: ' + err);

@@ -8,7 +8,7 @@ const collectionofficerDao = require("../dao/CollectionOfficer-dao");
 const collectionofficerValidate = require('../validations/CollectionOfficer-validation');
 
 const Joi = require('joi');
-
+const bcrypt = require("bcryptjs");
 
 exports.createCollectionOfficer = async (req, res) => {
     const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
@@ -17,18 +17,17 @@ exports.createCollectionOfficer = async (req, res) => {
     try {
         // Validate the request body
         // const validatedData = req.body;
-        const {officerData, companyData, bankData} = req.body   
+        const {officerData} = req.body   
         console.log(req.body);
              
 
         // Call the DAO to create the collection officer
         // const results = await collectionofficerDao.createCollectionOfficerPersonal(Object.values(validatedData));
-        const resultsPersonal = await collectionofficerDao.createCollectionOfficerPersonal(officerData, companyData, bankData);
-        const resultCompany = await collectionofficerDao.createCollectionOfficerCompany(companyData,resultsPersonal.insertId);
-        const resultBank = await collectionofficerDao.createCollectionOfficerBank(bankData,resultsPersonal.insertId);
+        const resultsPersonal = await collectionofficerDao.createCollectionOfficerPersonal(officerData);
+   
         
         console.log("Collection Officer created successfully");
-        return res.status(201).json({ message: "Collection Officer created successfully", id: resultBank.insertId, status:true });
+        return res.status(201).json({ message: "Collection Officer created successfully", id: resultsPersonal.insertId, status:true });
     } catch (error) {
         if (error.isJoi) {
             // Handle validation error
@@ -53,6 +52,35 @@ exports.getAllCollectionOfficers = async (req, res) => {
 
         // Call the DAO to get all collection officers
         const result = await collectionofficerDao.getAllCollectionOfficers(page, limit, nic, company);
+
+        console.log("Successfully fetched collection officers");
+        return res.status(200).json(result);
+    } catch (error) {
+        if (error.isJoi) {
+            // Handle validation error
+            return res.status(400).json({ error: error.details[0].message });
+        }
+
+        console.error("Error fetching collection officers:", error);
+        return res.status(500).json({ error: "An error occurred while fetching collection officers" });
+    }
+};
+
+
+
+
+exports.getAllCollectionOfficersStatus = async (req, res) => {
+    const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
+    console.log(fullUrl);
+
+    try {        
+        // Validate query parameters
+        const validatedQuery = await collectionofficerValidate.getAllCollectionOfficersSchema.validateAsync(req.query);
+        
+        const { page, limit, nic, company } = validatedQuery;
+
+        // Call the DAO to get all collection officers
+        const result = await collectionofficerDao.getAllCollectionOfficersStatus(page, limit, nic, company);
 
         console.log("Successfully fetched collection officers");
         return res.status(200).json(result);
@@ -193,29 +221,70 @@ exports.getAllCompanyNames = async (req, res) => {
 };
 
 
-exports.UpdateCollectionOfficerStatus = async (req, res) => {
-    const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
-    console.log(fullUrl);
+
+
+
+exports.UpdateStatusAndSendPassword = async (req, res) => {
     try {
-        const validatedParams = await collectionofficerValidate.UpdateCollectionOfficerStatus.validateAsync(req.params);
-        const results = await collectionofficerDao.UpdateCollectionOfiicerStatusDao(validatedParams);
+        const { id, status } = req.params;
 
-        console.log("Successfully Updated Status",results);
-        if(results.affectedRows > 0){
-            res.status(200).json({results:results, status:true});
-        }else{
-            res.json({results:results, status:false});
-
+        // Validate input
+        if (!id || !status) {
+            return res.status(400).json({ message: 'ID and status are required.', status: false });
         }
+
+        // Fetch officer details by ID
+        const officerData = await collectionofficerDao.getCollectionOfficerEmailDao(id);
+        if (!officerData) {
+            return res.status(404).json({ message: 'Collection officer not found.', status: false });
+        }
+
+        // Destructure email, firstNameEnglish, and empId from fetched data
+        const { email, firstNameEnglish, empId } = officerData;
+        console.log(`Email: ${email}, Name: ${firstNameEnglish}, Emp ID: ${empId}`);
+
+        // Generate a new random password
+        const generatedPassword = Math.random().toString(36).slice(-8); // Example: 8-character random password
+
+
+        const hashedPassword = await bcrypt.hash(generatedPassword, 10);
+
+        // Update status and password in the database
+        const updateResult = await collectionofficerDao.UpdateCollectionOfficerStatusAndPasswordDao({
+            id,
+            status,
+            password: hashedPassword,
+        });
+
+        if (updateResult.affectedRows === 0) {
+            return res.status(400).json({ message: 'Failed to update status and password.', status: false });
+        }
+
+        // If status is 'Approved', send the password email
+        if (status === 'Approved') {
+            const emailResult = await collectionofficerDao.SendGeneratedPasswordDao(email, generatedPassword, empId, firstNameEnglish);
+
+            if (!emailResult.success) {
+                return res.status(500).json({ message: 'Failed to send password email.', error: emailResult.error });
+            }
+        }
+
+        // Return success response with empId and email
+        res.status(200).json({
+            message: 'Status updated and password sent successfully.',
+            status: true,
+            data: {
+                empId,  // Include empId for reference
+                email,  // Include the email sent to
+            },
+        });
     } catch (error) {
-        if (error.isJoi) {
-            return res.status(400).json({ error: error.details[0].message, status:false});
-        }
-
-        console.error("Error retrieving Updated Status:", error);
-        return res.status(500).json({ error: "An error occurred while Updated Statuss" });
+        console.error('Error:', error);
+        res.status(500).json({ message: 'An error occurred.', error });
     }
 };
+
+
 
 
 
@@ -288,6 +357,7 @@ exports.updateCollectionOfficerDetails = async (req, res) => {
         district,
         province,
         country,
+        languages,
         companyNameEnglish,
         companyNameSinhala,
         companyNameTamil,
@@ -298,8 +368,12 @@ exports.updateCollectionOfficerDetails = async (req, res) => {
         accHolderName,
         accNumber,
         bankName,
-        branchName
+        branchName,
+        jobRole,
+        empId
     } = req.body;
+    console.log(empId);
+    
    
     
 
@@ -320,6 +394,7 @@ exports.updateCollectionOfficerDetails = async (req, res) => {
             district,
             province,
             country,
+            languages,
             companyNameEnglish,
             companyNameSinhala,
             companyNameTamil,
@@ -330,10 +405,60 @@ exports.updateCollectionOfficerDetails = async (req, res) => {
             accHolderName,
             accNumber,
             bankName,
-            branchName);
+            branchName,
+            jobRole,
+            empId
+        );
         res.json({ message: 'Collection officer details updated successfully' });
     } catch (err) {
         console.error('Error updating collection officer details:', err);
         res.status(500).json({ error: 'Failed to update collection officer details' });
     }
 };
+
+
+
+exports.getOfficerByIdMonthly = async (req, res) => {
+    try {
+        const id = req.params.id;
+        const officerData = await collectionofficerDao.getOfficerByIdMonthly(id);
+
+        if (!officerData) {
+            return res.status(404).json({ error: "Collection Officer not found" });
+        }
+
+        console.log("Successfully fetched collection officer, company, and bank details");
+        res.json({ officerData });
+    } catch (err) {
+        if (err.isJoi) {
+            return res.status(400).json({ error: err.details[0].message });
+        }
+        console.error("Error executing query:", err);
+        res.status(500).send("An error occurred while fetching data.");
+    }
+};
+
+
+
+// Controller to handle the logic for fetching the daily report
+exports.getDailyReport = async (req, res) => {
+    try {
+      const { collectionOfficerId, fromDate, toDate } = req.query;
+  
+      // Validate and format the inputs
+      const { error } = collectionofficerValidate.getDailyReportSchema.validate({ collectionOfficerId, fromDate, toDate });
+      if (error) {
+        return res.status(400).json({ error: error.details[0].message });
+      }
+  
+      // Call the DAO to fetch the required data
+      const reportData = await collectionofficerDao.getDailyReport(collectionOfficerId, fromDate, toDate);
+  
+      // Return the data
+      res.json(reportData);
+    } catch (err) {
+      console.error("Error fetching daily report:", err);
+      res.status(500).send("An error occurred while fetching the report.");
+    }
+  };
+  
