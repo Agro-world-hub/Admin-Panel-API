@@ -495,7 +495,7 @@ exports.getAllCropCalendars = (limit, offset) => {
       if (countErr) {
         reject(countErr);
       } else {
-        db.query(dataSql, [limit, offset], (dataErr, dataResults) => {
+        plantcare.query(dataSql, [limit, offset], (dataErr, dataResults) => {
           if (dataErr) {
             reject(dataErr);
           } else {

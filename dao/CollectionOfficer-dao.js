@@ -16,7 +16,7 @@ exports.getCollectionOfficerDistrictReports = (district) => {
              SUM(fpc.gradeAprice) AS priceA, 
              SUM(fpc.gradeBprice) AS priceB, 
              SUM(fpc.gradeCprice) AS priceC
-            FROM registeredfarmerpayments rp, collectionofficer c, cropvariety cv , plantcare.cropgroup cg, farmerpaymentscrops fpc
+            FROM registeredfarmerpayments rp, collectionofficer c, plant_care.cropvariety cv , plant_care.cropgroup cg, farmerpaymentscrops fpc
             WHERE rp.id = fpc.registerFarmerId AND rp.collectionOfficerId = c.id AND fpc.cropId = cv.id AND cv.cropGroupId = cg.id AND c.district = ?
             GROUP BY cg.cropNameEnglish, c.district
         `;
@@ -209,7 +209,7 @@ exports.getAllCollectionOfficersStatus = (page, limit, searchNIC, companyid) => 
         let countSql = `
             SELECT COUNT(*) as total
             FROM collectionofficer Coff
-            JOIN collectionofficercompanydetails Ccom ON Coff.id = Ccom.collectionofficerId
+            JOIN company Ccom ON Coff.companyId = Ccom.id
             JOIN collectioncenter CC ON Coff.centerId = CC.id
             WHERE Coff.status = 'Approved'
         `;
@@ -221,7 +221,7 @@ exports.getAllCollectionOfficersStatus = (page, limit, searchNIC, companyid) => 
                 Coff.firstNameEnglish,
                 Coff.lastNameEnglish,
                 Ccom.companyNameEnglish,
-                Ccom.empId,
+                Coff.empId,
                 Coff.phoneNumber01,
                 Coff.phoneNumber02,
                 Coff.nic,
@@ -230,7 +230,7 @@ exports.getAllCollectionOfficersStatus = (page, limit, searchNIC, companyid) => 
                 CC.centerName,
                 Coff.QRcode
             FROM collectionofficer Coff
-            JOIN collectionofficercompanydetails Ccom ON Coff.id = Ccom.collectionofficerId
+            JOIN company Ccom ON Coff.companyId = Ccom.id
             JOIN collectioncenter CC ON Coff.centerId = CC.id
             WHERE Coff.status = 'Approved'
         `;
@@ -365,7 +365,7 @@ exports.getCollectionOfficerProvinceReports = (province) => {
              SUM(fpc.gradeAprice) AS priceA, 
              SUM(fpc.gradeBprice) AS priceB, 
              SUM(fpc.gradeCprice) AS priceC
-            FROM registeredfarmerpayments rp, collectionofficer c, plantcare.cropvariety cv , plantcare.cropgroup cg, farmerpaymentscrops fpc
+            FROM registeredfarmerpayments rp, collectionofficer c, plant_care.cropvariety cv , plant_care.cropgroup cg, farmerpaymentscrops fpc
             WHERE rp.id = fpc.registerFarmerId AND rp.collectionOfficerId = c.id AND fpc.cropId = cv.id AND cv.cropGroupId = cg.id AND c.province = ?
             GROUP BY cg.cropNameEnglish, c.province
         `;
@@ -838,15 +838,13 @@ exports.getOfficerByIdMonthly = (id) => {
         const sql = `
             SELECT 
                 co.*, 
-                cocd.companyNameEnglish, cocd.companyNameSinhala, cocd.companyNameTamil,
-                cocd.jobRole, cocd.IRMname, cocd.companyEmail, cocd.assignedDistrict, cocd.employeeType, cocd.empId,
-                cobd.accHolderName, cobd.accNumber, cobd.bankName, cobd.branchName
+                cm.companyNameEnglish, cm.companyNameSinhala, cm.companyNameTamil,
+                co.jobRole, cm.email, co.empId,
+                co.accHolderName, co.accNumber, co.bankName, co.branchName
             FROM 
                 collectionofficer co
-            LEFT JOIN 
-                collectionofficercompanydetails cocd ON co.id = cocd.collectionOfficerId
-            LEFT JOIN 
-                collectionofficerbankdetails cobd ON co.id = cobd.collectionOfficerId
+            LEFT JOIN
+                company cm ON co.centerId = cm.id
             WHERE 
                 co.id = ?`;
 
