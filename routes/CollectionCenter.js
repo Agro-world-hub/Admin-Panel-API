@@ -112,5 +112,11 @@ router.post(
     CollectionCenterEp.generateRegCode
 );
 
+router.patch(
+    "/update-company/:id",
+    authMiddleware,
+    CollectionCenterEp.updateCompany
+)
+
 
 module.exports = router;

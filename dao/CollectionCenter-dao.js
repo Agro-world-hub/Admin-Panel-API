@@ -448,3 +448,88 @@ exports.GetAllCompanyDAO = () => {
     });
   });
 };
+
+exports.updateCompany = (
+  id,
+  regNumber,
+  companyNameEnglish,
+  companyNameSinhala,
+  companyNameTamil,
+  email,
+  oicName,
+  oicEmail,
+  oicConCode1,
+  oicConNum1,
+  oicConCode2,
+  oicConNum2,
+  accHolderName,
+  accNumber,
+  bankName,
+  branchName,
+  foName,
+  foConCode,
+  foConNum,
+  foEmail,
+  status
+) => {
+  return new Promise((resolve, reject) => {
+    const sql = `
+      UPDATE company SET 
+        regNumber = ?,
+        companyNameEnglish = ?,
+        companyNameSinhala = ?,
+        companyNameTamil = ?,
+        email = ?,
+        oicName = ?,
+        oicEmail = ?,
+        oicConCode1 = ?,
+        oicConNum1 = ?,
+        oicConCode2 = ?,
+        oicConNum2 = ?,
+        accHolderName = ?,
+        accNumber = ?,
+        bankName = ?,
+        branchName = ?,
+        foName = ?,
+        foConCode = ?,
+        foConNum = ?,
+        foEmail = ?,
+        status = ?
+      WHERE id = ?
+    `;
+
+    const values = [
+      regNumber,
+      companyNameEnglish,
+      companyNameSinhala,
+      companyNameTamil,
+      email,
+      oicName,
+      oicEmail,
+      oicConCode1,
+      oicConNum1,
+      oicConCode2,
+      oicConNum2,
+      accHolderName,
+      accNumber,
+      bankName,
+      branchName,
+      foName,
+      foConCode,
+      foConNum,
+      foEmail,
+      status,
+      id,
+    ];
+
+    collectionofficer.query(sql, values, (err, results) => {
+      if (err) {
+        console.error("Database error details:", err);
+        return reject(err);
+      }
+      console.log("Update successful:", results);
+      resolve(results);
+    });
+  });
+};
+

@@ -530,3 +530,77 @@ exports.getAllCompanies = async (req, res) => {
     res.status(500).json({ error: "An error occurred while fetching companies" });
   }
 };
+
+exports.updateCompany = async (req, res) => {
+  try {
+    const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
+    console.log(fullUrl);
+
+    const id = req.params.id;
+
+    const {
+      regNumber,
+      companyNameEnglish,
+      companyNameSinhala,
+      companyNameTamil,
+      email,
+      oicName,
+      oicEmail,
+      oicConCode1,
+      oicConNum1,
+      oicConCode2,
+      oicConNum2,
+      accHolderName,
+      accNumber,
+      bankName,
+      branchName,
+      foName,
+      foConCode,
+      foConNum,
+      foEmail,
+      status
+    } = req.body;
+
+    // Optional check for unique constraints or validations
+    if (email) {
+      const existingEmail = await CompanyDao.checkEmailExistDAO(email);
+      if (existingEmail.length > 0) {
+        return res.status(400).json({ message: "This email already exists!", status: false });
+      }
+    }
+
+    // Call DAO function to update the company record
+    const result = await CompanyDao.updateCompany(
+      id,
+      regNumber,
+      companyNameEnglish,
+      companyNameSinhala,
+      companyNameTamil,
+      email,
+      oicName,
+      oicEmail,
+      oicConCode1,
+      oicConNum1,
+      oicConCode2,
+      oicConNum2,
+      accHolderName,
+      accNumber,
+      bankName,
+      branchName,
+      foName,
+      foConCode,
+      foConNum,
+      foEmail,
+      status
+    );
+
+    console.log("Company update success");
+    return res.status(200).json({ result: result, status: true });
+  } catch (err) {
+    if (err.isJoi) {
+      return res.status(400).json({ error: err.details[0].message, status: false });
+    }
+    console.error("Error executing query:", err);
+    return res.status(500).json({ error: "An error occurred while updating the company", status: false });
+  }
+};
