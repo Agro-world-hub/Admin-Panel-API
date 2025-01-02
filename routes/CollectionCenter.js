@@ -114,9 +114,14 @@ router.post(
 
 router.patch(
     "/update-company/:id",
-    authMiddleware,
+    // authMiddleware,
     CollectionCenterEp.updateCompany
 )
 
+router.get(
+    "/get-company-by-id/:id",
+    // authMiddleware,
+    CollectionCenterEp.getCompanyById
+)
 
 module.exports = router;

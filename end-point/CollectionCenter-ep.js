@@ -515,7 +515,7 @@ exports.getAllCompanies = async (req, res) => {
     const { status = null, searchText = "" } = req.query;
 
     // Call the DAO function
-    const results = await CollectionCenterDao.GetAllCompanyDAO(status, searchText);
+    const results = await CollectionCenterDao.getAllCompanyDAO(status, searchText);
 
     console.log("Successfully retrieved all companies");
     res.json({ results, total: results.length }); // Provide total as the length of results
@@ -531,13 +531,39 @@ exports.getAllCompanies = async (req, res) => {
   }
 };
 
+exports.getCompanyById = async(req, res) =>{
+  try{
+    const {id} = req.params;
+
+    const results = await CollectionCenterDao.getCompanyDAO(id);
+
+    if(results.length === 0){
+      return res.status(404).json({ error: "Company not found" });
+    }
+
+    console.log("Successfully retrieved company");
+    console.log(results[0]);
+    
+    res.json(results[0]);
+  }catch(err){
+    console.error("Error fetching company:", err);
+    res.status(500).json({ error: "An error occurred while fetching the company" });
+  }
+}
+
 exports.updateCompany = async (req, res) => {
   try {
+    // Properly format and log the full URL
     const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
-    console.log(fullUrl);
+    console.log(`Full URL: ${fullUrl}`);
 
+    // Extract the company ID from request parameters
     const id = req.params.id;
+    if (!id) {
+      return res.status(400).json({ message: "Company ID is required", status: false });
+    }
 
+    // Destructure request body to get the fields
     const {
       regNumber,
       companyNameEnglish,
@@ -560,17 +586,8 @@ exports.updateCompany = async (req, res) => {
       foEmail,
       status
     } = req.body;
-
-    // Optional check for unique constraints or validations
-    if (email) {
-      const existingEmail = await CompanyDao.checkEmailExistDAO(email);
-      if (existingEmail.length > 0) {
-        return res.status(400).json({ message: "This email already exists!", status: false });
-      }
-    }
-
     // Call DAO function to update the company record
-    const result = await CompanyDao.updateCompany(
+    const result = await CollectionCenterDao.updateCompany(
       id,
       regNumber,
       companyNameEnglish,
@@ -594,12 +611,20 @@ exports.updateCompany = async (req, res) => {
       status
     );
 
+    // Check if any rows were affected (successful update)
+    if (!result || result.affectedRows === 0) {
+      return res.status(404).json({ message: "Company not found or no changes made", status: false });
+    }
+
     console.log("Company update success");
-    return res.status(200).json({ result: result, status: true });
+    return res.status(200).json({ message: "Company updated successfully", status: true });
   } catch (err) {
+    // Handle validation errors specifically
     if (err.isJoi) {
       return res.status(400).json({ error: err.details[0].message, status: false });
     }
+
+    // Log unexpected errors
     console.error("Error executing query:", err);
     return res.status(500).json({ error: "An error occurred while updating the company", status: false });
   }
