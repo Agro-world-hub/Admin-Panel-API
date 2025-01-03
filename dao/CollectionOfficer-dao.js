@@ -51,7 +51,7 @@ exports.createCollectionOfficerPersonal = (officerData) => {
             const sql = `
                 INSERT INTO collectionofficer (
                     centerId, companyId ,irmId ,firstNameEnglish, firstNameSinhala, firstNameTamil, lastNameEnglish,
-                    lastNameSinhala, lastNameTamil, jobRole, empId, enpType, phoneCode01, phoneNumber01, phoneCode02, phoneNumber02,
+                    lastNameSinhala, lastNameTamil, jobRole, empId, empType, phoneCode01, phoneNumber01, phoneCode02, phoneNumber02,
                     nic, email, houseNumber, streetName, city, district, province, country,
                     languages, accHolderName, accNumber, bankName, branchName,QRcode, status
                 ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?,
@@ -74,7 +74,7 @@ exports.createCollectionOfficerPersonal = (officerData) => {
                     officerData.lastNameTamil,
                     officerData.jobRole,
                     officerData.empId,
-                    officerData.enpType,
+                    officerData.employeeType,
                     officerData.phoneCode01,
                     officerData.phoneNumber01,
                     officerData.phoneCode02,
@@ -837,86 +837,18 @@ exports.getOfficerByIdMonthly = (id) => {
     return new Promise((resolve, reject) => {
         const sql = `
             SELECT 
-                co.*, 
-                cm.companyNameEnglish, cm.companyNameSinhala, cm.companyNameTamil,
-                co.jobRole, cm.email, co.empId,
-                co.accHolderName, co.accNumber, co.bankName, co.branchName
+                co.*
             FROM 
                 collectionofficer co
-            LEFT JOIN
-                company cm ON co.centerId = cm.id
             WHERE 
                 co.id = ?`;
 
                 collectionofficer.query(sql, [id], (err, results) => {
-            if (err) {
-                return reject(err); // Reject promise if an error occurs
-            }
-
-            if (results.length === 0) {
-                return resolve(null); // No officer found
-            }
-
-            const officer = results[0];
-
-            // Process image field if present
-            if (officer.image) {
-                const base64Image = Buffer.from(officer.image).toString("base64");
-                officer.image = `data:image/png;base64,${base64Image}`;
-            }
-
-            // Process QRcode field if present
-            if (officer.QRcode) {
-                const base64QRcode = Buffer.from(officer.QRcode).toString("base64");
-                officer.QRcode = `data:image/png;base64,${base64QRcode}`;
-            }
-
-            resolve({
-                collectionOfficer: {
-                    id: officer.id,
-                    centerId: officer.centerId,
-                    firstNameEnglish: officer.firstNameEnglish,
-                    firstNameSinhala: officer.firstNameSinhala,
-                    firstNameTamil: officer.firstNameTamil,
-                    lastNameEnglish: officer.lastNameEnglish,
-                    lastNameSinhala: officer.lastNameSinhala,
-                    lastNameTamil: officer.lastNameTamil,
-                    phoneNumber01: officer.phoneNumber01,
-                    phoneNumber02: officer.phoneNumber02,
-                    image: officer.image,
-                    QRcode: officer.QRcode,
-                    nic: officer.nic,
-                    email: officer.email,
-                    passwordUpdated: officer.passwordUpdated,
-                    address: {
-                        houseNumber: officer.houseNumber,
-                        streetName: officer.streetName,
-                        city: officer.city,
-                        district: officer.district,
-                        province: officer.province,
-                        country: officer.country,
-                    },
-                    languages: officer.languages,
-                },
-                companyDetails: {
-                    companyNameEnglish: officer.companyNameEnglish,
-                    companyNameSinhala: officer.companyNameSinhala,
-                    companyNameTamil: officer.companyNameTamil,
-                    jobRole: officer.jobRole,
-                    IRMname: officer.IRMname,
-                    companyEmail: officer.companyEmail,
-                    assignedDistrict: officer.assignedDistrict,
-                    employeeType: officer.employeeType,
-                    employeeId: officer.empId,
-                },
-                bankDetails: {
-                    accHolderName: officer.accHolderName,
-                    accNumber: officer.accNumber,
-                    bankName: officer.bankName,
-                    branchName: officer.branchName,
-                },
-            });
-        });
+                    if (err) {
+                      return reject(err);
+                    }
+                    resolve(results);
+                  });
     });
 };
 

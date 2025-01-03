@@ -307,7 +307,7 @@ const createFarmerComplains  = () => {
     language VARCHAR(50) NOT NULL,
     complainCategory VARCHAR(50) NOT NULL,
     complain TEXT NOT NULL,
-    reply TEXT NOT NULL,
+    reply TEXT NULL,
     status VARCHAR(20) NOT NULL,
     createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (farmerId) REFERENCES plant_care.users(id)
