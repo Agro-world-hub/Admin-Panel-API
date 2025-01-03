@@ -609,3 +609,17 @@ exports.updateCompany = (
     });
   });
 };
+
+exports.deleteCompanyById = async (id) => {
+  return new Promise((resolve, reject) => {
+    const sql = "DELETE FROM company WHERE id = ?";
+    collectionofficer.query(sql, [id], (err, results) => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(results.affectedRows); // Return the number of affected rows
+      }
+    });
+  });
+};
+
