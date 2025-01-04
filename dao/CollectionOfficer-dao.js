@@ -31,6 +31,42 @@ exports.getCollectionOfficerDistrictReports = (district) => {
     });
 };
 
+
+exports.checkNICExist = (nic) => {
+    return new Promise((resolve, reject) => {
+        const sql = `
+            SELECT COUNT(*) AS count 
+            FROM collectionofficer 
+            WHERE nic = ?
+        `;
+
+        collectionofficer.query(sql, [nic], (err, results) => {
+            if (err) {
+                return reject(err);
+            }
+            resolve(results[0].count > 0); // Return true if either NIC or email exists
+        });
+    });
+};
+
+
+exports.checkEmailExist = (email) => {
+    return new Promise((resolve, reject) => {
+        const sql = `
+            SELECT COUNT(*) AS count 
+            FROM collectionofficer 
+            WHERE email = ?
+        `;
+
+        collectionofficer.query(sql, [email], (err, results) => {
+            if (err) {
+                return reject(err);
+            }
+            resolve(results[0].count > 0); // Return true if either NIC or email exists
+        });
+    });
+};
+
 exports.createCollectionOfficerPersonal = (officerData) => {
     return new Promise(async (resolve, reject) => {
         try {
@@ -74,7 +110,7 @@ exports.createCollectionOfficerPersonal = (officerData) => {
                     officerData.lastNameTamil,
                     officerData.jobRole,
                     officerData.empId,
-                    officerData.employeeType,
+                    officerData.empType,
                     officerData.phoneCode01,
                     officerData.phoneNumber01,
                     officerData.phoneCode02,

@@ -15,14 +15,30 @@ exports.createCollectionOfficer = async (req, res) => {
     console.log(fullUrl);
 
     try {
-        // Validate the request body
-        // const validatedData = req.body;
+       
         const {officerData} = req.body   
         console.log(req.body);
-             
 
-        // Call the DAO to create the collection officer
-        // const results = await collectionofficerDao.createCollectionOfficerPersonal(Object.values(validatedData));
+        const isExistingNIC = await collectionofficerDao.checkNICExist(
+            officerData.nic
+        );
+
+        const isExistingEmail = await collectionofficerDao.checkEmailExist(
+            officerData.email
+        );
+
+        if (isExistingNIC) {
+            return res.status(500).json({ 
+                error: "NIC already exists"
+            });
+        }
+
+        if (isExistingEmail) {
+            return res.status(500).json({ 
+                error: "email already exists"
+            });
+        }
+
         const resultsPersonal = await collectionofficerDao.createCollectionOfficerPersonal(officerData);
    
         

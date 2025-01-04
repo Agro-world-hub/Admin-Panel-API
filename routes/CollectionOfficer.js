@@ -101,7 +101,7 @@ router.put(
 
 router.get(
     "/officer-details-monthly/:id",
-    authMiddleware,
+    // authMiddleware,
     CollectionOfficerEp.getOfficerByIdMonthly
 );
 
