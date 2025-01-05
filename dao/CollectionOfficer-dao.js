@@ -733,59 +733,166 @@ exports.getOfficerById = (id) => {
 
 
 
-exports.updateOfficerDetails = (id, 
+// exports.updateOfficerDetails = (
+//     id,
+//     centerId,
+//     companyId,
+//     irmId,
+//     firstNameEnglish,
+//     lastNameEnglish,
+//     firstNameSinhala,
+//     lastNameSinhala,
+//     firstNameTamil,
+//     lastNameTamil,
+//     jobRole,
+//     empId,
+//     empType,
+//     phoneCode01,
+//     phoneNumber01,
+//     phoneCode02,
+//     phoneNumber02,
+//     nic,
+//     email,
+//     houseNumber,
+//     streetName,
+//     city,
+//     district,
+//     province,
+//     country,
+//     languages,
+//     accHolderName,
+//     accNumber,
+//     bankName,
+//     branchName
+// ) => {
+//     return new Promise((resolve, reject) => {
+//         collectionofficer.beginTransaction((err) => {
+//             if (err) {
+//                 return reject(err);
+//             }
+
+//             const updateOfficerSQL = `
+//                 UPDATE collectionofficer
+//                 SET centerId = ?, companyId = ?, irmId = ?, firstNameEnglish = ?, lastNameEnglish = ?, firstNameSinhala = ?, lastNameSinhala = ?,
+//                     firstNameTamil = ?, lastNameTamil = ?, jobRole = ?, empId = ?, empType = ?, phoneCode01 = ?, phoneNumber01 = ?, phoneCode02 = ?, phoneNumber02 = ?,
+//                     nic = ?, email = ?, houseNumber = ?, streetName = ?, city = ?, district = ?, province = ?, country = ?, languages = ?,
+//                     accHolderName = ?, accNumber = ?, bankName = ?, branchName = ?, status = 'Not Approved'
+//                 WHERE id = ?
+//             `;
+
+//             const updateOfficerParams = [
+//                 centerId,
+//                 companyId,
+//                 irmId,
+//                 firstNameEnglish,
+//                 lastNameEnglish,
+//                 firstNameSinhala,
+//                 lastNameSinhala,
+//                 firstNameTamil,
+//                 lastNameTamil,
+//                 jobRole,
+//                 empId,
+//                 empType,
+//                 phoneCode01,
+//                 phoneNumber01,
+//                 phoneCode02,
+//                 phoneNumber02,
+//                 nic,
+//                 email,
+//                 houseNumber,
+//                 streetName,
+//                 city,
+//                 district,
+//                 province,
+//                 country,
+//                 languages,
+//                 accHolderName,
+//                 accNumber,
+//                 bankName,
+//                 branchName,
+//                 id,
+//             ];
+
+//             collectionofficer.query(updateOfficerSQL, updateOfficerParams, (err, results) => {
+//                 if (err) {
+//                     return collectionofficer.rollback(() => {
+//                         reject(err);
+//                     });
+//                 }
+
+//                 collectionofficer.commit((commitErr) => {
+//                     if (commitErr) {
+//                         return db.rollback(() => {
+//                             reject(commitErr);
+//                         });
+//                     }
+
+//                     resolve({ message: 'Officer details updated successfully.', results });
+//                 });
+//             });
+//         });
+//     });
+// };
+
+
+
+
+exports.updateOfficerDetails = ( 
+    id,
     centerId,
-        firstNameEnglish,
-        lastNameEnglish,
-        firstNameSinhala,
-        lastNameSinhala,
-        firstNameTamil,
-        lastNameTamil,
-        nic,
-        email,
-        houseNumber,
-        streetName,
-        city,
-        district,
-        province,
-        country,
-        languages,
-        companyNameEnglish,
-        companyNameSinhala,
-        companyNameTamil,
-        IRMname,
-        companyEmail,
-        assignedDistrict,
-        employeeType,
-        accHolderName,
-        accNumber,
-        bankName,
-        branchName,
-        jobRole,
-        empId
-) => {
+    companyId,
+    irmId,
+    firstNameEnglish,
+    lastNameEnglish,
+    firstNameSinhala,
+    lastNameSinhala,
+    firstNameTamil,
+    lastNameTamil,
+    jobRole,
+    empId,
+    empType,
+    phoneCode01,
+    phoneNumber01,
+    phoneCode02,
+    phoneNumber02,
+    nic,
+    email,
+    houseNumber,
+    streetName,
+    city,
+    district,
+    province,
+    country,
+    languages,
+    accHolderName,
+    accNumber,
+    bankName,
+    branchName) => {
     return new Promise((resolve, reject) => {
-       
-
-        db.beginTransaction((err) => {
-            if (err) return reject(err);
-
-            const updateOfficerSQL = `
-                UPDATE collectionofficer
-                SET centerId = ?, firstNameEnglish = ?, lastNameEnglish = ?, firstNameSinhala = ?, lastNameSinhala = ?,
-                    firstNameTamil = ?, lastNameTamil = ?, nic = ?, email = ?, houseNumber = ?, streetName = ?, city = ?,
-                    district = ?, province = ?, country = ? , languages = ? , status = 'Not Approved'
-                WHERE id = ?
-            `;
-
-            const updateOfficerParams = [
+      let sql = `
+             UPDATE collectionofficer
+                SET centerId = ?, companyId = ?, irmId = ?, firstNameEnglish = ?, lastNameEnglish = ?, firstNameSinhala = ?, lastNameSinhala = ?,
+                    firstNameTamil = ?, lastNameTamil = ?, jobRole = ?, empId = ?, empType = ?, phoneCode01 = ?, phoneNumber01 = ?, phoneCode02 = ?, phoneNumber02 = ?,
+                    nic = ?, email = ?, houseNumber = ?, streetName = ?, city = ?, district = ?, province = ?, country = ?, languages = ?,
+                    accHolderName = ?, accNumber = ?, bankName = ?, branchName = ?, status = 'Not Approved'
+          `;
+      let values = [
                 centerId,
+                companyId,
+                irmId || null,
                 firstNameEnglish,
                 lastNameEnglish,
                 firstNameSinhala,
                 lastNameSinhala,
                 firstNameTamil,
                 lastNameTamil,
+                jobRole,
+                empId,
+                empType,
+                phoneCode01,
+                phoneNumber01,
+                phoneCode02,
+                phoneNumber02,
                 nic,
                 email,
                 houseNumber,
@@ -795,76 +902,26 @@ exports.updateOfficerDetails = (id,
                 province,
                 country,
                 languages,
-                id,
-            ];
-
-            const updateBankDetailsSQL = `
-                UPDATE collectionofficerbankdetails
-                SET accHolderName = ?, accNumber = ?, bankName = ?, branchName = ?
-                WHERE collectionOfficerId = ?
-            `;
-
-            const updateBankDetailsParams = [
                 accHolderName,
                 accNumber,
                 bankName,
-                branchName,
-                id,
-            ];
-
-            let updateCompanyDetailsSQL = `
-                UPDATE collectionofficercompanydetails
-                SET companyNameEnglish = ?, companyNameSinhala = ?, companyNameTamil = ?, IRMname = ?, 
-                    companyEmail = ?, assignedDistrict = ?, employeeType = ?
-            `;
-
-            const updateCompanyDetailsParams = [
-                companyNameEnglish,
-                companyNameSinhala,
-                companyNameTamil,
-                IRMname,
-                companyEmail,
-                assignedDistrict,
-                employeeType,
-            ];
-
-            if(empId){
-                updateCompanyDetailsSQL += ` jobRole = ?, empId = ? `
-                updateCompanyDetailsParams.push(jobRole)
-                updateCompanyDetailsParams.push(empId)
-            }
-
-            updateCompanyDetailsSQL += ` WHERE collectionOfficerId = ? `
-            updateCompanyDetailsParams.push(id)
-
-
-            
-
-            collectionofficer.query(updateOfficerSQL, updateOfficerParams, (err, result) => {
-                if (err) {
-                    return db.rollback(() => reject(err));
-                }
-
-                collectionofficer.query(updateBankDetailsSQL, updateBankDetailsParams, (err, result) => {
-                    if (err) {
-                        return db.rollback(() => reject(err));
-                    }
-
-                    collectionofficer.query(updateCompanyDetailsSQL, updateCompanyDetailsParams, (err, result) => {
-                        if (err) {
-                            return db.rollback(() => reject(err));
-                        }
-
-                        collectionofficer.commit((err) => {
-                            if (err) return db.rollback(() => reject(err));
-                            resolve(result);
-                        });
-                    });
-                });
-            });
-        });
+                branchName
+      ];
+  
+     
+  
+      sql += ` WHERE id = ?`;
+      values.push(id);
+  
+      collectionofficer.query(sql, values, (err, results) => {
+        if (err) {
+          return reject(err);
+        }
+        resolve(results);
+      });
     });
-};
+  };
+
 
 
 

@@ -356,15 +356,26 @@ exports.getOfficerById = async (req, res) => {
 
 
 exports.updateCollectionOfficerDetails = async (req, res) => {
+    const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
+    console.log(fullUrl);
     const { id } = req.params;
     const {  
         centerId,
+        companyId,
+        irmId,
         firstNameEnglish,
         lastNameEnglish,
         firstNameSinhala,
         lastNameSinhala,
         firstNameTamil,
         lastNameTamil,
+        jobRole,
+        empId,
+        empType,
+        phoneCode01,
+        phoneNumber01,
+        phoneCode02,
+        phoneNumber02,
         nic,
         email,
         houseNumber,
@@ -374,20 +385,11 @@ exports.updateCollectionOfficerDetails = async (req, res) => {
         province,
         country,
         languages,
-        companyNameEnglish,
-        companyNameSinhala,
-        companyNameTamil,
-        IRMname,
-        companyEmail,
-        assignedDistrict,
-        employeeType,
         accHolderName,
         accNumber,
         bankName,
-        branchName,
-        jobRole,
-        empId
-    } = req.body;
+        branchName
+    } = req.body.officerData;
     console.log(empId);
     
    
@@ -396,12 +398,21 @@ exports.updateCollectionOfficerDetails = async (req, res) => {
     try {
         await collectionofficerDao.updateOfficerDetails(id, 
             centerId,
+            companyId,
+            irmId,
             firstNameEnglish,
             lastNameEnglish,
             firstNameSinhala,
             lastNameSinhala,
             firstNameTamil,
             lastNameTamil,
+            jobRole,
+            empId,
+            empType,
+            phoneCode01,
+            phoneNumber01,
+            phoneCode02,
+            phoneNumber02,
             nic,
             email,
             houseNumber,
@@ -411,19 +422,10 @@ exports.updateCollectionOfficerDetails = async (req, res) => {
             province,
             country,
             languages,
-            companyNameEnglish,
-            companyNameSinhala,
-            companyNameTamil,
-            IRMname,
-            companyEmail,
-            assignedDistrict,
-            employeeType,
             accHolderName,
             accNumber,
             bankName,
-            branchName,
-            jobRole,
-            empId
+            branchName
         );
         res.json({ message: 'Collection officer details updated successfully' });
     } catch (err) {
