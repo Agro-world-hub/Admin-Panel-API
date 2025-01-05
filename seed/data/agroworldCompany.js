@@ -1,5 +1,5 @@
 const bcrypt = require('bcryptjs');
-const db = require('../startup/database');
+const {collectionofficer } = require('../../startup/database');
 
 const createAgroWorld = async () => {
   const companyNameEnglish = 'agroworld (Pvt) Ltd';
@@ -14,7 +14,7 @@ const createAgroWorld = async () => {
     `;
 
     return new Promise((resolve, reject) => {
-      db.query(sql, [companyNameEnglish, companyNameSinhala, companyNameTamil], (err, result) => {
+      collectionofficer.query(sql, [companyNameEnglish, companyNameSinhala, companyNameTamil], (err, result) => {
         if (err) {
           reject('Error creating Agro World Company: ' + err);
         } else {

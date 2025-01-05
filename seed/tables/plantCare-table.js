@@ -1,4 +1,6 @@
-const db = require('../startup/database');
+
+
+const { db, plantcare, collectionofficer } = require('../../startup/database');
 
 const createUsersTable = () => {
     const sql = `
@@ -20,7 +22,7 @@ const createUsersTable = () => {
     )
   `;
     return new Promise((resolve, reject) => {
-        db.query(sql, (err, result) => {
+        plantcare.query(sql, (err, result) => {
             if (err) {
                 reject('Error creating users table: ' + err);
             } else {
@@ -30,6 +32,9 @@ const createUsersTable = () => {
     });
 };
 
+
+
+
 const createAdminUserRolesTable = () => {
     const sql = `
     CREATE TABLE IF NOT EXISTS adminroles (
@@ -38,7 +43,7 @@ const createAdminUserRolesTable = () => {
     )
   `;
     return new Promise((resolve, reject) => {
-        db.query(sql, (err, result) => {
+        plantcare.query(sql, (err, result) => {
             if (err) {
                 reject('Error creating adminUserRoles table: ' + err);
             } else {
@@ -47,6 +52,9 @@ const createAdminUserRolesTable = () => {
         });
     });
 };
+
+
+
 
 const createAdminUsersTable = () => {
     const sql = `
@@ -63,7 +71,7 @@ const createAdminUsersTable = () => {
     )
   `;
     return new Promise((resolve, reject) => {
-        db.query(sql, (err, result) => {
+        plantcare.query(sql, (err, result) => {
             if (err) {
                 reject('Error creating adminUsers table: ' + err);
             } else {
@@ -72,6 +80,7 @@ const createAdminUsersTable = () => {
         });
     });
 };
+
 
 
 const createContentTable = () => {
@@ -96,7 +105,7 @@ const createContentTable = () => {
     )
   `;
     return new Promise((resolve, reject) => {
-        db.query(sql, (err, result) => {
+        plantcare.query(sql, (err, result) => {
             if (err) {
                 reject('Error creating content table: ' + err);
             } else {
@@ -105,6 +114,9 @@ const createContentTable = () => {
         });
     });
 };
+
+
+
 
 const createCropGroup = () => {
     const sql = `
@@ -120,7 +132,7 @@ const createCropGroup = () => {
     )
   `;
     return new Promise((resolve, reject) => {
-        db.query(sql, (err, result) => {
+        plantcare.query(sql, (err, result) => {
             if (err) {
                 reject('Error creating cropgroup table: ' + err);
             } else {
@@ -129,6 +141,8 @@ const createCropGroup = () => {
         });
     });
 };
+
+
 
 
 const createCropVariety = () => {
@@ -151,7 +165,7 @@ const createCropVariety = () => {
     )
   `;
     return new Promise((resolve, reject) => {
-        db.query(sql, (err, result) => {
+        plantcare.query(sql, (err, result) => {
             if (err) {
                 reject('Error creating cropvariety table: ' + err);
             } else {
@@ -160,6 +174,8 @@ const createCropVariety = () => {
         });
     });
 };
+
+
 
 
 const createCropCalenderTable = () => {
@@ -178,7 +194,7 @@ const createCropCalenderTable = () => {
     )
   `;
     return new Promise((resolve, reject) => {
-        db.query(sql, (err, result) => {
+        plantcare.query(sql, (err, result) => {
             if (err) {
                 reject('Error creating cropCalender table: ' + err);
             } else {
@@ -187,6 +203,7 @@ const createCropCalenderTable = () => {
         });
     });
 };
+
 
 
 
@@ -220,7 +237,7 @@ const createCropCalenderDaysTable = () => {
 );
   `;
     return new Promise((resolve, reject) => {
-        db.query(sql, (err, result) => {
+        plantcare.query(sql, (err, result) => {
             if (err) {
                 reject('Error creating cropCalenderDays table: ' + err);
             } else {
@@ -229,9 +246,6 @@ const createCropCalenderDaysTable = () => {
         });
     });
 };
-
-
-
 
 
 
@@ -249,7 +263,7 @@ const createOngoingCultivationsTable = () => {
     )
   `;
     return new Promise((resolve, reject) => {
-        db.query(sql, (err, result) => {
+        plantcare.query(sql, (err, result) => {
             if (err) {
                 reject('Error creating ongoingCultivations table: ' + err);
             } else {
@@ -260,95 +274,6 @@ const createOngoingCultivationsTable = () => {
 };
 
 
-
-const createXlsxHistoryTable = () => {
-    const sql = `
-    CREATE TABLE IF NOT EXISTS xlsxhistory (
-      id INT AUTO_INCREMENT PRIMARY KEY,
-      xlName VARCHAR(50) NOT NULL,
-      createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-    )
-  `;
-    return new Promise((resolve, reject) => {
-        db.query(sql, (err, result) => {
-            if (err) {
-                reject('Error creating xlsxhistory table: ' + err);
-            } else {
-                resolve('xlsxhistory table created successfully.');
-            }
-        });
-    });
-};
-
-
-
-
-
-
-const createMarketPriceTable = () => {
-    const sql = `
-    CREATE TABLE IF NOT EXISTS marketprice (
-      id INT AUTO_INCREMENT PRIMARY KEY,
-      varietyId INT(11) DEFAULT NULL,
-      xlindex INT(11) DEFAULT NULL,
-      grade VARCHAR(1) NOT NULL,
-      price DECIMAL(15,2) DEFAULT NULL,
-      averagePrice DECIMAL(15,2) DEFAULT NULL,
-      createdAt TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-      createdBy INT(11) DEFAULT NULL,
-      FOREIGN KEY (varietyId) REFERENCES cropvariety(id)
-        ON DELETE CASCADE
-        ON UPDATE CASCADE,
-      FOREIGN KEY (createdBy) REFERENCES adminUsers(id)
-        ON DELETE CASCADE
-        ON UPDATE CASCADE,
-      FOREIGN KEY (xlindex) REFERENCES xlsxhistory(id)
-        ON DELETE CASCADE
-        ON UPDATE CASCADE
-    )
-  `;
-    return new Promise((resolve, reject) => {
-        db.query(sql, (err, result) => {
-            if (err) {
-                reject('Error creating market-price table: ' + err);
-            } else {
-                resolve('market-price table created successfully.');
-            }
-        });
-    });
-};
-
-
-
-
-
-const createMarketPriceServeTable = () => {
-    const sql = `
-    CREATE TABLE IF NOT EXISTS marketpriceserve (
-      id INT AUTO_INCREMENT PRIMARY KEY,
-      marketPriceId INT(11) DEFAULT NULL,
-      xlindex INT(11) DEFAULT NULL,
-      price DECIMAL(15,2) DEFAULT NULL,
-      updatedPrice DECIMAL(15,2) DEFAULT NULL,
-      collectionCenterId INT(11) DEFAULT NULL,
-      FOREIGN KEY (marketPriceId) REFERENCES marketprice(id)
-        ON DELETE CASCADE
-        ON UPDATE CASCADE,
-      FOREIGN KEY (collectionCenterId) REFERENCES collectioncenter(id)
-        ON DELETE CASCADE
-        ON UPDATE CASCADE
-    )
-  `;
-    return new Promise((resolve, reject) => {
-        db.query(sql, (err, result) => {
-            if (err) {
-                reject('Error creating marketpriceserve table: ' + err);
-            } else {
-                resolve('mmarketpriceserve table created successfully.');
-            }
-        });
-    });
-};
 
 
 
@@ -372,7 +297,7 @@ const createOngoingCultivationsCropsTable = () => {
     )
   `;
     return new Promise((resolve, reject) => {
-        db.query(sql, (err, result) => {
+        plantcare.query(sql, (err, result) => {
             if (err) {
                 reject('Error creating ongoingCultivationsCrops table: ' + err);
             } else {
@@ -381,7 +306,6 @@ const createOngoingCultivationsCropsTable = () => {
         });
     });
 };
-
 
 
 
@@ -411,7 +335,7 @@ const createCurrentAssetTable = () => {
     )
   `;
     return new Promise((resolve, reject) => {
-        db.query(sql, (err, result) => {
+        plantcare.query(sql, (err, result) => {
             if (err) {
                 reject('Error creating current asset table: ' + err);
             } else {
@@ -421,7 +345,10 @@ const createCurrentAssetTable = () => {
     });
 };
 
-//01
+
+
+
+
 const createFixedAsset = () => {
     const sql = `
     CREATE TABLE IF NOT EXISTS fixedasset (
@@ -435,7 +362,7 @@ const createFixedAsset = () => {
     )
   `;
     return new Promise((resolve, reject) => {
-        db.query(sql, (err, result) => {
+        plantcare.query(sql, (err, result) => {
             if (err) {
                 reject('Error creating fixed asset table: ' + err);
             } else {
@@ -446,7 +373,9 @@ const createFixedAsset = () => {
 };
 
 
-//02
+
+
+
 const createBuldingFixedAsset = () => {
     const sql = `
     CREATE TABLE IF NOT EXISTS buildingfixedasset (
@@ -463,7 +392,7 @@ const createBuldingFixedAsset = () => {
     )
   `;
     return new Promise((resolve, reject) => {
-        db.query(sql, (err, result) => {
+        plantcare.query(sql, (err, result) => {
             if (err) {
                 reject('Error creating building fixed asset table: ' + err);
             } else {
@@ -494,7 +423,7 @@ const createLandFixedAsset = () => {
     )
   `;
     return new Promise((resolve, reject) => {
-        db.query(sql, (err, result) => {
+        plantcare.query(sql, (err, result) => {
             if (err) {
                 reject('Error creating land fixed asset table: ' + err);
             } else {
@@ -526,7 +455,7 @@ const createMachToolsFixedAsset = () => {
     )
   `;
     return new Promise((resolve, reject) => {
-        db.query(sql, (err, result) => {
+        plantcare.query(sql, (err, result) => {
             if (err) {
                 reject('Error creating machtools fixed asset table: ' + err);
             } else {
@@ -552,7 +481,7 @@ const createMachToolsWarrantyFixedAsset = () => {
     )
   `;
     return new Promise((resolve, reject) => {
-        db.query(sql, (err, result) => {
+        plantcare.query(sql, (err, result) => {
             if (err) {
                 reject('Error creating fixed asset warranty table: ' + err);
             } else {
@@ -581,7 +510,7 @@ const createOwnershipOwnerFixedAsset = () => {
     )
   `;
     return new Promise((resolve, reject) => {
-        db.query(sql, (err, result) => {
+        plantcare.query(sql, (err, result) => {
             if (err) {
                 reject('Error creating ownershipownerfixedasset table: ' + err);
             } else {
@@ -612,7 +541,7 @@ const createOwnershipLeastFixedAsset = () => {
     )
   `;
     return new Promise((resolve, reject) => {
-        db.query(sql, (err, result) => {
+        plantcare.query(sql, (err, result) => {
             if (err) {
                 reject('Error creating ownershipleastfixedasset table: ' + err);
             } else {
@@ -641,7 +570,7 @@ const createOwnershipPermitFixedAsset = () => {
     )
   `;
     return new Promise((resolve, reject) => {
-        db.query(sql, (err, result) => {
+        plantcare.query(sql, (err, result) => {
             if (err) {
                 reject('Error creating ownershippermitfixedasset table: ' + err);
             } else {
@@ -668,7 +597,7 @@ const createOwnershipSharedFixedAsset = () => {
     )
   `;
     return new Promise((resolve, reject) => {
-        db.query(sql, (err, result) => {
+        plantcare.query(sql, (err, result) => {
             if (err) {
                 reject('Error creating ownershipsharedfixedasset table: ' + err);
             } else {
@@ -694,7 +623,7 @@ const createCurrentAssetRecord = () => {
 );
   `;
     return new Promise((resolve, reject) => {
-        db.query(sql, (err, result) => {
+        plantcare.query(sql, (err, result) => {
             if (err) {
                 reject('Error creating cuurent asset record table: ' + err);
             } else {
@@ -748,7 +677,7 @@ const createSlaveCropCalenderDaysTable = () => {
   );
     `;
     return new Promise((resolve, reject) => {
-        db.query(sql, (err, result) => {
+        plantcare.query(sql, (err, result) => {
             if (err) {
                 reject('Error creating slave crop Calender Days table: ' + err);
             } else {
@@ -773,7 +702,7 @@ const createCropGeoTable = () => {
 );
   `;
     return new Promise((resolve, reject) => {
-        db.query(sql, (err, result) => {
+        plantcare.query(sql, (err, result) => {
             if (err) {
                 reject('Error creating cropGeo table: ' + err);
             } else {
@@ -797,7 +726,7 @@ const createTaskImages = () => {
   );
     `;
     return new Promise((resolve, reject) => {
-        db.query(sql, (err, result) => {
+        plantcare.query(sql, (err, result) => {
             if (err) {
                 reject('Error taskimages table: ' + err);
             } else {
@@ -825,7 +754,7 @@ const createpublicforumposts = () => {
   );
     `;
     return new Promise((resolve, reject) => {
-        db.query(sql, (err, result) => {
+        plantcare.query(sql, (err, result) => {
             if (err) {
                 reject('Error publicforumposts table: ' + err);
             } else {
@@ -853,7 +782,7 @@ const createpublicforumreplies = () => {
   );
     `;
     return new Promise((resolve, reject) => {
-        db.query(sql, (err, result) => {
+        plantcare.query(sql, (err, result) => {
             if (err) {
                 reject('Error publicforumreplies table: ' + err);
             } else {
@@ -862,224 +791,6 @@ const createpublicforumreplies = () => {
         });
     });
 };
-
-
-
-
-
-const createCompany = () => {
-    const sql = `
-    CREATE TABLE IF NOT EXISTS company (
-      id INT AUTO_INCREMENT PRIMARY KEY,
-      regNumber VARCHAR(50) NOT NULL,
-      companyNameEnglish VARCHAR(50) NOT NULL,
-      companyNameSinhala VARCHAR(50) NOT NULL,
-      companyNameTamil VARCHAR(50) NOT NULL,
-      email VARCHAR(50) NOT NULL,
-      oicName VARCHAR(50) NULL,
-      oicEmail VARCHAR(50) NULL,
-      oicConCode1 VARCHAR(5) NULL,
-      oicConNum1 VARCHAR(12) NULL,
-      oicConCode2 VARCHAR(5) NULL,
-      oicConNum2 VARCHAR(12) NULL,
-      accHolderName VARCHAR(50) NULL,
-      accNumber VARCHAR(30) NULL,
-      bankName VARCHAR(30) NULL,
-      branchName VARCHAR(30) NULL,
-      foName VARCHAR(50) NULL,
-      foConCode VARCHAR(5) NULL,
-      foConNum VARCHAR(12) NULL,
-      foEmail VARCHAR(50) NULL,
-      createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-      )
-  `;
-    return new Promise((resolve, reject) => {
-        db.query(sql, (err, result) => {
-            if (err) {
-                reject('Error creating ccompany: ' + err);
-            } else {
-                resolve('company table created successfully.');
-            }
-        });
-    });
-};
-
-
-
-//Collection officer tables
-
-const createCollectionOfficer = () => {
-    const sql = `
-    CREATE TABLE IF NOT EXISTS collectionofficer (
-      id INT AUTO_INCREMENT PRIMARY KEY,
-      centerId INT NOT NULL,
-      companyId INT NOT NULL,
-      irmId INT NULL,
-      firstNameEnglish VARCHAR(50) NOT NULL,
-      firstNameSinhala VARCHAR(50) NOT NULL,
-      firstNameTamil VARCHAR(50) NOT NULL,
-      lastNameEnglish VARCHAR(50) NOT NULL,
-      lastNameSinhala VARCHAR(50) NOT NULL,
-      lastNameTamil VARCHAR(50) NOT NULL,
-      jobRole VARCHAR(50) NULL,
-      empId VARCHAR(10) NOT NULL,
-      enpType VARCHAR(10) NOT NULL,
-      phoneCode01 VARCHAR(5) NOT NULL,
-      phoneNumber01 VARCHAR(12) NOT NULL,
-      phoneCode02 VARCHAR(5) NULL,
-      phoneNumber02 VARCHAR(12) NULL,
-      nic VARCHAR(12) NOT NULL,
-      email VARCHAR(50) NOT NULL,
-      password VARCHAR(20) NULL,
-      passwordUpdated BOOLEAN NULL,
-      houseNumber VARCHAR(10) NOT NULL,
-      streetName VARCHAR(50) NOT NULL,
-      city VARCHAR(50) NOT NULL,
-      district VARCHAR(25) NOT NULL,
-      province VARCHAR(25) NOT NULL,
-      country VARCHAR(25) NOT NULL,
-      languages VARCHAR(255) NOT NULL,
-      accHolderName VARCHAR(75) NOT NULL,
-      accNumber VARCHAR(25) NOT NULL,
-      bankName VARCHAR(25) NOT NULL,
-      branchName VARCHAR(25) NOT NULL,
-      image LONGBLOB NULL,
-      QRcode LONGBLOB,
-      status VARCHAR(25) NULL,
-      claimStatus BOOLEAN DEFAULT 0,
-      createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-      FOREIGN KEY (centerId) REFERENCES collectioncenter(id)
-        ON DELETE CASCADE
-        ON UPDATE CASCADE,
-      FOREIGN KEY (companyId) REFERENCES company(id)
-        ON DELETE CASCADE
-        ON UPDATE CASCADE,
-      FOREIGN KEY (irmId) REFERENCES collectionofficer(id)
-        ON DELETE CASCADE
-        ON UPDATE CASCADE
-    )
-  `;
-    return new Promise((resolve, reject) => {
-        db.query(sql, (err, result) => {
-            if (err) {
-                reject('Error creating collection officer table: ' + err);
-            } else {
-                resolve('collection officer table created successfully.');
-            }
-        });
-    });
-};
-
-
-
-
-
-const createRegisteredFarmerPayments = () => {
-    const sql = `
-    CREATE TABLE IF NOT EXISTS registeredfarmerpayments (
-      id INT AUTO_INCREMENT PRIMARY KEY,
-      userId INT,
-      collectionOfficerId INT,
-      createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-      FOREIGN KEY (userId) REFERENCES users(id)
-        ON DELETE CASCADE
-        ON UPDATE CASCADE,
-      FOREIGN KEY (collectionOfficerId) REFERENCES collectionofficer(id)
-        ON DELETE CASCADE
-        ON UPDATE CASCADE
-      
-    )
-  `;
-    return new Promise((resolve, reject) => {
-        db.query(sql, (err, result) => {
-            if (err) {
-                reject('Error creating registeredfarmerpayments table: ' + err);
-            } else {
-                resolve('registeredfarmerpayments table created successfully.');
-            }
-        });
-    });
-};
-
-
-const createFarmerPaymensCrops = () => {
-    const sql = `
-    CREATE TABLE IF NOT EXISTS farmerpaymentscrops (
-      id INT AUTO_INCREMENT PRIMARY KEY,
-      registerFarmerId INT,
-      cropId INT,
-      gradeAprice DECIMAL(15, 2) NULL,
-      gradeBprice DECIMAL(15, 2) NULL,
-      gradeCprice DECIMAL(15, 2) NULL,
-      gradeAquan DECIMAL(15, 2) NULL,
-      gradeBquan DECIMAL(15, 2) NULL,
-      gradeCquan DECIMAL(15, 2) NULL,
-      image LONGBLOB,
-      createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-      FOREIGN KEY (registerFarmerId) REFERENCES registeredfarmerpayments(id)
-        ON DELETE CASCADE
-        ON UPDATE CASCADE,
-      FOREIGN KEY (cropId) REFERENCES cropvariety(id)
-        ON DELETE CASCADE
-        ON UPDATE CASCADE
-    )
-  `;
-    return new Promise((resolve, reject) => {
-        db.query(sql, (err, result) => {
-            if (err) {
-                reject('Error creating farmerpaymentscrops table: ' + err);
-            } else {
-                resolve('farmerpaymentscrops table created successfully.');
-            }
-        });
-    });
-};
-
-
-
-exports.getPaymentSlipReport = (officerID) => {
-  return new Promise((resolve, reject) => {
-    const dataSql = `
-      SELECT 
-        u.id AS userId,
-        u.firstName,
-        u.lastName,
-        u.NICnumber,
-        co.firstNameEnglish AS officerFirstName,
-        co.lastNameEnglish AS officerLastName,
-        fpc.gradeAprice,
-        fpc.gradeBprice,
-        fpc.gradeCprice,
-        fpc.gradeAquan,
-        fpc.gradeBquan,
-        fpc.gradeCquan,
-        (fpc.gradeAprice * fpc.gradeAquan) +
-        (fpc.gradeBprice * fpc.gradeBquan) +
-        (fpc.gradeCprice * fpc.gradeCquan) AS totalAmount
-      FROM 
-        registeredfarmerpayments rp
-      JOIN 
-        users u ON rp.userId = u.id
-      JOIN 
-        farmerpaymentscrops fpc ON rp.id = fpc.registerFarmerId
-      JOIN 
-        collectionofficer co ON rp.collectionOfficerId = co.id
-      WHERE 
-        rp.collectionOfficerId = ?
-      ORDER BY 
-        u.id;
-    `;
-    db.query(dataSql, [officerID], (error, results) => {
-      if (error) {
-        reject(error);
-      } else {
-        resolve(results);
-      }
-    });
-  });
-};
-
-
 
 
 
@@ -1100,7 +811,7 @@ const createUserBankDetails = () => {
     )
   `;
     return new Promise((resolve, reject) => {
-        db.query(sql, (err, result) => {
+        plantcare.query(sql, (err, result) => {
             if (err) {
                 reject('Error creating userbankdetails table: ' + err);
             } else {
@@ -1111,398 +822,8 @@ const createUserBankDetails = () => {
 };
 
 
-const createCollectionCenter = () => {
-    const sql = `
-    CREATE TABLE IF NOT EXISTS collectioncenter (
-      id INT AUTO_INCREMENT PRIMARY KEY,
-      regCode VARCHAR(30) NOT NULL,
-      centerName VARCHAR(30) NOT NULL,
-      code1 VARCHAR(5) NOT NULL,
-      contact01 VARCHAR(13) NOT NULL,
-      code2 VARCHAR(5) NOT NULL,
-      contact02 VARCHAR(13) NOT NULL,
-      buildingNumber VARCHAR(50) NOT NULL,
-      street VARCHAR(50) NOT NULL,
-      city VARCHAR(50) NOT NULL,
-      district VARCHAR(30) NOT NULL,
-      province VARCHAR(30) NOT NULL,
-      country VARCHAR(30) NOT NULL,
-      companies VARCHAR(30) NOT NULL,
-      createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-    )
-  `;
-    return new Promise((resolve, reject) => {
-        db.query(sql, (err, result) => {
-            if (err) {
-                reject('Error creating collectioncenter table: ' + err);
-            } else {
-                resolve('collectioncenter table created successfully.');
-            }
-        });
-    });
-};
 
 
-
-
-
-
-const createFarmerComplains  = () => {
-    const sql = `
-   CREATE TABLE IF NOT EXISTS farmerComplains (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    farmerId INT,
-    coId INT,
-    refNo VARCHAR(20) NOT NULL,
-    language VARCHAR(50) NOT NULL,
-    complainCategory VARCHAR(50) NOT NULL,
-    complain TEXT NOT NULL,
-    reply TEXT NOT NULL,
-    status VARCHAR(20) NOT NULL,
-    createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (farmerId) REFERENCES users(id)
-        ON DELETE CASCADE
-        ON UPDATE CASCADE,
-    FOREIGN KEY (coId) REFERENCES collectionofficer(id)
-        ON DELETE CASCADE
-        ON UPDATE CASCADE
-)
-  `;
-    return new Promise((resolve, reject) => {
-        db.query(sql, (err, result) => {
-            if (err) {
-                reject('Error creating market place users table: ' + err);
-            } else {
-                resolve('market place users table created successfully.');
-            }
-        });
-    });
-};
-
-
-
-
-
-
-//Seed for market Place Application
-
-const createMarketPlaceUsersTable = () => {
-    const sql = `
-    CREATE TABLE IF NOT EXISTS marketplaceusers (
-      id INT AUTO_INCREMENT PRIMARY KEY,
-      firstName VARCHAR(50) NOT NULL,
-      lastName VARCHAR(50) NOT NULL,
-      phoneNumber VARCHAR(12) NOT NULL,
-      NICnumber VARCHAR(12) NOT NULL,
-      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-    )
-  `;
-    return new Promise((resolve, reject) => {
-        db.query(sql, (err, result) => {
-            if (err) {
-                reject('Error creating market place users table: ' + err);
-            } else {
-                resolve('market place users table created successfully.');
-            }
-        });
-    });
-};
-
-
-const createMarketPlacePackages = () => {
-    const sql = `
-    CREATE TABLE IF NOT EXISTS marketplacepackages (
-      id INT AUTO_INCREMENT PRIMARY KEY,
-      name VARCHAR(50) NOT NULL,
-      status VARCHAR(10)  NOT NULL,
-      total DECIMAL(15, 2) NOT NULL,
-      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-    )
-  `;
-    return new Promise((resolve, reject) => {
-        db.query(sql, (err, result) => {
-            if (err) {
-                reject('Error creating market place users package: ' + err);
-            } else {
-                resolve('market place package table created successfully.');
-            }
-        });
-    });
-};
-
-const createCoupon = () => {
-    const sql = `
-    CREATE TABLE IF NOT EXISTS coupon(
-      id INT AUTO_INCREMENT PRIMARY KEY,
-      code VARCHAR(25),
-      type VARCHAR(25) NOT NULL,
-      percentage DECIMAL(15, 2),
-      status VARCHAR(25) NOT NULL,
-      checkLimit Boolean NOT NULL,
-      priceLimit DECIMAL(15,2),
-      fixDiscount DECIMAL(15,2),
-      startDate DATETIME NOT NULL,
-      endDate DATETIME NOT NULL,
-      createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-    )
-  `;
-    return new Promise((resolve, reject) => {
-        db.query(sql, (err, result) => {
-            if (err) {
-                reject('Error creating coupen table: ' + err);
-            } else {
-                resolve('coupen table created successfully.');
-            }
-      });
-});
-};
-
-
-const createMarketPlaceItems = () => {
-    const sql = `
-    CREATE TABLE IF NOT EXISTS marketplaceitems (
-      id INT AUTO_INCREMENT PRIMARY KEY,
-      cropId INT,
-      displayName VARCHAR(50) NOT NULL,
-      category VARCHAR(25) NOT NULL,
-      normalPrice DECIMAL(15, 2) NOT NULL,
-      discountedPrice DECIMAL(15, 2) NOT NULL,
-      promo BOOLEAN  NOT NULL,
-      unitType VARCHAR(5) NOT NULL,
-      startValue DECIMAL(15, 2) NOT NULL,
-      changeby DECIMAL(15, 2) NOT NULL,
-      tags TEXT NOT NULL,
-      createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-      FOREIGN KEY (cropId) REFERENCES cropvariety(id)
-        ON DELETE CASCADE
-        ON UPDATE CASCADE
-    )
-  `;
-    return new Promise((resolve, reject) => {
-        db.query(sql, (err, result) => {
-            if (err) {
-                reject('Error creating market place items table: ' + err);
-            } else {
-                resolve('market place items table created successfully.');
-            }
-        });
-    });
-};
-
-
-const createPackageDetails = () => {
-    const sql = `
-    CREATE TABLE IF NOT EXISTS packagedetails (
-      id INT AUTO_INCREMENT PRIMARY KEY,
-      packageId INT,
-      mpItemId INT,
-      quantity INT(11) NOT NULL,
-      quantityType VARCHAR(5) NOT NULL,
-      discountedPrice DECIMAL(15, 2) NOT NULL,
-      createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-      FOREIGN KEY (packageId) REFERENCES marketplacepackages(id)
-        ON DELETE CASCADE
-        ON UPDATE CASCADE,
-      FOREIGN KEY (mpItemId) REFERENCES marketplaceitems(id)
-        ON DELETE CASCADE
-        ON UPDATE CASCADE
-    )
-  `;
-    return new Promise((resolve, reject) => {
-        db.query(sql, (err, result) => {
-            if (err) {
-                reject('Error creating package details table: ' + err);
-            } else {
-                resolve('package details table created successfully.');
-            }
-        });
-    });
-};
-
-
-const createPromoItems = () => {
-    const sql = `
-    CREATE TABLE IF NOT EXISTS promoitems (
-      id INT AUTO_INCREMENT PRIMARY KEY,
-      mpItemId INT,
-      discount DECIMAL(15, 2) NOT NULL,
-      createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-      FOREIGN KEY (mpItemId) REFERENCES marketplaceitems(id)
-        ON DELETE CASCADE
-        ON UPDATE CASCADE
-    )
-  `;
-    return new Promise((resolve, reject) => {
-        db.query(sql, (err, result) => {
-            if (err) {
-                reject('Error creating promo items table: ' + err);
-            } else {
-                resolve('promo items table created successfully.');
-            }
-        });
-    });
-};
-
-
-const createCart = () => {
-    const sql = `
-    CREATE TABLE IF NOT EXISTS cart (
-      id INT AUTO_INCREMENT PRIMARY KEY,
-      userId INT,
-      status VARCHAR(13) NOT NULL,
-      createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-      FOREIGN KEY (userId) REFERENCES users(id)
-        ON DELETE CASCADE
-        ON UPDATE CASCADE
-    )
-  `;
-    return new Promise((resolve, reject) => {
-        db.query(sql, (err, result) => {
-            if (err) {
-                reject('Error creating cart table: ' + err);
-            } else {
-                resolve('cart table created successfully.');
-            }
-        });
-    });
-};
-
-
-const createCartItems = () => {
-    const sql = `
-    CREATE TABLE IF NOT EXISTS cartitems (
-      id INT AUTO_INCREMENT PRIMARY KEY,
-      cartId INT,
-      mpItemId INT,
-      quantity DECIMAL(8, 2) NOT NULL,
-      total DECIMAL(15, 2) NOT NULL,
-      createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-      FOREIGN KEY (cartId) REFERENCES cart(id)
-        ON DELETE CASCADE
-        ON UPDATE CASCADE,
-      FOREIGN KEY (mpItemId) REFERENCES marketplaceitems(id)
-        ON DELETE CASCADE
-        ON UPDATE CASCADE
-    )
-  `;
-    return new Promise((resolve, reject) => {
-        db.query(sql, (err, result) => {
-            if (err) {
-                reject('Error creating cart table: ' + err);
-            } else {
-                resolve('cart table created successfully.');
-            }
-        });
-    });
-};
-
-
-
-
-const createMarketPriceRequestTable = () => {
-    const sql = `
-    CREATE TABLE IF NOT EXISTS marketpricerequest (
-      id INT AUTO_INCREMENT PRIMARY KEY,
-      marketPriceId INT(11) DEFAULT NULL,
-      centerId INT(11) DEFAULT NULL,
-      requestPrice DECIMAL(10,2) DEFAULT NULL,
-      status VARCHAR(20) NOT NULL,
-      empId INT(11) DEFAULT NULL,
-      createdAt TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-      FOREIGN KEY (marketPriceId) REFERENCES marketprice(id)
-        ON DELETE CASCADE
-        ON UPDATE CASCADE,
-      FOREIGN KEY (centerId) REFERENCES collectioncenter(id)
-        ON DELETE CASCADE
-        ON UPDATE CASCADE,
-      FOREIGN KEY (empId) REFERENCES collectionofficer(id)
-        ON DELETE CASCADE
-        ON UPDATE CASCADE
-    )
-  `;
-    return new Promise((resolve, reject) => {
-        db.query(sql, (err, result) => {
-            if (err) {
-                reject('Error creating market-price request table: ' + err);
-            } else {
-                resolve('market-price table created request successfully.');
-            }
-        });
-    });
-};
-
-
-
-
-const createSalesAgentTable = () => {
-    const sql = `
-    CREATE TABLE salesagent (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    firstName VARCHAR(100) NOT NULL,
-    lastName VARCHAR(100) NOT NULL,
-    empType VARCHAR(50) NOT NULL,
-    empId VARCHAR(50) NOT NULL UNIQUE,
-    phoneCode1 VARCHAR(10) NOT NULL,
-    phoneNumber1 VARCHAR(15) NOT NULL,
-    phoneCode2 VARCHAR(10),
-    phoneNumber2 VARCHAR(15),
-    nic VARCHAR(50) NOT NULL UNIQUE,
-    email VARCHAR(100) NOT NULL UNIQUE,
-    houseNumber VARCHAR(50),
-    streetName VARCHAR(100),
-    city VARCHAR(100),
-    district VARCHAR(100),
-    province VARCHAR(100),
-    country VARCHAR(100) NOT NULL,
-    accHolderName VARCHAR(100) NOT NULL,
-    accNumber VARCHAR(50) NOT NULL UNIQUE,
-    bankName VARCHAR(100) NOT NULL,
-    branchName VARCHAR(100),
-    status VARCHAR(50) DEFAULT 'pending', 
-    password VARCHAR(255),
-    passwordUpdate BOOLEAN DEFAULT 0,
-    createdAt TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
-)
-
-  `;
-    return new Promise((resolve, reject) => {
-        db.query(sql, (err, result) => {
-            if (err) {
-                reject('Error creating salesagent table: ' + err);
-            } else {
-                resolve('salesagent table created request successfully.');
-            }
-        });
-    });
-};
-
-
-
-const createSalesAgentStarTable = () => {
-    const sql = `
-    CREATE TABLE salesagentstars (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    salesagentId INT NOT NULL,
-    date DATE NOT NULL,
-    target INT NOT NULL,
-    completed INT NOT NULL,
-    numOfStars BOOLEAN NOT NULL DEFAULT 0, 
-    createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (salesagentId) REFERENCES salesagent(id)
-        ON DELETE CASCADE
-        ON UPDATE CASCADE
-)
-  `;
-    return new Promise((resolve, reject) => {
-        db.query(sql, (err, result) => {
-            if (err) {
-                reject('Error creating salesagentstars table: ' + err);
-            } else {
-                resolve('ssalesagentstars table created request successfully.');
-            }
-        });
-    });
-};
 
 
 module.exports = {
@@ -1515,14 +836,10 @@ module.exports = {
     createCropCalenderTable,
     createCropCalenderDaysTable,
     createOngoingCultivationsTable,
-    createXlsxHistoryTable,
-    createMarketPriceTable,
-    createMarketPriceServeTable,
     createOngoingCultivationsCropsTable,
     createCurrentAssetTable,
     createpublicforumposts,
     createpublicforumreplies,
-
     createFixedAsset,
     createBuldingFixedAsset, 
     createLandFixedAsset,
@@ -1533,34 +850,8 @@ module.exports = {
     createOwnershipPermitFixedAsset,
     createOwnershipSharedFixedAsset,
     createCurrentAssetRecord,
-
-
     createSlaveCropCalenderDaysTable,
     createCropGeoTable,
     createTaskImages,
-
-    //collection officer
-    createCompany,
-    createCollectionOfficer,
-    
-    createRegisteredFarmerPayments,
-    createFarmerPaymensCrops,
-    createUserBankDetails,
-    createCollectionCenter,
-    createFarmerComplains,
-
-    //Seed for market Place Application
-    createMarketPlaceUsersTable,
-    createMarketPlacePackages,
-    createCoupon,
-    createMarketPlaceItems,
-    createPackageDetails,
-    createPromoItems,
-    createCart,
-    createCartItems,
-    createMarketPriceRequestTable,
-
-
-    createSalesAgentTable,
-    createSalesAgentStarTable
+    createUserBankDetails
 };

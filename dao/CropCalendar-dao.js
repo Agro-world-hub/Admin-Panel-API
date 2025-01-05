@@ -1,13 +1,14 @@
-const db = require("../startup/database");
+const { plantcare, collectionofficer, marketPlace, dash } = require('../startup/database');
 const Joi = require('joi');
 const path = require('path');
+
 
 
 exports.allCropGroups = () => {
   return new Promise((resolve, reject) => {
     const sql = "SELECT id, cropNameEnglish FROM cropgroup";
 
-    db.query(sql, (err, results) => {
+    plantcare.query(sql, (err, results) => {
       if (err) {
         return reject(err); // Reject promise if an error occurs
       }
@@ -39,7 +40,7 @@ exports.createCropGroup = async (
       bgColor
     ];
 
-    db.query(sql, values, (err, results) => {
+    plantcare.query(sql, values, (err, results) => {
       if (err) {
         reject(err);
       } else {
@@ -72,11 +73,11 @@ exports.getAllCropGroups = (limit, offset) => {
         LIMIT ? OFFSET ?;
       `;
 
-    db.query(countSql, (countErr, countResults) => {
+      plantcare.query(countSql, (countErr, countResults) => {
       if (countErr) {
         reject(countErr);
       } else {
-        db.query(dataSql, [limit, offset], (dataErr, dataResults) => {
+        plantcare.query(dataSql, [limit, offset], (dataErr, dataResults) => {
           if (dataErr) {
             reject(dataErr);
           } else {
@@ -104,7 +105,7 @@ exports.getAllCropGroups = (limit, offset) => {
 exports.deleteCropGroup = async (id) => {
   return new Promise((resolve, reject) => {
     const sql = "DELETE FROM cropgroup WHERE id = ?";
-    db.query(sql, [id], (err, results) => {
+    plantcare.query(sql, [id], (err, results) => {
       if (err) {
         reject(err);
       } else {
@@ -142,7 +143,7 @@ exports.createCropVariety = async (
       bgColor
     ];
 
-    db.query(sql, values, (err, results) => {
+    plantcare.query(sql, values, (err, results) => {
       if (err) {
         reject(err);
       } else {
@@ -158,7 +159,7 @@ exports.allCropVariety = (cropGroupId) => {
 
     const sql = "SELECT id, varietyNameEnglish FROM cropvariety WHERE cropGroupId = ?";  // Use parameterized query with "?"
 
-    db.query(sql, [cropGroupId], (err, results) => {  // Pass cropGroupId in an array as the second argument
+    plantcare.query(sql, [cropGroupId], (err, results) => {  // Pass cropGroupId in an array as the second argument
       if (err) {
         console.error('Database error:', err);
         return reject(err); // Reject promise if an error occurs
@@ -191,7 +192,7 @@ exports.createCropCallender = async (
       suitableAreas
     ];
 
-    db.query(sql, values, (err, results) => {
+    plantcare.query(sql, values, (err, results) => {
       if (err) {
         reject(err);
       } else {
@@ -272,7 +273,7 @@ exports.insertXLSXData = (cropId, data) => {
       row["Require Geo"],
     ]);
 
-    db.query(sql, [values], (err, result) => {
+    plantcare.query(sql, [values], (err, result) => {
       if (err) {
         reject(err);
       } else {
@@ -292,7 +293,7 @@ exports.getAllVarietyByGroup = (cropGroupId) => {
   return new Promise((resolve, reject) => {
     const sql = "SELECT * FROM cropvariety WHERE cropGroupId = ?";
 
-    db.query(sql, [cropGroupId], (err, results) => {
+    plantcare.query(sql, [cropGroupId], (err, results) => {
       if (err) {
         return reject(err); // Reject promise if an error occurs
       }
@@ -318,7 +319,7 @@ exports.getAllVarietyByGroup = (cropGroupId) => {
 exports.deleteCropVariety = async (id) => {
   return new Promise((resolve, reject) => {
     const sql = "DELETE FROM cropvariety WHERE id = ?";
-    db.query(sql, [id], (err, results) => {
+    plantcare.query(sql, [id], (err, results) => {
       if (err) {
         reject(err);
       } else {
@@ -334,7 +335,7 @@ exports.getGroupById = (id) => {
   return new Promise((resolve, reject) => {
     const sql = "SELECT * FROM cropgroup WHERE id = ?";
 
-    db.query(sql, [id], (err, results) => {
+    plantcare.query(sql, [id], (err, results) => {
       if (err) {
         return reject(err); // Reject promise if an error occurs
       }
@@ -357,7 +358,7 @@ exports.getVarietyById = (id) => {
   return new Promise((resolve, reject) => {
     const sql = "SELECT * FROM cropvariety WHERE id = ?";
 
-    db.query(sql, [id], (err, results) => {
+    plantcare.query(sql, [id], (err, results) => {
       if (err) {
         return reject(err); // Reject promise if an error occurs
       }
@@ -433,7 +434,7 @@ exports.updateGroup = (newsData, id) => {
     sql += ` WHERE id = ?`;
     values.push(id);
 
-    db.query(sql, values, (err, results) => {
+    plantcare.query(sql, values, (err, results) => {
       if (err) {
         return reject(err);
       }
@@ -455,7 +456,7 @@ exports.updateCropVariety = (id, updates) => {
     const sql = `UPDATE cropvariety SET ${fields.join(', ')} WHERE id = ?`;
     values.push(id); // Add ID as the last parameter
 
-    db.query(sql, values, (err, result) => {
+    plantcare.query(sql, values, (err, result) => {
       if (err) return reject(err);
       resolve(result);
     });
@@ -490,7 +491,7 @@ exports.getAllCropCalendars = (limit, offset) => {
       LIMIT ? OFFSET ?;
     `;
 
-    db.query(countSql, (countErr, countResults) => {
+    plantcare.query(countSql, (countErr, countResults) => {
       if (countErr) {
         reject(countErr);
       } else {
@@ -536,7 +537,7 @@ exports.updateCropCalender = async (id, updateData) => {
     values.push(id);
 
     // Execute the query
-    db.query(sql, values, (err, results) => {
+    plantcare.query(sql, values, (err, results) => {
       if (err) {
         reject(err);
       } else {
@@ -551,7 +552,7 @@ exports.updateCropCalender = async (id, updateData) => {
 exports.deleteCropCalender = async (id) => {
   return new Promise((resolve, reject) => {
     const sql = "DELETE FROM cropcalender WHERE id = ?";
-    db.query(sql, [id], (err, results) => {
+    plantcare.query(sql, [id], (err, results) => {
       if (err) {
         reject(err);
       } else {
@@ -576,11 +577,11 @@ exports.getAllTaskByCropId = (cropId, limit, offset) => {
             LIMIT ? OFFSET ?`;
     const values = [cropId];
 
-    db.query(countSql, [cropId], (countErr, countResults) => {
+    plantcare.query(countSql, [cropId], (countErr, countResults) => {
       if (countErr) {
         reject(countErr);
       } else {
-        db.query(
+        plantcare.query(
           sql,
           [cropId, parseInt(limit), parseInt(offset)],
           (dataErr, dataResults) => {
@@ -638,7 +639,7 @@ exports.updateVariety = (newsData, id) => {
     sql += ` WHERE id = ?`;
     values.push(id);
 
-    db.query(sql, values, (err, results) => {
+    plantcare.query(sql, values, (err, results) => {
       if (err) {
         return reject(err);
       }
@@ -654,7 +655,7 @@ exports.checkCropGroup = (engName) => {
 
     const sql = "SELECT * FROM cropgroup WHERE cropNameEnglish LIKE ?";
 
-    db.query(sql, [engName], (err, results) => {
+    plantcare.query(sql, [engName], (err, results) => {
       console.log(sql);
       
       if (err) {
@@ -673,7 +674,7 @@ exports.checkCropVerity = (id, engName) => {
 
     const sql = "SELECT * FROM cropvariety WHERE cropGroupId = ? AND varietyNameEnglish LIKE ?";
 
-    db.query(sql, [id, engName], (err, results) => {
+    plantcare.query(sql, [id, engName], (err, results) => {
       if (err) {
         console.error('Database error:', err);
         return reject(err);
@@ -688,7 +689,7 @@ exports.checkCropVerity = (id, engName) => {
 exports.checkExistanceCropCalander = async (id, cultivationMethod, natureOfCultivation) => {
   return new Promise((resolve, reject) => {
     const sql = "SELECT * FROM cropcalender WHERE cropVarietyId = ? AND method = ? AND natOfCul = ? ";
-    db.query(sql, [id, cultivationMethod, natureOfCultivation], (err, results) => {
+    plantcare.query(sql, [id, cultivationMethod, natureOfCultivation], (err, results) => {
       if (err) {
         reject(err);
       } else {

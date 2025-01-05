@@ -1,4 +1,4 @@
-const db = require("../startup/database");
+const { plantcare, collectionofficer, marketPlace, dash } = require('../startup/database');
 const Joi = require('joi');
 const path = require('path');
 
@@ -8,7 +8,7 @@ exports.createxlhistory = (xlName) => {
     const sql = "INSERT INTO xlsxhistory (`xlName`) VALUES (?)";
     const values = [xlName];
 
-    db.query(sql, [values], (err, results) => {
+    collectionofficer.query(sql, [values], (err, results) => {
       if (err) {
         reject(err);
       } else {
@@ -73,7 +73,7 @@ exports.insertMarketPriceXLSXData = (xlindex, data, createdBy) => {
       createdBy,
     ]);
 
-    db.query(marketPriceSQL, [marketPriceValues], (err, marketPriceResult) => {
+    collectionofficer.query(marketPriceSQL, [marketPriceValues], (err, marketPriceResult) => {
       if (err) {
         return reject(err);
       }
@@ -83,7 +83,7 @@ exports.insertMarketPriceXLSXData = (xlindex, data, createdBy) => {
       // Step 2: Fetch all collectionCenterId values
       const fetchCentersSQL = `SELECT id FROM collectioncenter`;
 
-      db.query(fetchCentersSQL, (err, collectionCenters) => {
+      collectionofficer.query(fetchCentersSQL, (err, collectionCenters) => {
         if (err) {
           return reject(err);
         }
@@ -121,7 +121,7 @@ exports.insertMarketPriceXLSXData = (xlindex, data, createdBy) => {
           (marketPriceId, xlindex, price, collectionCenterId) 
           VALUES ?`;
 
-        db.query(marketPriceServeSQL, [marketPriceServeValues], (err, marketPriceServeResult) => {
+          collectionofficer.query(marketPriceServeSQL, [marketPriceServeValues], (err, marketPriceServeResult) => {
           if (err) {
             return reject(err);
           }
@@ -150,11 +150,11 @@ exports.insertMarketPriceXLSXData = (xlindex, data, createdBy) => {
   ORDER BY createdAt DESC 
   LIMIT ? OFFSET ?`;
   
-      db.query(countSql, (countErr, countResults) => {
+  collectionofficer.query(countSql, (countErr, countResults) => {
         if (countErr) {
           reject(countErr);
         } else {
-          db.query(dataSql, [limit, offset], (dataErr, dataResults) => {
+          collectionofficer.query(dataSql, [limit, offset], (dataErr, dataResults) => {
             if (dataErr) {
               reject(dataErr);
             } else {
@@ -173,7 +173,7 @@ exports.insertMarketPriceXLSXData = (xlindex, data, createdBy) => {
     const sql = "DELETE FROM xlsxhistory WHERE id = ?";
   
     return new Promise((resolve, reject) => {
-      db.query(sql, [id], (err, results) => {
+      collectionofficer.query(sql, [id], (err, results) => {
         if (err) {
           reject("Error executing delete query: " + err);
         } else {
@@ -265,8 +265,8 @@ exports.getAllMarketPriceDAO = (limit, offset, crop, grade) => {
     let countSql = `
       SELECT COUNT(*) as total
       FROM marketprice m
-      JOIN cropvariety cv ON m.varietyId = cv.id
-      JOIN cropgroup cg ON cv.cropGroupId = cg.id
+      JOIN plant_care.cropvariety cv ON m.varietyId = cv.id
+      JOIN plant_care.cropgroup cg ON cv.cropGroupId = cg.id
       WHERE 1=1
     `;
     let sql = `
@@ -278,8 +278,8 @@ exports.getAllMarketPriceDAO = (limit, offset, crop, grade) => {
         m.price,
         m.createdAt
       FROM marketprice m
-      JOIN cropvariety cv ON m.varietyId = cv.id
-      JOIN cropgroup cg ON cv.cropGroupId = cg.id
+      JOIN plant_care.cropvariety cv ON m.varietyId = cv.id
+      JOIN plant_care.cropgroup cg ON cv.cropGroupId = cg.id
       WHERE 1=1
     `;
 
@@ -306,14 +306,14 @@ exports.getAllMarketPriceDAO = (limit, offset, crop, grade) => {
     console.log("SQL Params:", params);
 
     // Execute the count query
-    db.query(countSql, countParams, (countErr, countResults) => {
+    collectionofficer.query(countSql, countParams, (countErr, countResults) => {
       if (countErr) {
         console.error("Count Query Error:", countErr.message || countErr);
         return reject(countErr);
       }
 
       // Execute the main query
-      db.query(sql, params, (dataErr, dataResults) => {
+      collectionofficer.query(sql, params, (dataErr, dataResults) => {
         if (dataErr) {
           console.error("Data Query Error:", dataErr.message || dataErr);
           return reject(dataErr);
@@ -345,7 +345,7 @@ exports.getAllCropNameDAO = () => {
         FROM cropgroup  
         `;
 
-    db.query(sql, (err, results) => {
+        plantcare.query(sql, (err, results) => {
       if (err) {
         return reject(err);
       }

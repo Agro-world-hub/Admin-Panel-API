@@ -112,5 +112,22 @@ router.post(
     CollectionCenterEp.generateRegCode
 );
 
+router.patch(
+    "/update-company/:id",
+    // authMiddleware,
+    CollectionCenterEp.updateCompany
+)
+
+router.get(
+    "/get-company-by-id/:id",
+    // authMiddleware,
+    CollectionCenterEp.getCompanyById
+)
+
+router.delete(
+    "/delete-company/:id",
+    // authMiddleware,
+    CollectionCenterEp.deleteCompany
+)
 
 module.exports = router;

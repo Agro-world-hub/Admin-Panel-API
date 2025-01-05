@@ -1,9 +1,9 @@
-const db = require("../startup/database"); // Replace with your actual DB connection
+const { plantcare, collectionofficer, marketPlace, dash } = require('../startup/database');
 
 exports.deleteNews = (id) => {
     return new Promise((resolve, reject) => {
         const sql = 'DELETE FROM content WHERE id = ?';
-        db.query(sql, [id], (err, results) => {
+        plantcare.query(sql, [id], (err, results) => {
             if (err) {
                 return reject(err);
             }
@@ -48,7 +48,7 @@ exports.updateNews = (newsData, id) => {
         sql += ` WHERE id = ?`;
         values.push(id);
 
-        db.query(sql, values, (err, results) => {
+        plantcare.query(sql, values, (err, results) => {
             if (err) {
                 console.log(err);
                 

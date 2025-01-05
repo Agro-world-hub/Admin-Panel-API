@@ -1,4 +1,4 @@
-const db = require("../startup/database");
+const { plantcare, collectionofficer, marketPlace, dash } = require('../startup/database');
 const QRCode = require('qrcode');
 const nodemailer = require('nodemailer');
 const PDFDocument = require('pdfkit');
@@ -16,11 +16,11 @@ exports.getCollectionOfficerDistrictReports = (district) => {
              SUM(fpc.gradeAprice) AS priceA, 
              SUM(fpc.gradeBprice) AS priceB, 
              SUM(fpc.gradeCprice) AS priceC
-            FROM registeredfarmerpayments rp, collectionofficer c, cropvariety cv , cropgroup cg, farmerpaymentscrops fpc
+            FROM registeredfarmerpayments rp, collectionofficer c, cropvariety cv , plantcare.cropgroup cg, farmerpaymentscrops fpc
             WHERE rp.id = fpc.registerFarmerId AND rp.collectionOfficerId = c.id AND fpc.cropId = cv.id AND cv.cropGroupId = cg.id AND c.district = ?
             GROUP BY cg.cropNameEnglish, c.district
         `;
-        db.query(sql, [district], (err, results) => {
+        collectionofficer.query(sql, [district], (err, results) => {
             if (err) {
                 return reject(err); // Reject promise if an error occurs
             }
@@ -60,7 +60,7 @@ exports.createCollectionOfficerPersonal = (officerData) => {
             `;
 
             // Database query with QR image data added
-            db.query(
+            collectionofficer.query(
                 sql,
                 [
                     officerData.centerId,
@@ -179,7 +179,7 @@ exports.getAllCollectionOfficers = (page, limit, searchNIC, companyid) => {
         dataParams.push(limit, offset);
 
         // Execute count query
-        db.query(countSql, countParams, (countErr, countResults) => {
+        collectionofficer.query(countSql, countParams, (countErr, countResults) => {
             if (countErr) {
                 console.error('Error in count query:', countErr);
                 return reject(countErr);
@@ -188,7 +188,7 @@ exports.getAllCollectionOfficers = (page, limit, searchNIC, companyid) => {
             const total = countResults[0].total;
 
             // Execute data query
-            db.query(dataSql, dataParams, (dataErr, dataResults) => {
+            collectionofficer.query(dataSql, dataParams, (dataErr, dataResults) => {
                 if (dataErr) {
                     console.error('Error in data query:', dataErr);
                     return reject(dataErr);
@@ -270,7 +270,7 @@ exports.getAllCollectionOfficersStatus = (page, limit, searchNIC, companyid) => 
         dataParams.push(limit, offset);
 
         // Execute count query
-        db.query(countSql, countParams, (countErr, countResults) => {
+        collectionofficer.query(countSql, countParams, (countErr, countResults) => {
             if (countErr) {
                 console.error('Error in count query:', countErr);
                 return reject(countErr);
@@ -279,7 +279,7 @@ exports.getAllCollectionOfficersStatus = (page, limit, searchNIC, companyid) => 
             const total = countResults[0].total;
 
             // Execute data query
-            db.query(dataSql, dataParams, (dataErr, dataResults) => {
+            collectionofficer.query(dataSql, dataParams, (dataErr, dataResults) => {
                 if (dataErr) {
                     console.error('Error in data query:', dataErr);
                     return reject(dataErr);
@@ -313,7 +313,7 @@ exports.getRegisteredFarmerPaymentsByOfficer = (collectionOfficerId, date) => {
         `;
         const values = [collectionOfficerId, date];
 
-        db.query(sql, values, (err, results) => {
+        collectionofficer.query(sql, values, (err, results) => {
             if (err) {
                 return reject(err);
             }
@@ -329,12 +329,12 @@ exports.getFarmerPaymentsCropsByRegisteredFarmerId = (registeredFarmerId) => {
             SELECT c.varietyNameEnglish, fc.gradeAprice AS 'Grade A', fc.gradeBprice AS 'Grade B', fc.gradeCprice AS 'Grade C',
                    (fc.gradeAquan + fc.gradeBquan + fc.gradeCquan) AS totalQuantity, fc.gradeAquan, fc.gradeBquan, fc.gradeCquan
             FROM farmerpaymentscrops fc
-            JOIN cropvariety c ON fc.cropId = c.id
+            JOIN plant_care.cropvariety c ON fc.cropId = c.id
             WHERE fc.registerFarmerId = ?;
         `;
         const values = [registeredFarmerId];
 
-        db.query(sql, values, (err, results) => {
+        collectionofficer.query(sql, values, (err, results) => {
             if (err) {
                 return reject(err);
             }
@@ -365,11 +365,11 @@ exports.getCollectionOfficerProvinceReports = (province) => {
              SUM(fpc.gradeAprice) AS priceA, 
              SUM(fpc.gradeBprice) AS priceB, 
              SUM(fpc.gradeCprice) AS priceC
-            FROM registeredfarmerpayments rp, collectionofficer c, cropvariety cv , cropgroup cg, farmerpaymentscrops fpc
+            FROM registeredfarmerpayments rp, collectionofficer c, plantcare.cropvariety cv , plantcare.cropgroup cg, farmerpaymentscrops fpc
             WHERE rp.id = fpc.registerFarmerId AND rp.collectionOfficerId = c.id AND fpc.cropId = cv.id AND cv.cropGroupId = cg.id AND c.province = ?
             GROUP BY cg.cropNameEnglish, c.province
         `;
-        db.query(sql, [province], (err, results) => {
+        collectionofficer.query(sql, [province], (err, results) => {
             if (err) {
                 return reject(err); 
             }
@@ -386,7 +386,7 @@ exports.getAllCompanyNamesDao = (district) => {
             SELECT id, companyNameEnglish
             FROM company
         `;
-        db.query(sql, [district], (err, results) => {
+        collectionofficer.query(sql, [district], (err, results) => {
             if (err) {
                 return reject(err); // Reject promise if an error occurs
             }
@@ -404,7 +404,7 @@ exports.getCollectionOfficerEmailDao = (id) => {
             FROM collectionofficer c
             WHERE c.id = ?
         `;
-        db.query(sql, [id], (err, results) => {
+        collectionofficer.query(sql, [id], (err, results) => {
             if (err) {
                 return reject(err); // Reject promise if an error occurs
             }
@@ -551,7 +551,7 @@ exports.UpdateCollectionOfficerStatusAndPasswordDao = (params) => {
             SET status = ?, password = ?, passwordUpdated = 0
             WHERE id = ?
         `;
-        db.query(sql, [params.status, params.password, parseInt(params.id)], (err, results) => {
+        collectionofficer.query(sql, [params.status, params.password, parseInt(params.id)], (err, results) => {
             if (err) {
                 return reject(err); // Reject promise if an error occurs
             }
@@ -570,7 +570,7 @@ exports.UpdateCollectionOfiicerStatusDao = (params) => {
             SET status = ?
             WHERE id = ?
         `;
-        db.query(sql, [params.status, parseInt(params.id)], (err, results) => {
+        collectionofficer.query(sql, [params.status, parseInt(params.id)], (err, results) => {
             if (err) {
                 return reject(err); // Reject promise if an error occurs
             }
@@ -587,7 +587,7 @@ exports.DeleteCollectionOfficerDao = (id) => {
             DELETE FROM collectionofficer
             WHERE id = ?
         `;
-        db.query(sql, [parseInt(id)], (err, results) => {
+        collectionofficer.query(sql, [parseInt(id)], (err, results) => {
             if (err) {
                 return reject(err); // Reject promise if an error occurs
             }
@@ -619,7 +619,7 @@ exports.getOfficerById = (id) => {
             WHERE 
                 co.id = ?`;
 
-        db.query(sql, [id], (err, results) => {
+                collectionofficer.query(sql, [id], (err, results) => {
             if (err) {
                 return reject(err); // Reject promise if an error occurs
             }
@@ -804,22 +804,22 @@ exports.updateOfficerDetails = (id,
 
             
 
-            db.query(updateOfficerSQL, updateOfficerParams, (err, result) => {
+            collectionofficer.query(updateOfficerSQL, updateOfficerParams, (err, result) => {
                 if (err) {
                     return db.rollback(() => reject(err));
                 }
 
-                db.query(updateBankDetailsSQL, updateBankDetailsParams, (err, result) => {
+                collectionofficer.query(updateBankDetailsSQL, updateBankDetailsParams, (err, result) => {
                     if (err) {
                         return db.rollback(() => reject(err));
                     }
 
-                    db.query(updateCompanyDetailsSQL, updateCompanyDetailsParams, (err, result) => {
+                    collectionofficer.query(updateCompanyDetailsSQL, updateCompanyDetailsParams, (err, result) => {
                         if (err) {
                             return db.rollback(() => reject(err));
                         }
 
-                        db.commit((err) => {
+                        collectionofficer.commit((err) => {
                             if (err) return db.rollback(() => reject(err));
                             resolve(result);
                         });
@@ -850,7 +850,7 @@ exports.getOfficerByIdMonthly = (id) => {
             WHERE 
                 co.id = ?`;
 
-        db.query(sql, [id], (err, results) => {
+                collectionofficer.query(sql, [id], (err, results) => {
             if (err) {
                 return reject(err); // Reject promise if an error occurs
             }
@@ -950,7 +950,7 @@ exports.getDailyReport = (collectionOfficerId, fromDate, toDate) => {
       // Parameters: collectionOfficerId, fromDate, toDate
       const params = [collectionOfficerId, fromDate, toDate];
   
-      db.query(query, params, (err, results) => {
+      collectionofficer.query(query, params, (err, results) => {
         if (err) {
           return reject(err);
         }
