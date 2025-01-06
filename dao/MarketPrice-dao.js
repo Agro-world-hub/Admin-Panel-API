@@ -265,8 +265,8 @@ exports.getAllMarketPriceDAO = (limit, offset, crop, grade) => {
     let countSql = `
       SELECT COUNT(*) as total
       FROM marketprice m
-      JOIN plant_care.cropvariety cv ON m.varietyId = cv.id
-      JOIN plant_care.cropgroup cg ON cv.cropGroupId = cg.id
+      JOIN plant-care.cropvariety cv ON m.varietyId = cv.id
+      JOIN plant-care.cropgroup cg ON cv.cropGroupId = cg.id
       WHERE 1=1
     `;
     let sql = `
@@ -278,8 +278,8 @@ exports.getAllMarketPriceDAO = (limit, offset, crop, grade) => {
         m.price,
         m.createdAt
       FROM marketprice m
-      JOIN plant_care.cropvariety cv ON m.varietyId = cv.id
-      JOIN plant_care.cropgroup cg ON cv.cropGroupId = cg.id
+      JOIN plant-care.cropvariety cv ON m.varietyId = cv.id
+      JOIN plant-care.cropgroup cg ON cv.cropGroupId = cg.id
       WHERE 1=1
     `;
 

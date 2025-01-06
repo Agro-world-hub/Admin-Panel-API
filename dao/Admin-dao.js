@@ -1676,7 +1676,7 @@ exports.getPaymentSlipReportrrrr = (officerID) => {
   return new Promise((resolve, reject) => {
     const dataSql = `
       SELECT u.id, co.firstNameEnglish AS officerFirstName, co.lastNameEnglish AS officerLastName, u.firstName, u.lastName, u.NICnumber, SUM(gradeAprice)+SUM(gradeBprice)+SUM(gradeCprice) AS total
-      FROM registeredfarmerpayments rp, plantcare.users u ,farmerpaymentscrops fpc, collectionofficer co
+      FROM registeredfarmerpayments rp, plant-care.users u ,farmerpaymentscrops fpc, collectionofficer co
       WHERE rp.userId = u.id AND rp.id = fpc.registerFarmerId 
       GROUP BY u.id, co.firstNameEnglish, co.lastNameEnglish, u.firstName, u.lastName, u.NICnumber
     `;
@@ -1760,7 +1760,7 @@ exports.getPaymentSlipReport = (officerID, limit, offset, date = null, search = 
     let countSql = `
       SELECT COUNT(*) AS total 
       FROM registeredfarmerpayments rp 
-      JOIN plant_care.users u ON rp.userId = u.id 
+      JOIN plant-care.users u ON rp.userId = u.id 
       WHERE rp.collectionOfficerId = ? 
     `;
     let dataSql = `
@@ -1776,7 +1776,7 @@ exports.getPaymentSlipReport = (officerID, limit, offset, date = null, search = 
       FROM 
           registeredfarmerpayments rp
       JOIN 
-          plant_care.users u ON rp.userId = u.id
+          plant-care.users u ON rp.userId = u.id
       JOIN 
           collectionofficer co ON rp.collectionOfficerId = co.id
       WHERE 
@@ -1847,7 +1847,7 @@ exports.getFarmerListReport = (id) => {
 FROM 
   registeredfarmerpayments rp
 JOIN 
-  plant_care.users u ON rp.userId = u.id
+  plant-care.users u ON rp.userId = u.id
 JOIN 
   collectionofficer co ON rp.collectionOfficerId = co.id
 WHERE 
@@ -1885,9 +1885,9 @@ SELECT
 FROM 
   farmerpaymentscrops fp
 JOIN 
-  plant_care.cropvariety cv ON fp.cropId = cv.id
+  plant-care.cropvariety cv ON fp.cropId = cv.id
 JOIN 
-  plant_care.cropgroup cg ON cv.cropGroupId  = cg.id
+  plant-care.cropgroup cg ON cv.cropGroupId  = cg.id
 WHERE 
   fp.registerFarmerId  = ?
     `;

@@ -119,7 +119,7 @@ exports.getMarketplaceItems = () => {
   return new Promise((resolve, reject) => {
     const dataSql = `
     SELECT m.id, m.cropId, cg.cropNameEnglish, m.displayName , cv.varietyNameEnglish, m.discountedPrice, m.startValue, m.promo, m.unitType, m.changeby, m.normalPrice, m.category
-    FROM marketplaceitems m, plantcare.cropgroup cg, plantcare.cropvariety cv
+    FROM marketplaceitems m, plant-care.cropgroup cg, plant-care.cropvariety cv
     WHERE m.cropId = cv.id AND cv.cropGroupId = cg.id
     `;
     marketPlace.query(dataSql, (error, results) => {
@@ -268,7 +268,7 @@ exports.getAllProductCropCatogoryDAO = () => {
   return new Promise((resolve, reject) => {
     const sql = `
           SELECT cg.id AS cropId, mpi.normalPrice, mpi.discountedPrice, mpi.id AS varietyId, cg.cropNameEnglish, mpi.displayName
-          FROM marketplaceitems mpi, plantcare.cropvariety cv, plantcare.cropgroup cg
+          FROM marketplaceitems mpi, plant-care.cropvariety cv, plant-care.cropgroup cg
           WHERE mpi.cropId = cv.id AND cv.cropGroupId = cg.id
       `;
 

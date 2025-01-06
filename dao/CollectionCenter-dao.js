@@ -91,7 +91,7 @@ exports.GetAllComplainDAO = (page, limit, status, searchText) => {
       FROM farmercomplains fc
       LEFT JOIN collectionofficer cf ON fc.coId = cf.id
       LEFT JOIN collectioncenter cc ON cf.centerId = cc.id
-      LEFT JOIN plant_care.users u ON fc.farmerId = u.id
+      LEFT JOIN plant-care.users u ON fc.farmerId = u.id
       WHERE 1 = 1
     `;
 
@@ -110,7 +110,7 @@ exports.GetAllComplainDAO = (page, limit, status, searchText) => {
       FROM farmercomplains fc
       LEFT JOIN collectionofficer cf ON fc.coId = cf.id
       LEFT JOIN collectioncenter cc ON cf.centerId = cc.id
-      LEFT JOIN plant_care.users u ON fc.farmerId = u.id
+      LEFT JOIN plant-care.users u ON fc.farmerId = u.id
       WHERE 1 = 1
     `;
 
@@ -167,7 +167,7 @@ exports.getComplainById = (id) => {
   return new Promise((resolve, reject) => {
     const sql = ` 
     SELECT fc.id, fc.refNo, fc.createdAt, fc.status, fc.language, fc.complain, fc.reply, u.firstName AS farmerName, u.phoneNumber AS farmerPhone, c.firstNameEnglish as officerName, c.phoneNumber01 AS officerPhone, cc.centerName, cc.contact01 AS CollectionContact
-    FROM farmercomplains fc, collectionofficer c, plant_care.users u , collectioncenter cc
+    FROM farmercomplains fc, collectionofficer c, plant-care.users u , collectioncenter cc
     WHERE fc.farmerId = u.id AND c.centerId = cc.id AND fc.coId = c.id AND fc.id = ? 
     `;
     collectionofficer.query(sql, [id], (err, results) => {
