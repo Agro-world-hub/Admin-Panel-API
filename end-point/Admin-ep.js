@@ -9,6 +9,15 @@ const adminDao = require("../dao/Admin-dao");
 const ValidateSchema = require("../validations/Admin-validation");
 const { type } = require("os");
 const bcrypt = require("bcryptjs");
+const AWS = require("aws-sdk");
+const { v4: uuidv4 } = require("uuid");
+
+
+const s3 = new AWS.S3({
+  accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+  secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+  region: process.env.AWS_REGION,
+});
 
 exports.loginAdmin = async (req, res) => {
   const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
@@ -1148,6 +1157,18 @@ exports.createPlantCareUser = async (req, res) => {
     }
 
     const fileBuffer = req.file.buffer;
+    const fileExtension = req.file.originalname.split(".").pop(); // Get the file extension
+    const fileName = `${uuidv4()}.${fileExtension}`; // Generate a unique file name
+
+    const s3Params = {
+      Bucket: process.env.AWS_S3_BUCKET_NAME, // Your bucket name
+      Key: `users/profile-images/${fileName}`, // Folder path and file name in the bucket
+      Body: fileBuffer,
+      ContentType: req.file.mimetype,
+      ACL: "public-read", // Allow public access to the file
+    };
+
+    const s3UploadResult = await s3.upload(s3Params).promise();
 
     const userData = {
       firstName,
@@ -1156,7 +1177,7 @@ exports.createPlantCareUser = async (req, res) => {
       NICnumber,
       district,
       membership,
-      fileBuffer,
+      profileImageUrl: s3UploadResult.Location,
     };
 
     console.log(userData);

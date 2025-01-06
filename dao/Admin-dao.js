@@ -3,6 +3,7 @@ const path = require("path");
 const { Upload } = require("@aws-sdk/lib-storage");
 const Joi = require("joi");
 
+
 exports.loginAdmin = (email) => {
   return new Promise((resolve, reject) => {
     const sql = "SELECT * FROM adminusers WHERE mail = ?";
@@ -118,21 +119,21 @@ exports.getAllUsers = (limit, offset, searchItem) => {
         }
 
         // Process each user's image
-        const processedDataResults = dataResults.map((user) => {
-          if (user.profileImage) {
-            const base64Image = Buffer.from(user.profileImage).toString(
-              "base64"
-            );
-            const mimeType = "image/png"; // Adjust the MIME type if needed
-            user.profileImage = `data:${mimeType};base64,${base64Image}`;
-          }
-          return user;
-        });
+        // const processedDataResults = dataResults.map((user) => {
+        //   if (user.profileImage) {
+        //     const base64Image = Buffer.from(user.profileImage).toString(
+        //       "base64"
+        //     );
+        //     const mimeType = "image/png"; // Adjust the MIME type if needed
+        //     user.profileImage = `data:${mimeType};base64,${base64Image}`;
+        //   }
+        //   return user;
+        // });
 
         // Resolve with total count and the processed results
         resolve({
           total: total,
-          items: processedDataResults,
+          items: dataResults,
         });
       });
     });
@@ -898,7 +899,7 @@ exports.updatePlantCareUserById = (userData, id) => {
 
 exports.createPlantCareUser = (userData) => {
   return new Promise((resolve, reject) => {
-    const { firstName, lastName, phoneNumber, NICnumber, district, membership, fileBuffer } =
+    const { firstName, lastName, phoneNumber, NICnumber, district, membership, profileImageUrl } =
       userData;
 
     // SQL query to check if phoneNumber or NICnumber already exists
@@ -929,7 +930,7 @@ exports.createPlantCareUser = (userData) => {
         NICnumber,
         district,
         membership,
-        fileBuffer,
+        profileImageUrl,
       ];
 
       plantcare.query(insertSql, insertValues, (insertErr, insertResults) => {

@@ -203,8 +203,8 @@ const createCollectionOfficer = () => {
       accNumber VARCHAR(25) NULL,
       bankName VARCHAR(25) NULL,
       branchName VARCHAR(25) NULL,
-      image LONGBLOB NULL,
-      QRcode LONGBLOB,
+      image TEXT NULL,
+      QRcode TEXT,
       status VARCHAR(25) NULL,
       claimStatus BOOLEAN DEFAULT 0,
       createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -274,7 +274,7 @@ const createFarmerPaymensCrops = () => {
       gradeAquan DECIMAL(15, 2) NULL,
       gradeBquan DECIMAL(15, 2) NULL,
       gradeCquan DECIMAL(15, 2) NULL,
-      image LONGBLOB,
+      image TEXT,
       createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (registerFarmerId) REFERENCES registeredfarmerpayments(id)
         ON DELETE CASCADE

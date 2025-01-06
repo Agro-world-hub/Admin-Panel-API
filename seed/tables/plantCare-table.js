@@ -10,8 +10,8 @@ const createUsersTable = () => {
       lastName VARCHAR(50) NOT NULL,
       phoneNumber VARCHAR(12) NOT NULL,
       NICnumber VARCHAR(12) NOT NULL,
-      profileImage LONGBLOB NULL,
-      farmerQr LONGBLOB,
+      profileImage TEXT NULL,
+      farmerQr TEXT,
       membership VARCHAR(25) NULL,
       activeStatus VARCHAR(25) NULL,
       houseNo VARCHAR(10) NULL,
@@ -93,7 +93,7 @@ const createContentTable = () => {
       descriptionEnglish  TEXT NOT NULL,
       descriptionSinhala TEXT NOT NULL,
       descriptionTamil TEXT NOT NULL,
-      image LONGBLOB,
+      image TEXT,
       status VARCHAR(15) NOT NULL,
       publishDate TIMESTAMP,
       expireDate TIMESTAMP NULL DEFAULT NULL,
@@ -126,7 +126,7 @@ const createCropGroup = () => {
       cropNameSinhala VARCHAR(50) NOT NULL,
       cropNameTamil VARCHAR(50) NOT NULL,
       category VARCHAR(255) NOT NULL,
-      image LONGBLOB,
+      image TEXT,
       bgColor VARCHAR(10),
       createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     )
@@ -156,7 +156,7 @@ const createCropVariety = () => {
       descriptionEnglish TEXT NOT NULL,
       descriptionSinhala TEXT NOT NULL,
       descriptionTamil TEXT NOT NULL,
-      image LONGBLOB,
+      image TEXT,
       bgColor VARCHAR(10),
       createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (cropGroupId) REFERENCES cropgroup(id)
@@ -718,7 +718,7 @@ const createTaskImages = () => {
       CREATE TABLE IF NOT EXISTS taskimages (
             id INT AUTO_INCREMENT PRIMARY KEY,
             slaveId INT(11) NOT NULL,
-            image LONGBLOB,
+            image TEXT,
             createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             FOREIGN KEY (slaveId) REFERENCES slavecropcalendardays(id)
                 ON DELETE CASCADE
@@ -747,7 +747,7 @@ const createpublicforumposts = () => {
             heading varchar(255) NOT NULL,
             message text NOT NULL,
             createdAt timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-            postimage longblob,
+            postimage TEXT,
             FOREIGN KEY (userId) REFERENCES users(id)
                 ON DELETE CASCADE
                 ON UPDATE CASCADE
