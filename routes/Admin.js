@@ -53,7 +53,7 @@ router.get("/get-admin-by-id/:id", authMiddleware, AdminEp.getAdminById);
 router.post("/create-admin", authMiddleware, AdminEp.createAdmin);
 
 router.delete(
-    "/delete-plantcare-user/:id",
+    "/delete-plant-care-user/:id",
     authMiddleware,
     AdminEp.deletePlantCareUser
 );
