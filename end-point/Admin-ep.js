@@ -11,6 +11,7 @@ const { type } = require("os");
 const bcrypt = require("bcryptjs");
 const AWS = require("aws-sdk");
 const { v4: uuidv4 } = require("uuid");
+const uploadFileToS3 = require("../middlewares/s3upload");
 
 
 const s3 = new AWS.S3({
@@ -1157,18 +1158,9 @@ exports.createPlantCareUser = async (req, res) => {
     }
 
     const fileBuffer = req.file.buffer;
-    const fileExtension = req.file.originalname.split(".").pop(); // Get the file extension
-    const fileName = `${uuidv4()}.${fileExtension}`; // Generate a unique file name
+    const fileName = req.file.originalname;
 
-    const s3Params = {
-      Bucket: process.env.AWS_S3_BUCKET_NAME, // Your bucket name
-      Key: `users/profile-images/${fileName}`, // Folder path and file name in the bucket
-      Body: fileBuffer,
-      ContentType: req.file.mimetype,
-      ACL: "public-read", // Allow public access to the file
-    };
-
-    const s3UploadResult = await s3.upload(s3Params).promise();
+ const profileImageUrl = await uploadFileToS3(fileBuffer, fileName, "users/profile-images");
 
     const userData = {
       firstName,
@@ -1177,7 +1169,7 @@ exports.createPlantCareUser = async (req, res) => {
       NICnumber,
       district,
       membership,
-      profileImageUrl: s3UploadResult.Location,
+      profileImageUrl
     };
 
     console.log(userData);
