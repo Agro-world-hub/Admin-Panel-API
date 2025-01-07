@@ -7,6 +7,7 @@ const xlsx = require("xlsx");
 const cropCalendarDao = require("../dao/CropCalendar-dao");
 const cropCalendarValidations = require('../validations/CropCalendar-validation');
 const mime = require("mime-types");
+const uploadFileToS3 = require("../middlewares/s3upload");
 
 exports.allCropGroups = async (req, res) => {
   try {
@@ -42,8 +43,11 @@ exports.createCropGroup = async (req, res) => {
       cropNameSinhala,
       cropNameTamil,
       category,
-      bgColor
+      bgColor,
+      fileName
     } = req.body;
+    console.log(req.body);
+    
 
     if (!req.file) {
       return res.status(400).json({ error: "No file uploaded" });
@@ -59,6 +63,10 @@ exports.createCropGroup = async (req, res) => {
 
     // Get file buffer (binary data)
     const fileBuffer = req.file.buffer;
+    const cropImageUrl = await uploadFileToS3(fileBuffer, fileName, "crop/crop-group");
+    console.log(cropImageUrl);
+    
+
 
     // Call DAO to save news and the image file as longblob
     const newsId = await cropCalendarDao.createCropGroup(
@@ -66,7 +74,7 @@ exports.createCropGroup = async (req, res) => {
       cropNameSinhala,
       cropNameTamil,
       category,
-      fileBuffer,
+      cropImageUrl,
       bgColor
     );
 
