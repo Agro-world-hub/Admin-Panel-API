@@ -3,6 +3,7 @@ const QRCode = require('qrcode');
 const nodemailer = require('nodemailer');
 const PDFDocument = require('pdfkit');
 const fs = require('fs');
+const uploadFileToS3 = require('../middlewares/s3upload');
 
 
 exports.getCollectionOfficerDistrictReports = (district) => {
@@ -78,11 +79,12 @@ exports.createCollectionOfficerPersonal = (officerData) => {
             `;
 
             const qrCodeBase64 = await QRCode.toDataURL(qrData);
-
-            const qrCodeBuffer = Buffer.from(
+             const qrCodeBuffer = Buffer.from(
                 qrCodeBase64.replace(/^data:image\/png;base64,/, ""),
                 'base64'
             );
+            const qrcodeURL = await uploadFileToS3(qrCodeBuffer, `${officerData.empId}.png`, "collectionofficer/QRcode")
+            console.log(qrcodeURL);
 
             const sql = `
                 INSERT INTO collectionofficer (
