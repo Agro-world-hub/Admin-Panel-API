@@ -44,8 +44,7 @@ exports.createCropGroup = async (req, res) => {
       cropNameSinhala,
       cropNameTamil,
       category,
-      bgColor,
-      fileName
+      bgColor
     } = req.body;
     console.log(req.body);
     
