@@ -10,6 +10,7 @@ const bcrypt = require("bcryptjs");
 const AWS = require("aws-sdk");
 const { v4: uuidv4 } = require("uuid");
 const uploadFileToS3 = require("../middlewares/s3upload");
+const deleteFromS3 = require("../middlewares/s3delete");
 
 const s3 = new AWS.S3({
     accessKeyId: process.env.AWS_ACCESS_KEY_ID,
@@ -315,8 +316,26 @@ exports.deleteCollectionOfficer = async (req, res) => {
     const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
     console.log(fullUrl);
     try {
-        
+
+        const { id } = req.params;
+
+        const qrimage = await collectionofficerDao.getQrImage(id);
+
+        const qrUrl = qrimage.QRcode;
+
+        console.log(qrUrl);
+
+        if(qrUrl){
+            try{
+                await deleteFromS3(qrUrl);
+            }catch(s3Error){
+                console.error("Failed to delete image from S3:", s3Error);
+            }
+        }
+
+
         const results = await collectionofficerDao.DeleteCollectionOfficerDao(req.params.id);
+        
 
         console.log("Successfully Delete Status");
         if(results.affectedRows > 0){
@@ -325,6 +344,9 @@ exports.deleteCollectionOfficer = async (req, res) => {
             res.json({results:results, status:false});
 
         }
+
+        
+
     } catch (error) {
         if (error.isJoi) {
             return res.status(400).json({ error: error.details[0].message, status:false});
@@ -366,6 +388,25 @@ exports.updateCollectionOfficerDetails = async (req, res) => {
     const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
     console.log(fullUrl);
     const { id } = req.params;
+
+    const qrCode = await collectionofficerDao.getQrImage(id);
+
+    const qrImageUrl = qrCode.QRcode;
+    let s3Key;
+
+    if (qrImageUrl && qrImageUrl.startsWith(`https://${process.env.AWS_S3_BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/`)){
+        s3Key = qrImageUrl.split(`https://${process.env.AWS_S3_BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/`)[1];
+    }
+    
+    await deleteFromS3(s3Key);
+
+    let qrCodeImage = null;
+    if (req.file){
+        const fileBuffer = req.file.buffer;
+        const fileName = req.file.originalname;
+        qrCodeImage = await uploadFileToS3(fileBuffer, fileName, "")
+    }
+
     const {  
         centerId,
         companyId,
