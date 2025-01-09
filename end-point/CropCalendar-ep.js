@@ -44,8 +44,11 @@ exports.createCropGroup = async (req, res) => {
       cropNameSinhala,
       cropNameTamil,
       category,
-      bgColor
+      bgColor,
+      fileName
     } = req.body;
+    console.log(req.body);
+    
 
     if (!req.file) {
       return res.status(400).json({ error: "No file uploaded" });
