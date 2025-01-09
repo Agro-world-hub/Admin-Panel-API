@@ -1817,13 +1817,13 @@ exports.getAllPostyById = async (req, res) => {
     // console.log(results);
 
     // Modify the results to convert images to base64
-    results.forEach((result, indexId) => {
-      if (result.postimage) {
-        const base64Image = Buffer.from(result.postimage).toString("base64");
-        const mimeType = "image/png";
-        results[indexId].postimage = `data:${mimeType};base64,${base64Image}`;
-      }
-    });
+    // results.forEach((result, indexId) => {
+    //   if (result.postimage) {
+    //     const base64Image = Buffer.from(result.postimage).toString("base64");
+    //     const mimeType = "image/png";
+    //     results[indexId].postimage = `data:${mimeType};base64,${base64Image}`;
+    //   }
+    // });
 
     res.json(results);
   } catch (error) {
