@@ -22,7 +22,7 @@ exports.getCollectionOfficerDistrictReports = (district) => {
              SUM(fpc.gradeAprice) AS priceA, 
              SUM(fpc.gradeBprice) AS priceB, 
              SUM(fpc.gradeCprice) AS priceC
-            FROM registeredfarmerpayments rp, collectionofficer c, plant-care.cropvariety cv , plant-care.cropgroup cg, farmerpaymentscrops fpc
+            FROM registeredfarmerpayments rp, collectionofficer c, plant_care.cropvariety cv , plant_care.cropgroup cg, farmerpaymentscrops fpc
             WHERE rp.id = fpc.registerFarmerId AND rp.collectionOfficerId = c.id AND fpc.cropId = cv.id AND cv.cropGroupId = cg.id AND c.district = ?
             GROUP BY cg.cropNameEnglish, c.district
         `;
@@ -415,7 +415,7 @@ exports.getFarmerPaymentsCropsByRegisteredFarmerId = (registeredFarmerId) => {
             SELECT c.varietyNameEnglish, fc.gradeAprice AS 'Grade A', fc.gradeBprice AS 'Grade B', fc.gradeCprice AS 'Grade C',
                    (fc.gradeAquan + fc.gradeBquan + fc.gradeCquan) AS totalQuantity, fc.gradeAquan, fc.gradeBquan, fc.gradeCquan
             FROM farmerpaymentscrops fc
-            JOIN plant-care.cropvariety c ON fc.cropId = c.id
+            JOIN plant_care.cropvariety c ON fc.cropId = c.id
             WHERE fc.registerFarmerId = ?;
         `;
     const values = [registeredFarmerId];
@@ -440,7 +440,7 @@ exports.getCollectionOfficerProvinceReports = (province) => {
              SUM(fpc.gradeAprice) AS priceA, 
              SUM(fpc.gradeBprice) AS priceB, 
              SUM(fpc.gradeCprice) AS priceC
-            FROM registeredfarmerpayments rp, collectionofficer c, plant-care.cropvariety cv , plant-care.cropgroup cg, farmerpaymentscrops fpc
+            FROM registeredfarmerpayments rp, collectionofficer c, plant_care.cropvariety cv , plant_care.cropgroup cg, farmerpaymentscrops fpc
             WHERE rp.id = fpc.registerFarmerId AND rp.collectionOfficerId = c.id AND fpc.cropId = cv.id AND cv.cropGroupId = cg.id AND c.province = ?
             GROUP BY cg.cropNameEnglish, c.province
         `;

@@ -949,9 +949,7 @@ exports.getUserById = (userId) => {
       if (err) {
         return reject(err);
       }
-      if (results.length === 0) {
-        return resolve(null); // No user found
-      }
+      
       // if (results[0].profileImage) {
       //   const base64Image = Buffer.from(results[0].profileImage).toString(
       //     "base64"
@@ -1673,7 +1671,7 @@ exports.getPaymentSlipReportrrrr = (officerID) => {
   return new Promise((resolve, reject) => {
     const dataSql = `
       SELECT u.id, co.firstNameEnglish AS officerFirstName, co.lastNameEnglish AS officerLastName, u.firstName, u.lastName, u.NICnumber, SUM(gradeAprice)+SUM(gradeBprice)+SUM(gradeCprice) AS total
-      FROM registeredfarmerpayments rp, plant-care.users u ,farmerpaymentscrops fpc, collectionofficer co
+      FROM registeredfarmerpayments rp, plant_care.users u ,farmerpaymentscrops fpc, collectionofficer co
       WHERE rp.userId = u.id AND rp.id = fpc.registerFarmerId 
       GROUP BY u.id, co.firstNameEnglish, co.lastNameEnglish, u.firstName, u.lastName, u.NICnumber
     `;
@@ -1757,7 +1755,7 @@ exports.getPaymentSlipReport = (officerID, limit, offset, date = null, search = 
     let countSql = `
       SELECT COUNT(*) AS total 
       FROM registeredfarmerpayments rp 
-      JOIN plant-care.users u ON rp.userId = u.id 
+      JOIN plant_care.users u ON rp.userId = u.id 
       WHERE rp.collectionOfficerId = ? 
     `;
     let dataSql = `
@@ -1773,7 +1771,7 @@ exports.getPaymentSlipReport = (officerID, limit, offset, date = null, search = 
       FROM 
           registeredfarmerpayments rp
       JOIN 
-          plant-care.users u ON rp.userId = u.id
+          plant_care.users u ON rp.userId = u.id
       JOIN 
           collectionofficer co ON rp.collectionOfficerId = co.id
       WHERE 
@@ -1844,7 +1842,7 @@ exports.getFarmerListReport = (id) => {
 FROM 
   registeredfarmerpayments rp
 JOIN 
-  plant-care.users u ON rp.userId = u.id
+  plant_care.users u ON rp.userId = u.id
 JOIN 
   collectionofficer co ON rp.collectionOfficerId = co.id
 WHERE 
@@ -1882,9 +1880,9 @@ SELECT
 FROM 
   farmerpaymentscrops fp
 JOIN 
-  plant-care.cropvariety cv ON fp.cropId = cv.id
+  plant_care.cropvariety cv ON fp.cropId = cv.id
 JOIN 
-  plant-care.cropgroup cg ON cv.cropGroupId  = cg.id
+  plant_care.cropgroup cg ON cv.cropGroupId  = cg.id
 WHERE 
   fp.registerFarmerId  = ?
     `;
