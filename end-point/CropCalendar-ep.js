@@ -7,6 +7,8 @@ const xlsx = require("xlsx");
 const cropCalendarDao = require("../dao/CropCalendar-dao");
 const cropCalendarValidations = require('../validations/CropCalendar-validation');
 const mime = require("mime-types");
+const deleteFromS3 = require("../middlewares/s3delete");
+const uploadFileToS3 = require("../middlewares/s3upload");
 
 exports.allCropGroups = async (req, res) => {
   try {
@@ -59,6 +61,9 @@ exports.createCropGroup = async (req, res) => {
 
     // Get file buffer (binary data)
     const fileBuffer = req.file.buffer;
+    const fileName = req.file.originalname;
+
+    const profileImageUrl = await uploadFileToS3(fileBuffer, fileName, "cropgroup/image");
 
     // Call DAO to save news and the image file as longblob
     const newsId = await cropCalendarDao.createCropGroup(
@@ -66,7 +71,7 @@ exports.createCropGroup = async (req, res) => {
       cropNameSinhala,
       cropNameTamil,
       category,
-      fileBuffer,
+      profileImageUrl,
       bgColor
     );
 
@@ -135,6 +140,16 @@ exports.deleteCropGroup = async (req, res) => {
     const { id } = await cropCalendarValidations.deleteCropCalenderSchema.validateAsync(
       req.params
     );
+
+    const cropGroup = await cropCalendarDao.getGroupById(id);
+    if (!cropGroup) {
+      return res.status(404).json({ message: "PlantCare User not found" });
+    }
+
+    const imageUrl = user.profileImage;
+    console.log('This is the URL',imageUrl);
+    let s3Key;
+
 
     const affectedRows = await cropCalendarDao.deleteCropGroup(id);
 

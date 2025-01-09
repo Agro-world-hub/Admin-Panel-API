@@ -7,6 +7,8 @@ const newsDao = require("../dao/News-dao");
 const newsValidate = require('../validations/News-validation');
 const fs = require("fs");
 const xlsx = require("xlsx");
+const deleteFromS3 = require("../middlewares/s3delete");
+const uploadFileToS3 = require("../middlewares/s3upload");
 
 
 
@@ -17,8 +19,22 @@ exports.deleteNews = async (req, res) => {
     const { id } = req.params;
 
     try {
-        // Validate request parameters
         await newsValidate.deleteNewsSchema.validateAsync({ id });
+
+        const news = await newsDao.geNewsById(id);
+
+        if (!news) {
+            return res.status(404).json({ message: "News not found" });
+          }
+
+        const imageUrl = news.image;
+       
+        let s3Key;
+
+        if (imageUrl && imageUrl.startsWith(`https://${process.env.AWS_S3_BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/`)) {
+        s3Key = imageUrl.split(`https://${process.env.AWS_S3_BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/`)[1];
+        }
+        
 
         // Call DAO to delete the news
         const results = await newsDao.deleteNews(id);
@@ -26,6 +42,16 @@ exports.deleteNews = async (req, res) => {
         if (results.affectedRows === 0) {
             return res.status(404).json({ message: 'News not found' });
         }
+
+        if (s3Key) {
+            try {
+              
+              await deleteFromS3(s3Key);
+            } catch (s3Error) {
+              console.error("Failed to delete image from S3:", s3Error);
+              // Optionally handle the failure, e.g., log but not block user deletion
+            }
+          }
 
         console.log('News deleted successfully');
         return res.status(200).json({ message: 'News deleted successfully' });
@@ -54,11 +80,27 @@ exports.editNews = async (req, res) => {
         // Validate request body
         // await newsValidate.editNewsSchema.validateAsync(req.body);
         console.log(req.body);
+
+        const news = await newsDao.geNewsById(id);
+            if (!news) {
+            return res.status(404).json({ message: "News not found" });
+            }
+
+            const imageUrl = news.image;
+            let s3Key;
+
+            if (imageUrl && imageUrl.startsWith(`https://${process.env.AWS_S3_BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/`)) {
+            s3Key = imageUrl.split(`https://${process.env.AWS_S3_BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/`)[1];
+            }
+
+            await deleteFromS3(s3Key);
         
 
         let imageData = null;
         if (req.file) {
-            imageData = req.file.buffer; // Store the binary image data from req.file
+            const fileBuffer = req.file.buffer;
+            const fileName = req.file.originalname;
+            imageData = await uploadFileToS3(fileBuffer, fileName, "content/image"); // Store the binary image data from req.file
         }
         // Call DAO to update the news
         const results = await newsDao.updateNews({ titleEnglish, titleSinhala, titleTamil, descriptionEnglish, descriptionSinhala, descriptionTamil, image: imageData, publishDate,expireDate }, id);

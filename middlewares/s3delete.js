@@ -12,7 +12,14 @@ const s3 = new AWS.S3({
  * @returns {Promise<void>} 
  */
 
-const deleteFromS3 = async (s3Key) => {
+const deleteFromS3 = async (imageUrl) => {
+
+  let s3Key;
+
+  if (imageUrl && imageUrl.startsWith(`https://${process.env.AWS_S3_BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/`)) {
+    s3Key = imageUrl.split(`https://${process.env.AWS_S3_BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/`)[1];
+  }
+
   if (!s3Key) {
     console.log("No S3 key provided, skipping deletion.");
     return;

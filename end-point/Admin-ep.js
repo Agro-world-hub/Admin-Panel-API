@@ -239,7 +239,7 @@ exports.createNews = async (req, res) => {
     const fileBuffer = req.file.buffer;
     const fileName = req.file.originalname;
 
-    const image = await uploadFileToS3(fileBuffer, fileName, "content/images");
+    const image = await uploadFileToS3(fileBuffer, fileName, "content/image");
 
 
     // Call DAO to save news and the image file as longblob
@@ -1056,11 +1056,11 @@ exports.deletePlantCareUser = async (req, res) => {
 
     const imageUrl = user.profileImage;
     
-    let s3Key;
+    // let s3Key;
 
-    if (imageUrl && imageUrl.startsWith(`https://${process.env.AWS_S3_BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/`)) {
-      s3Key = imageUrl.split(`https://${process.env.AWS_S3_BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/`)[1];
-    }
+    // if (imageUrl && imageUrl.startsWith(`https://${process.env.AWS_S3_BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/`)) {
+    //   s3Key = imageUrl.split(`https://${process.env.AWS_S3_BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/`)[1];
+    // }
     
 
     const result = await adminDao.deletePlantCareUserById(id);
@@ -1069,9 +1069,9 @@ exports.deletePlantCareUser = async (req, res) => {
       return res.status(404).json({ message: "Failed to delete PlantCare User" });
     }
 
-    if (s3Key) {
+    if (imageUrl) {
       try {
-        await deleteFromS3(s3Key);
+        await deleteFromS3(imageUrl);
       } catch (s3Error) {
         console.error("Failed to delete image from S3:", s3Error);
         // Optionally handle the failure, e.g., log but not block user deletion
