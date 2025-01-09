@@ -1114,12 +1114,17 @@ exports.updatePlantCareUser = async (req, res) => {
 
     await deleteFromS3(imageUrl);
 
-    let profileImageUrl = null;
-    if (req.file) {
-      const fileBuffer = req.file.buffer;
-      const fileName = req.file.originalname;
-      profileImageUrl = await uploadFileToS3(fileBuffer, fileName, "users/profile-images");
-    }
+    const qrCodeBase64 = await QRCode.toDataURL(qrData);
+      const qrCodeBuffer = Buffer.from(
+        qrCodeBase64.replace(/^data:image\/png;base64,/, ""),
+        "base64"
+      );
+      const qrcodeURL = await uploadFileToS3(
+        qrCodeBuffer,
+        `${officerData.empId}.png`,
+        "collectionofficer/QRcode"
+      );
+      console.log(qrcodeURL);
 
     const userData = { firstName, lastName, phoneNumber, NICnumber, district, membership, profileImage: profileImageUrl };
 
