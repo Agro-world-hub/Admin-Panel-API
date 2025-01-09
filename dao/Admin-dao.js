@@ -844,23 +844,23 @@ exports.deletePlantCareUserById = (id) => {
 
 exports.updatePlantCareUserById = (userData, id) => {
   return new Promise((resolve, reject) => {
-    const { firstName, lastName, phoneNumber, NICnumber, district, membership, imageData } = userData;
+    const { firstName, lastName, phoneNumber, NICnumber, district, membership, profileImage } = userData;
 
     let sql = `
-            UPDATE users 
-            SET 
-                firstName = ?, 
-                lastName = ?, 
-                phoneNumber = ?, 
-                NICnumber = ?,
-                district = ?, 
-                membership = ?
-        `;
+      UPDATE users 
+      SET 
+          firstName = ?, 
+          lastName = ?, 
+          phoneNumber = ?, 
+          NICnumber = ?, 
+          district = ?, 
+          membership = ?
+    `;
     let values = [firstName, lastName, phoneNumber, NICnumber, district, membership];
 
-    if (imageData) {
+    if (profileImage) {
       sql += `, profileImage = ?`;
-      values.push(imageData);
+      values.push(profileImage);
     }
 
     sql += ` WHERE id = ?`;
@@ -875,6 +875,7 @@ exports.updatePlantCareUserById = (userData, id) => {
     });
   });
 };
+
 
 // exports.createPlantCareUser = (userData) => {
 //   return new Promise((resolve, reject) => {
@@ -956,13 +957,13 @@ exports.getUserById = (userId) => {
       if (results.length === 0) {
         return resolve(null); // No user found
       }
-      if (results[0].profileImage) {
-        const base64Image = Buffer.from(results[0].profileImage).toString(
-          "base64"
-        );
-        const mimeType = "image/png"; // Adjust MIME type if necessary, depending on the image type
-        results[0].profileImage = `data:${mimeType};base64,${base64Image}`;
-      }
+      // if (results[0].profileImage) {
+      //   const base64Image = Buffer.from(results[0].profileImage).toString(
+      //     "base64"
+      //   );
+      //   const mimeType = "image/png"; // Adjust MIME type if necessary, depending on the image type
+      //   results[0].profileImage = `data:${mimeType};base64,${base64Image}`;
+      // }
       resolve(results[0]); // Return the first result
     });
   });

@@ -340,13 +340,7 @@ exports.getGroupById = (id) => {
         return reject(err); // Reject promise if an error occurs
       }
       const processedDataResults = results.map((variety) => {
-        if (variety.image) {
-          const base64Image = Buffer.from(variety.image).toString(
-            "base64"
-          );
-          const mimeType = "image/png"; // Adjust the MIME type if needed
-          variety.image = `data:${mimeType};base64,${base64Image}`;
-        }
+        
         return variety;
       });
       resolve(processedDataResults); // No need to wrap in arrays, return results directly
