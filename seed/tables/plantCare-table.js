@@ -231,7 +231,7 @@ const createCropCalenderDaysTable = () => {
     reqImages INT(11) NULL,
     reqGeo BOOLEAN NULL,
     createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (cropId) REFERENCES cropCalender(id)
+    FOREIGN KEY (cropId) REFERENCES cropcalender(id)
         ON DELETE CASCADE
         ON UPDATE CASCADE
 );
@@ -288,10 +288,10 @@ const createOngoingCultivationsCropsTable = () => {
       extentac DECIMAL(15, 2) NOT NULL,
       extentp DECIMAL(15, 2) NOT NULL,
       createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-      FOREIGN KEY (ongoingCultivationId) REFERENCES ongoingCultivations(id)
+      FOREIGN KEY (ongoingCultivationId) REFERENCES ongoingcultivations(id)
         ON DELETE CASCADE
         ON UPDATE CASCADE,
-      FOREIGN KEY (cropCalendar) REFERENCES cropCalender(id)
+      FOREIGN KEY (cropCalendar) REFERENCES cropcalender(id)
         ON DELETE CASCADE
         ON UPDATE CASCADE
     )
@@ -668,7 +668,7 @@ const createSlaveCropCalenderDaysTable = () => {
       FOREIGN KEY (userId) REFERENCES users(id)
           ON DELETE CASCADE
           ON UPDATE CASCADE,
-      FOREIGN KEY (cropCalendarId) REFERENCES cropCalender(id)
+      FOREIGN KEY (cropCalendarId) REFERENCES cropcalender(id)
         ON DELETE CASCADE
         ON UPDATE CASCADE,
       FOREIGN KEY (onCulscropID) REFERENCES ongoingcultivationscrops(id)

@@ -89,7 +89,7 @@ const createMarketPlaceItems = () => {
       changeby DECIMAL(15, 2) NOT NULL,
       tags TEXT NOT NULL,
       createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-      FOREIGN KEY (cropId) REFERENCES \`plant-care\`.cropvariety(id)
+      FOREIGN KEY (cropId) REFERENCES plant_care.cropvariety(id)
         ON DELETE CASCADE
         ON UPDATE CASCADE
     )
@@ -167,7 +167,7 @@ const createCart = () => {
       userId INT,
       status VARCHAR(13) NOT NULL,
       createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-      FOREIGN KEY (userId) REFERENCES \`plant-care\`.users(id)
+      FOREIGN KEY (userId) REFERENCES plant_care.users(id)
         ON DELETE CASCADE
         ON UPDATE CASCADE
     )

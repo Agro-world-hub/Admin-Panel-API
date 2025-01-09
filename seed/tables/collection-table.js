@@ -68,10 +68,10 @@ const createMarketPriceTable = () => {
       averagePrice DECIMAL(15,2) DEFAULT NULL,
       createdAt TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
       createdBy INT(11) DEFAULT NULL,
-      FOREIGN KEY (varietyId) REFERENCES \`plant-care\`.cropvariety(id)
+      FOREIGN KEY (varietyId) REFERENCES plant_care.cropvariety(id)
         ON DELETE CASCADE
         ON UPDATE CASCADE,
-      FOREIGN KEY (createdBy) REFERENCES \`plant-care\`.adminUsers(id)
+      FOREIGN KEY (createdBy) REFERENCES plant_care.adminusers(id)
         ON DELETE CASCADE
         ON UPDATE CASCADE,
       FOREIGN KEY (xlindex) REFERENCES xlsxhistory(id)
@@ -241,7 +241,7 @@ const createRegisteredFarmerPayments = () => {
       userId INT,
       collectionOfficerId INT,
       createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-      FOREIGN KEY (userId) REFERENCES \`plant-care\`.users(id)
+      FOREIGN KEY (userId) REFERENCES plant_care.users(id)
         ON DELETE CASCADE
         ON UPDATE CASCADE,
       FOREIGN KEY (collectionOfficerId) REFERENCES collectionofficer(id)
@@ -279,7 +279,7 @@ const createFarmerPaymensCrops = () => {
       FOREIGN KEY (registerFarmerId) REFERENCES registeredfarmerpayments(id)
         ON DELETE CASCADE
         ON UPDATE CASCADE,
-      FOREIGN KEY (cropId) REFERENCES \`plant-care\`.cropvariety(id)
+      FOREIGN KEY (cropId) REFERENCES plant_care.cropvariety(id)
         ON DELETE CASCADE
         ON UPDATE CASCADE
     )
@@ -310,7 +310,7 @@ const createFarmerComplains  = () => {
     reply TEXT NULL,
     status VARCHAR(20) NOT NULL,
     createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (farmerId) REFERENCES \`plant-care\`.users(id)
+    FOREIGN KEY (farmerId) REFERENCES plant_care.users(id)
         ON DELETE CASCADE
         ON UPDATE CASCADE,
     FOREIGN KEY (coId) REFERENCES collectionofficer(id)
