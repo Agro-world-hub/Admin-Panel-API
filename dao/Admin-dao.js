@@ -262,12 +262,7 @@ exports.getAllNews = async (limit, offset, status, createdAt) => {
 
         // Convert the image blob to base64 and include in the response
         const newsItems = dataResults.map((news) => {
-          if (news.image) {
-            // Convert the image (stored as longblob) to a base64 string
-            news.image = `data:image/jpeg;base64,${news.image.toString(
-              "base64"
-            )}`;
-          }
+         
           return news;
         });
 

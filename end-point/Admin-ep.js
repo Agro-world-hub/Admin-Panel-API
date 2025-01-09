@@ -1110,13 +1110,9 @@ exports.updatePlantCareUser = async (req, res) => {
     }
 
     const imageUrl = user.profileImage;
-    let s3Key;
+    
 
-    if (imageUrl && imageUrl.startsWith(`https://${process.env.AWS_S3_BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/`)) {
-      s3Key = imageUrl.split(`https://${process.env.AWS_S3_BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/`)[1];
-    }
-
-    await deleteFromS3(s3Key);
+    await deleteFromS3(imageUrl);
 
     let profileImageUrl = null;
     if (req.file) {

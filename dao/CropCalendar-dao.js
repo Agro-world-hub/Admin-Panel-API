@@ -125,7 +125,7 @@ exports.createCropVariety = async (
   descriptionEnglish,
   descriptionSinhala,
   descriptionTamil,
-  fileBuffer,
+  image,
   bgColor
 ) => {
   return new Promise((resolve, reject) => {
@@ -139,7 +139,7 @@ exports.createCropVariety = async (
       descriptionEnglish,
       descriptionSinhala,
       descriptionTamil,
-      fileBuffer,
+      image,
       bgColor
     ];
 
@@ -298,13 +298,13 @@ exports.getAllVarietyByGroup = (cropGroupId) => {
         return reject(err); // Reject promise if an error occurs
       }
       const processedDataResults = results.map((variety) => {
-        if (variety.image) {
-          const base64Image = Buffer.from(variety.image).toString(
-            "base64"
-          );
-          const mimeType = "image/png"; // Adjust the MIME type if needed
-          variety.image = `data:${mimeType};base64,${base64Image}`;
-        }
+        // if (variety.image) {
+        //   const base64Image = Buffer.from(variety.image).toString(
+        //     "base64"
+        //   );
+        //   const mimeType = "image/png"; // Adjust the MIME type if needed
+        //   variety.image = `data:${mimeType};base64,${base64Image}`;
+        // }
         return variety;
       });
 
@@ -348,6 +348,36 @@ exports.getGroupById = (id) => {
   });
 };
 
+exports.getGroupByIds3 = (id) => {
+  return new Promise((resolve, reject) => {
+    const sql = "SELECT * FROM cropgroup WHERE id = ?";
+    plantcare.query(sql, [id], (err, results) => {
+      if (err) {
+        return reject(err);
+      }
+      if (results.length === 0) {
+        return resolve(null); // No user found
+      }
+      resolve(results[0]); // Return the first result
+    });
+  });
+};
+
+exports.getVarietyByIds3 = (id) => {
+  return new Promise((resolve, reject) => {
+    const sql = "SELECT * FROM cropvariety WHERE id = ?";
+    plantcare.query(sql, [id], (err, results) => {
+      if (err) {
+        return reject(err);
+      }
+      if (results.length === 0) {
+        return resolve(null); // No user found
+      }
+      resolve(results[0]); // Return the first result
+    });
+  });
+};
+
 exports.getVarietyById = (id) => {
   return new Promise((resolve, reject) => {
     const sql = "SELECT * FROM cropvariety WHERE id = ?";
@@ -357,13 +387,13 @@ exports.getVarietyById = (id) => {
         return reject(err); // Reject promise if an error occurs
       }
       const processedDataResults = results.map((variety) => {
-        if (variety.image) {
-          const base64Image = Buffer.from(variety.image).toString(
-            "base64"
-          );
-          const mimeType = "image/png"; // Adjust the MIME type if needed
-          variety.image = `data:${mimeType};base64,${base64Image}`;
-        }
+        // if (variety.image) {
+        //   const base64Image = Buffer.from(variety.image).toString(
+        //     "base64"
+        //   );
+        //   const mimeType = "image/png"; // Adjust the MIME type if needed
+        //   variety.image = `data:${mimeType};base64,${base64Image}`;
+        // }
         return variety;
       });
       resolve(processedDataResults); // No need to wrap in arrays, return results directly
