@@ -224,7 +224,9 @@ exports.insertXLSXData = (cropId, data) => {
       "Task description (Sinhala)": Joi.string().required(),
       "Task description (Tamil)": Joi.string().required(),
       "Image Link": Joi.string().required(),
-      "Video Link": Joi.string().required(),
+      "Video Link English": Joi.string().required(),
+      "Video Link Sinhala": Joi.string().required(),
+      "Video Link Tamil": Joi.string().required(),
       "Required Images": Joi.number().required(),
       "Require Geo": Joi.number().required(),
     }).required();
@@ -248,7 +250,7 @@ exports.insertXLSXData = (cropId, data) => {
         (cropId, taskIndex, days, taskTypeEnglish, taskTypeSinhala, taskTypeTamil, 
         taskCategoryEnglish, taskCategorySinhala, taskCategoryTamil, 
         taskEnglish, taskSinhala, taskTamil, 
-        taskDescriptionEnglish, taskDescriptionSinhala, taskDescriptionTamil, imageLink, videoLink, reqImages, reqGeo) 
+        taskDescriptionEnglish, taskDescriptionSinhala, taskDescriptionTamil, imageLink, videoLinkEnglish, videoLinkSinhala, videoLinkTamil, reqImages, reqGeo) 
         VALUES ?`;
 
     const values = validatedData.map((row) => [
@@ -268,7 +270,9 @@ exports.insertXLSXData = (cropId, data) => {
       row["Task description (Sinhala)"],
       row["Task description (Tamil)"],
       row["Image Link"],
-      row["Video Link"],
+      row["Video Link English"],
+      row["Video Link Sinhala"],
+      row["Video Link Tamil"],
       row["Required Images"],
       row["Require Geo"],
     ]);

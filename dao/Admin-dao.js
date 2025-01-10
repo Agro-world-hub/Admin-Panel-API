@@ -1078,14 +1078,16 @@ exports.editTask = (
   taskDescriptionTamil,
   reqImages,
   imageLink,
-  videoLink,
+  videoLinkEnglish,
+  videoLinkSinhala,
+  videoLinkTamil,
   id
 ) => {
   return new Promise((resolve, reject) => {
     const sql = `
             UPDATE cropcalendardays 
             SET taskEnglish=?, taskSinhala=?, taskTamil=?, taskTypeEnglish=?, taskTypeSinhala=?, taskTypeTamil=?, 
-                taskCategoryEnglish=?, taskCategorySinhala=?, taskCategoryTamil=?, taskDescriptionEnglish=?, taskDescriptionSinhala=?, taskDescriptionTamil=?, reqImages=?, imageLink=?, videoLink=?
+                taskCategoryEnglish=?, taskCategorySinhala=?, taskCategoryTamil=?, taskDescriptionEnglish=?, taskDescriptionSinhala=?, taskDescriptionTamil=?, reqImages=?, imageLink=?, videoLinkEnglish=?, videoLinkSinhala=?, videoLinkTamil=?
             WHERE id = ?
         `;
     const values = [
@@ -1103,7 +1105,9 @@ exports.editTask = (
       taskDescriptionTamil,
       reqImages,
       imageLink,
-      videoLink,
+      videoLinkEnglish,
+      videoLinkSinhala,
+      videoLinkTamil,
       id,
     ];
 
@@ -1180,7 +1184,9 @@ exports.getAllUserTaskByCropId = (cropId, userId, limit, offset) => {
         slavecropcalendardays.startingDate, 
         slavecropcalendardays.taskEnglish,
         slavecropcalendardays.imageLink,
-        slavecropcalendardays.videoLink,
+        slavecropcalendardays.videoLinkEnglish,
+        slavecropcalendardays.videoLinkSinhala,
+        slavecropcalendardays.videoLinkTamil,
         slavecropcalendardays.status
       FROM 
         slavecropcalendardays

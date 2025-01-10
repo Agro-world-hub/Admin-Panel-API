@@ -1439,7 +1439,9 @@ exports.editTask = async (req, res) => {
       validatedParams.taskDescriptionTamil,
       validatedParams.reqImages,
       validatedParams.imageLink,
-      validatedParams.videoLink,
+      validatedParams.videoLinkEnglish,
+      validatedParams.videoLinkSinhala,
+      validatedParams.videoLinkTamil,
       validatedParams.id
     );
 
