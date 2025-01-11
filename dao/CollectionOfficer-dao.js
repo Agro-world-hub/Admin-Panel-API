@@ -71,7 +71,7 @@ exports.checkEmailExist = (email) => {
   });
 };
 
-exports.createCollectionOfficerPersonal = (officerData) => {
+exports.createCollectionOfficerPersonal = (officerData, profileImageUrl) => {
   return new Promise(async (resolve, reject) => {
     try {
       // Prepare data for QR code generation
@@ -98,10 +98,10 @@ exports.createCollectionOfficerPersonal = (officerData) => {
                     centerId, companyId ,irmId ,firstNameEnglish, firstNameSinhala, firstNameTamil, lastNameEnglish,
                     lastNameSinhala, lastNameTamil, jobRole, empId, empType, phoneCode01, phoneNumber01, phoneCode02, phoneNumber02,
                     nic, email, houseNumber, streetName, city, district, province, country,
-                    languages, accHolderName, accNumber, bankName, branchName,QRcode, status
+                    languages, accHolderName, accNumber, bankName, branchName, image, QRcode, status
                 ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?,
                          ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,
-                         ?, ?, ?, ?, ?, ?, ?, ?, ?,?, 'Not Approved')
+                         ?, ?, ?, ?, ?, ?, ?, ?, ?,?,?, 'Not Approved')
             `;
 
       // Database query with QR image data added
@@ -137,6 +137,7 @@ exports.createCollectionOfficerPersonal = (officerData) => {
           officerData.accNumber,
           officerData.bankName,
           officerData.branchName,
+          profileImageUrl,
           qrcodeURL,
         ],
         (err, results) => {
@@ -156,7 +157,7 @@ exports.createCollectionOfficerPersonal = (officerData) => {
 
 exports.getQrImage = (id) => {
   return new Promise((resolve, reject) => {
-    const sql = "SELECT QRcode FROM collectionofficer WHERE id = ?";
+    const sql = "SELECT image, QRcode FROM collectionofficer WHERE id = ?";
     collectionofficer.query(sql, [id], (err, results) => {
       if (err) {
         return reject(err);
@@ -896,7 +897,8 @@ exports.updateOfficerDetails = (
   accHolderName,
   accNumber,
   bankName,
-  branchName
+  branchName,
+  profileImageUrl
 ) => {
   return new Promise((resolve, reject) => {
     let sql = `
@@ -904,7 +906,7 @@ exports.updateOfficerDetails = (
                 SET centerId = ?, companyId = ?, irmId = ?, firstNameEnglish = ?, lastNameEnglish = ?, firstNameSinhala = ?, lastNameSinhala = ?,
                     firstNameTamil = ?, lastNameTamil = ?, jobRole = ?, empId = ?, empType = ?, phoneCode01 = ?, phoneNumber01 = ?, phoneCode02 = ?, phoneNumber02 = ?,
                     nic = ?, email = ?, houseNumber = ?, streetName = ?, city = ?, district = ?, province = ?, country = ?, languages = ?,
-                    accHolderName = ?, accNumber = ?, bankName = ?, branchName = ?, status = 'Not Approved'
+                    accHolderName = ?, accNumber = ?, bankName = ?, branchName = ?, image = ?, status = 'Not Approved'
           `;
     let values = [
       centerId,
@@ -936,6 +938,7 @@ exports.updateOfficerDetails = (
       accNumber,
       bankName,
       branchName,
+      profileImageUrl
     ];
 
     sql += ` WHERE id = ?`;

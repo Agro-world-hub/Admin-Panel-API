@@ -367,6 +367,67 @@ const createMarketPriceRequestTable = () => {
 };
 
 
+const createDailyTargetTable = () => {
+    const sql = `
+    CREATE TABLE IF NOT EXISTS dailytarget (
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      centerId INT(11) DEFAULT NULL,
+      fromDate DATE  NOT NULL,
+      toDate DATE  NOT NULL,
+      fromTime TIME NOT NULL,
+      toTime TIME NOT NULL,
+      createdBy INT(11) DEFAULT NULL,
+      createdAt TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (centerId) REFERENCES collectioncenter(id)
+        ON DELETE CASCADE
+        ON UPDATE CASCADE,
+      FOREIGN KEY (createdBy) REFERENCES collectionofficer(id)
+        ON DELETE CASCADE
+        ON UPDATE CASCADE
+    )
+  `;
+    return new Promise((resolve, reject) => {
+        collectionofficer.query(sql, (err, result) => {
+            if (err) {
+                reject('Error creating Daily Target request table: ' + err);
+            } else {
+                resolve('Daily Target table created request successfully.');
+            }
+        });
+    });
+};
+
+
+const createDailyTargetItemsTable = () => {
+    const sql = `
+    CREATE TABLE IF NOT EXISTS dailytargetitems (
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      targetId INT(11) NOT NULL,
+      varietyId INT(11) DEFAULT NULL,
+      qtyA DECIMAL(8,2) DEFAULT 0,
+      qtyB DECIMAL(8,2) DEFAULT 0,
+      qtC DECIMAL(8,2) DEFAULT 0,
+      createdAt TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (targetId) REFERENCES dailytarget(id)
+        ON DELETE CASCADE
+        ON UPDATE CASCADE,
+      FOREIGN KEY (varietyId) REFERENCES plant_care.cropvariety(id)
+        ON DELETE CASCADE
+        ON UPDATE CASCADE
+    )
+  `;
+    return new Promise((resolve, reject) => {
+        collectionofficer.query(sql, (err, result) => {
+            if (err) {
+                reject('Error creating Daily Target Items request table: ' + err);
+            } else {
+                resolve('Daily Target Items table created request successfully.');
+            }
+        });
+    });
+};
+
+
 
 module.exports = {
     createXlsxHistoryTable,
@@ -379,4 +440,6 @@ module.exports = {
     createCollectionCenter,
     createFarmerComplains,
     createMarketPriceRequestTable,
+    createDailyTargetTable,
+    createDailyTargetItemsTable
 };
