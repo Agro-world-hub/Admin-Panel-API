@@ -500,9 +500,64 @@ exports.generateRegCode = (province, district, city, callback) => {
   });
 };
 
+// exports.getAllCompanyDAO = () => {
+//   return new Promise((resolve, reject) => {
+//     const sql = `
+//       SELECT 
+//         c.companyNameEnglish AS companyName,
+//         c.email AS companyEmail,
+//         c.status,
+//         SUM(CASE WHEN co.jobRole = 'Collection Center Head' THEN 1 ELSE 0 END) AS numOfHeads,
+//         SUM(CASE WHEN co.jobRole = 'Collection Center Manager' THEN 1 ELSE 0 END) AS numOfManagers,
+//         SUM(CASE WHEN co.jobRole = 'Collection Officer' THEN 1 ELSE 0 END) AS numOfOfficers
+//       FROM 
+//         company c
+//       LEFT JOIN 
+//         collectionofficer co 
+//       ON 
+//         c.id = co.companyId
+//       GROUP BY 
+//         c.id
+//     `;
+//     collectionofficer.query(sql, (err, results) => {
+//       if (err) {
+//         return reject(err);
+//       }
+//       resolve(results);
+//     });
+//   });
+// };
+
+
 exports.getAllCompanyDAO = () => {
   return new Promise((resolve, reject) => {
-    const sql = `SELECT c.id, c.companyNameEnglish, c.email, c.status, c.oicName, c.oicEmail, c.oicConCode1, c.oicConNum1, c.oicConCode2, c.oicConNum2, co.jobRole, COUNT(co.jobRole) as jobRoleCount FROM company c LEFT JOIN collectionofficer co ON c.id = co.companyId GROUP BY  c.id, co.jobRole`;
+    const sql = `
+      SELECT 
+        c.id,
+        c.companyNameEnglish AS companyName,
+        c.email AS companyEmail,
+        c.status,
+        SUM(CASE WHEN co.jobRole = 'Collection Center Head' THEN 1 ELSE 0 END) AS numOfHead,
+        SUM(CASE WHEN co.jobRole = 'Collection Center Manager' THEN 1 ELSE 0 END) AS numOfManagers,
+        SUM(CASE WHEN co.jobRole = 'Collection Officer' THEN 1 ELSE 0 END) AS numOfOfficers,
+        SUM(CASE WHEN co.jobRole = 'Customer Officer' THEN 1 ELSE 0 END) AS numOfCustomerOfficers,
+        (
+          SELECT 
+            COUNT(*) 
+          FROM 
+            collectioncenter cc 
+          WHERE 
+            FIND_IN_SET(c.companyNameEnglish, REPLACE(cc.companies, ', ', ',')) > 0
+        ) AS numOfCenters
+      FROM 
+        company c
+      LEFT JOIN 
+        collectionofficer co 
+      ON 
+        c.id = co.companyId
+      GROUP BY 
+        c.id
+    `;
     collectionofficer.query(sql, (err, results) => {
       if (err) {
         return reject(err);
@@ -511,6 +566,9 @@ exports.getAllCompanyDAO = () => {
     });
   });
 };
+
+
+
 
 exports.getCompanyDAO = (id) => {
   return new Promise((resolve, reject) => {
