@@ -377,11 +377,6 @@ exports.getAllCollectionOfficersStatus = (
 
         // Convert QRcode to Base64
         const processedResults = dataResults.map((item) => {
-          if (item.QRcode) {
-            item.QRcode = `data:image/png;base64,${Buffer.from(
-              item.QRcode
-            ).toString("base64")}`;
-          }
           return item;
         });
 

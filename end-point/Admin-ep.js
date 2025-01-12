@@ -2340,11 +2340,7 @@ exports.getFarmerListReport = async (req, res) => {
     const cropList = await adminDao.getFarmerCropListReport(id);
     const userdetails = await adminDao.getReportfarmerDetails(userId);
 
-    if (userdetails.farmerQr) {
-      const base64Image = Buffer.from(userdetails.farmerQr).toString("base64");
-      const mimeType = "image/png"; // Adjust MIME type if necessary, depending on the image type
-      userdetails.farmerQr = `data:${mimeType};base64,${base64Image}`;
-    }
+    
 
 
     console.log("Successfully fetched farmer list report");
