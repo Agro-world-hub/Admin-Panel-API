@@ -71,6 +71,11 @@ app.use('/api/market-place', MarketPlace);
 app.use('/api/crop-calendar', CropCalendar);
 app.use('/uploads', express.static('uploads'));
 
+app.get('/test', (req, res) => {
+  res.send('Test route is working!');
+  console.log('tset toute is working');
+});
+
 app.listen(port, () => {
   console.log(`Server running on http://localhost:${port}`);
 });
