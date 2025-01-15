@@ -1,4 +1,4 @@
-const marketPriceDao = require('../dao/marketPrice-dao');
+const marketPriceDao = require('../dao/MarketPrice-dao');
 const xlsx = require('xlsx');
 const path = require('path');
 const ValidateSchema = require("../validations/Admin-validation");
