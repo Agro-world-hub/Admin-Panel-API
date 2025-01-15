@@ -6,18 +6,18 @@ const createUsersTable = () => {
     const sql = `
     CREATE TABLE IF NOT EXISTS users (
       id INT AUTO_INCREMENT PRIMARY KEY,
-      firstName VARCHAR(50) NOT NULL,
-      lastName VARCHAR(50) NOT NULL,
-      phoneNumber VARCHAR(12) NOT NULL,
-      NICnumber VARCHAR(12) NOT NULL,
-      profileImage TEXT NULL,
-      farmerQr TEXT,
-      membership VARCHAR(25) NULL,
-      activeStatus VARCHAR(25) NULL,
-      houseNo VARCHAR(10) NULL,
-      streetName VARCHAR(25) NULL,
-      city VARCHAR(25) NULL,
-      district VARCHAR(25) NULL,
+      firstName VARCHAR(50) DEFAULT NULL,
+      lastName VARCHAR(50) DEFAULT NULL,
+      phoneNumber VARCHAR(12) DEFAULT NULL,
+      NICnumber VARCHAR(12) DEFAULT NULL,
+      profileImage TEXT DEFAULT NULL,
+      farmerQr TEXT DEFAULT NULL,
+      membership VARCHAR(25) DEFAULT NULL,
+      activeStatus VARCHAR(25) DEFAULT NULL,
+      houseNo VARCHAR(10) DEFAULT NULL,
+      streetName VARCHAR(25) DEFAULT NULL,
+      city VARCHAR(25) DEFAULT NULL,
+      district VARCHAR(25) DEFAULT NULL,
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     )
   `;
@@ -39,7 +39,7 @@ const createAdminUserRolesTable = () => {
     const sql = `
     CREATE TABLE IF NOT EXISTS adminroles (
       id INT AUTO_INCREMENT PRIMARY KEY,
-      role VARCHAR(100) NOT NULL
+      role VARCHAR(100) DEFAULT NULL
     )
   `;
     return new Promise((resolve, reject) => {
@@ -60,10 +60,10 @@ const createAdminUsersTable = () => {
     const sql = `
     CREATE TABLE IF NOT EXISTS adminusers (
       id INT AUTO_INCREMENT PRIMARY KEY,
-      mail VARCHAR(50) NOT NULL,
-      userName VARCHAR(30) NOT NULL,
-      password TEXT NOT NULL,
-      role INT,
+      mail VARCHAR(50) DEFAULT NULL,
+      userName VARCHAR(30) DEFAULT NULL,
+      password TEXT DEFAULT NULL,
+      role INT DEFAULT NULL,
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (role) REFERENCES adminroles(id)
         ON DELETE CASCADE
@@ -87,18 +87,18 @@ const createContentTable = () => {
     const sql = `
     CREATE TABLE IF NOT EXISTS content (
       id INT AUTO_INCREMENT PRIMARY KEY,
-      titleEnglish TEXT NOT NULL,
-      titleSinhala TEXT NOT NULL,
-      titleTamil TEXT NOT NULL,
-      descriptionEnglish  TEXT NOT NULL,
-      descriptionSinhala TEXT NOT NULL,
-      descriptionTamil TEXT NOT NULL,
-      image TEXT,
-      status VARCHAR(15) NOT NULL,
-      publishDate TIMESTAMP,
+      titleEnglish TEXT DEFAULT NULL,
+      titleSinhala TEXT DEFAULT NULL,
+      titleTamil TEXT DEFAULT NULL,
+      descriptionEnglish  TEXT DEFAULT NULL,
+      descriptionSinhala TEXT DEFAULT NULL,
+      descriptionTamil TEXT DEFAULT NULL,
+      image TEXT DEFAULT NULL,
+      status VARCHAR(15) DEFAULT NULL,
+      publishDate TIMESTAMP NULL DEFAULT NULL,
       expireDate TIMESTAMP NULL DEFAULT NULL,
       createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-      createdBy INT,
+      createdBy INT DEFAULT NULL,
       FOREIGN KEY (createdBy) REFERENCES adminusers(id)
         ON DELETE CASCADE
         ON UPDATE CASCADE
@@ -122,12 +122,12 @@ const createCropGroup = () => {
     const sql = `
     CREATE TABLE IF NOT EXISTS cropgroup (
       id INT AUTO_INCREMENT PRIMARY KEY,
-      cropNameEnglish VARCHAR(50) NOT NULL,
-      cropNameSinhala VARCHAR(50) NOT NULL,
-      cropNameTamil VARCHAR(50) NOT NULL,
-      category VARCHAR(255) NOT NULL,
-      image TEXT,
-      bgColor VARCHAR(10),
+      cropNameEnglish VARCHAR(50) DEFAULT NULL,
+      cropNameSinhala VARCHAR(50) DEFAULT NULL,
+      cropNameTamil VARCHAR(50) DEFAULT NULL,
+      category VARCHAR(255) DEFAULT NULL,
+      image TEXT DEFAULT NULL,
+      bgColor VARCHAR(10) DEFAULT NULL,
       createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     )
   `;
@@ -149,15 +149,15 @@ const createCropVariety = () => {
     const sql = `
     CREATE TABLE IF NOT EXISTS cropvariety (
       id INT AUTO_INCREMENT PRIMARY KEY,
-      cropGroupId INT(11) NULL,
-      varietyNameEnglish VARCHAR(50) NOT NULL,
-      varietyNameSinhala VARCHAR(50) NOT NULL,
-      varietyNameTamil VARCHAR(50) NOT NULL,
-      descriptionEnglish TEXT NOT NULL,
-      descriptionSinhala TEXT NOT NULL,
-      descriptionTamil TEXT NOT NULL,
-      image TEXT,
-      bgColor VARCHAR(10),
+      cropGroupId INT(11) DEFAULT NULL,
+      varietyNameEnglish VARCHAR(50) DEFAULT NULL,
+      varietyNameSinhala VARCHAR(50) DEFAULT NULL,
+      varietyNameTamil VARCHAR(50) DEFAULT NULL,
+      descriptionEnglish TEXT DEFAULT NULL,
+      descriptionSinhala TEXT DEFAULT NULL,
+      descriptionTamil TEXT DEFAULT NULL,
+      image TEXT DEFAULT NULL,
+      bgColor VARCHAR(10) DEFAULT NULL,
       createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (cropGroupId) REFERENCES cropgroup(id)
         ON DELETE CASCADE
@@ -182,11 +182,11 @@ const createCropCalenderTable = () => {
     const sql = `
     CREATE TABLE IF NOT EXISTS cropcalender (
       id INT AUTO_INCREMENT PRIMARY KEY,
-      cropVarietyId INT(11) NULL,
-      method VARCHAR(25) NOT NULL,
-      natOfCul VARCHAR(25) NOT NULL,
-      cropDuration VARCHAR(3) NOT NULL,
-      suitableAreas TEXT NOT NULL,
+      cropVarietyId INT(11) DEFAULT NULL,
+      method VARCHAR(25) DEFAULT NULL,
+      natOfCul VARCHAR(25) DEFAULT NULL,
+      cropDuration VARCHAR(3) DEFAULT NULL,
+      suitableAreas TEXT DEFAULT NULL,
       createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (cropVarietyId) REFERENCES cropvariety(id)
         ON DELETE CASCADE
@@ -211,27 +211,27 @@ const createCropCalenderDaysTable = () => {
     const sql = `
     CREATE TABLE IF NOT EXISTS cropcalendardays (
     id INT AUTO_INCREMENT PRIMARY KEY,
-    cropId INT(11) NOT NULL,
-    taskIndex INT(255) NOT NULL,
-    days INT(11) NOT NULL,
-    taskTypeEnglish TEXT COLLATE latin1_swedish_ci NOT NULL,
-    taskTypeSinhala TEXT COLLATE utf8_unicode_ci NOT NULL,
-    taskTypeTamil TEXT COLLATE utf8_unicode_ci NOT NULL,
-    taskCategoryEnglish TEXT COLLATE latin1_swedish_ci NOT NULL,
-    taskCategorySinhala TEXT COLLATE utf8_unicode_ci NOT NULL,
-    taskCategoryTamil TEXT COLLATE utf8_unicode_ci NOT NULL,
-    taskEnglish TEXT COLLATE latin1_swedish_ci NOT NULL,
-    taskSinhala TEXT COLLATE utf8_unicode_ci NOT NULL,
-    taskTamil TEXT COLLATE utf8_unicode_ci NOT NULL,
-    taskDescriptionEnglish TEXT COLLATE latin1_swedish_ci NOT NULL,
-    taskDescriptionSinhala TEXT COLLATE utf8_unicode_ci NOT NULL,
-    taskDescriptionTamil TEXT COLLATE utf8_unicode_ci NOT NULL,
-    imageLink TEXT NULL,
-    videoLinkEnglish TEXT NULL,
-    videoLinkSinhala TEXT NULL,
-    videoLinkTamil TEXT NULL,
-    reqImages INT(11) NULL,
-    reqGeo BOOLEAN NULL,
+    cropId INT(11) DEFAULT NULL,
+    taskIndex INT(255) DEFAULT NULL,
+    days INT(11) DEFAULT NULL,
+    taskTypeEnglish TEXT COLLATE latin1_swedish_ci DEFAULT NULL,
+    taskTypeSinhala TEXT COLLATE utf8_unicode_ci DEFAULT NULL,
+    taskTypeTamil TEXT COLLATE utf8_unicode_ci DEFAULT NULL,
+    taskCategoryEnglish TEXT COLLATE latin1_swedish_ci DEFAULT NULL,
+    taskCategorySinhala TEXT COLLATE utf8_unicode_ci DEFAULT NULL,
+    taskCategoryTamil TEXT COLLATE utf8_unicode_ci DEFAULT NULL,
+    taskEnglish TEXT COLLATE latin1_swedish_ci DEFAULT NULL,
+    taskSinhala TEXT COLLATE utf8_unicode_ci DEFAULT NULL,
+    taskTamil TEXT COLLATE utf8_unicode_ci DEFAULT NULL,
+    taskDescriptionEnglish TEXT COLLATE latin1_swedish_ci DEFAULT NULL,
+    taskDescriptionSinhala TEXT COLLATE utf8_unicode_ci DEFAULT NULL,
+    taskDescriptionTamil TEXT COLLATE utf8_unicode_ci DEFAULT NULL,
+    imageLink TEXT DEFAULT NULL,
+    videoLinkEnglish TEXT DEFAULT NULL,
+    videoLinkSinhala TEXT DEFAULT NULL,
+    videoLinkTamil TEXT DEFAULT NULL,
+    reqImages INT(11) DEFAULT NULL,
+    reqGeo BOOLEAN DEFAULT NULL,
     createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (cropId) REFERENCES cropcalender(id)
         ON DELETE CASCADE
@@ -257,7 +257,7 @@ const createOngoingCultivationsTable = () => {
     const sql = `
     CREATE TABLE IF NOT EXISTS ongoingcultivations (
       id INT AUTO_INCREMENT PRIMARY KEY,
-      userId INT,
+      userId INT DEFAULT NULL,
       createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (userId) REFERENCES users(id)
         ON DELETE CASCADE
@@ -283,12 +283,12 @@ const createOngoingCultivationsCropsTable = () => {
     const sql = `
     CREATE TABLE IF NOT EXISTS ongoingcultivationscrops (
       id INT AUTO_INCREMENT PRIMARY KEY,
-      ongoingCultivationId INT,
-      cropCalendar INT,
+      ongoingCultivationId INT DEFAULT NULL,
+      cropCalendar INT DEFAULT NULL,
       startedAt DATE DEFAULT NULL,
-      extentha DECIMAL(15, 2) NOT NULL,
-      extentac DECIMAL(15, 2) NOT NULL,
-      extentp DECIMAL(15, 2) NOT NULL,
+      extentha DECIMAL(15, 2) DEFAULT NULL,
+      extentac DECIMAL(15, 2) DEFAULT NULL,
+      extentp DECIMAL(15, 2) DEFAULT NULL,
       createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (ongoingCultivationId) REFERENCES ongoingcultivations(id)
         ON DELETE CASCADE
@@ -317,19 +317,19 @@ const createCurrentAssetTable = () => {
     const sql = `
     CREATE TABLE IF NOT EXISTS currentasset (
       id INT AUTO_INCREMENT PRIMARY KEY,
-      userId INT,
-      category VARCHAR(50) NOT NULL,
-      asset VARCHAR(50) NOT NULL,
-      brand VARCHAR(50) NOT NULL,
-      batchNum VARCHAR(50) NOT NULL,
-      unit VARCHAR(10) NOT NULL,
-      unitVolume INT,
-      numOfUnit DECIMAL(15, 2) NOT NULL,
-      unitPrice DECIMAL(15, 2) NOT NULL,
-      total DECIMAL(15, 2) NOT NULL,
-      purchaseDate DATETIME NOT NULL,
-      expireDate DATETIME NOT NULL,
-      status VARCHAR(255) NOT NULL,
+      userId INT DEFAULT NULL,
+      category VARCHAR(50) DEFAULT NULL,
+      asset VARCHAR(50) DEFAULT NULL,
+      brand VARCHAR(50) DEFAULT NULL,
+      batchNum VARCHAR(50) DEFAULT NULL,
+      unit VARCHAR(10) DEFAULT NULL,
+      unitVolume INT DEFAULT NULL,
+      numOfUnit DECIMAL(15, 2) DEFAULT NULL,
+      unitPrice DECIMAL(15, 2) DEFAULT NULL,
+      total DECIMAL(15, 2) DEFAULT NULL,
+      purchaseDate DATETIME DEFAULT NULL,
+      expireDate DATETIME DEFAULT NULL,
+      status VARCHAR(255) DEFAULT NULL,
       createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (userId) REFERENCES users(id)
         ON DELETE CASCADE
@@ -355,8 +355,8 @@ const createFixedAsset = () => {
     const sql = `
     CREATE TABLE IF NOT EXISTS fixedasset (
       id INT AUTO_INCREMENT PRIMARY KEY,
-      userId INT,
-      category VARCHAR(50) NOT NULL,
+      userId INT DEFAULT NULL,
+      category VARCHAR(50) DEFAULT NULL,
       createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (userId) REFERENCES users(id)
         ON DELETE CASCADE
@@ -382,12 +382,12 @@ const createBuldingFixedAsset = () => {
     const sql = `
     CREATE TABLE IF NOT EXISTS buildingfixedasset (
       id INT AUTO_INCREMENT PRIMARY KEY,
-      fixedAssetId INT,
-      type VARCHAR(50) NOT NULL,
-      floorArea DECIMAL(15, 2) NOT NULL,
-      ownership VARCHAR(50) NOT NULL,
-      generalCondition VARCHAR(50) NOT NULL,
-      district VARCHAR(15) NOT NULL,
+      fixedAssetId INT DEFAULT NULL,
+      type VARCHAR(50) DEFAULT NULL,
+      floorArea DECIMAL(15, 2) DEFAULT NULL,
+      ownership VARCHAR(50) DEFAULT NULL,
+      generalCondition VARCHAR(50) DEFAULT NULL,
+      district VARCHAR(15) DEFAULT NULL,
       FOREIGN KEY (fixedAssetId) REFERENCES fixedasset(id)
         ON DELETE CASCADE
         ON UPDATE CASCADE
@@ -411,14 +411,14 @@ const createLandFixedAsset = () => {
     const sql = `
     CREATE TABLE IF NOT EXISTS landfixedasset (
       id INT AUTO_INCREMENT PRIMARY KEY,
-      fixedAssetId INT,
-      extentha DECIMAL(15, 2) NOT NULL,
-      extentac DECIMAL(15, 2) NOT NULL,
-      extentp DECIMAL(15, 2) NOT NULL,
-      ownership VARCHAR(50) NOT NULL,
-      district VARCHAR(15) NOT NULL,
-      landFenced VARCHAR(15) NOT NULL,
-      perennialCrop VARCHAR(15)  NOT NULL,
+      fixedAssetId INT DEFAULT NULL,
+      extentha DECIMAL(15, 2) DEFAULT NULL,
+      extentac DECIMAL(15, 2) DEFAULT NULL,
+      extentp DECIMAL(15, 2) DEFAULT NULL,
+      ownership VARCHAR(50) DEFAULT NULL,
+      district VARCHAR(15) DEFAULT NULL,
+      landFenced VARCHAR(15) DEFAULT NULL,
+      perennialCrop VARCHAR(15)  DEFAULT NULL,
       FOREIGN KEY (fixedAssetId) REFERENCES fixedasset(id)
         ON DELETE CASCADE
         ON UPDATE CASCADE
@@ -442,15 +442,15 @@ const createMachToolsFixedAsset = () => {
     const sql = `
     CREATE TABLE IF NOT EXISTS machtoolsfixedasset (
       id INT AUTO_INCREMENT PRIMARY KEY,
-      fixedAssetId INT,
-      asset VARCHAR(50) NOT NULL,
-      assetType VARCHAR(25) NOT NULL,
-      mentionOther VARCHAR(50) NOT NULL,
-      brand VARCHAR(25) NOT NULL,
-      numberOfUnits INT NOT NULL,
-      unitPrice DECIMAL(15, 2) NOT NULL,
-      totalPrice DECIMAL(15, 2) NOT NULL,
-      warranty VARCHAR(20) NOT NULL,
+      fixedAssetId INT DEFAULT NULL,
+      asset VARCHAR(50) DEFAULT NULL,
+      assetType VARCHAR(25) DEFAULT NULL,
+      mentionOther VARCHAR(50) DEFAULT NULL,
+      brand VARCHAR(25) DEFAULT NULL,
+      numberOfUnits INT DEFAULT NULL,
+      unitPrice DECIMAL(15, 2) DEFAULT NULL,
+      totalPrice DECIMAL(15, 2) DEFAULT NULL,
+      warranty VARCHAR(20) DEFAULT NULL,
       FOREIGN KEY (fixedAssetId) REFERENCES fixedasset(id)
         ON DELETE CASCADE
         ON UPDATE CASCADE
@@ -473,10 +473,10 @@ const createMachToolsWarrantyFixedAsset = () => {
     const sql = `
     CREATE TABLE IF NOT EXISTS machtoolsfixedassetwarranty (
       id INT AUTO_INCREMENT PRIMARY KEY,
-      machToolsId INT,
-      purchaseDate DATETIME NOT NULL,
-      expireDate DATETIME NOT NULL,
-      warrantystatus VARCHAR(20) NOT NULL,
+      machToolsId INT DEFAULT NULL,
+      purchaseDate DATETIME DEFAULT NULL,
+      expireDate DATETIME DEFAULT NULL,
+      warrantystatus VARCHAR(20) DEFAULT NULL,
       FOREIGN KEY (machToolsId) REFERENCES machtoolsfixedasset(id)
         ON DELETE CASCADE
         ON UPDATE CASCADE
@@ -499,10 +499,10 @@ const createOwnershipOwnerFixedAsset = () => {
     const sql = `
     CREATE TABLE IF NOT EXISTS ownershipownerfixedasset (
       id INT AUTO_INCREMENT PRIMARY KEY,
-      buildingAssetId INT NULL,
-      landAssetId INT NULL,
-      issuedDate DATETIME NOT NULL,
-      estimateValue DECIMAL(15, 2) NOT NULL,
+      buildingAssetId INT DEFAULT NULL,
+      landAssetId INT DEFAULT NULL,
+      issuedDate DATETIME DEFAULT NULL,
+      estimateValue DECIMAL(15, 2) DEFAULT NULL,
       FOREIGN KEY (buildingAssetId) REFERENCES buildingfixedasset(id)
         ON DELETE CASCADE
         ON UPDATE CASCADE,
@@ -528,12 +528,12 @@ const createOwnershipLeastFixedAsset = () => {
     const sql = `
     CREATE TABLE IF NOT EXISTS ownershipleastfixedasset (
       id INT AUTO_INCREMENT PRIMARY KEY,
-      buildingAssetId INT NULL,
-      landAssetId INT NULL,
-      startDate DATETIME NOT NULL,
-      durationYears INT(8) NOT NULL,
-      durationMonths INT(8) NOT NULL,
-      leastAmountAnnually DECIMAL(15, 2) NOT NULL,
+      buildingAssetId INT DEFAULT NULL,
+      landAssetId INT DEFAULT NULL,
+      startDate DATETIME DEFAULT NULL,
+      durationYears INT(8) DEFAULT NULL,
+      durationMonths INT(8) DEFAULT NULL,
+      leastAmountAnnually DECIMAL(15, 2) DEFAULT NULL,
       FOREIGN KEY (buildingAssetId) REFERENCES buildingfixedasset(id)
         ON DELETE CASCADE
         ON UPDATE CASCADE,
@@ -559,10 +559,10 @@ const createOwnershipPermitFixedAsset = () => {
     const sql = `
     CREATE TABLE IF NOT EXISTS ownershippermitfixedasset (
       id INT AUTO_INCREMENT PRIMARY KEY,
-      buildingAssetId INT NULL,
-      landAssetId INT NULL,
-      issuedDate DATETIME NOT NULL,
-      permitFeeAnnually DECIMAL(15, 2) NOT NULL,
+      buildingAssetId INT DEFAULT NULL,
+      landAssetId INT DEFAULT NULL,
+      issuedDate DATETIME DEFAULT NULL,
+      permitFeeAnnually DECIMAL(15, 2) DEFAULT NULL,
       FOREIGN KEY (buildingAssetId) REFERENCES buildingfixedasset(id)
         ON DELETE CASCADE
         ON UPDATE CASCADE,
@@ -587,9 +587,9 @@ const createOwnershipSharedFixedAsset = () => {
     const sql = `
     CREATE TABLE IF NOT EXISTS ownershipsharedfixedasset (
       id INT AUTO_INCREMENT PRIMARY KEY,
-      buildingAssetId INT NULL,
-      landAssetId INT NULL,
-      paymentAnnually DECIMAL(15, 2) NOT NULL,
+      buildingAssetId INT DEFAULT NULL,
+      landAssetId INT DEFAULT NULL,
+      paymentAnnually DECIMAL(15, 2) DEFAULT NULL,
       FOREIGN KEY (buildingAssetId) REFERENCES buildingfixedasset(id)
         ON DELETE CASCADE
         ON UPDATE CASCADE,
@@ -614,10 +614,10 @@ const createCurrentAssetRecord = () => {
     const sql = `
     CREATE TABLE IF NOT EXISTS currentassetrecord (
     id INT AUTO_INCREMENT PRIMARY KEY,
-    currentAssetId INT(5) NOT NULL,
-    numOfPlusUnit DECIMAL(15, 2) NULL,
-    numOfMinUnit DECIMAL(15, 2) NULL,
-    totalPrice DECIMAL(15, 2) NULL,
+    currentAssetId INT(5) DEFAULT NULL,
+    numOfPlusUnit DECIMAL(15, 2) DEFAULT NULL,
+    numOfMinUnit DECIMAL(15, 2) DEFAULT NULL,
+    totalPrice DECIMAL(15, 2) DEFAULT NULL,
     createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
    FOREIGN KEY (currentAssetId) REFERENCES currentasset(id)
         ON DELETE CASCADE
@@ -643,29 +643,29 @@ const createSlaveCropCalenderDaysTable = () => {
     const sql = `
       CREATE TABLE IF NOT EXISTS slavecropcalendardays (
       id INT AUTO_INCREMENT PRIMARY KEY,
-      userId INT(11) NULL,
-      onCulscropID  INT(11) NULL,
-      cropCalendarId INT(11) NULL,
-      taskIndex INT(255) NULL,
+      userId INT(11) DEFAULT NULL,
+      onCulscropID  INT(11) DEFAULT NULL,
+      cropCalendarId INT(11) DEFAULT NULL,
+      taskIndex INT(255) DEFAULT NULL,
       startingDate DATE DEFAULT NULL,
-      days INT(255) NULL,
-      taskTypeEnglish TEXT COLLATE latin1_swedish_ci NULL,
-      taskTypeSinhala TEXT COLLATE utf8_unicode_ci NULL,
-      taskTypeTamil TEXT COLLATE utf8_unicode_ci NULL,
-      taskCategoryEnglish TEXT COLLATE latin1_swedish_ci NULL,
-      taskCategorySinhala TEXT COLLATE utf8_unicode_ci NULL,
-      taskCategoryTamil TEXT COLLATE utf8_unicode_ci NULL,
-      taskEnglish TEXT COLLATE latin1_swedish_ci NULL,
-      taskSinhala TEXT COLLATE utf8_unicode_ci NULL,
-      taskTamil TEXT COLLATE utf8_unicode_ci NULL,
-      taskDescriptionEnglish TEXT COLLATE latin1_swedish_ci NULL,
-      taskDescriptionSinhala TEXT COLLATE utf8_unicode_ci NULL,
-      taskDescriptionTamil TEXT COLLATE utf8_unicode_ci NULL,
-      status VARCHAR(20),
-      imageLink TEXT,
-      videoLink TEXT,
-      reqImages INT(11) NULL,
-      reqGeo BOOLEAN NULL,
+      days INT(255) DEFAULT NULL,
+      taskTypeEnglish TEXT COLLATE latin1_swedish_ci DEFAULT NULL,
+      taskTypeSinhala TEXT COLLATE utf8_unicode_ci DEFAULT NULL,
+      taskTypeTamil TEXT COLLATE utf8_unicode_ci DEFAULT NULL,
+      taskCategoryEnglish TEXT COLLATE latin1_swedish_ci DEFAULT NULL,
+      taskCategorySinhala TEXT COLLATE utf8_unicode_ci DEFAULT NULL,
+      taskCategoryTamil TEXT COLLATE utf8_unicode_ci DEFAULT NULL,
+      taskEnglish TEXT COLLATE latin1_swedish_ci DEFAULT NULL,
+      taskSinhala TEXT COLLATE utf8_unicode_ci DEFAULT NULL,
+      taskTamil TEXT COLLATE utf8_unicode_ci DEFAULT NULL,
+      taskDescriptionEnglish TEXT COLLATE latin1_swedish_ci DEFAULT NULL,
+      taskDescriptionSinhala TEXT COLLATE utf8_unicode_ci DEFAULT NULL,
+      taskDescriptionTamil TEXT COLLATE utf8_unicode_ci DEFAULT NULL,
+      status VARCHAR(20) DEFAULT NULL,
+      imageLink TEXT DEFAULT NULL,
+      videoLink TEXT DEFAULT NULL,
+      reqImages INT(11) DEFAULT NULL,
+      reqGeo BOOLEAN DEFAULT NULL,
       createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (userId) REFERENCES users(id)
           ON DELETE CASCADE
@@ -694,9 +694,9 @@ const createCropGeoTable = () => {
     const sql = `
     CREATE TABLE IF NOT EXISTS cropGeo (
     id INT AUTO_INCREMENT PRIMARY KEY,
-    taskId INT(11) NOT NULL,
-    longitude DECIMAL(20,15) NOT NULL,
-    latitude DECIMAL(20,15) NOT NULL,
+    taskId INT(11) DEFAULT NULL,
+    longitude DECIMAL(20,15) DEFAULT NULL,
+    latitude DECIMAL(20,15) DEFAULT NULL,
     createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (taskId) REFERENCES slavecropcalendardays(id)
         ON DELETE CASCADE
@@ -719,8 +719,8 @@ const createTaskImages = () => {
     const sql = `
       CREATE TABLE IF NOT EXISTS taskimages (
             id INT AUTO_INCREMENT PRIMARY KEY,
-            slaveId INT(11) NOT NULL,
-            image TEXT,
+            slaveId INT(11) DEFAULT NULL,
+            image TEXT DEFAULT NULL,
             createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             FOREIGN KEY (slaveId) REFERENCES slavecropcalendardays(id)
                 ON DELETE CASCADE
@@ -745,10 +745,10 @@ const createpublicforumposts = () => {
     const sql = `
       CREATE TABLE IF NOT EXISTS publicforumposts (
             id int AUTO_INCREMENT PRIMARY KEY,
-            userId int NOT NULL,
-            heading varchar(255) NOT NULL,
-            message text NOT NULL,
-            createdAt timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            userId int DEFAULT NULL,
+            heading varchar(255) DEFAULT NULL,
+            message text DEFAULT NULL,
+            createdAt timestamp NULL DEFAULT CURRENT_TIMESTAMP,
             postimage TEXT,
             FOREIGN KEY (userId) REFERENCES users(id)
                 ON DELETE CASCADE
@@ -770,9 +770,9 @@ const createpublicforumreplies = () => {
     const sql = `
       CREATE TABLE IF NOT EXISTS publicforumreplies (
         id int AUTO_INCREMENT PRIMARY KEY,
-        chatId int NOT NULL,
-        replyId int NULL,
-        replyMessage text NOT NULL,
+        chatId int DEFAULT NULL,
+        replyId int DEFAULT NULL,
+        replyMessage text DEFAULT NULL,
         createdAt timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
         FOREIGN KEY (replyId) REFERENCES users(id)
             ON DELETE CASCADE
@@ -800,12 +800,12 @@ const createUserBankDetails = () => {
     const sql = `
     CREATE TABLE IF NOT EXISTS userbankdetails (
       id INT AUTO_INCREMENT PRIMARY KEY,
-      userId INT,
-      address TEXT NOT NULL,
-      accNumber VARCHAR(50) NOT NULL,
-      accHolderName VARCHAR(50) NOT NULL,
-      bankName VARCHAR(50) NOT NULL,
-      branchName VARCHAR(50) NOT NULL,
+      userId INT DEFAULT NULL,
+      address TEXT NULL DEFAULT NULL,
+      accNumber VARCHAR(50) DEFAULT NULL,
+      accHolderName VARCHAR(50) DEFAULT NULL,
+      bankName VARCHAR(50) DEFAULT NULL,
+      branchName VARCHAR(50) DEFAULT NULL,
       createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (userId) REFERENCES users(id)
         ON DELETE CASCADE
