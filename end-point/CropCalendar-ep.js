@@ -7,6 +7,8 @@ const xlsx = require("xlsx");
 const cropCalendarDao = require("../dao/CropCalendar-dao");
 const cropCalendarValidations = require('../validations/CropCalendar-validation');
 const mime = require("mime-types");
+const deleteFromS3 = require("../middlewares/s3delete");
+const uploadFileToS3 = require("../middlewares/s3upload");
 
 exports.allCropGroups = async (req, res) => {
   try {
@@ -44,6 +46,8 @@ exports.createCropGroup = async (req, res) => {
       category,
       bgColor
     } = req.body;
+    console.log(req.body);
+    
 
     if (!req.file) {
       return res.status(400).json({ error: "No file uploaded" });
@@ -59,6 +63,9 @@ exports.createCropGroup = async (req, res) => {
 
     // Get file buffer (binary data)
     const fileBuffer = req.file.buffer;
+    const fileName = req.file.originalname;
+
+    const profileImageUrl = await uploadFileToS3(fileBuffer, fileName, "cropgroup/image");
 
     // Call DAO to save news and the image file as longblob
     const newsId = await cropCalendarDao.createCropGroup(
@@ -66,7 +73,7 @@ exports.createCropGroup = async (req, res) => {
       cropNameSinhala,
       cropNameTamil,
       category,
-      fileBuffer,
+      profileImageUrl,
       bgColor
     );
 
@@ -136,6 +143,23 @@ exports.deleteCropGroup = async (req, res) => {
       req.params
     );
 
+    const cropGroup = await cropCalendarDao.getGroupByIds3(id);
+    if (!cropGroup) {
+      return res.status(404).json({ message: "PlantCare User not found" });
+    }
+
+    const imageUrl = cropGroup.image;
+    console.log(imageUrl)
+    if (imageUrl) {
+      try {
+        await deleteFromS3(imageUrl);
+      } catch (s3Error) {
+        console.error("Failed to delete image from S3:", s3Error);
+        // Optionally handle the failure, e.g., log but not block user deletion
+      }
+    }
+
+
     const affectedRows = await cropCalendarDao.deleteCropGroup(id);
 
     if (affectedRows === 0) {
@@ -183,12 +207,17 @@ exports.createCropVariety = async (req, res) => {
     }
 
     // Get file buffer (binary data)
-    const fileBuffer = req.file.buffer;
+   
     const checkCropVerityName = await cropCalendarDao.checkCropVerity(groupId, varietyNameEnglish)
 
     if (checkCropVerityName.length > 0) {
       return res.json({ message: "This crop verity name is already exist!", status: false })
     }
+
+    const fileBuffer = req.file.buffer;
+    const fileName = req.file.originalname;
+
+    const image = await uploadFileToS3(fileBuffer, fileName, "cropvariety/image");
 
 
     // Call DAO to save news and the image file as longblob
@@ -200,7 +229,7 @@ exports.createCropVariety = async (req, res) => {
       descriptionEnglish,
       descriptionSinhala,
       descriptionTamil,
-      fileBuffer,
+      image,
       bgColor
     );
 
@@ -389,14 +418,7 @@ exports.getAllVarietyByGroup = async (req, res) => {
 
     console.log(groups?.cropGroupId);
 
-    if (groups.image) {
-      console.log('find');
-      const base64Image = Buffer.from(groups.image).toString(
-        "base64"
-      );
-      const mimeType = "image/png"; // Adjust the MIME type if needed
-      groups.image = `data:${mimeType};base64,${base64Image}`;
-    }
+    
 
     console.log("Successfully fetched crop groups");
     res.json({
@@ -423,6 +445,12 @@ exports.deleteCropVariety = async (req, res) => {
     const { id } = await cropCalendarValidations.deleteCropCalenderSchema.validateAsync(
       req.params
     );
+
+    const cropVariety = await cropCalendarDao.getVarietyByIds3(id);
+
+    const imageUrl = cropVariety.image;
+
+    await deleteFromS3(imageUrl);
 
     const affectedRows = await cropCalendarDao.deleteCropVariety(id);
 
@@ -501,9 +529,28 @@ exports.updateGroup = async (req, res) => {
   console.log(req.params);
   
   try {
-    let imageData = null;
+    
+
+    const cropGroup = await cropCalendarDao.getGroupByIds3(id);
+    if (!cropGroup) {
+      return res.status(404).json({ message: "Crop roup not found" });
+    }
+
+    const imageUrl = cropGroup.image;
+    console.log(imageUrl)
+    if (imageUrl) {
+      try {
+        await deleteFromS3(imageUrl);
+      } catch (s3Error) {
+        console.error("Failed to delete image from S3:", s3Error);
+        // Optionally handle the failure, e.g., log but not block user deletion
+      }
+    }
+
     if (req.file) {
-      imageData = req.file.buffer; // Store the binary image data from req.file
+      const fileBuffer = req.file.buffer;
+      const fileName = req.file.originalname;
+      image = await uploadFileToS3(fileBuffer, fileName, "cropgroup/image");
     }
 
     if (Existname !== cropNameEnglish) {
@@ -516,7 +563,7 @@ exports.updateGroup = async (req, res) => {
     }
 
 
-    await cropCalendarDao.updateGroup({ cropNameEnglish, cropNameSinhala, cropNameTamil, category, bgColor, image: imageData }, id);
+    await cropCalendarDao.updateGroup({ cropNameEnglish, cropNameSinhala, cropNameTamil, category, bgColor, image }, id);
     res.json({ message: 'Crop group updated successfully.', status:true });
   } catch (err) {
     console.error('Error updating crop group:', err);
@@ -531,10 +578,21 @@ exports.updateCropVariety = async (req, res) => {
     let image = null;
     console.log('Request body:', req.body);
 
+
+    const cropVariety = await cropCalendarDao.getVarietyByIds3(id);
+
+    const imageUrl = cropVariety.image;
+
+    await deleteFromS3(imageUrl);
+
     if (req.file) {
-      image = req.file.buffer; // Handle file upload if present
+      const fileBuffer = req.file.buffer;
+      const fileName = req.file.originalname;
+      image = await uploadFileToS3(fileBuffer, fileName, "cropvariety/image");
       updates.image = image;
     }
+
+    
 
     await cropCalendarDao.updateCropVariety(id, updates);
     res.json({ message: 'Crop variety updated successfully.' });

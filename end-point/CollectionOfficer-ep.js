@@ -6,9 +6,17 @@ const path = require("path");
 const xlsx = require("xlsx");
 const collectionofficerDao = require("../dao/CollectionOfficer-dao");
 const collectionofficerValidate = require('../validations/CollectionOfficer-validation');
-
-const Joi = require('joi');
 const bcrypt = require("bcryptjs");
+const AWS = require("aws-sdk");
+const { v4: uuidv4 } = require("uuid");
+const uploadFileToS3 = require("../middlewares/s3upload");
+const deleteFromS3 = require("../middlewares/s3delete");
+
+const s3 = new AWS.S3({
+    accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+    region: process.env.AWS_REGION,
+});
 
 exports.createCollectionOfficer = async (req, res) => {
     const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
@@ -16,8 +24,11 @@ exports.createCollectionOfficer = async (req, res) => {
 
     try {
        
-        const {officerData} = req.body   
-        console.log(req.body);
+        const officerData = JSON.parse(req.body.officerData);
+        
+        if (req.body.file) {
+            console.log('image recieved');
+           }
 
         const isExistingNIC = await collectionofficerDao.checkNICExist(
             officerData.nic
@@ -26,6 +37,8 @@ exports.createCollectionOfficer = async (req, res) => {
         const isExistingEmail = await collectionofficerDao.checkEmailExist(
             officerData.email
         );
+
+        
 
         if (isExistingNIC) {
             return res.status(500).json({ 
@@ -39,7 +52,23 @@ exports.createCollectionOfficer = async (req, res) => {
             });
         }
 
-        const resultsPersonal = await collectionofficerDao.createCollectionOfficerPersonal(officerData);
+        // Ensure a file is uploaded
+    if (!req.body.file) {
+        return res.status(400).json({ error: "No file uploaded" });
+      }
+      
+  
+      const base64String = req.body.file.split(",")[1]; // Extract the Base64 content
+        const mimeType = req.body.file.match(/data:(.*?);base64,/)[1]; // Extract MIME type
+        const fileBuffer = Buffer.from(base64String, "base64"); // Decode Base64 to buffer
+
+        const fileExtension = mimeType.split("/")[1]; // Extract file extension from MIME type
+        const fileName = `${officerData.firstNameEnglish}_${officerData.lastNameEnglish}.${fileExtension}`;
+  
+   const profileImageUrl = await uploadFileToS3(fileBuffer, fileName, "collectionofficer/image");
+  
+
+        const resultsPersonal = await collectionofficerDao.createCollectionOfficerPersonal(officerData, profileImageUrl);
    
         
         console.log("Collection Officer created successfully");
@@ -308,8 +337,35 @@ exports.deleteCollectionOfficer = async (req, res) => {
     const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
     console.log(fullUrl);
     try {
-        
+
+        const { id } = req.params;
+
+        const qrimage = await collectionofficerDao.getQrImage(id);
+
+        const qrUrl = qrimage.QRcode;
+        const imageUrl = qrimage.image;
+
+        console.log(qrUrl);
+
+        if(qrUrl){
+            try{
+                await deleteFromS3(qrUrl);
+            }catch(s3Error){
+                console.error("Failed to delete image from S3:", s3Error);
+            }
+        }
+
+        if(imageUrl){
+            try{
+                await deleteFromS3(imageUrl);
+            }catch(s3Error){
+                console.error("Failed to delete image from S3:", s3Error);
+            }
+        }
+
+
         const results = await collectionofficerDao.DeleteCollectionOfficerDao(req.params.id);
+        
 
         console.log("Successfully Delete Status");
         if(results.affectedRows > 0){
@@ -318,6 +374,9 @@ exports.deleteCollectionOfficer = async (req, res) => {
             res.json({results:results, status:false});
 
         }
+
+        
+
     } catch (error) {
         if (error.isJoi) {
             return res.status(400).json({ error: error.details[0].message, status:false});
@@ -359,6 +418,26 @@ exports.updateCollectionOfficerDetails = async (req, res) => {
     const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
     console.log(fullUrl);
     const { id } = req.params;
+    
+    const officerData = JSON.parse(req.body.officerData);
+    const qrCode = await collectionofficerDao.getQrImage(id);
+
+    const qrImageUrl = qrCode.image;
+  
+    await deleteFromS3(qrImageUrl);
+   
+    if (req.body.file){
+        console.log('Recieved');
+        
+    }
+    const base64String = req.body.file.split(",")[1]; // Extract the Base64 content
+    const mimeType = req.body.file.match(/data:(.*?);base64,/)[1]; // Extract MIME type
+    const fileBuffer = Buffer.from(base64String, "base64"); // Decode Base64 to buffer
+
+    const fileExtension = mimeType.split("/")[1]; // Extract file extension from MIME type
+    const fileName = `${officerData.firstNameEnglish}_${officerData.lastNameEnglish}.${fileExtension}`;
+  
+   const profileImageUrl = await uploadFileToS3(fileBuffer, fileName, "collectionofficer/image");
     const {  
         centerId,
         companyId,
@@ -388,8 +467,8 @@ exports.updateCollectionOfficerDetails = async (req, res) => {
         accHolderName,
         accNumber,
         bankName,
-        branchName
-    } = req.body.officerData;
+        branchName,
+    } = officerData;
     console.log(empId);
     
    
@@ -425,7 +504,8 @@ exports.updateCollectionOfficerDetails = async (req, res) => {
             accHolderName,
             accNumber,
             bankName,
-            branchName
+            branchName,
+            profileImageUrl
         );
         res.json({ message: 'Collection officer details updated successfully' });
     } catch (err) {

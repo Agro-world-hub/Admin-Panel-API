@@ -8,6 +8,8 @@ const { createFarmerPaymensCrops } = require('../tables/collection-table');
 const { createCollectionCenter } = require('../tables/collection-table');
 const { createFarmerComplains } = require('../tables/collection-table');
 const { createMarketPriceRequestTable } = require('../tables/collection-table');
+const { createDailyTargetTable } = require('../tables/collection-table');
+const { createDailyTargetItemsTable } = require('../tables/collection-table');
 
 
 
@@ -46,6 +48,12 @@ const seedCollection = async () => {
 
     const messageCreateMarketPriceRequestTable = await createMarketPriceRequestTable();
     console.log(messageCreateMarketPriceRequestTable);
+
+    const messageCreateDailyTargetTable = await createDailyTargetTable();
+    console.log(messageCreateDailyTargetTable);
+
+    const messageCreateDailyTargetItemsTable = await createDailyTargetItemsTable();
+    console.log(messageCreateDailyTargetItemsTable);
 
 
 

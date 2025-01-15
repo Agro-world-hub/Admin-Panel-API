@@ -3,6 +3,7 @@ const path = require("path");
 const { Upload } = require("@aws-sdk/lib-storage");
 const Joi = require("joi");
 
+
 exports.loginAdmin = (email) => {
   return new Promise((resolve, reject) => {
     const sql = "SELECT * FROM adminusers WHERE mail = ?";
@@ -118,21 +119,21 @@ exports.getAllUsers = (limit, offset, searchItem) => {
         }
 
         // Process each user's image
-        const processedDataResults = dataResults.map((user) => {
-          if (user.profileImage) {
-            const base64Image = Buffer.from(user.profileImage).toString(
-              "base64"
-            );
-            const mimeType = "image/png"; // Adjust the MIME type if needed
-            user.profileImage = `data:${mimeType};base64,${base64Image}`;
-          }
-          return user;
-        });
+        // const processedDataResults = dataResults.map((user) => {
+        //   if (user.profileImage) {
+        //     const base64Image = Buffer.from(user.profileImage).toString(
+        //       "base64"
+        //     );
+        //     const mimeType = "image/png"; // Adjust the MIME type if needed
+        //     user.profileImage = `data:${mimeType};base64,${base64Image}`;
+        //   }
+        //   return user;
+        // });
 
         // Resolve with total count and the processed results
         resolve({
           total: total,
-          items: processedDataResults,
+          items: dataResults,
         });
       });
     });
@@ -261,12 +262,7 @@ exports.getAllNews = async (limit, offset, status, createdAt) => {
 
         // Convert the image blob to base64 and include in the response
         const newsItems = dataResults.map((news) => {
-          if (news.image) {
-            // Convert the image (stored as longblob) to a base64 string
-            news.image = `data:image/jpeg;base64,${news.image.toString(
-              "base64"
-            )}`;
-          }
+         
           return news;
         });
 
@@ -843,23 +839,23 @@ exports.deletePlantCareUserById = (id) => {
 
 exports.updatePlantCareUserById = (userData, id) => {
   return new Promise((resolve, reject) => {
-    const { firstName, lastName, phoneNumber, NICnumber, district, membership, imageData } = userData;
+    const { firstName, lastName, phoneNumber, NICnumber, district, membership, profileImage } = userData;
 
     let sql = `
-            UPDATE users 
-            SET 
-                firstName = ?, 
-                lastName = ?, 
-                phoneNumber = ?, 
-                NICnumber = ?,
-                district = ?, 
-                membership = ?
-        `;
+      UPDATE users 
+      SET 
+          firstName = ?, 
+          lastName = ?, 
+          phoneNumber = ?, 
+          NICnumber = ?, 
+          district = ?, 
+          membership = ?
+    `;
     let values = [firstName, lastName, phoneNumber, NICnumber, district, membership];
 
-    if (imageData) {
+    if (profileImage) {
       sql += `, profileImage = ?`;
-      values.push(imageData);
+      values.push(profileImage);
     }
 
     sql += ` WHERE id = ?`;
@@ -874,6 +870,7 @@ exports.updatePlantCareUserById = (userData, id) => {
     });
   });
 };
+
 
 // exports.createPlantCareUser = (userData) => {
 //   return new Promise((resolve, reject) => {
@@ -898,7 +895,7 @@ exports.updatePlantCareUserById = (userData, id) => {
 
 exports.createPlantCareUser = (userData) => {
   return new Promise((resolve, reject) => {
-    const { firstName, lastName, phoneNumber, NICnumber, district, membership, fileBuffer } =
+    const { firstName, lastName, phoneNumber, NICnumber, district, membership, profileImageUrl } =
       userData;
 
     // SQL query to check if phoneNumber or NICnumber already exists
@@ -929,7 +926,7 @@ exports.createPlantCareUser = (userData) => {
         NICnumber,
         district,
         membership,
-        fileBuffer,
+        profileImageUrl,
       ];
 
       plantcare.query(insertSql, insertValues, (insertErr, insertResults) => {
@@ -952,16 +949,14 @@ exports.getUserById = (userId) => {
       if (err) {
         return reject(err);
       }
-      if (results.length === 0) {
-        return resolve(null); // No user found
-      }
-      if (results[0].profileImage) {
-        const base64Image = Buffer.from(results[0].profileImage).toString(
-          "base64"
-        );
-        const mimeType = "image/png"; // Adjust MIME type if necessary, depending on the image type
-        results[0].profileImage = `data:${mimeType};base64,${base64Image}`;
-      }
+      
+      // if (results[0].profileImage) {
+      //   const base64Image = Buffer.from(results[0].profileImage).toString(
+      //     "base64"
+      //   );
+      //   const mimeType = "image/png"; // Adjust MIME type if necessary, depending on the image type
+      //   results[0].profileImage = `data:${mimeType};base64,${base64Image}`;
+      // }
       resolve(results[0]); // Return the first result
     });
   });
@@ -1682,7 +1677,7 @@ exports.getPaymentSlipReportrrrr = (officerID) => {
   return new Promise((resolve, reject) => {
     const dataSql = `
       SELECT u.id, co.firstNameEnglish AS officerFirstName, co.lastNameEnglish AS officerLastName, u.firstName, u.lastName, u.NICnumber, SUM(gradeAprice)+SUM(gradeBprice)+SUM(gradeCprice) AS total
-      FROM registeredfarmerpayments rp, \`plant-care\`.users u ,farmerpaymentscrops fpc, collectionofficer co
+      FROM registeredfarmerpayments rp, plant_care.users u ,farmerpaymentscrops fpc, collectionofficer co
       WHERE rp.userId = u.id AND rp.id = fpc.registerFarmerId 
       GROUP BY u.id, co.firstNameEnglish, co.lastNameEnglish, u.firstName, u.lastName, u.NICnumber
     `;
@@ -1766,7 +1761,7 @@ exports.getPaymentSlipReport = (officerID, limit, offset, date = null, search = 
     let countSql = `
       SELECT COUNT(*) AS total 
       FROM registeredfarmerpayments rp 
-      JOIN \`plant-care\`.users u ON rp.userId = u.id 
+      JOIN plant_care.users u ON rp.userId = u.id 
       WHERE rp.collectionOfficerId = ? 
     `;
     let dataSql = `
@@ -1782,7 +1777,7 @@ exports.getPaymentSlipReport = (officerID, limit, offset, date = null, search = 
       FROM 
           registeredfarmerpayments rp
       JOIN 
-          \`plant-care\`.users u ON rp.userId = u.id
+          plant_care.users u ON rp.userId = u.id
       JOIN 
           collectionofficer co ON rp.collectionOfficerId = co.id
       WHERE 
@@ -1853,7 +1848,7 @@ exports.getFarmerListReport = (id) => {
 FROM 
   registeredfarmerpayments rp
 JOIN 
-  \`plant-care\`.users u ON rp.userId = u.id
+  plant_care.users u ON rp.userId = u.id
 JOIN 
   collectionofficer co ON rp.collectionOfficerId = co.id
 WHERE 
@@ -1891,9 +1886,9 @@ SELECT
 FROM 
   farmerpaymentscrops fp
 JOIN 
-  \`plant-care\`.cropvariety cv ON fp.cropId = cv.id
+  plant_care.cropvariety cv ON fp.cropId = cv.id
 JOIN 
-  \`plant-care\`.cropgroup cg ON cv.cropGroupId  = cg.id
+  plant_care.cropgroup cg ON cv.cropGroupId  = cg.id
 WHERE 
   fp.registerFarmerId  = ?
     `;
