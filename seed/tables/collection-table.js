@@ -68,10 +68,10 @@ const createMarketPriceTable = () => {
       averagePrice DECIMAL(15,2) DEFAULT NULL,
       createdAt TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
       createdBy INT(11) DEFAULT NULL,
-      FOREIGN KEY (varietyId) REFERENCES \`plant-care\`.cropvariety(id)
+      FOREIGN KEY (varietyId) REFERENCES plant_care.cropvariety(id)
         ON DELETE CASCADE
         ON UPDATE CASCADE,
-      FOREIGN KEY (createdBy) REFERENCES \`plant-care\`.adminUsers(id)
+      FOREIGN KEY (createdBy) REFERENCES plant_care.adminusers(id)
         ON DELETE CASCADE
         ON UPDATE CASCADE,
       FOREIGN KEY (xlindex) REFERENCES xlsxhistory(id)
@@ -203,8 +203,8 @@ const createCollectionOfficer = () => {
       accNumber VARCHAR(25) NULL,
       bankName VARCHAR(25) NULL,
       branchName VARCHAR(25) NULL,
-      image LONGBLOB NULL,
-      QRcode LONGBLOB,
+      image TEXT NULL,
+      QRcode TEXT,
       status VARCHAR(25) NULL,
       claimStatus BOOLEAN DEFAULT 0,
       createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -241,7 +241,7 @@ const createRegisteredFarmerPayments = () => {
       userId INT,
       collectionOfficerId INT,
       createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-      FOREIGN KEY (userId) REFERENCES \`plant-care\`.users(id)
+      FOREIGN KEY (userId) REFERENCES plant_care.users(id)
         ON DELETE CASCADE
         ON UPDATE CASCADE,
       FOREIGN KEY (collectionOfficerId) REFERENCES collectionofficer(id)
@@ -274,12 +274,12 @@ const createFarmerPaymensCrops = () => {
       gradeAquan DECIMAL(15, 2) NULL,
       gradeBquan DECIMAL(15, 2) NULL,
       gradeCquan DECIMAL(15, 2) NULL,
-      image LONGBLOB,
+      image TEXT,
       createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (registerFarmerId) REFERENCES registeredfarmerpayments(id)
         ON DELETE CASCADE
         ON UPDATE CASCADE,
-      FOREIGN KEY (cropId) REFERENCES \`plant-care\`.cropvariety(id)
+      FOREIGN KEY (cropId) REFERENCES plant_care.cropvariety(id)
         ON DELETE CASCADE
         ON UPDATE CASCADE
     )
@@ -310,7 +310,7 @@ const createFarmerComplains  = () => {
     reply TEXT NULL,
     status VARCHAR(20) NOT NULL,
     createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (farmerId) REFERENCES \`plant-care\`.users(id)
+    FOREIGN KEY (farmerId) REFERENCES plant_care.users(id)
         ON DELETE CASCADE
         ON UPDATE CASCADE,
     FOREIGN KEY (coId) REFERENCES collectionofficer(id)
@@ -367,6 +367,67 @@ const createMarketPriceRequestTable = () => {
 };
 
 
+const createDailyTargetTable = () => {
+    const sql = `
+    CREATE TABLE IF NOT EXISTS dailytarget (
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      centerId INT(11) DEFAULT NULL,
+      fromDate DATE  NOT NULL,
+      toDate DATE  NOT NULL,
+      fromTime TIME NOT NULL,
+      toTime TIME NOT NULL,
+      createdBy INT(11) DEFAULT NULL,
+      createdAt TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (centerId) REFERENCES collectioncenter(id)
+        ON DELETE CASCADE
+        ON UPDATE CASCADE,
+      FOREIGN KEY (createdBy) REFERENCES collectionofficer(id)
+        ON DELETE CASCADE
+        ON UPDATE CASCADE
+    )
+  `;
+    return new Promise((resolve, reject) => {
+        collectionofficer.query(sql, (err, result) => {
+            if (err) {
+                reject('Error creating Daily Target request table: ' + err);
+            } else {
+                resolve('Daily Target table created request successfully.');
+            }
+        });
+    });
+};
+
+
+const createDailyTargetItemsTable = () => {
+    const sql = `
+    CREATE TABLE IF NOT EXISTS dailytargetitems (
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      targetId INT(11) NOT NULL,
+      varietyId INT(11) DEFAULT NULL,
+      qtyA DECIMAL(8,2) DEFAULT 0,
+      qtyB DECIMAL(8,2) DEFAULT 0,
+      qtC DECIMAL(8,2) DEFAULT 0,
+      createdAt TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (targetId) REFERENCES dailytarget(id)
+        ON DELETE CASCADE
+        ON UPDATE CASCADE,
+      FOREIGN KEY (varietyId) REFERENCES plant_care.cropvariety(id)
+        ON DELETE CASCADE
+        ON UPDATE CASCADE
+    )
+  `;
+    return new Promise((resolve, reject) => {
+        collectionofficer.query(sql, (err, result) => {
+            if (err) {
+                reject('Error creating Daily Target Items request table: ' + err);
+            } else {
+                resolve('Daily Target Items table created request successfully.');
+            }
+        });
+    });
+};
+
+
 
 module.exports = {
     createXlsxHistoryTable,
@@ -379,4 +440,6 @@ module.exports = {
     createCollectionCenter,
     createFarmerComplains,
     createMarketPriceRequestTable,
+    createDailyTargetTable,
+    createDailyTargetItemsTable
 };

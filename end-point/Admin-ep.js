@@ -9,6 +9,17 @@ const adminDao = require("../dao/Admin-dao");
 const ValidateSchema = require("../validations/Admin-validation");
 const { type } = require("os");
 const bcrypt = require("bcryptjs");
+const AWS = require("aws-sdk");
+const { v4: uuidv4 } = require("uuid");
+const uploadFileToS3 = require("../middlewares/s3upload");
+const deleteFromS3 = require("../middlewares/s3delete");
+
+
+const s3 = new AWS.S3({
+  accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+  secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+  region: process.env.AWS_REGION,
+});
 
 exports.loginAdmin = async (req, res) => {
   const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
@@ -226,6 +237,10 @@ exports.createNews = async (req, res) => {
 
     // Get file buffer (binary data)
     const fileBuffer = req.file.buffer;
+    const fileName = req.file.originalname;
+
+    const image = await uploadFileToS3(fileBuffer, fileName, "content/image");
+
 
     // Call DAO to save news and the image file as longblob
     const newsId = await adminDao.createNews(
@@ -235,7 +250,7 @@ exports.createNews = async (req, res) => {
       descriptionEnglish,
       descriptionSinhala,
       descriptionTamil,
-      fileBuffer, // pass the file buffer
+      image,
       status,
       createdBy,
       publishDate,
@@ -341,11 +356,11 @@ exports.getNewsById = async (req, res) => {
     }
 
     // Convert image buffer to base64 string if image exists
-    if (news[0].image) {
-      const base64Image = Buffer.from(news[0].image).toString("base64");
-      const mimeType = "image/png"; // Adjust MIME type if necessary, depending on the image type
-      news[0].image = `data:${mimeType};base64,${base64Image}`;
-    }
+    // if (news[0].image) {
+    //   const base64Image = Buffer.from(news[0].image).toString("base64");
+    //   const mimeType = "image/png"; // Adjust MIME type if necessary, depending on the image type
+    //   news[0].image = `data:${mimeType};base64,${base64Image}`;
+    // }
 
     console.log("Successfully fetched the news content");
     return res.status(200).json(news);
@@ -1022,54 +1037,96 @@ exports.editAdminUserPassword = async (req, res) => {
   }
 };
 
+
+
+
 exports.deletePlantCareUser = async (req, res) => {
+
+  const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
+  console.log(fullUrl);
+
+
   try {
-    const { id } = await ValidateSchema.deletePlantCareUserSchema.validateAsync(
-      req.params
-    );
+    const { id } = await ValidateSchema.deletePlantCareUserSchema.validateAsync(req.params);
+
+    const user = await adminDao.getUserById(id);
+    if (!user) {
+      return res.status(404).json({ message: "PlantCare User not found" });
+    }
+
+    const imageUrl = user.profileImage;
+    
+    // let s3Key;
+
+    // if (imageUrl && imageUrl.startsWith(`https://${process.env.AWS_S3_BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/`)) {
+    //   s3Key = imageUrl.split(`https://${process.env.AWS_S3_BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/`)[1];
+    // }
+    
 
     const result = await adminDao.deletePlantCareUserById(id);
 
     if (result.affectedRows === 0) {
-      return res.status(404).json({ message: "PlantCare User not found" });
+      return res.status(404).json({ message: "Failed to delete PlantCare User" });
+    }
+
+    if (imageUrl) {
+      try {
+        await deleteFromS3(imageUrl);
+      } catch (s3Error) {
+        console.error("Failed to delete image from S3:", s3Error);
+        // Optionally handle the failure, e.g., log but not block user deletion
+      }
     }
 
     console.log("PlantCare User deleted successfully");
-    return res
-      .status(200)
-      .json({ status: true, message: "PlantCare User deleted successfully" });
+    return res.status(200).json({
+      status: true,
+      message: "PlantCare User deleted successfully",
+    });
   } catch (err) {
     if (err.isJoi) {
-      // Validation error
       return res.status(400).json({ error: err.details[0].message });
     }
 
-    console.error("Error deleting PlantCare user:", err);
-    return res
-      .status(500)
-      .json({ error: "An error occurred while deleting PlantCare User" });
+    console.error("Error deleting PlantCare User:", err);
+    return res.status(500).json({ error: "An error occurred while deleting PlantCare User" });
   }
 };
+
+
+
 
 exports.updatePlantCareUser = async (req, res) => {
   const { id } = req.params;
 
   try {
-    // Validate input data
     const validatedBody =
       await ValidateSchema.updatePlantCareUserSchema.validateAsync(req.body);
     const { firstName, lastName, phoneNumber, NICnumber, district, membership } = validatedBody;
 
-    // Handle image upload if file is provided
-
-    let imageData = null;
-    if (req.file) {
-      imageData = req.file.buffer; // Store the binary image data from req.file
+    const user = await adminDao.getUserById(id);
+    if (!user) {
+      return res.status(404).json({ message: "PlantCare User not found" });
     }
 
-    const userData = { firstName, lastName, phoneNumber, NICnumber, district, membership, imageData };
+    const imageUrl = user.profileImage;
+    
 
-    // Call DAO to update the user
+    await deleteFromS3(imageUrl);
+    console.log(imageUrl);
+
+    if (req.file) {
+      const fileBuffer = req.file.buffer;
+      const fileName = req.file.originalname;
+      image = await uploadFileToS3(fileBuffer, fileName, "users/profile-images");
+      
+    }
+
+
+    
+
+    const userData = { firstName, lastName, phoneNumber, NICnumber, district, membership, image };
+
     const result = await adminDao.updatePlantCareUserById(userData, id);
 
     if (result.affectedRows === 0) {
@@ -1082,7 +1139,6 @@ exports.updatePlantCareUser = async (req, res) => {
       .json({ message: "PlantCare User updated successfully" });
   } catch (error) {
     if (error.isJoi) {
-      // Validation error
       return res.status(400).json({ error: error.details[0].message });
     }
 
@@ -1092,6 +1148,7 @@ exports.updatePlantCareUser = async (req, res) => {
       .json({ error: "An error occurred while updating PlantCare User" });
   }
 };
+
 
 // exports.createPlantCareUser = async (req, res) => {
 //   try {
@@ -1148,6 +1205,9 @@ exports.createPlantCareUser = async (req, res) => {
     }
 
     const fileBuffer = req.file.buffer;
+    const fileName = req.file.originalname;
+
+ const profileImageUrl = await uploadFileToS3(fileBuffer, fileName, "users/profile-images");
 
     const userData = {
       firstName,
@@ -1156,7 +1216,7 @@ exports.createPlantCareUser = async (req, res) => {
       NICnumber,
       district,
       membership,
-      fileBuffer,
+      profileImageUrl
     };
 
     console.log(userData);
@@ -1759,13 +1819,13 @@ exports.getAllPostyById = async (req, res) => {
     // console.log(results);
 
     // Modify the results to convert images to base64
-    results.forEach((result, indexId) => {
-      if (result.postimage) {
-        const base64Image = Buffer.from(result.postimage).toString("base64");
-        const mimeType = "image/png";
-        results[indexId].postimage = `data:${mimeType};base64,${base64Image}`;
-      }
-    });
+    // results.forEach((result, indexId) => {
+    //   if (result.postimage) {
+    //     const base64Image = Buffer.from(result.postimage).toString("base64");
+    //     const mimeType = "image/png";
+    //     results[indexId].postimage = `data:${mimeType};base64,${base64Image}`;
+    //   }
+    // });
 
     res.json(results);
   } catch (error) {
@@ -2282,11 +2342,7 @@ exports.getFarmerListReport = async (req, res) => {
     const cropList = await adminDao.getFarmerCropListReport(id);
     const userdetails = await adminDao.getReportfarmerDetails(userId);
 
-    if (userdetails.farmerQr) {
-      const base64Image = Buffer.from(userdetails.farmerQr).toString("base64");
-      const mimeType = "image/png"; // Adjust MIME type if necessary, depending on the image type
-      userdetails.farmerQr = `data:${mimeType};base64,${base64Image}`;
-    }
+    
 
 
     console.log("Successfully fetched farmer list report");

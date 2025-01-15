@@ -58,3 +58,26 @@ exports.updateNews = (newsData, id) => {
         });
     });
 };
+
+
+exports.geNewsById = (id) => {
+    return new Promise((resolve, reject) => {
+      const sql = "SELECT * FROM content WHERE id = ?";
+      plantcare.query(sql, [id], (err, results) => {
+        if (err) {
+          return reject(err);
+        }
+        if (results.length === 0) {
+          return resolve(null); // No user found
+        }
+        // if (results[0].profileImage) {
+        //   const base64Image = Buffer.from(results[0].profileImage).toString(
+        //     "base64"
+        //   );
+        //   const mimeType = "image/png"; // Adjust MIME type if necessary, depending on the image type
+        //   results[0].profileImage = `data:${mimeType};base64,${base64Image}`;
+        // }
+        resolve(results[0]); // Return the first result
+      });
+    });
+  };

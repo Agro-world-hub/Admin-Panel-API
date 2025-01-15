@@ -32,6 +32,7 @@ const uploadfile = multer({
 router.post(
     "/collection-officer/create-collection-officer",
     authMiddleware,
+    upload.single("image"),
     CollectionOfficerEp.createCollectionOfficer
 );
 
@@ -95,6 +96,7 @@ router.get(
 router.put(
     '/update-officer-details/:id', 
     authMiddleware, 
+    upload.single("image"),
     CollectionOfficerEp.updateCollectionOfficerDetails
 );
 
