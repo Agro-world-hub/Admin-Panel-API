@@ -801,7 +801,6 @@ const createUserBankDetails = () => {
     CREATE TABLE IF NOT EXISTS userbankdetails (
       id INT AUTO_INCREMENT PRIMARY KEY,
       userId INT DEFAULT NULL,
-      address TEXT NULL DEFAULT NULL,
       accNumber VARCHAR(50) DEFAULT NULL,
       accHolderName VARCHAR(50) DEFAULT NULL,
       bankName VARCHAR(50) DEFAULT NULL,
@@ -822,6 +821,77 @@ const createUserBankDetails = () => {
         });
     });
 };
+
+
+const createFeedBackListTable = () => {
+    const sql = `
+    CREATE TABLE IF NOT EXISTS feedbacklist (
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      orderNumber INT DEFAULT NULL,
+      colour VARCHAR(15) NULL DEFAULT NULL,
+      feedback TEXT DEFAULT NULL,
+      createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )
+  `;
+    return new Promise((resolve, reject) => {
+        plantcare.query(sql, (err, result) => {
+            if (err) {
+                reject('Error creating feedbacklist table: ' + err);
+            } else {
+                resolve('feedbacklist table created successfully.');
+            }
+        });
+    });
+};
+
+
+const createDeletedUserTable = () => {
+    const sql = `
+    CREATE TABLE IF NOT EXISTS deleteduser (
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      firstName VARCHAR(30) NULL DEFAULT NULL,
+      lastName VARCHAR(30) NULL DEFAULT NULL,
+      createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )
+  `;
+    return new Promise((resolve, reject) => {
+        plantcare.query(sql, (err, result) => {
+            if (err) {
+                reject('Error creating deleteduser table: ' + err);
+            } else {
+                resolve('deleteduser table created successfully.');
+            }
+        });
+    });
+};
+
+
+const createUserFeedbackTable = () => {
+    const sql = `
+      CREATE TABLE IF NOT EXISTS userfeedback (
+        id int AUTO_INCREMENT PRIMARY KEY,
+        deletedUserId int DEFAULT NULL,
+        feedbackId int DEFAULT NULL,
+        createdAt timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (deletedUserId) REFERENCES deleteduser(id)
+            ON DELETE CASCADE
+            ON UPDATE CASCADE,
+        FOREIGN KEY (feedbackId) REFERENCES feedbacklist(id)
+            ON DELETE CASCADE
+            ON UPDATE CASCADE
+  );
+    `;
+    return new Promise((resolve, reject) => {
+        plantcare.query(sql, (err, result) => {
+            if (err) {
+                reject('Error userfeedback table: ' + err);
+            } else {
+                resolve('userfeedback table created successfully.');
+            }
+        });
+    });
+};
+
 
 
 
@@ -855,5 +925,9 @@ module.exports = {
     createSlaveCropCalenderDaysTable,
     createCropGeoTable,
     createTaskImages,
-    createUserBankDetails
+    createUserBankDetails,
+
+    createFeedBackListTable,
+    createDeletedUserTable,
+    createUserFeedbackTable
 };

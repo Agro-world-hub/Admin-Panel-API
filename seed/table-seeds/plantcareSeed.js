@@ -26,6 +26,10 @@ const { createCropGeoTable } = require('../tables/plantCare-table');
 const { createTaskImages } = require('../tables/plantCare-table');
 const { createUserBankDetails } = require('../tables/plantCare-table');
 
+const { createFeedBackListTable } = require('../tables/plantCare-table');
+const { createDeletedUserTable } = require('../tables/plantCare-table');
+const { createUserFeedbackTable } = require('../tables/plantCare-table');
+
 
 
 const {createSuperAdmin} = require('../data/admin')
@@ -122,6 +126,16 @@ const seedPlantCare = async () => {
 
 
 
+
+
+    const messageCreateFeedBackListTable = await createFeedBackListTable();
+    console.log(messageCreateFeedBackListTable);
+
+    const messageCreateDeletedUserTable= await createDeletedUserTable();
+    console.log(messageCreateDeletedUserTable);
+
+    const messageCreateUserFeedbackTable = await createUserFeedbackTable();
+    console.log(messageCreateUserFeedbackTable);
 
 
 

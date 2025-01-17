@@ -372,14 +372,14 @@ const createDailyTargetTable = () => {
     const sql = `
     CREATE TABLE IF NOT EXISTS dailytarget (
       id INT AUTO_INCREMENT PRIMARY KEY,
-      centerId INT(11) DEFAULT NULL,
+      companyId INT(11) DEFAULT NULL,
       fromDate DATE DEFAULT NULL,
       toDate DATE DEFAULT NULL,
       fromTime TIME DEFAULT NULL,
       toTime TIME DEFAULT NULL,
       createdBy INT(11) DEFAULT NULL,
       createdAt TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-      FOREIGN KEY (centerId) REFERENCES collectioncenter(id)
+      FOREIGN KEY (companyId) REFERENCES company(id)
         ON DELETE CASCADE
         ON UPDATE CASCADE,
       FOREIGN KEY (createdBy) REFERENCES collectionofficer(id)
