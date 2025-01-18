@@ -339,7 +339,7 @@ router.get(
 
 router.post(
     "/create-feedback", 
-    // authMiddleware,
+    authMiddleware,
     AdminEp.createFeedback
 );
 
