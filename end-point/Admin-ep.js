@@ -2362,3 +2362,38 @@ exports.getFarmerListReport = async (req, res) => {
 
 
 
+exports.createFeedback = async (req, res) => {
+  try {
+    const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
+    console.log("Request URL:", fullUrl);
+    
+    await ValidateSchema.createfeedback.validateAsync(req.body);
+
+    const {
+      orderNumber,
+      colourcode,
+      feedback
+    } = req.body;
+
+    // Call DAO to save news and the image file as longblob
+    const feedBack = await adminDao.createFeedback(
+      orderNumber,
+      colourcode,
+      feedback
+    );
+
+    
+    return res
+      .status(201)
+      .json({ message: "feedback create successfully", id: feedBack, status: true });
+  } catch (err) {
+    if (err.isJoi) {
+      return res.status(400).json({ error: err.details[0].message });
+    }
+
+    console.error("Error executing query:", err);
+    return res
+      .status(500)
+      .json({ error: "An error occurred while creating feedback" });
+  }
+};

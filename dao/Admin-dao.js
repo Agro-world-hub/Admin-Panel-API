@@ -2085,3 +2085,28 @@ exports.insertUserXLSXData = (data) => {
     }
   });
 };
+
+exports.createFeedback = async (
+  orderNumber,
+  colourcode,
+  feedback
+) => {
+  return new Promise((resolve, reject) => {
+    const sql =
+      "INSERT INTO feedbacklist (orderNumber, colour, feedback) VALUES (?, ?, ?)";
+    const values = [
+      orderNumber,
+      colourcode,
+      feedback
+    ];
+
+    plantcare.query(sql, values, (err, results) => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(results.insertId);
+      }
+    });
+  });
+};
+
