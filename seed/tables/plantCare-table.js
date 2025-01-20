@@ -829,7 +829,9 @@ const createFeedBackListTable = () => {
       id INT AUTO_INCREMENT PRIMARY KEY,
       orderNumber INT DEFAULT NULL,
       colour VARCHAR(15) NULL DEFAULT NULL,
-      feedback TEXT DEFAULT NULL,
+      feedbackEnglish TEXT DEFAULT NULL,
+      feedbackSinahala TEXT DEFAULT NULL,
+      feedbackTamil TEXT DEFAULT NULL,
       createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     )
   `;
