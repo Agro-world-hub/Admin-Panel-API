@@ -2233,18 +2233,22 @@ ORDER BY
 exports.createFeedback = async (
   orderNumber,
   colourcode,
-  feedback
+  feedbackEnglish,
+  feedbackSinahala,
+  feedbackTamil
 ) => {
   return new Promise((resolve, reject) => {
     const sql =
-      "INSERT INTO feedbacklist (orderNumber, colour, feedback) VALUES (?, ?, ?)";
+      "INSERT INTO feedbacklist (orderNumber, colour, feedbackEnglish, feedbackSinahala, feedbackTamil) VALUES (?, ?, ?, ?, ?)";
     const values = [
       orderNumber,
       colourcode,
-      feedback
+      feedbackEnglish,
+      feedbackSinahala,
+      feedbackTamil
     ];
 
-    plantcare.query(sql, (err, results) => {
+    plantcare.query(sql,values, (err, results) => {
       if (err) {
         return reject(err); // Handle error in the promise
       }
