@@ -1,8 +1,12 @@
-const { plantcare, collectionofficer, marketPlace, dash } = require('../startup/database');
+const {
+  plantcare,
+  collectionofficer,
+  marketPlace,
+  dash,
+} = require("../startup/database");
 const path = require("path");
 const { Upload } = require("@aws-sdk/lib-storage");
 const Joi = require("joi");
-
 
 exports.loginAdmin = (email) => {
   return new Promise((resolve, reject) => {
@@ -66,7 +70,6 @@ exports.getAllAdminUsers = (limit, offset, role, search) => {
     });
   });
 };
-
 
 exports.adminCreateUser = (firstName, lastName, phoneNumber, NICnumber) => {
   return new Promise((resolve, reject) => {
@@ -232,44 +235,47 @@ exports.getAllNews = async (limit, offset, status, createdAt) => {
       "with params:",
       queryParams.slice(0, -2)
     );
-    plantcare.query(countsSql, queryParams.slice(0, -2), (countErr, countResults) => {
-      if (countErr) {
-        console.error("Error in count query:", countErr);
-        reject(countErr);
-        return;
-      }
-
-      const total = countResults[0].total;
-      console.log("Total count:", total);
-
-      if (total === 0) {
-        resolve({ items: [], total: 0 });
-        return;
-      }
-
-      console.log(
-        "Executing data query:",
-        dataSql,
-        "with params:",
-        queryParams
-      );
-      plantcare.query(dataSql, queryParams, (dataErr, dataResults) => {
-        if (dataErr) {
-          console.error("Error in data query:", dataErr);
-          reject(dataErr);
+    plantcare.query(
+      countsSql,
+      queryParams.slice(0, -2),
+      (countErr, countResults) => {
+        if (countErr) {
+          console.error("Error in count query:", countErr);
+          reject(countErr);
           return;
         }
 
-        // Convert the image blob to base64 and include in the response
-        const newsItems = dataResults.map((news) => {
-         
-          return news;
-        });
+        const total = countResults[0].total;
+        console.log("Total count:", total);
 
-        console.log("Data query results:", newsItems.length);
-        resolve({ items: newsItems, total: total });
-      });
-    });
+        if (total === 0) {
+          resolve({ items: [], total: 0 });
+          return;
+        }
+
+        console.log(
+          "Executing data query:",
+          dataSql,
+          "with params:",
+          queryParams
+        );
+        plantcare.query(dataSql, queryParams, (dataErr, dataResults) => {
+          if (dataErr) {
+            console.error("Error in data query:", dataErr);
+            reject(dataErr);
+            return;
+          }
+
+          // Convert the image blob to base64 and include in the response
+          const newsItems = dataResults.map((news) => {
+            return news;
+          });
+
+          console.log("Data query results:", newsItems.length);
+          resolve({ items: newsItems, total: total });
+        });
+      }
+    );
   });
 };
 
@@ -395,21 +401,29 @@ exports.getAllMarketPrice = (status, createdAt, limit, offset) => {
     dataSql += " LIMIT ? OFFSET ?";
     queryParams.push(limit, offset);
 
-    collectionofficer.query(countsSql, queryParams.slice(0, -2), (countErr, countResults) => {
-      if (countErr) {
-        return reject(countErr);
-      }
-
-      const total = countResults[0].total;
-
-      collectionofficer.query(dataSql, queryParams, (dataErr, dataResults) => {
-        if (dataErr) {
-          return reject(dataErr);
+    collectionofficer.query(
+      countsSql,
+      queryParams.slice(0, -2),
+      (countErr, countResults) => {
+        if (countErr) {
+          return reject(countErr);
         }
 
-        resolve({ total, dataResults });
-      });
-    });
+        const total = countResults[0].total;
+
+        collectionofficer.query(
+          dataSql,
+          queryParams,
+          (dataErr, dataResults) => {
+            if (dataErr) {
+              return reject(dataErr);
+            }
+
+            resolve({ total, dataResults });
+          }
+        );
+      }
+    );
   });
 };
 
@@ -839,7 +853,15 @@ exports.deletePlantCareUserById = (id) => {
 
 exports.updatePlantCareUserById = (userData, id) => {
   return new Promise((resolve, reject) => {
-    const { firstName, lastName, phoneNumber, NICnumber, district, membership, profileImage } = userData;
+    const {
+      firstName,
+      lastName,
+      phoneNumber,
+      NICnumber,
+      district,
+      membership,
+      profileImage,
+    } = userData;
 
     let sql = `
       UPDATE users 
@@ -851,7 +873,14 @@ exports.updatePlantCareUserById = (userData, id) => {
           district = ?, 
           membership = ?
     `;
-    let values = [firstName, lastName, phoneNumber, NICnumber, district, membership];
+    let values = [
+      firstName,
+      lastName,
+      phoneNumber,
+      NICnumber,
+      district,
+      membership,
+    ];
 
     if (profileImage) {
       sql += `, profileImage = ?`;
@@ -870,7 +899,6 @@ exports.updatePlantCareUserById = (userData, id) => {
     });
   });
 };
-
 
 // exports.createPlantCareUser = (userData) => {
 //   return new Promise((resolve, reject) => {
@@ -895,8 +923,15 @@ exports.updatePlantCareUserById = (userData, id) => {
 
 exports.createPlantCareUser = (userData) => {
   return new Promise((resolve, reject) => {
-    const { firstName, lastName, phoneNumber, NICnumber, district, membership, profileImageUrl } =
-      userData;
+    const {
+      firstName,
+      lastName,
+      phoneNumber,
+      NICnumber,
+      district,
+      membership,
+      profileImageUrl,
+    } = userData;
 
     // SQL query to check if phoneNumber or NICnumber already exists
     const checkSql = `
@@ -949,7 +984,7 @@ exports.getUserById = (userId) => {
       if (err) {
         return reject(err);
       }
-      
+
       // if (results[0].profileImage) {
       //   const base64Image = Buffer.from(results[0].profileImage).toString(
       //     "base64"
@@ -1337,7 +1372,7 @@ exports.getReplyCount = () => {
     const sql =
       "SELECT chatId, COUNT(id) AS replyCount FROM publicforumreplies GROUP BY chatId";
 
-      plantcare.query(sql, (err, results) => {
+    plantcare.query(sql, (err, results) => {
       if (err) {
         return reject(err); // Handle error in the promise
       }
@@ -1695,14 +1730,14 @@ exports.getPaymentSlipReportrrrr = (officerID) => {
 //   return new Promise((resolve, reject) => {
 //     // SQL query to count the total number of rows
 //     const countSql = `
-//       SELECT COUNT(*) AS total 
-//       FROM registeredfarmerpayments 
+//       SELECT COUNT(*) AS total
+//       FROM registeredfarmerpayments
 //       WHERE collectionOfficerId = ?
 //     `;
 
 //     // SQL query to fetch paginated results
 //     const dataSql = `
-//       SELECT 
+//       SELECT
 //         rp.id,
 //         u.id AS userId,
 //         u.firstName,
@@ -1711,17 +1746,17 @@ exports.getPaymentSlipReportrrrr = (officerID) => {
 //         co.firstNameEnglish AS officerFirstName,
 //         co.lastNameEnglish AS officerLastName,
 //         rp.createdAt
-//       FROM 
+//       FROM
 //         registeredfarmerpayments rp
-//       JOIN 
+//       JOIN
 //         users u ON rp.userId = u.id
-//       JOIN 
+//       JOIN
 //         collectionofficer co ON rp.collectionOfficerId = co.id
-//       WHERE 
+//       WHERE
 //         rp.collectionOfficerId = ?
-//       ORDER BY 
-//         rp.createdAt DESC 
-//       LIMIT ? 
+//       ORDER BY
+//         rp.createdAt DESC
+//       LIMIT ?
 //       OFFSET ?
 //     `;
 
@@ -1754,8 +1789,13 @@ exports.getPaymentSlipReportrrrr = (officerID) => {
 //   });
 // };
 
-
-exports.getPaymentSlipReport = (officerID, limit, offset, date = null, search = null) => {
+exports.getPaymentSlipReport = (
+  officerID,
+  limit,
+  offset,
+  date = null,
+  search = null
+) => {
   return new Promise((resolve, reject) => {
     // Base SQL queries
     let countSql = `
@@ -1796,8 +1836,10 @@ exports.getPaymentSlipReport = (officerID, limit, offset, date = null, search = 
     // Add search filter if provided
     if (search) {
       const searchQuery = `%${search}%`;
-      countSql += " AND (u.firstName LIKE ? OR u.lastName LIKE ? OR u.NICnumber LIKE ?)";
-      dataSql += " AND (u.firstName LIKE ? OR u.lastName LIKE ? OR u.NICnumber LIKE ?)";
+      countSql +=
+        " AND (u.firstName LIKE ? OR u.lastName LIKE ? OR u.NICnumber LIKE ?)";
+      dataSql +=
+        " AND (u.firstName LIKE ? OR u.lastName LIKE ? OR u.NICnumber LIKE ?)";
       params.push(searchQuery, searchQuery, searchQuery);
     }
 
@@ -1806,33 +1848,33 @@ exports.getPaymentSlipReport = (officerID, limit, offset, date = null, search = 
     params.push(limit, offset);
 
     // Execute the count query
-    collectionofficer.query(countSql, params.slice(0, params.length - 2), (countErr, countResults) => {
-      if (countErr) {
-        console.error("Error in count query:", countErr);
-        return reject(countErr);
-      }
-
-      const total = countResults[0]?.total || 0;
-
-      // Execute the data query
-      collectionofficer.query(dataSql, params, (dataErr, dataResults) => {
-        if (dataErr) {
-          console.error("Error in data query:", dataErr);
-          return reject(dataErr);
+    collectionofficer.query(
+      countSql,
+      params.slice(0, params.length - 2),
+      (countErr, countResults) => {
+        if (countErr) {
+          console.error("Error in count query:", countErr);
+          return reject(countErr);
         }
 
-        resolve({
-          total: total,
-          items: dataResults,
+        const total = countResults[0]?.total || 0;
+
+        // Execute the data query
+        collectionofficer.query(dataSql, params, (dataErr, dataResults) => {
+          if (dataErr) {
+            console.error("Error in data query:", dataErr);
+            return reject(dataErr);
+          }
+
+          resolve({
+            total: total,
+            items: dataResults,
+          });
         });
-      });
-    });
+      }
+    );
   });
 };
-
-
-
-
 
 exports.getFarmerListReport = (id) => {
   return new Promise((resolve, reject) => {
@@ -1859,7 +1901,7 @@ LIMIT 10 OFFSET 2;
 
     `;
 
-    collectionofficer.query(dataSql,[id] ,(error, results) => {
+    collectionofficer.query(dataSql, [id], (error, results) => {
       if (error) {
         return reject(error);
       }
@@ -1867,8 +1909,6 @@ LIMIT 10 OFFSET 2;
     });
   });
 };
-
-
 
 exports.getFarmerCropListReport = (id) => {
   return new Promise((resolve, reject) => {
@@ -1893,7 +1933,7 @@ WHERE
   fp.registerFarmerId  = ?
     `;
 
-    collectionofficer.query(dataSql,[id] ,(error, results) => {
+    collectionofficer.query(dataSql, [id], (error, results) => {
       if (error) {
         return reject(error);
       }
@@ -1901,8 +1941,6 @@ WHERE
     });
   });
 };
-
-
 
 exports.getReportfarmerDetails = (userId) => {
   return new Promise((resolve, reject) => {
@@ -1929,7 +1967,7 @@ exports.getReportfarmerDetails = (userId) => {
         u.id  = ?
     `;
 
-    plantcare.query(dataSql,[userId] ,(error, results) => {
+    plantcare.query(dataSql, [userId], (error, results) => {
       if (error) {
         return reject(error);
       }
@@ -1941,9 +1979,6 @@ exports.getReportfarmerDetails = (userId) => {
     });
   });
 };
-
-
-
 
 exports.insertUserXLSXData = (data) => {
   return new Promise(async (resolve, reject) => {
@@ -2086,30 +2121,68 @@ exports.insertUserXLSXData = (data) => {
   });
 };
 
-exports.createFeedback = async (
-  orderNumber,
-  colour,
-  feedbackEnglish,
-  feedbackSinahala,
-  feedbackTamil
-) => {
-  return new Promise((resolve, reject) => {
-    const sql =
-      "INSERT INTO feedbacklist (orderNumber, colour, feedbackEnglish, feedbackSinahala, feedbackTamil) VALUES (?, ?, ?, ?, ?)";
-    const values = [
-      orderNumber,
-      colour,
-      feedbackEnglish,
-      feedbackSinahala,
-      feedbackTamil
-    ];
+// exports.getUserFeedbackDetails = () => {
+//   return new Promise((resolve, reject) => {
+//     const sql = `
+//       SELECT
+//         du.firstName,
+//         du.lastName,
+//         du.createdAt AS userCreatedAt,
+//         fl.feedback,
+//         uf.createdAt AS feedbackCreatedAt
+//       FROM
+//         userfeedback uf
+//       INNER JOIN
+//         feedbacklist fl
+//       ON
+//         uf.feedbackId = fl.id
+//       INNER JOIN
+//         deleteduser du
+//       ON
+//         uf.deletedUserId = du.id
+//     `;
 
-    plantcare.query(sql, values, (err, results) => {
+//     plantcare.query(sql, (err, results) => {
+//       if (err) {
+//         return reject(err); // Handle error in the promise
+//       }
+
+//       // Return the joined result
+//       resolve(results);
+//     });
+//   });
+// };
+
+exports.getUserFeedbackDetails = () => {
+  return new Promise((resolve, reject) => {
+    const sql = `
+      SELECT 
+        uf.feedbackId,
+        GROUP_CONCAT(DISTINCT CONCAT(du.firstName, ' ', du.lastName)) AS userNames,
+        GROUP_CONCAT(DISTINCT du.createdAt ORDER BY du.createdAt ASC) AS userCreatedAt,
+        fl.feedback,
+        GROUP_CONCAT(uf.createdAt ORDER BY uf.createdAt ASC) AS feedbackCreatedAt
+      FROM 
+        userfeedback uf
+      INNER JOIN 
+        feedbacklist fl 
+      ON 
+        uf.feedbackId = fl.id
+      INNER JOIN 
+        deleteduser du 
+      ON 
+        uf.deletedUserId = du.id
+      GROUP BY 
+        uf.feedbackId, fl.feedback
+    `;
+
+    plantcare.query(sql, (err, results) => {
       if (err) {
-        reject(err);
-      } else {
-        resolve(results.insertId);
+        return reject(err); // Handle error in the promise
       }
+
+      // Return the grouped result
+      resolve(results);
     });
   });
 };
