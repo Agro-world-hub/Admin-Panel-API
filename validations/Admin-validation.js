@@ -396,6 +396,9 @@ exports.slaveCropId = Joi.object({
 
 exports.createfeedback = Joi.object({
     orderNumber: Joi.number().required(),
-    colourcode: Joi.string().required(),
-    feedback: Joi.string().required()
+    colour: Joi.string().required(),
+    feedbackEnglish: Joi.string().required(),
+    feedbackSinahala: Joi.string().required(),
+    feedbackTamil: Joi.string().required()
+ 
 });

@@ -54,6 +54,25 @@ const createAdminUserRolesTable = () => {
 };
 
 
+const createAdminUserPositionTable = () => {
+    const sql = `
+    CREATE TABLE IF NOT EXISTS adminposition (
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      positions VARCHAR(100) DEFAULT NULL
+    )
+  `;
+    return new Promise((resolve, reject) => {
+        plantcare.query(sql, (err, result) => {
+            if (err) {
+                reject('Error creating adminposition table: ' + err);
+            } else {
+                resolve('adminposition table created successfully.');
+            }
+        });
+    });
+};
+
+
 
 
 const createAdminUsersTable = () => {

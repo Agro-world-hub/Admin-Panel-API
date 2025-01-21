@@ -2088,16 +2088,20 @@ exports.insertUserXLSXData = (data) => {
 
 exports.createFeedback = async (
   orderNumber,
-  colourcode,
-  feedback
+  colour,
+  feedbackEnglish,
+  feedbackSinahala,
+  feedbackTamil
 ) => {
   return new Promise((resolve, reject) => {
     const sql =
-      "INSERT INTO feedbacklist (orderNumber, colour, feedback) VALUES (?, ?, ?)";
+      "INSERT INTO feedbacklist (orderNumber, colour, feedbackEnglish, feedbackSinahala, feedbackTamil) VALUES (?, ?, ?, ?, ?)";
     const values = [
       orderNumber,
-      colourcode,
-      feedback
+      colour,
+      feedbackEnglish,
+      feedbackSinahala,
+      feedbackTamil
     ];
 
     plantcare.query(sql, values, (err, results) => {
@@ -2110,3 +2114,21 @@ exports.createFeedback = async (
   });
 };
 
+
+
+exports.getNextOrderNumber = () => {
+  return new Promise((resolve, reject) => {
+    const query = `
+      SELECT COALESCE(MAX(orderNumber), 0) + 1 AS nextOrderNumber
+      FROM feedbacklist
+    `;
+
+    plantcare.query(query, (error, results) => {
+      if (error) {
+        return reject(error); // Handle error
+      }
+
+      resolve(results[0].nextOrderNumber); // Return the next order number
+    });
+  });
+};

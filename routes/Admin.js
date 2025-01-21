@@ -339,10 +339,13 @@ router.get(
 
 router.post(
     "/create-feedback", 
-    authMiddleware,
+    // authMiddleware,
     AdminEp.createFeedback
 );
 
+
+router.get('/next-order-number', 
+    AdminEp.getNextOrderNumber);
 
 
 

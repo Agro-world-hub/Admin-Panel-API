@@ -2366,20 +2366,25 @@ exports.createFeedback = async (req, res) => {
   try {
     const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
     console.log("Request URL:", fullUrl);
+    console.log(req.body);
     
     await ValidateSchema.createfeedback.validateAsync(req.body);
 
     const {
       orderNumber,
-      colourcode,
-      feedback
+      colour,
+      feedbackEnglish,
+      feedbackSinahala,
+      feedbackTamil
     } = req.body;
 
     // Call DAO to save news and the image file as longblob
     const feedBack = await adminDao.createFeedback(
       orderNumber,
-      colourcode,
-      feedback
+      colour,
+      feedbackEnglish,
+      feedbackSinahala,
+      feedbackTamil
     );
 
     
@@ -2395,5 +2400,25 @@ exports.createFeedback = async (req, res) => {
     return res
       .status(500)
       .json({ error: "An error occurred while creating feedback" });
+  }
+};
+
+
+
+
+exports.getNextOrderNumber = async (req, res) => {
+  try {
+    const nextOrderNumber = await adminDao.getNextOrderNumber(); // Call the DAO function
+    res.status(200).json({
+      success: true,
+      nextOrderNumber: nextOrderNumber,
+    });
+  } catch (error) {
+    console.error('Error fetching next order number:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to retrieve the next order number.',
+      error: error.message,
+    });
   }
 };
