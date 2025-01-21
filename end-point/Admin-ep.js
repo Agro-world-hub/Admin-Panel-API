@@ -2362,3 +2362,111 @@ exports.getFarmerListReport = async (req, res) => {
 
 
 
+
+exports.getUserFeedbackDetails = async (req, res) => {
+  try {
+    // Construct the full URL for logging purposes
+    const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
+    console.log("Request URL:", fullUrl);
+
+    // Log request parameters if needed
+    console.log("Fetching user feedback details");
+
+    // Fetch user feedback details from the DAO
+    const feedbackDetails = await adminDao.getUserFeedbackDetails();
+
+    console.log("Successfully fetched user feedback details");
+    console.log(feedbackDetails);
+
+    // Respond with the feedback details
+    res.json(feedbackDetails);
+  } catch (error) {
+    console.error("Error fetching user feedback details:", error);
+    return res.status(500).json({
+      error: "An error occurred while fetching user feedback details",
+    });
+  }
+};
+
+
+
+exports.createFeedback = async (req, res) => {
+  try {
+    const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
+    console.log("Request URL:", fullUrl);
+    console.log(req.body);
+    
+    await ValidateSchema.createfeedback.validateAsync(req.body);
+
+    const {
+      orderNumber,
+      colour,
+      feedbackEnglish,
+      feedbackSinahala,
+      feedbackTamil
+    } = req.body;
+
+    // Call DAO to save news and the image file as longblob
+    const feedBack = await adminDao.createFeedback(
+      orderNumber,
+      colour,
+      feedbackEnglish,
+      feedbackSinahala,
+      feedbackTamil
+    );
+
+    
+    return res
+      .status(201)
+      .json({ message: "feedback create successfully", id: feedBack, status: true });
+  } catch (err) {
+    if (err.isJoi) {
+      return res.status(400).json({ error: err.details[0].message });
+    }
+
+    console.error("Error executing query:", err);
+    return res
+      .status(500)
+      .json({ error: "An error occurred while creating feedback" });
+  }
+};
+
+
+
+
+exports.getNextOrderNumber = async (req, res) => {
+  try {
+    const nextOrderNumber = await adminDao.getNextOrderNumber(); // Call the DAO function
+    res.status(200).json({
+      success: true,
+      nextOrderNumber: nextOrderNumber,
+    });
+  } catch (error) {
+    console.error('Error fetching next order number:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to retrieve the next order number.',
+      error: error.message,
+    });
+  }
+};
+
+
+
+exports.getAllfeedackList = async (req, res) => {
+  try {
+    const feedbacks = await adminDao.getAllfeedackList();
+
+    console.log("Successfully fetched admin roles");
+    res.json({
+      feedbacks,
+    });
+  } catch (err) {
+    if (err.isJoi) {
+      // Validation error
+      return res.status(400).json({ error: err.details[0].message });
+    }
+    console.error("Error executing query:", err);
+    res.status(500).send("An error occurred while fetching data.");
+  }
+};

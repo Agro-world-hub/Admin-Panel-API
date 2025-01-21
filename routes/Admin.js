@@ -333,10 +333,37 @@ router.get(
 
 router.get(
     "/farmer-list-report/:id/:userId",
-    // authMiddleware, 
+    authMiddleware, 
     AdminEp.getFarmerListReport
 );
 
+router.get(
+    "/opt-out-feedbacks",
+    authMiddleware, 
+     AdminEp.getUserFeedbackDetails
+    );
+
+
+router.post(
+    "/create-feedback", 
+    authMiddleware,
+    AdminEp.createFeedback
+);
+
+
+router.get(
+    '/next-order-number',
+    authMiddleware,
+    AdminEp.getNextOrderNumber
+);
+
+
+
+router.get(
+    "/get-all-roles", 
+    authMiddleware, 
+    AdminEp.getAllfeedackList
+);
 
 
 

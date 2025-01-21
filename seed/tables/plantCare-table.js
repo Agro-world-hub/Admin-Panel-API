@@ -54,6 +54,25 @@ const createAdminUserRolesTable = () => {
 };
 
 
+const createAdminUserPositionTable = () => {
+    const sql = `
+    CREATE TABLE IF NOT EXISTS adminposition (
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      positions VARCHAR(100) DEFAULT NULL
+    )
+  `;
+    return new Promise((resolve, reject) => {
+        plantcare.query(sql, (err, result) => {
+            if (err) {
+                reject('Error creating adminposition table: ' + err);
+            } else {
+                resolve('adminposition table created successfully.');
+            }
+        });
+    });
+};
+
+
 
 
 const createAdminUsersTable = () => {
@@ -829,7 +848,9 @@ const createFeedBackListTable = () => {
       id INT AUTO_INCREMENT PRIMARY KEY,
       orderNumber INT DEFAULT NULL,
       colour VARCHAR(15) NULL DEFAULT NULL,
-      feedback TEXT DEFAULT NULL,
+      feedbackEnglish TEXT DEFAULT NULL,
+      feedbackSinahala TEXT DEFAULT NULL,
+      feedbackTamil TEXT DEFAULT NULL,
       createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     )
   `;
