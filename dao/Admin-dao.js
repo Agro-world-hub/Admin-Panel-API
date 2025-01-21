@@ -2125,11 +2125,12 @@ exports.insertUserXLSXData = (data) => {
 //   return new Promise((resolve, reject) => {
 //     const sql = `
 //       SELECT
+//         du.id AS deletedUserId,
 //         du.firstName,
 //         du.lastName,
 //         du.createdAt AS userCreatedAt,
-//         fl.feedback,
-//         uf.createdAt AS feedbackCreatedAt
+//         GROUP_CONCAT(fl.feedback SEPARATOR ', ') AS allFeedbacks,
+//         COUNT(uf.id) AS feedbackCount
 //       FROM
 //         userfeedback uf
 //       INNER JOIN
@@ -2140,6 +2141,8 @@ exports.insertUserXLSXData = (data) => {
 //         deleteduser du
 //       ON
 //         uf.deletedUserId = du.id
+//       GROUP BY
+//         du.id
 //     `;
 
 //     plantcare.query(sql, (err, results) => {
@@ -2147,7 +2150,41 @@ exports.insertUserXLSXData = (data) => {
 //         return reject(err); // Handle error in the promise
 //       }
 
-//       // Return the joined result
+//       // Return the grouped feedback result
+//       resolve(results);
+//     });
+//   });
+// };
+
+// exports.getUserFeedbackDetails = () => {
+//   return new Promise((resolve, reject) => {
+//     const sql = `
+//       SELECT
+//         du.id AS deletedUserId,
+//         du.firstName,
+//         du.lastName,
+//         du.createdAt AS userCreatedAt,
+//         GROUP_CONCAT(fl.feedback SEPARATOR ', ') AS allFeedbacks
+//       FROM
+//         userfeedback uf
+//       INNER JOIN
+//         feedbacklist fl
+//       ON
+//         uf.feedbackId = fl.id
+//       INNER JOIN
+//         deleteduser du
+//       ON
+//         uf.deletedUserId = du.id
+//       GROUP BY
+//         du.id
+//     `;
+
+//     plantcare.query(sql, (err, results) => {
+//       if (err) {
+//         return reject(err); // Handle error in the promise
+//       }
+
+//       // Return the grouped feedback result
 //       resolve(results);
 //     });
 //   });
@@ -2156,33 +2193,37 @@ exports.insertUserXLSXData = (data) => {
 exports.getUserFeedbackDetails = () => {
   return new Promise((resolve, reject) => {
     const sql = `
-      SELECT 
-        uf.feedbackId,
-        GROUP_CONCAT(DISTINCT CONCAT(du.firstName, ' ', du.lastName)) AS userNames,
-        GROUP_CONCAT(DISTINCT du.createdAt ORDER BY du.createdAt ASC) AS userCreatedAt,
-        fl.feedback,
-        GROUP_CONCAT(uf.createdAt ORDER BY uf.createdAt ASC) AS feedbackCreatedAt
-      FROM 
-        userfeedback uf
-      INNER JOIN 
-        feedbacklist fl 
-      ON 
-        uf.feedbackId = fl.id
-      INNER JOIN 
-        deleteduser du 
-      ON 
-        uf.deletedUserId = du.id
-      GROUP BY 
-        uf.feedbackId, fl.feedback
+SELECT 
+    du.firstName,
+    du.lastName,
+    du.createdAt AS deletedUserCreatedAt,
+    GROUP_CONCAT(fl.orderNumber ORDER BY fl.orderNumber ASC) AS orderNumbers,
+    GROUP_CONCAT(fl.feedbackEnglish ORDER BY fl.orderNumber ASC) AS feedbacks
+FROM 
+    userfeedback uf
+JOIN 
+    deleteduser du ON uf.deletedUserId = du.id
+JOIN 
+    feedbacklist fl ON uf.feedbackId = fl.id
+GROUP BY 
+    du.firstName, du.lastName, du.createdAt
+ORDER BY 
+    du.createdAt;
+
     `;
+
+    console.log("Executing full SQL query:", sql);
 
     plantcare.query(sql, (err, results) => {
       if (err) {
-        return reject(err); // Handle error in the promise
+        console.error("Error details:", err); // Log the full error details
+        return reject(
+          new Error("An error occurred while fetching user feedback details")
+        );
       }
 
-      // Return the grouped result
-      resolve(results);
+      console.log("Query Results:", results); // Log the results for debugging
+      resolve(results); // Resolve the promise with the results
     });
   });
 };

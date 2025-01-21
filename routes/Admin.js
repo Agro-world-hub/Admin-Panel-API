@@ -307,9 +307,9 @@ router.get(
   AdminEp.getFarmerListReport
 );
 
-router.post("/create-feedback", authMiddleware, AdminEp.createFeedback);
+// router.post("/create-feedback", authMiddleware, AdminEp.createFeedback);
 
-router.post("/create-feedback", authMiddleware, AdminEp.createFeedback);
+// router.post("/create-feedback", authMiddleware, AdminEp.createFeedback);
 
 router.get("/opt-out-feedbacks", AdminEp.getUserFeedbackDetails);
 
