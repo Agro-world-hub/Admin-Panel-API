@@ -16,19 +16,22 @@ on:
         default: latest
       github_iam_role:
         description: Name of the IAM Role for adding access to ECR repo
-        default: "github-actions-role"
+        default: "github-actions-rmodi"
         type: string
       aws_account_id:
         description: AWS Account ID
         type: string
       aws_region:
         description: Target AWS Region
-        default: "us-west-2"
+        default: "us-west-1"
         type: string
 
 jobs:
   docker:
     runs-on: ubuntu-latest
+
+    env:
+      ECR_REPO_NAME: "adminpanel-api"
 
     permissions:
       id-token: write
@@ -62,7 +65,7 @@ jobs:
           IMAGE_TAG: ${{ inputs.image_tag }}
         run: |
           docker build "${{ inputs.docker_build_dir }}" -f "${{ inputs.path_to_dockerfile }}" -t "$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG"
-          docker push "$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG"
+          docker push "$ECR_REGISTRY/$ECR_REPOSITORY/${{ github.event.repository.name }}":$IMAGE_TAG"
           echo "IMAGE $IMAGE_TAG is pushed to $ECR_REGISTRY/$ECR_REPOSITORY"
           echo "image_tag=$IMAGE_TAG"
           echo "full_image=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG"
