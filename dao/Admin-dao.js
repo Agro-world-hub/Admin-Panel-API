@@ -2231,3 +2231,19 @@ exports.getNextOrderNumber = () => {
     });
   });
 };
+
+
+
+exports.getAllfeedackList = () => {
+  return new Promise((resolve, reject) => {
+    const sql = "SELECT * FROM feedbacklist";
+
+    plantcare.query(sql, (err, results) => {
+      if (err) {
+        return reject(err); // Reject promise if an error occurs
+      }
+
+      resolve(results); // No need to wrap in arrays, return results directly
+    });
+  });
+};

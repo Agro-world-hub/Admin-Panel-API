@@ -2450,3 +2450,23 @@ exports.getNextOrderNumber = async (req, res) => {
     });
   }
 };
+
+
+
+exports.getAllfeedackList = async (req, res) => {
+  try {
+    const feedbacks = await adminDao.getAllfeedackList();
+
+    console.log("Successfully fetched admin roles");
+    res.json({
+      feedbacks,
+    });
+  } catch (err) {
+    if (err.isJoi) {
+      // Validation error
+      return res.status(400).json({ error: err.details[0].message });
+    }
+    console.error("Error executing query:", err);
+    res.status(500).send("An error occurred while fetching data.");
+  }
+};

@@ -359,5 +359,13 @@ router.get(
 
 
 
+router.get(
+    "/get-all-roles", 
+    authMiddleware, 
+    AdminEp.getAllfeedackList
+);
+
+
+
 
 module.exports = router;
