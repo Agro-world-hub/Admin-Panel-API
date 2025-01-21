@@ -2362,6 +2362,34 @@ exports.getFarmerListReport = async (req, res) => {
 
 
 
+
+exports.getUserFeedbackDetails = async (req, res) => {
+  try {
+    // Construct the full URL for logging purposes
+    const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
+    console.log("Request URL:", fullUrl);
+
+    // Log request parameters if needed
+    console.log("Fetching user feedback details");
+
+    // Fetch user feedback details from the DAO
+    const feedbackDetails = await adminDao.getUserFeedbackDetails();
+
+    console.log("Successfully fetched user feedback details");
+    console.log(feedbackDetails);
+
+    // Respond with the feedback details
+    res.json(feedbackDetails);
+  } catch (error) {
+    console.error("Error fetching user feedback details:", error);
+    return res.status(500).json({
+      error: "An error occurred while fetching user feedback details",
+    });
+  }
+};
+
+
+
 exports.createFeedback = async (req, res) => {
   try {
     const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;

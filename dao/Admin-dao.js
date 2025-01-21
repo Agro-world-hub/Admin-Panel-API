@@ -2189,6 +2189,32 @@ exports.getUserFeedbackDetails = () => {
 
 
 
+exports.createFeedback = async (
+  orderNumber,
+  colourcode,
+  feedback
+) => {
+  return new Promise((resolve, reject) => {
+    const sql =
+      "INSERT INTO feedbacklist (orderNumber, colour, feedback) VALUES (?, ?, ?)";
+    const values = [
+      orderNumber,
+      colourcode,
+      feedback
+    ];
+
+    plantcare.query(sql, (err, results) => {
+      if (err) {
+        return reject(err); // Handle error in the promise
+      }
+
+      // Return the grouped result
+      resolve(results);
+    });
+  });
+};
+
+
 exports.getNextOrderNumber = () => {
   return new Promise((resolve, reject) => {
     const query = `
