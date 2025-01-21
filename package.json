@@ -1,41 +1,41 @@
 {
-  "name": "agro_world_api",
-  "version": "1.0.0",
-  "main": "index.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "nodemon server.js",
-    "seed": "node seed/mainseed.js"
-  },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "description": "",
-  "dependencies": {
-    "@aws-sdk/client-s3": "^3.632.0",
-    "@aws-sdk/lib-storage": "^3.658.1",
-    "@aws-sdk/s3-request-presigner": "^3.637.0",
-    "aws-sdk": "^2.1692.0",
-    "bcryptjs": "^2.4.3",
-    "body-parser": "^1.20.2",
-    "cors": "^2.8.5",
-    "csv-parser": "^3.0.0",
-    "dotenv": "^16.4.7",
-    "express": "^4.19.2",
-    "force": "^0.0.3",
-    "joi": "^17.13.3",
-    "jsonwebtoken": "^9.0.2",
-    "multer": "^1.4.5-lts.1",
-    "mysql2": "^3.12.0",
-    "nodemailer": "^6.9.16",
-    "path-to-regexp": "^8.2.0",
-    "pdfkit": "^0.15.1",
-    "qrcode": "^1.5.4",
-    "run": "^1.5.0",
-    "seed": "^0.4.4",
-    "xlsx": "^0.18.5"
-  },
-  "devDependencies": {
-    "nodemon": "^3.1.4"
-  }
+    "name": "agro_world_api",
+    "version": "1.0.0",
+    "main": "index.js",
+    "scripts": {
+        "test": "echo \"Error: no test specified\" && exit 1",
+        "start": "node server.js",
+        "seed": "node seed/mainseed.js"
+    },
+    "keywords": [],
+    "author": "",
+    "license": "ISC",
+    "description": "",
+    "dependencies": {
+        "@aws-sdk/client-s3": "^3.632.0",
+        "@aws-sdk/lib-storage": "^3.658.1",
+        "@aws-sdk/s3-request-presigner": "^3.637.0",
+        "aws-sdk": "^2.1692.0",
+        "bcryptjs": "^2.4.3",
+        "body-parser": "^1.20.2",
+        "cors": "^2.8.5",
+        "csv-parser": "^3.0.0",
+        "dotenv": "^16.4.7",
+        "express": "^4.19.2",
+        "force": "^0.0.3",
+        "joi": "^17.13.3",
+        "jsonwebtoken": "^9.0.2",
+        "multer": "^1.4.5-lts.1",
+        "mysql2": "^3.12.0",
+        "nodemailer": "^6.9.16",
+        "path-to-regexp": "^8.2.0",
+        "pdfkit": "^0.15.1",
+        "qrcode": "^1.5.4",
+        "run": "^1.5.0",
+        "seed": "^0.4.4",
+        "xlsx": "^0.18.5"
+    },
+    "devDependencies": {
+        "nodemon": "^3.1.4"
+    }
 }
