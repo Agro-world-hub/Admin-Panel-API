@@ -6,10 +6,10 @@ const createMarketPlaceUsersTable = () => {
     const sql = `
     CREATE TABLE IF NOT EXISTS marketplaceusers (
       id INT AUTO_INCREMENT PRIMARY KEY,
-      firstName VARCHAR(50) NOT NULL,
-      lastName VARCHAR(50) NOT NULL,
-      phoneNumber VARCHAR(12) NOT NULL,
-      NICnumber VARCHAR(12) NOT NULL,
+      firstName VARCHAR(50) DEFAULT NULL,
+      lastName VARCHAR(50) DEFAULT NULL,
+      phoneNumber VARCHAR(12) DEFAULT NULL,
+      NICnumber VARCHAR(12) DEFAULT NULL,
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     )
   `;
@@ -29,9 +29,9 @@ const createMarketPlacePackages = () => {
     const sql = `
     CREATE TABLE IF NOT EXISTS marketplacepackages (
       id INT AUTO_INCREMENT PRIMARY KEY,
-      name VARCHAR(50) NOT NULL,
-      status VARCHAR(10)  NOT NULL,
-      total DECIMAL(15, 2) NOT NULL,
+      name VARCHAR(50) DEFAULT NULL,
+      status VARCHAR(10) DEFAULT NULL,
+      total DECIMAL(15, 2) DEFAULT NULL,
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     )
   `;
@@ -50,15 +50,15 @@ const createCoupon = () => {
     const sql = `
     CREATE TABLE IF NOT EXISTS coupon(
       id INT AUTO_INCREMENT PRIMARY KEY,
-      code VARCHAR(25),
-      type VARCHAR(25) NOT NULL,
-      percentage DECIMAL(15, 2),
-      status VARCHAR(25) NOT NULL,
-      checkLimit Boolean NOT NULL,
-      priceLimit DECIMAL(15,2),
-      fixDiscount DECIMAL(15,2),
-      startDate DATETIME NOT NULL,
-      endDate DATETIME NOT NULL,
+      code VARCHAR(25) DEFAULT NULL,
+      type VARCHAR(25) DEFAULT NULL,
+      percentage DECIMAL(15, 2) DEFAULT NULL,
+      status VARCHAR(25) DEFAULT NULL,
+      checkLimit Boolean DEFAULT NULL,
+      priceLimit DECIMAL(15,2) DEFAULT NULL,
+      fixDiscount DECIMAL(15,2) DEFAULT NULL,
+      startDate DATETIME DEFAULT NULL,
+      endDate DATETIME DEFAULT NULL,
       createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     )
   `;
@@ -79,15 +79,15 @@ const createMarketPlaceItems = () => {
     CREATE TABLE IF NOT EXISTS marketplaceitems (
       id INT AUTO_INCREMENT PRIMARY KEY,
       cropId INT,
-      displayName VARCHAR(50) NOT NULL,
-      category VARCHAR(25) NOT NULL,
-      normalPrice DECIMAL(15, 2) NOT NULL,
-      discountedPrice DECIMAL(15, 2) NOT NULL,
-      promo BOOLEAN  NOT NULL,
-      unitType VARCHAR(5) NOT NULL,
-      startValue DECIMAL(15, 2) NOT NULL,
-      changeby DECIMAL(15, 2) NOT NULL,
-      tags TEXT NOT NULL,
+      displayName VARCHAR(50) DEFAULT NULL,
+      category VARCHAR(25) DEFAULT NULL,
+      normalPrice DECIMAL(15, 2) DEFAULT NULL,
+      discountedPrice DECIMAL(15, 2) DEFAULT NULL,
+      promo BOOLEAN  DEFAULT NULL,
+      unitType VARCHAR(5) DEFAULT NULL,
+      startValue DECIMAL(15, 2) DEFAULT NULL,
+      changeby DECIMAL(15, 2) DEFAULT NULL,
+      tags TEXT DEFAULT NULL,
       createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (cropId) REFERENCES plant_care.cropvariety(id)
         ON DELETE CASCADE
@@ -110,11 +110,11 @@ const createPackageDetails = () => {
     const sql = `
     CREATE TABLE IF NOT EXISTS packagedetails (
       id INT AUTO_INCREMENT PRIMARY KEY,
-      packageId INT,
-      mpItemId INT,
-      quantity INT(11) NOT NULL,
-      quantityType VARCHAR(5) NOT NULL,
-      discountedPrice DECIMAL(15, 2) NOT NULL,
+      packageId INT DEFAULT NULL,
+      mpItemId INT DEFAULT NULL,
+      quantity INT(11) DEFAULT NULL,
+      quantityType VARCHAR(5) DEFAULT NULL,
+      discountedPrice DECIMAL(15, 2) DEFAULT NULL,
       createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (packageId) REFERENCES marketplacepackages(id)
         ON DELETE CASCADE
@@ -140,8 +140,8 @@ const createPromoItems = () => {
     const sql = `
     CREATE TABLE IF NOT EXISTS promoitems (
       id INT AUTO_INCREMENT PRIMARY KEY,
-      mpItemId INT,
-      discount DECIMAL(15, 2) NOT NULL,
+      mpItemId INT DEFAULT NULL,
+      discount DECIMAL(15, 2) DEFAULT NULL,
       createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (mpItemId) REFERENCES marketplaceitems(id)
         ON DELETE CASCADE
@@ -164,8 +164,8 @@ const createCart = () => {
     const sql = `
     CREATE TABLE IF NOT EXISTS cart (
       id INT AUTO_INCREMENT PRIMARY KEY,
-      userId INT,
-      status VARCHAR(13) NOT NULL,
+      userId INT DEFAULT NULL,
+      status VARCHAR(13) DEFAULT NULL,
       createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (userId) REFERENCES plant_care.users(id)
         ON DELETE CASCADE
@@ -188,10 +188,10 @@ const createCartItems = () => {
     const sql = `
     CREATE TABLE IF NOT EXISTS cartitems (
       id INT AUTO_INCREMENT PRIMARY KEY,
-      cartId INT,
-      mpItemId INT,
-      quantity DECIMAL(8, 2) NOT NULL,
-      total DECIMAL(15, 2) NOT NULL,
+      cartId INT DEFAULT NULL,
+      mpItemId INT DEFAULT NULL,
+      quantity DECIMAL(8, 2) DEFAULT NULL,
+      total DECIMAL(15, 2) DEFAULT NULL,
       createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (cartId) REFERENCES cart(id)
         ON DELETE CASCADE

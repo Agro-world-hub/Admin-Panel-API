@@ -393,3 +393,9 @@ exports.slaveUserId = Joi.object({
 exports.slaveCropId = Joi.object({
     cropId: Joi.number().integer().required().label('Ongoing Cultivation ID')
 });
+
+exports.createfeedback = Joi.object({
+    orderNumber: Joi.number().required(),
+    colourcode: Joi.string().required(),
+    feedback: Joi.string().required()
+});

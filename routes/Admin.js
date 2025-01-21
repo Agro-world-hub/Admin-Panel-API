@@ -303,9 +303,13 @@ router.get(
 
 router.get(
   "/farmer-list-report/:id/:userId",
-  // authMiddleware,
+  authMiddleware,
   AdminEp.getFarmerListReport
 );
+
+router.post("/create-feedback", authMiddleware, AdminEp.createFeedback);
+
+router.post("/create-feedback", authMiddleware, AdminEp.createFeedback);
 
 router.get("/opt-out-feedbacks", AdminEp.getUserFeedbackDetails);
 
