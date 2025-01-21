@@ -45,7 +45,7 @@ jobs:
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v2
         with:
-          reigon: ${{ inputs.aws_region }}
+          region: ${{ inputs.aws_region }}
           registries: ${{ inputs.aws_account_id }}
 
       - name: Build, tag, and push image to Amazon ECR
