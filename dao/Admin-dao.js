@@ -2228,8 +2228,6 @@ ORDER BY
   });
 };
 
-
-
 exports.createFeedback = async (
   orderNumber,
   colourcode,
@@ -2245,10 +2243,10 @@ exports.createFeedback = async (
       colourcode,
       feedbackEnglish,
       feedbackSinahala,
-      feedbackTamil
+      feedbackTamil,
     ];
 
-    plantcare.query(sql,values, (err, results) => {
+    plantcare.query(sql, values, (err, results) => {
       if (err) {
         return reject(err); // Handle error in the promise
       }
@@ -2258,7 +2256,6 @@ exports.createFeedback = async (
     });
   });
 };
-
 
 exports.getNextOrderNumber = () => {
   return new Promise((resolve, reject) => {
@@ -2277,8 +2274,6 @@ exports.getNextOrderNumber = () => {
   });
 };
 
-
-
 exports.getAllfeedackList = () => {
   return new Promise((resolve, reject) => {
     const sql = "SELECT * FROM feedbacklist";
@@ -2289,6 +2284,27 @@ exports.getAllfeedackList = () => {
       }
 
       resolve(results); // No need to wrap in arrays, return results directly
+    });
+  });
+};
+
+exports.getUserFeedbackCount = () => {
+  return new Promise((resolve, reject) => {
+    const sql = `
+SELECT COUNT (*) AS Total FROM userfeedback`;
+
+    console.log("Executing full SQL query:", sql);
+
+    plantcare.query(sql, (err, results) => {
+      if (err) {
+        console.error("Error details:", err); // Log the full error details
+        return reject(
+          new Error("An error occurred while fetching user feedback details")
+        );
+      }
+
+      console.log("Query Results:", results); // Log the results for debugging
+      resolve(results[0]); // Resolve the promise with the results
     });
   });
 };
