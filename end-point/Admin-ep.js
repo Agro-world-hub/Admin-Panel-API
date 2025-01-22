@@ -2406,12 +2406,15 @@ exports.getUserFeedbackDetails = async (req, res) => {
 
     // Fetch user feedback details from the DAO
     const feedbackDetails = await adminDao.getUserFeedbackDetails();
-
+    const feedbackCount = await adminDao.getUserFeedbackCount();
+    const deletedUserCount = await adminDao.getDeletedUserCount();
+    console.log(feedbackCount);
     console.log("Successfully fetched user feedback details");
     console.log(feedbackDetails);
+    console.log(deletedUserCount);
 
     // Respond with the feedback details
-    res.json(feedbackDetails);
+    res.json({ feedbackDetails, feedbackCount, deletedUserCount });
   } catch (error) {
     console.error("Error fetching user feedback details:", error);
     return res.status(500).json({
@@ -2455,15 +2458,12 @@ exports.getAllfeedackList = async (req, res) => {
   }
 };
 
-
-
-
 exports.createFeedback = async (req, res) => {
   try {
     const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
     console.log("Request URL:", fullUrl);
     console.log(req.body);
-    
+
     await ValidateSchema.createfeedback.validateAsync(req.body);
 
     const {
@@ -2471,7 +2471,7 @@ exports.createFeedback = async (req, res) => {
       colour,
       feedbackEnglish,
       feedbackSinahala,
-      feedbackTamil
+      feedbackTamil,
     } = req.body;
 
     // Call DAO to save news and the image file as longblob
@@ -2483,10 +2483,11 @@ exports.createFeedback = async (req, res) => {
       feedbackTamil
     );
 
-    
-    return res
-      .status(201)
-      .json({ message: "feedback create successfully", id: feedBack, status: true });
+    return res.status(201).json({
+      message: "feedback create successfully",
+      id: feedBack,
+      status: true,
+    });
   } catch (err) {
     if (err.isJoi) {
       return res.status(400).json({ error: err.details[0].message });
