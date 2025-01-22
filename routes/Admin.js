@@ -307,16 +307,35 @@ router.get(
   AdminEp.getFarmerListReport
 );
 
-router.post("/create-feedback", authMiddleware, AdminEp.createFeedback);
+router.post(
+  "/create-feedback",
+  authMiddleware,
+  AdminEp.createFeedback
+);
 
-// router.post("/create-feedback", authMiddleware, AdminEp.createFeedback);
 
-router.get("/opt-out-feedbacks", AdminEp.getUserFeedbackDetails);
+
+router.get(
+  "/opt-out-feedbacks", 
+  AdminEp.getUserFeedbackDetails
+);
 
 router.get(
     '/next-order-number',
     // authMiddleware,
     AdminEp.getNextOrderNumber
+);
+
+router.get(
+  "/get-all-feedbacks", 
+  // authMiddleware,
+  AdminEp.getAllfeedackList
+);
+
+
+router.put(
+  '/update-feedback-order', 
+  AdminEp.updateFeedbackOrder
 );
 
 

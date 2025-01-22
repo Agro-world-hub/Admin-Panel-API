@@ -2281,7 +2281,7 @@ exports.getNextOrderNumber = () => {
 
 exports.getAllfeedackList = () => {
   return new Promise((resolve, reject) => {
-    const sql = "SELECT * FROM feedbacklist";
+    const sql = "SELECT * FROM feedbacklist ORDER BY orderNumber";
 
     plantcare.query(sql, (err, results) => {
       if (err) {
@@ -2292,3 +2292,27 @@ exports.getAllfeedackList = () => {
     });
   });
 };
+
+
+exports.updateFeedbackOrder = async (feedbacks) => {
+  return new Promise((resolve, reject) => {
+    const sql = "UPDATE feedbacklist SET orderNumber = ? WHERE id = ?";
+
+    const queries = feedbacks.map((feedback) => {
+      return new Promise((resolveInner, rejectInner) => {
+        plantcare.query(sql, [feedback.orderNumber, feedback.id], (err, results) => {
+          if (err) {
+            return rejectInner(err); // Reject the inner promise on error
+          }
+          resolveInner(results); // Resolve the inner promise with the results
+        });
+      });
+    });
+
+    // Resolve all queries and handle their results
+    Promise.all(queries)
+      .then((results) => resolve(results)) // Resolve the outer promise with all results
+      .catch((err) => reject(err)); // Reject the outer promise if any query fails
+  });
+};
+

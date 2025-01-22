@@ -2441,7 +2441,7 @@ exports.getAllfeedackList = async (req, res) => {
   try {
     const feedbacks = await adminDao.getAllfeedackList();
 
-    console.log("Successfully fetched admin roles");
+    console.log("Successfully fetched feedback list");
     res.json({
       feedbacks,
     });
@@ -2498,3 +2498,35 @@ exports.createFeedback = async (req, res) => {
       .json({ error: "An error occurred while creating feedback" });
   }
 };
+
+
+
+exports.updateFeedbackOrder = async (req, res) => {
+  try {
+      const feedbacks = req.body.feedbacks; // Array of {id, orderNumber}
+      const result = await adminDao.updateFeedbackOrder(feedbacks);
+      
+      if (result) {
+          return res.status(200).json({
+              status: true,
+              message: "Feedback order updated successfully"
+          });
+      }
+      
+      return res.status(400).json({
+          status: false,
+          message: "Failed to update feedback order"
+      });
+  } catch (error) {
+      console.error('Error in updateFeedbackOrder:', error);
+      return res.status(500).json({
+          status: false,
+          message: "Internal server error"
+      });
+  }
+};
+
+
+
+
+
