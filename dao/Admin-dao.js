@@ -2228,8 +2228,6 @@ ORDER BY
   });
 };
 
-
-
 exports.createFeedback = async (
   orderNumber,
   colourcode,
@@ -2245,10 +2243,10 @@ exports.createFeedback = async (
       colourcode,
       feedbackEnglish,
       feedbackSinahala,
-      feedbackTamil
+      feedbackTamil,
     ];
 
-    plantcare.query(sql,values, (err, results) => {
+    plantcare.query(sql, values, (err, results) => {
       if (err) {
         return reject(err); // Handle error in the promise
       }
@@ -2258,7 +2256,6 @@ exports.createFeedback = async (
     });
   });
 };
-
 
 exports.getNextOrderNumber = () => {
   return new Promise((resolve, reject) => {
@@ -2276,8 +2273,6 @@ exports.getNextOrderNumber = () => {
     });
   });
 };
-
-
 
 exports.getAllfeedackList = () => {
   return new Promise((resolve, reject) => {
