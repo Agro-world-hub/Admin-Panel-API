@@ -2308,3 +2308,24 @@ SELECT COUNT (*) AS Total FROM userfeedback`;
     });
   });
 };
+
+exports.getDeletedUserCount = () => {
+  return new Promise((resolve, reject) => {
+    const sql = `
+      SELECT COUNT(*) AS Total FROM deleteduser`;
+
+    console.log("Executing full SQL query:", sql);
+
+    plantcare.query(sql, (err, results) => {
+      if (err) {
+        console.error("Error details:", err); // Log the full error details
+        return reject(
+          new Error("An error occurred while fetching deleted user count")
+        );
+      }
+
+      console.log("Query Results:", results); // Log the results for debugging
+      resolve(results[0]); // Resolve the promise with the results
+    });
+  });
+};

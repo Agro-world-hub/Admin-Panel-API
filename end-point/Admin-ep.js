@@ -2407,13 +2407,14 @@ exports.getUserFeedbackDetails = async (req, res) => {
     // Fetch user feedback details from the DAO
     const feedbackDetails = await adminDao.getUserFeedbackDetails();
     const feedbackCount = await adminDao.getUserFeedbackCount();
+    const deletedUserCount = await adminDao.getDeletedUserCount();
     console.log(feedbackCount);
-
     console.log("Successfully fetched user feedback details");
     console.log(feedbackDetails);
+    console.log(deletedUserCount);
 
     // Respond with the feedback details
-    res.json({ feedbackDetails, feedbackCount });
+    res.json({ feedbackDetails, feedbackCount, deletedUserCount });
   } catch (error) {
     console.error("Error fetching user feedback details:", error);
     return res.status(500).json({
