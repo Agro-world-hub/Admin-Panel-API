@@ -2534,6 +2534,22 @@ exports.deleteFeedback = async (req, res) => {
 
 
 
+exports.getAllfeedackListForBarChart = async (req, res) => {
+  try {
+    const feedbacks = await adminDao.getAllfeedackListForBarChart();
 
+    console.log("Successfully fetched feedback list");
+    res.json({
+      feedbacks,
+    });
+  } catch (err) {
+    if (err.isJoi) {
+      // Validation error
+      return res.status(400).json({ error: err.details[0].message });
+    }
+    console.error("Error executing query:", err);
+    res.status(500).send("An error occurred while fetching data.");
+  }
+};
 
 

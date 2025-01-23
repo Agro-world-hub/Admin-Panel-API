@@ -345,5 +345,10 @@ router.delete(
     AdminEp.deleteFeedback
   );
 
+  router.get(
+    "/get-all-feedbacks-for-bar-chart", 
+    // authMiddleware,
+    AdminEp.getAllfeedackListForBarChart
+  );
 
 module.exports = router;

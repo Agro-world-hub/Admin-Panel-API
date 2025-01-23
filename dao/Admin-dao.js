@@ -2396,3 +2396,34 @@ exports.deleteFeedbackAndUpdateOrder = async (feedbackId, orderNumber) => {
     });
   });
 };
+
+
+
+exports.getAllfeedackListForBarChart = () => {
+  return new Promise((resolve, reject) => {
+    const sql = `
+      SELECT 
+        fl.orderNumber,
+        COUNT(uf.feedbackId) AS feedbackCount
+      FROM 
+        feedbacklist fl
+      LEFT JOIN 
+        userfeedback uf
+      ON 
+        fl.id = uf.feedbackId
+      GROUP BY 
+        fl.orderNumber
+      ORDER BY 
+        fl.orderNumber;
+    `;
+
+    plantcare.query(sql, (err, results) => {
+      if (err) {
+        return reject(err); // Reject the promise if an error occurs
+      }
+
+      resolve(results); // Resolve with the results directly
+    });
+  });
+};
+
