@@ -2338,17 +2338,15 @@ exports.updateFeedbackOrder = async (feedbacks) => {
       return new Promise((resolveInner, rejectInner) => {
         plantcare.query(sql, [feedback.orderNumber, feedback.id], (err, results) => {
           if (err) {
-            return rejectInner(err); // Reject the inner promise on error
+            return rejectInner(err);
           }
-          resolveInner(results); // Resolve the inner promise with the results
+          resolveInner(results); 
         });
       });
     });
-
-    // Resolve all queries and handle their results
     Promise.all(queries)
-      .then((results) => resolve(results)) // Resolve the outer promise with all results
-      .catch((err) => reject(err)); // Reject the outer promise if any query fails
+      .then((results) => resolve(results))
+      .catch((err) => reject(err));
   });
 };
 
@@ -2360,7 +2358,7 @@ exports.getFeedbackById = async (feedbackId) => {
       if (err) {
         return reject(err);
       }
-      resolve(results[0]); // Return the first (and only) feedback record
+      resolve(results[0]); 
     });
   });
 };
@@ -2375,19 +2373,15 @@ exports.deleteFeedbackAndUpdateOrder = async (feedbackId, orderNumber) => {
     const deleteSql = "DELETE FROM feedbacklist WHERE id = ?";
     const updateSql = "UPDATE feedbacklist SET orderNumber = orderNumber - 1 WHERE orderNumber > ?";
 
-    // Perform the delete operation
     plantcare.query(deleteSql, [feedbackId], (deleteErr, deleteResults) => {
       if (deleteErr) {
-        return reject(deleteErr); // Reject if deletion fails
+        return reject(deleteErr); 
       }
-
-      // Update order numbers for subsequent feedbacks
       plantcare.query(updateSql, [orderNumber], (updateErr, updateResults) => {
         if (updateErr) {
-          return reject(updateErr); // Reject if update fails
+          return reject(updateErr); 
         }
 
-        // Resolve with both delete and update results
         resolve({
           deleteResults,
           updateResults,
@@ -2419,10 +2413,10 @@ exports.getAllfeedackListForBarChart = () => {
 
     plantcare.query(sql, (err, results) => {
       if (err) {
-        return reject(err); // Reject the promise if an error occurs
+        return reject(err);
       }
 
-      resolve(results); // Resolve with the results directly
+      resolve(results);
     });
   });
 };

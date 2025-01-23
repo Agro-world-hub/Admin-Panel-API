@@ -347,7 +347,7 @@ router.delete(
 
   router.get(
     "/get-all-feedbacks-for-bar-chart", 
-    // authMiddleware,
+    authMiddleware,
     AdminEp.getAllfeedackListForBarChart
   );
 

@@ -2544,7 +2544,6 @@ exports.getAllfeedackListForBarChart = async (req, res) => {
     });
   } catch (err) {
     if (err.isJoi) {
-      // Validation error
       return res.status(400).json({ error: err.details[0].message });
     }
     console.error("Error executing query:", err);
