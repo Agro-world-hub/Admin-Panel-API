@@ -847,7 +847,6 @@ const createFeedBackListTable = () => {
     CREATE TABLE IF NOT EXISTS feedbacklist (
       id INT AUTO_INCREMENT PRIMARY KEY,
       orderNumber INT DEFAULT NULL,
-      colour VARCHAR(15) NULL DEFAULT NULL,
       feedbackEnglish TEXT DEFAULT NULL,
       feedbackSinahala TEXT DEFAULT NULL,
       feedbackTamil TEXT DEFAULT NULL,

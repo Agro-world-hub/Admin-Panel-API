@@ -339,4 +339,11 @@ router.put(
 );
 
 
+router.delete(
+  '/feedback/:id',
+    authMiddleware,
+    AdminEp.deleteFeedback
+  );
+
+
 module.exports = router;

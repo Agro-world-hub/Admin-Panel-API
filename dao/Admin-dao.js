@@ -2230,17 +2230,15 @@ ORDER BY
 
 exports.createFeedback = async (
   orderNumber,
-  colourcode,
   feedbackEnglish,
   feedbackSinahala,
   feedbackTamil
 ) => {
   return new Promise((resolve, reject) => {
     const sql =
-      "INSERT INTO feedbacklist (orderNumber, colour, feedbackEnglish, feedbackSinahala, feedbackTamil) VALUES (?, ?, ?, ?, ?)";
+      "INSERT INTO feedbacklist (orderNumber, feedbackEnglish, feedbackSinahala, feedbackTamil) VALUES (?, ?, ?, ?)";
     const values = [
       orderNumber,
-      colourcode,
       feedbackEnglish,
       feedbackSinahala,
       feedbackTamil,
@@ -2354,3 +2352,47 @@ exports.updateFeedbackOrder = async (feedbacks) => {
   });
 };
 
+
+exports.getFeedbackById = async (feedbackId) => {
+  return new Promise((resolve, reject) => {
+    const sql = "SELECT * FROM feedbacklist WHERE id = ?";
+    plantcare.query(sql, [feedbackId], (err, results) => {
+      if (err) {
+        return reject(err);
+      }
+      resolve(results[0]); // Return the first (and only) feedback record
+    });
+  });
+};
+
+
+
+
+
+
+exports.deleteFeedbackAndUpdateOrder = async (feedbackId, orderNumber) => {
+  return new Promise((resolve, reject) => {
+    const deleteSql = "DELETE FROM feedbacklist WHERE id = ?";
+    const updateSql = "UPDATE feedbacklist SET orderNumber = orderNumber - 1 WHERE orderNumber > ?";
+
+    // Perform the delete operation
+    plantcare.query(deleteSql, [feedbackId], (deleteErr, deleteResults) => {
+      if (deleteErr) {
+        return reject(deleteErr); // Reject if deletion fails
+      }
+
+      // Update order numbers for subsequent feedbacks
+      plantcare.query(updateSql, [orderNumber], (updateErr, updateResults) => {
+        if (updateErr) {
+          return reject(updateErr); // Reject if update fails
+        }
+
+        // Resolve with both delete and update results
+        resolve({
+          deleteResults,
+          updateResults,
+        });
+      });
+    });
+  });
+};

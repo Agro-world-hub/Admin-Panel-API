@@ -2444,16 +2444,16 @@ exports.createFeedback = async (req, res) => {
 
     const {
       orderNumber,
-      colour,
       feedbackEnglish,
       feedbackSinahala,
       feedbackTamil,
     } = req.body;
 
+    console.log(feedbackEnglish)
+
     // Call DAO to save news and the image file as longblob
     const feedBack = await adminDao.createFeedback(
       orderNumber,
-      colour,
       feedbackEnglish,
       feedbackSinahala,
       feedbackTamil
@@ -2502,6 +2502,36 @@ exports.updateFeedbackOrder = async (req, res) => {
       });
   }
 };
+
+
+
+
+exports.deleteFeedback = async (req, res) => {
+  const feedbackId = parseInt(req.params.id, 10);
+
+  if (isNaN(feedbackId)) {
+    return res.status(400).json({ error: 'Invalid feedback ID' });
+  }
+
+  try {
+    // Retrieve the feedback's current orderNumber before deletion
+    const feedback = await adminDao.getFeedbackById(feedbackId);
+    if (!feedback) {
+      return res.status(404).json({ error: 'Feedback not found' });
+    }
+
+    const orderNumber = feedback.orderNumber;
+
+    // Delete feedback and update subsequent order numbers
+    const result = await adminDao.deleteFeedbackAndUpdateOrder(feedbackId, orderNumber);
+
+    return res.status(200).json({ message: 'Feedback deleted and order updated successfully', result });
+  } catch (error) {
+    console.error('Error deleting feedback:', error);
+    return res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
 
 
 
