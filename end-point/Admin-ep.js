@@ -2370,6 +2370,33 @@ exports.getFarmerListReport = async (req, res) => {
   }
 };
 
+// exports.getUserFeedbackDetails = async (req, res) => {
+//   try {
+//     // Construct the full URL for logging purposes
+//     const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
+//     console.log("Request URL:", fullUrl);
+
+//     // Log request parameters if needed
+//     console.log("Fetching user feedback details");
+
+//     // Fetch user feedback details from the DAO
+//     const feedbackDetails = await adminDao.getUserFeedbackDetails();
+//     const feedbackCount = await adminDao.getUserFeedbackCount();
+//     const deletedUserCount = await adminDao.getDeletedUserCount();
+//     console.log(feedbackCount);
+//     console.log("Successfully fetched user feedback details");
+//     console.log(feedbackDetails);
+//     console.log(deletedUserCount);
+
+//     // Respond with the feedback details
+//     res.json({ feedbackDetails, feedbackCount, deletedUserCount });
+//   } catch (error) {
+//     console.error("Error fetching user feedback details:", error);
+//     return res.status(500).json({
+//       error: "An error occurred while fetching user feedback details",
+//     });
+//   }
+// };
 
 exports.getUserFeedbackDetails = async (req, res) => {
   try {
@@ -2377,20 +2404,33 @@ exports.getUserFeedbackDetails = async (req, res) => {
     const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
     console.log("Request URL:", fullUrl);
 
-    // Log request parameters if needed
-    console.log("Fetching user feedback details");
+    // Extract pagination parameters (page and limit) from the query string
+    const { page = 1, limit = 10 } = req.query; // Set default values for page and limit
+    console.log("Pagination:", page, limit);
 
-    // Fetch user feedback details from the DAO
-    const feedbackDetails = await adminDao.getUserFeedbackDetails();
+    // Validate that page and limit are numbers
+    if (isNaN(page) || isNaN(limit) || page < 1 || limit < 1) {
+      return res.status(400).json({ error: "Invalid page or limit" });
+    }
+
+    // Fetch user feedback details from the DAO with pagination
+    const feedbackDetails = await adminDao.getUserFeedbackDetails(page, limit);
     const feedbackCount = await adminDao.getUserFeedbackCount();
     const deletedUserCount = await adminDao.getDeletedUserCount();
-    console.log(feedbackCount);
+
     console.log("Successfully fetched user feedback details");
     console.log(feedbackDetails);
-    console.log(deletedUserCount);
+    console.log("Feedback Count:", feedbackCount);
+    console.log("Deleted User Count:", deletedUserCount);
 
-    // Respond with the feedback details
-    res.json({ feedbackDetails, feedbackCount, deletedUserCount });
+    // Respond with the paginated feedback details and count information
+    res.json({
+      feedbackDetails,
+      feedbackCount,
+      deletedUserCount,
+      page,
+      limit,
+    });
   } catch (error) {
     console.error("Error fetching user feedback details:", error);
     return res.status(500).json({
@@ -2444,16 +2484,16 @@ exports.createFeedback = async (req, res) => {
 
     const {
       orderNumber,
+      colour,
       feedbackEnglish,
       feedbackSinahala,
       feedbackTamil,
     } = req.body;
 
-    console.log(feedbackEnglish)
-
     // Call DAO to save news and the image file as longblob
     const feedBack = await adminDao.createFeedback(
       orderNumber,
+      colour,
       feedbackEnglish,
       feedbackSinahala,
       feedbackTamil
@@ -2476,79 +2516,27 @@ exports.createFeedback = async (req, res) => {
   }
 };
 
-
-
 exports.updateFeedbackOrder = async (req, res) => {
   try {
-      const feedbacks = req.body.feedbacks; // Array of {id, orderNumber}
-      const result = await adminDao.updateFeedbackOrder(feedbacks);
-      
-      if (result) {
-          return res.status(200).json({
-              status: true,
-              message: "Feedback order updated successfully"
-          });
-      }
-      
-      return res.status(400).json({
-          status: false,
-          message: "Failed to update feedback order"
+    const feedbacks = req.body.feedbacks; // Array of {id, orderNumber}
+    const result = await adminDao.updateFeedbackOrder(feedbacks);
+
+    if (result) {
+      return res.status(200).json({
+        status: true,
+        message: "Feedback order updated successfully",
       });
-  } catch (error) {
-      console.error('Error in updateFeedbackOrder:', error);
-      return res.status(500).json({
-          status: false,
-          message: "Internal server error"
-      });
-  }
-};
-
-
-
-
-exports.deleteFeedback = async (req, res) => {
-  const feedbackId = parseInt(req.params.id, 10);
-
-  if (isNaN(feedbackId)) {
-    return res.status(400).json({ error: 'Invalid feedback ID' });
-  }
-
-  try {
-    // Retrieve the feedback's current orderNumber before deletion
-    const feedback = await adminDao.getFeedbackById(feedbackId);
-    if (!feedback) {
-      return res.status(404).json({ error: 'Feedback not found' });
     }
 
-    const orderNumber = feedback.orderNumber;
-
-    // Delete feedback and update subsequent order numbers
-    const result = await adminDao.deleteFeedbackAndUpdateOrder(feedbackId, orderNumber);
-
-    return res.status(200).json({ message: 'Feedback deleted and order updated successfully', result });
-  } catch (error) {
-    console.error('Error deleting feedback:', error);
-    return res.status(500).json({ error: 'Internal server error' });
-  }
-};
-
-
-
-exports.getAllfeedackListForBarChart = async (req, res) => {
-  try {
-    const feedbacks = await adminDao.getAllfeedackListForBarChart();
-
-    console.log("Successfully fetched feedback list");
-    res.json({
-      feedbacks,
+    return res.status(400).json({
+      status: false,
+      message: "Failed to update feedback order",
     });
-  } catch (err) {
-    if (err.isJoi) {
-      return res.status(400).json({ error: err.details[0].message });
-    }
-    console.error("Error executing query:", err);
-    res.status(500).send("An error occurred while fetching data.");
+  } catch (error) {
+    console.error("Error in updateFeedbackOrder:", error);
+    return res.status(500).json({
+      status: false,
+      message: "Internal server error",
+    });
   }
 };
-
-

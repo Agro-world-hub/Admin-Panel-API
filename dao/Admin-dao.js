@@ -2124,97 +2124,68 @@ exports.insertUserXLSXData = (data) => {
 // exports.getUserFeedbackDetails = () => {
 //   return new Promise((resolve, reject) => {
 //     const sql = `
-//       SELECT
-//         du.id AS deletedUserId,
-//         du.firstName,
-//         du.lastName,
-//         du.createdAt AS userCreatedAt,
-//         GROUP_CONCAT(fl.feedback SEPARATOR ', ') AS allFeedbacks,
-//         COUNT(uf.id) AS feedbackCount
-//       FROM
-//         userfeedback uf
-//       INNER JOIN
-//         feedbacklist fl
-//       ON
-//         uf.feedbackId = fl.id
-//       INNER JOIN
-//         deleteduser du
-//       ON
-//         uf.deletedUserId = du.id
-//       GROUP BY
-//         du.id
+// SELECT
+//     du.firstName,
+//     du.lastName,
+//     du.createdAt AS deletedUserCreatedAt,
+//     GROUP_CONCAT(fl.orderNumber ORDER BY fl.orderNumber ASC) AS orderNumbers,
+//     GROUP_CONCAT(fl.feedbackEnglish ORDER BY fl.orderNumber ASC) AS feedbacks
+// FROM
+//     userfeedback uf
+// JOIN
+//     deleteduser du ON uf.deletedUserId = du.id
+// JOIN
+//     feedbacklist fl ON uf.feedbackId = fl.id
+// GROUP BY
+//     du.firstName, du.lastName, du.createdAt
+// ORDER BY
+//     du.createdAt;
+
 //     `;
+
+//     console.log("Executing full SQL query:", sql);
 
 //     plantcare.query(sql, (err, results) => {
 //       if (err) {
-//         return reject(err); // Handle error in the promise
+//         console.error("Error details:", err); // Log the full error details
+//         return reject(
+//           new Error("An error occurred while fetching user feedback details")
+//         );
 //       }
 
-//       // Return the grouped feedback result
-//       resolve(results);
+//       console.log("Query Results:", results); // Log the results for debugging
+//       resolve(results); // Resolve the promise with the results
 //     });
 //   });
 // };
 
-// exports.getUserFeedbackDetails = () => {
-//   return new Promise((resolve, reject) => {
-//     const sql = `
-//       SELECT
-//         du.id AS deletedUserId,
-//         du.firstName,
-//         du.lastName,
-//         du.createdAt AS userCreatedAt,
-//         GROUP_CONCAT(fl.feedback SEPARATOR ', ') AS allFeedbacks
-//       FROM
-//         userfeedback uf
-//       INNER JOIN
-//         feedbacklist fl
-//       ON
-//         uf.feedbackId = fl.id
-//       INNER JOIN
-//         deleteduser du
-//       ON
-//         uf.deletedUserId = du.id
-//       GROUP BY
-//         du.id
-//     `;
-
-//     plantcare.query(sql, (err, results) => {
-//       if (err) {
-//         return reject(err); // Handle error in the promise
-//       }
-
-//       // Return the grouped feedback result
-//       resolve(results);
-//     });
-//   });
-// };
-
-exports.getUserFeedbackDetails = () => {
+exports.getUserFeedbackDetails = (page, limit) => {
   return new Promise((resolve, reject) => {
-    const sql = `
-SELECT 
-    du.firstName,
-    du.lastName,
-    du.createdAt AS deletedUserCreatedAt,
-    GROUP_CONCAT(fl.orderNumber ORDER BY fl.orderNumber ASC) AS orderNumbers,
-    GROUP_CONCAT(fl.feedbackEnglish ORDER BY fl.orderNumber ASC) AS feedbacks
-FROM 
-    userfeedback uf
-JOIN 
-    deleteduser du ON uf.deletedUserId = du.id
-JOIN 
-    feedbacklist fl ON uf.feedbackId = fl.id
-GROUP BY 
-    du.firstName, du.lastName, du.createdAt
-ORDER BY 
-    du.createdAt;
+    const offset = (page - 1) * limit; // Calculate the offset for pagination
 
+    const sql = `
+    SELECT 
+        du.firstName,
+        du.lastName,
+        du.createdAt AS deletedUserCreatedAt,
+        GROUP_CONCAT(fl.orderNumber ORDER BY fl.orderNumber ASC) AS orderNumbers,
+        GROUP_CONCAT(fl.feedbackEnglish ORDER BY fl.orderNumber ASC) AS feedbacks
+    FROM 
+        userfeedback uf
+    JOIN 
+        deleteduser du ON uf.deletedUserId = du.id
+    JOIN 
+        feedbacklist fl ON uf.feedbackId = fl.id
+    GROUP BY 
+        du.firstName, du.lastName, du.createdAt
+    ORDER BY 
+        du.createdAt
+    LIMIT ? OFFSET ?;
     `;
 
-    console.log("Executing full SQL query:", sql);
+    console.log("Executing paginated SQL query:", sql);
 
-    plantcare.query(sql, (err, results) => {
+    plantcare.query(sql, [limit, offset], (err, results) => {
       if (err) {
         console.error("Error details:", err); // Log the full error details
         return reject(
@@ -2328,20 +2299,22 @@ exports.getDeletedUserCount = () => {
   });
 };
 
-
-
 exports.updateFeedbackOrder = async (feedbacks) => {
   return new Promise((resolve, reject) => {
     const sql = "UPDATE feedbacklist SET orderNumber = ? WHERE id = ?";
 
     const queries = feedbacks.map((feedback) => {
       return new Promise((resolveInner, rejectInner) => {
-        plantcare.query(sql, [feedback.orderNumber, feedback.id], (err, results) => {
-          if (err) {
-            return rejectInner(err);
+        plantcare.query(
+          sql,
+          [feedback.orderNumber, feedback.id],
+          (err, results) => {
+            if (err) {
+              return rejectInner(err);
+            }
+            resolveInner(results);
           }
-          resolveInner(results); 
-        });
+        );
       });
     });
     Promise.all(queries)
@@ -2350,7 +2323,6 @@ exports.updateFeedbackOrder = async (feedbacks) => {
   });
 };
 
-
 exports.getFeedbackById = async (feedbackId) => {
   return new Promise((resolve, reject) => {
     const sql = "SELECT * FROM feedbacklist WHERE id = ?";
@@ -2358,28 +2330,24 @@ exports.getFeedbackById = async (feedbackId) => {
       if (err) {
         return reject(err);
       }
-      resolve(results[0]); 
+      resolve(results[0]);
     });
   });
 };
 
-
-
-
-
-
 exports.deleteFeedbackAndUpdateOrder = async (feedbackId, orderNumber) => {
   return new Promise((resolve, reject) => {
     const deleteSql = "DELETE FROM feedbacklist WHERE id = ?";
-    const updateSql = "UPDATE feedbacklist SET orderNumber = orderNumber - 1 WHERE orderNumber > ?";
+    const updateSql =
+      "UPDATE feedbacklist SET orderNumber = orderNumber - 1 WHERE orderNumber > ?";
 
     plantcare.query(deleteSql, [feedbackId], (deleteErr, deleteResults) => {
       if (deleteErr) {
-        return reject(deleteErr); 
+        return reject(deleteErr);
       }
       plantcare.query(updateSql, [orderNumber], (updateErr, updateResults) => {
         if (updateErr) {
-          return reject(updateErr); 
+          return reject(updateErr);
         }
 
         resolve({
@@ -2390,8 +2358,6 @@ exports.deleteFeedbackAndUpdateOrder = async (feedbackId, orderNumber) => {
     });
   });
 };
-
-
 
 exports.getAllfeedackListForBarChart = () => {
   return new Promise((resolve, reject) => {
@@ -2420,4 +2386,3 @@ exports.getAllfeedackListForBarChart = () => {
     });
   });
 };
-
