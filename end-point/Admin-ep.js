@@ -30,49 +30,45 @@ exports.loginAdmin = async (req, res) => {
 
     const { email, password } = req.body;
 
-    // Fetch user from the database
+    // Fetch user and permissions from the database
     const [user] = await adminDao.loginAdmin(email);
 
     if (!user) {
-      // If user is not found
       return res.status(401).json({ error: "User not found." });
     }
 
-    if (user) {
-      // Compare password with hashed password in DB
-      const verify_password = bcrypt.compareSync(password, user.password);
+    const verify_password = bcrypt.compareSync(password, user.password);
 
-      if (!verify_password) {
-        // If password doesn't match
-        return res.status(401).json({ error: "Wrong password." });
-      }
-
-      if (verify_password) {
-        // Generate JWT token
-        const token = jwt.sign(
-          { userId: user.id, role: user.role },
-          process.env.JWT_SECRET,
-          { expiresIn: "5h" }
-        );
-
-        const data = {
-          token,
-          userId: user.id,
-          role: user.role,
-          userName: user.userName,
-        };
-
-        return res.json(data);
-      }
+    if (!verify_password) {
+      return res.status(401).json({ error: "Wrong password." });
     }
 
-    // If user is not found or password doesn't match
-    res.status(401).json({ error: "Invalid email or password." });
+    // Fetch permissions based on the user's role
+    const permissions = await adminDao.getPermissionsByRole(user.role);
+
+    // Generate JWT token
+    const token = jwt.sign(
+      { userId: user.id, role: user.role, permissions },
+      process.env.JWT_SECRET,
+      { expiresIn: "5h" }
+    );
+
+    // Construct response data
+    const data = {
+      token,
+      userId: user.id,
+      role: user.role,
+      userName: user.userName,
+      permissions,
+    };
+
+    res.json(data);
   } catch (err) {
     console.error("Error during login:", err);
     res.status(500).json({ error: "An error occurred during login." });
   }
 };
+
 
 exports.getAllAdminUsers = async (req, res) => {
   try {
@@ -2518,6 +2514,8 @@ exports.createFeedback = async (req, res) => {
 
 exports.updateFeedbackOrder = async (req, res) => {
   try {
+    const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
+    console.log("Request URL:", fullUrl);
     const feedbacks = req.body.feedbacks; // Array of {id, orderNumber}
     const result = await adminDao.updateFeedbackOrder(feedbacks);
 
@@ -2538,5 +2536,53 @@ exports.updateFeedbackOrder = async (req, res) => {
       status: false,
       message: "Internal server error",
     });
+  }
+};
+
+
+
+
+exports.deleteFeedback = async (req, res) => {
+  const feedbackId = parseInt(req.params.id, 10);
+
+  if (isNaN(feedbackId)) {
+    return res.status(400).json({ error: 'Invalid feedback ID' });
+  }
+
+  try {
+    // Retrieve the feedback's current orderNumber before deletion
+    const feedback = await adminDao.getFeedbackById(feedbackId);
+    if (!feedback) {
+      return res.status(404).json({ error: 'Feedback not found' });
+    }
+
+    const orderNumber = feedback.orderNumber;
+
+    // Delete feedback and update subsequent order numbers
+    const result = await adminDao.deleteFeedbackAndUpdateOrder(feedbackId, orderNumber);
+
+    return res.status(200).json({ message: 'Feedback deleted and order updated successfully', result });
+  } catch (error) {
+    console.error('Error deleting feedback:', error);
+    return res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+
+
+exports.getAllfeedackListForBarChart = async (req, res) => {
+  try {
+    const feedbacks = await adminDao.getAllfeedackListForBarChart();
+
+    console.log("Successfully fetched feedback list");
+    res.json({
+      feedbacks,
+    });
+  } catch (err) {
+    if (err.isJoi) {
+      return res.status(400).json({ error: err.details[0].message });
+    }
+    console.error("Error executing query:", err);
+    res.status(500).send("An error occurred while fetching data.");
   }
 };

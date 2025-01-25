@@ -8,6 +8,27 @@ const path = require("path");
 const { Upload } = require("@aws-sdk/lib-storage");
 const Joi = require("joi");
 
+
+exports.getPermissionsByRole = (role) => {
+  return new Promise((resolve, reject) => {
+    const sql = `
+      SELECT rf.feature_id, fe.name
+      FROM role_features rf
+      JOIN features fe ON rf.feature_id  = fe.id
+      WHERE role_id = ?`;
+
+    plantcare.query(sql, [role], (err, results) => {
+      if (err) {
+        reject(err);
+      } else {
+        // Map the results to return an array of permission names
+        const permissions = results.map(row => row.name);
+        resolve(permissions);
+      }
+    });
+  });
+};
+
 exports.loginAdmin = (email) => {
   return new Promise((resolve, reject) => {
     const sql = "SELECT * FROM adminusers WHERE mail = ?";
