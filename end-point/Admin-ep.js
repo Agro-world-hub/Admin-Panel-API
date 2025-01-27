@@ -44,11 +44,19 @@ exports.loginAdmin = async (req, res) => {
     }
 
     // Fetch permissions based on the user's role
-    const permissions = await adminDao.getPermissionsByRole(user.role, user.position);
+    const permissions = await adminDao.getPermissionsByRole(
+      user.role,
+      user.position
+    );
 
     // Generate JWT token
     const token = jwt.sign(
-      { userId: user.id, role: user.role, position: user.position,  permissions },
+      {
+        userId: user.id,
+        role: user.role,
+        position: user.position,
+        permissions,
+      },
       process.env.JWT_SECRET,
       { expiresIn: "5h" }
     );
@@ -69,7 +77,6 @@ exports.loginAdmin = async (req, res) => {
     res.status(500).json({ error: "An error occurred during login." });
   }
 };
-
 
 exports.getAllAdminUsers = async (req, res) => {
   try {
@@ -893,14 +900,15 @@ exports.editAdminUser = async (req, res) => {
   const { id } = req.params;
 
   try {
-    const { mail, userName, role } = req.body;
+    const { mail, userName, role, position } = req.body;
 
     // Update admin user in the DAO
     const results = await adminDao.updateAdminUserById(
       id,
       mail,
       userName,
-      role
+      role,
+      position
     );
 
     if (results.affectedRows === 0) {
@@ -2220,7 +2228,6 @@ exports.getAllRoles = async (req, res) => {
   }
 };
 
-
 exports.getAllPosition = async (req, res) => {
   const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
   console.log("Request URL:", fullUrl);
@@ -2561,36 +2568,39 @@ exports.updateFeedbackOrder = async (req, res) => {
   }
 };
 
-
-
-
 exports.deleteFeedback = async (req, res) => {
   const feedbackId = parseInt(req.params.id, 10);
 
   if (isNaN(feedbackId)) {
-    return res.status(400).json({ error: 'Invalid feedback ID' });
+    return res.status(400).json({ error: "Invalid feedback ID" });
   }
 
   try {
     // Retrieve the feedback's current orderNumber before deletion
     const feedback = await adminDao.getFeedbackById(feedbackId);
     if (!feedback) {
-      return res.status(404).json({ error: 'Feedback not found' });
+      return res.status(404).json({ error: "Feedback not found" });
     }
 
     const orderNumber = feedback.orderNumber;
 
     // Delete feedback and update subsequent order numbers
-    const result = await adminDao.deleteFeedbackAndUpdateOrder(feedbackId, orderNumber);
+    const result = await adminDao.deleteFeedbackAndUpdateOrder(
+      feedbackId,
+      orderNumber
+    );
 
-    return res.status(200).json({ message: 'Feedback deleted and order updated successfully', result });
+    return res
+      .status(200)
+      .json({
+        message: "Feedback deleted and order updated successfully",
+        result,
+      });
   } catch (error) {
-    console.error('Error deleting feedback:', error);
-    return res.status(500).json({ error: 'Internal server error' });
+    console.error("Error deleting feedback:", error);
+    return res.status(500).json({ error: "Internal server error" });
   }
 };
-
-
 
 exports.getAllfeedackListForBarChart = async (req, res) => {
   try {

@@ -8,7 +8,6 @@ const path = require("path");
 const { Upload } = require("@aws-sdk/lib-storage");
 const Joi = require("joi");
 
-
 exports.getPermissionsByRole = (role, position) => {
   return new Promise((resolve, reject) => {
     const sql = `
@@ -22,7 +21,7 @@ exports.getPermissionsByRole = (role, position) => {
         reject(err);
       } else {
         // Map the results to return an array of permission names
-        const permissions = results.map(row => row.name);
+        const permissions = results.map((row) => row.name);
         resolve(permissions);
       }
     });
@@ -775,38 +774,44 @@ exports.deleteAdminUserById = (id) => {
   });
 };
 
-exports.updateAdminUserById = (id, mail, userName, role) => {
+exports.updateAdminUserById = (id, mail, userName, role, position) => {
   const sql = `
         UPDATE adminusers 
         SET 
             mail = ?, 
             userName = ?, 
-            role = ? 
+            role = ?,
+            position = ?
         WHERE id = ?`;
 
   return new Promise((resolve, reject) => {
-    plantcare.query(sql, [mail, userName, role, id], (err, results) => {
-      if (err) {
-        reject("Error executing update query: " + err);
-      } else {
-        resolve(results);
+    plantcare.query(
+      sql,
+      [mail, userName, role, id, position],
+      (err, results) => {
+        if (err) {
+          reject("Error executing update query: " + err);
+        } else {
+          resolve(results);
+        }
       }
-    });
+    );
   });
 };
 
-exports.updateAdminUser = (id, mail, userName, role) => {
+exports.updateAdminUser = (id, mail, userName, role, position) => {
   return new Promise((resolve, reject) => {
     const sql = `
             UPDATE adminusers 
             SET 
                 mail = ?, 
                 userName = ?, 
-                role = ?
+                role = ?,
+                position = ?
             WHERE id = ?
         `;
 
-    const values = [mail, userName, role, id];
+    const values = [mail, userName, role, position, id];
 
     plantcare.query(sql, values, (err, results) => {
       if (err) {
@@ -1684,7 +1689,6 @@ exports.getAllRoles = () => {
     });
   });
 };
-
 
 exports.getAllPosition = () => {
   return new Promise((resolve, reject) => {
