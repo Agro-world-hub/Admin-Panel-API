@@ -295,6 +295,8 @@ router.post(
 
 router.get("/get-all-roles", authMiddleware, AdminEp.getAllRoles);
 
+router.get("/get-all-position", authMiddleware, AdminEp.getAllPosition);
+
 router.get(
   "/farmer-payments/:officerID",
   authMiddleware,

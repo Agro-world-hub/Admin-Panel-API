@@ -9,15 +9,15 @@ const { Upload } = require("@aws-sdk/lib-storage");
 const Joi = require("joi");
 
 
-exports.getPermissionsByRole = (role) => {
+exports.getPermissionsByRole = (role, position) => {
   return new Promise((resolve, reject) => {
     const sql = `
       SELECT rf.feature_id, fe.name
       FROM role_features rf
       JOIN features fe ON rf.feature_id  = fe.id
-      WHERE role_id = ?`;
+      WHERE role_id = ? AND position_id = ?`;
 
-    plantcare.query(sql, [role], (err, results) => {
+    plantcare.query(sql, [role, position], (err, results) => {
       if (err) {
         reject(err);
       } else {
@@ -1021,12 +1021,13 @@ exports.getUserById = (userId) => {
 exports.createAdmin = (adminData, hashedPassword) => {
   return new Promise((resolve, reject) => {
     const sql = `
-            INSERT INTO adminusers (mail, role, userName, password) 
-            VALUES (?, ?, ?, ?)
+            INSERT INTO adminusers (mail, role, position, userName, password) 
+            VALUES (?, ?, ?, ?, ?)
         `;
     const values = [
       adminData.mail,
       adminData.role,
+      adminData.position,
       adminData.userName,
       hashedPassword,
     ];
@@ -1673,6 +1674,21 @@ exports.insertUserXLSXData = (data) => {
 exports.getAllRoles = () => {
   return new Promise((resolve, reject) => {
     const sql = "SELECT * FROM adminroles";
+
+    plantcare.query(sql, (err, results) => {
+      if (err) {
+        return reject(err); // Reject promise if an error occurs
+      }
+
+      resolve(results); // No need to wrap in arrays, return results directly
+    });
+  });
+};
+
+
+exports.getAllPosition = () => {
+  return new Promise((resolve, reject) => {
+    const sql = "SELECT * FROM adminposition";
 
     plantcare.query(sql, (err, results) => {
       if (err) {

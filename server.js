@@ -7,6 +7,7 @@ const CollectionCenterRoutes = require('./routes/CollectionCenter');
 const MarketPrice = require('./routes/MarketPrice');
 const MarketPlace = require('./routes/MarketPlace');
 const CropCalendar = require('./routes/CropCalendar');
+const Permission = require('./routes/Permission');
 require('dotenv').config();
 const cors = require('cors');
 
@@ -25,36 +26,40 @@ app.use(express.urlencoded({ extended: true }));
 
 
 
-plantcare.connect(err => {
+plantcare.getConnection((err, connection) => {
   if (err) {
     console.error('Error connecting to the database in index.js (plantcare):', err);
     return;
   }
-  console.log('Connected to the MySQL database in server.js.(plantcare)');
+  console.log('Connected to the MySQL database in server.js (plantcare).');
+  connection.release(); // Release the connection back to the pool
 });
 
-collectionofficer.connect(err => {
+collectionofficer.getConnection((err, connection) => {
   if (err) {
     console.error('Error connecting to the database in index.js (collectionofficer):', err);
     return;
   }
   console.log('Connected to the MySQL database in server.js.(collectionofficer)');
+  connection.release();
 });
 
-marketPlace.connect(err => {
+marketPlace.getConnection((err, connection) => {
   if (err) {
     console.error('Error connecting to the database in index.js (marketPlace):', err);
     return;
   }
   console.log('Connected to the MySQL database in server.js.(marketPlace)');
+  connection.release();
 });
 
-dash.connect(err => {
+dash.getConnection((err, connection) => {
   if (err) {
     console.error('Error connecting to the database in index.js (dash):', err);
     return;
   }
   console.log('Connected to the MySQL database in server.js.(dash)');
+  connection.release();
 });
 
 
@@ -69,6 +74,7 @@ app.use(process.env.AUTHOR, CollectionCenterRoutes);
 app.use(process.env.MARKETPRICE, MarketPrice);
 app.use('/api/market-place', MarketPlace);
 app.use('/api/crop-calendar', CropCalendar);
+app.use('/api/permission', Permission);
 app.use('/uploads', express.static('uploads'));
 
 app.get('/test', (req, res) => {

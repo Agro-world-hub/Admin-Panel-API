@@ -44,11 +44,11 @@ exports.loginAdmin = async (req, res) => {
     }
 
     // Fetch permissions based on the user's role
-    const permissions = await adminDao.getPermissionsByRole(user.role);
+    const permissions = await adminDao.getPermissionsByRole(user.role, user.position);
 
     // Generate JWT token
     const token = jwt.sign(
-      { userId: user.id, role: user.role, permissions },
+      { userId: user.id, role: user.role, position: user.position,  permissions },
       process.env.JWT_SECRET,
       { expiresIn: "5h" }
     );
@@ -58,6 +58,7 @@ exports.loginAdmin = async (req, res) => {
       token,
       userId: user.id,
       role: user.role,
+      position: user.position,
       userName: user.userName,
       permissions,
     };
@@ -2208,6 +2209,27 @@ exports.getAllRoles = async (req, res) => {
     console.log("Successfully fetched admin roles");
     res.json({
       roles,
+    });
+  } catch (err) {
+    if (err.isJoi) {
+      // Validation error
+      return res.status(400).json({ error: err.details[0].message });
+    }
+    console.error("Error executing query:", err);
+    res.status(500).send("An error occurred while fetching data.");
+  }
+};
+
+
+exports.getAllPosition = async (req, res) => {
+  const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
+  console.log("Request URL:", fullUrl);
+  try {
+    const positions = await adminDao.getAllPosition();
+
+    console.log("Successfully fetched admin roles");
+    res.json({
+      positions,
     });
   } catch (err) {
     if (err.isJoi) {
