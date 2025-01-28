@@ -67,11 +67,7 @@ const createMarketPriceTable = () => {
       price DECIMAL(15,2) DEFAULT NULL,
       averagePrice DECIMAL(15,2) DEFAULT NULL,
       createdAt TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-      createdBy INT(11) DEFAULT NULL,
       FOREIGN KEY (varietyId) REFERENCES plant_care.cropvariety(id)
-        ON DELETE CASCADE
-        ON UPDATE CASCADE,
-      FOREIGN KEY (createdBy) REFERENCES plant_care.adminusers(id)
         ON DELETE CASCADE
         ON UPDATE CASCADE,
       FOREIGN KEY (xlindex) REFERENCES xlsxhistory(id)
