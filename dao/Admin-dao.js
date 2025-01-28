@@ -17,7 +17,7 @@ exports.getPermissionsByRole = (role, position) => {
       JOIN features fe ON rf.featureId  = fe.id
       WHERE roleId = ? AND positionId = ?`;
 
-      admin.query(sql, [role, position], (err, results) => {
+    admin.query(sql, [role, position], (err, results) => {
       if (err) {
         reject(err);
       } else {
@@ -784,17 +784,13 @@ exports.updateAdminUserById = (id, mail, userName, role, position) => {
         WHERE id = ?`;
 
   return new Promise((resolve, reject) => {
-    admin.query(
-      sql,
-      [mail, userName, role, id, position],
-      (err, results) => {
-        if (err) {
-          reject("Error executing update query: " + err);
-        } else {
-          resolve(results);
-        }
+    admin.query(sql, [mail, userName, role, id, position], (err, results) => {
+      if (err) {
+        reject("Error executing update query: " + err);
+      } else {
+        resolve(results);
       }
-    );
+    });
   });
 };
 
@@ -2423,6 +2419,26 @@ exports.getAllfeedackListForBarChart = () => {
       }
 
       resolve(results);
+    });
+  });
+};
+
+exports.getMeById = (userId) => {
+  return new Promise((resolve, reject) => {
+    const sql = `
+      SELECT id, mail, userName, role
+      FROM adminusers
+      WHERE id = ?`;
+
+    admin.query(sql, [userId], (err, results) => {
+      if (err) {
+        reject(err);
+      } else if (results.length === 0) {
+        reject(new Error("User not found."));
+      } else {
+        // Return the user object
+        resolve(results[0]);
+      }
     });
   });
 };

@@ -107,31 +107,61 @@ exports.getAllAdminUsers = async (req, res) => {
   }
 };
 
-exports.getMe = (req, res) => {
-  const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
-  console.log(fullUrl);
-  const userId = req.user.userId;
-  const sql = "SELECT id, mail, userName, role FROM adminusers WHERE id = ?";
-  db.query(sql, [userId], (err, results) => {
-    if (err) {
-      console.error("Error executing query:", err);
-      return res
-        .status(500)
-        .json({ error: "An error occurred while fetching user details." });
-    }
-    if (results.length === 0) {
-      return res.status(404).json({ error: "User not found." });
-    }
-    const user = results[0];
-    console.log("Fetch user success");
+// exports.getMe = (req, res) => {
+//   const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
+//   console.log(fullUrl);
+//   const userId = req.user.userId;
+//   const sql = "SELECT id, mail, userName, role FROM adminusers WHERE id = ?";
+//   db.query(sql, [userId], (err, results) => {
+//     if (err) {
+//       console.error("Error executing query:", err);
+//       return res
+//         .status(500)
+//         .json({ error: "An error occurred while fetching user details." });
+//     }
+//     if (results.length === 0) {
+//       return res.status(404).json({ error: "User not found." });
+//     }
+//     const user = results[0];
+//     console.log("Fetch user success");
+//     res.json({
+//       id: user.id,
+//       userName: user.userName,
+//       mail: user.mail,
+//       role: user.role,
+//       password: user.password,
+//     });
+//   });
+// };
+
+exports.getMe = async (req, res) => {
+  try {
+    // Retrieve userId from the request object
+    const userId = req.user.userId;
+
+    // Fetch user details using the DAO function
+    const user = await adminDao.getMeById(userId);
+
+    console.log("Successfully fetched user details");
+
+    // Respond with the user details
     res.json({
       id: user.id,
       userName: user.userName,
       mail: user.mail,
       role: user.role,
-      password: user.password,
     });
-  });
+  } catch (err) {
+    if (err.message === "User not found.") {
+      // User not found
+      return res.status(404).json({ error: "User not found." });
+    }
+
+    console.error("Error fetching user details:", err);
+    res
+      .status(500)
+      .json({ error: "An error occurred while fetching user details." });
+  }
 };
 
 exports.adminCreateUser = async (req, res) => {
@@ -2590,12 +2620,10 @@ exports.deleteFeedback = async (req, res) => {
       orderNumber
     );
 
-    return res
-      .status(200)
-      .json({
-        message: "Feedback deleted and order updated successfully",
-        result,
-      });
+    return res.status(200).json({
+      message: "Feedback deleted and order updated successfully",
+      result,
+    });
   } catch (error) {
     console.error("Error deleting feedback:", error);
     return res.status(500).json({ error: "Internal server error" });
