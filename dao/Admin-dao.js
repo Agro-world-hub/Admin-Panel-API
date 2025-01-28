@@ -1,4 +1,5 @@
 const {
+  admin,
   plantcare,
   collectionofficer,
   marketPlace,
@@ -11,12 +12,12 @@ const Joi = require("joi");
 exports.getPermissionsByRole = (role, position) => {
   return new Promise((resolve, reject) => {
     const sql = `
-      SELECT rf.feature_id, fe.name
-      FROM role_features rf
-      JOIN features fe ON rf.feature_id  = fe.id
-      WHERE role_id = ? AND position_id = ?`;
+      SELECT rf.featureId, fe.name
+      FROM rolefeatures rf
+      JOIN features fe ON rf.featureId  = fe.id
+      WHERE roleId = ? AND positionId = ?`;
 
-    plantcare.query(sql, [role, position], (err, results) => {
+      admin.query(sql, [role, position], (err, results) => {
       if (err) {
         reject(err);
       } else {
@@ -31,7 +32,7 @@ exports.getPermissionsByRole = (role, position) => {
 exports.loginAdmin = (email) => {
   return new Promise((resolve, reject) => {
     const sql = "SELECT * FROM adminusers WHERE mail = ?";
-    plantcare.query(sql, [email], (err, results) => {
+    admin.query(sql, [email], (err, results) => {
       if (err) {
         reject(err);
       } else {
@@ -72,11 +73,11 @@ exports.getAllAdminUsers = (limit, offset, role, search) => {
     dataSql += ` ORDER BY AU.created_at DESC LIMIT ? OFFSET ? `;
     dataParms.push(limit, offset);
 
-    plantcare.query(countSql, dataParms, (countErr, countResults) => {
+    admin.query(countSql, dataParms, (countErr, countResults) => {
       if (countErr) {
         reject(countErr);
       } else {
-        plantcare.query(dataSql, dataParms, (dataErr, dataResults) => {
+        admin.query(dataSql, dataParms, (dataErr, dataResults) => {
           if (dataErr) {
             reject(dataErr);
           } else {
@@ -188,13 +189,12 @@ exports.createNews = async (
   descriptionTamil,
   imageBuffer, // accept the image buffer
   status,
-  createdBy,
   publishDate,
   expireDate
 ) => {
   return new Promise((resolve, reject) => {
     const sql =
-      "INSERT INTO content (titleEnglish, titleSinhala, titleTamil, descriptionEnglish, descriptionSinhala, descriptionTamil, image, status, createdBy,publishDate, expireDate) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+      "INSERT INTO content (titleEnglish, titleSinhala, titleTamil, descriptionEnglish, descriptionSinhala, descriptionTamil, image, status,publishDate, expireDate) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
     const values = [
       titleEnglish,
       titleSinhala,
@@ -204,7 +204,6 @@ exports.createNews = async (
       descriptionTamil,
       imageBuffer, // pass the buffer as image
       status,
-      createdBy,
       publishDate,
       expireDate,
     ];
@@ -764,7 +763,7 @@ exports.deleteAdminUserById = (id) => {
   const sql = "DELETE FROM adminusers WHERE id = ?";
 
   return new Promise((resolve, reject) => {
-    plantcare.query(sql, [id], (err, results) => {
+    admin.query(sql, [id], (err, results) => {
       if (err) {
         reject("Error executing delete query: " + err);
       } else {
@@ -785,7 +784,7 @@ exports.updateAdminUserById = (id, mail, userName, role, position) => {
         WHERE id = ?`;
 
   return new Promise((resolve, reject) => {
-    plantcare.query(
+    admin.query(
       sql,
       [mail, userName, role, id, position],
       (err, results) => {
@@ -813,7 +812,7 @@ exports.updateAdminUser = (id, mail, userName, role, position) => {
 
     const values = [mail, userName, role, position, id];
 
-    plantcare.query(sql, values, (err, results) => {
+    admin.query(sql, values, (err, results) => {
       if (err) {
         reject(err);
       } else {
@@ -827,7 +826,7 @@ exports.getAdminUserById = (id) => {
   return new Promise((resolve, reject) => {
     const sql = "SELECT * FROM adminusers WHERE id = ?";
 
-    plantcare.query(sql, [id], (err, results) => {
+    admin.query(sql, [id], (err, results) => {
       if (err) {
         reject(err);
       } else {
@@ -840,7 +839,7 @@ exports.getAdminUserById = (id) => {
 exports.getAdminPasswordById = (id) => {
   return new Promise((resolve, reject) => {
     const sql = "SELECT password FROM adminusers WHERE id = ?";
-    plantcare.query(sql, [id], (err, results) => {
+    admin.query(sql, [id], (err, results) => {
       if (err) {
         reject(err);
       } else {
@@ -854,7 +853,7 @@ exports.getAdminPasswordById = (id) => {
 exports.updateAdminPasswordById = (id, newPassword) => {
   return new Promise((resolve, reject) => {
     const sql = "UPDATE adminusers SET password = ? WHERE id = ?";
-    plantcare.query(sql, [newPassword, id], (err, results) => {
+    admin.query(sql, [newPassword, id], (err, results) => {
       if (err) {
         reject(err);
       } else {
@@ -1037,7 +1036,7 @@ exports.createAdmin = (adminData, hashedPassword) => {
       hashedPassword,
     ];
 
-    plantcare.query(sql, values, (err, results) => {
+    admin.query(sql, values, (err, results) => {
       if (err) {
         return reject(err); // Pass the error back if it occurs
       }
@@ -1680,7 +1679,7 @@ exports.getAllRoles = () => {
   return new Promise((resolve, reject) => {
     const sql = "SELECT * FROM adminroles";
 
-    plantcare.query(sql, (err, results) => {
+    admin.query(sql, (err, results) => {
       if (err) {
         return reject(err); // Reject promise if an error occurs
       }
@@ -1694,7 +1693,7 @@ exports.getAllPosition = () => {
   return new Promise((resolve, reject) => {
     const sql = "SELECT * FROM adminposition";
 
-    plantcare.query(sql, (err, results) => {
+    admin.query(sql, (err, results) => {
       if (err) {
         return reject(err); // Reject promise if an error occurs
       }

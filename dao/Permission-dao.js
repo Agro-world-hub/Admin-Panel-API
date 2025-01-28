@@ -1,10 +1,10 @@
-const { plantcare, collectionofficer, marketPlace, dash } = require('../startup/database');
+const { admin, plantcare, collectionofficer, marketPlace, dash } = require('../startup/database');
 
 exports.getAllFeatures = () => {
     return new Promise((resolve, reject) => {
       const sql = "SELECT * FROM features";
   
-      plantcare.query(sql, (err, results) => {
+      admin.query(sql, (err, results) => {
         if (err) {
           return reject(err); // Reject promise if an error occurs
         }
@@ -18,9 +18,9 @@ exports.getAllFeatures = () => {
 
   exports.getAllRoleFeatures = (roleId) => {
     return new Promise((resolve, reject) => {
-      const sql = "SELECT * FROM role_features WHERE role_id = ?";
+      const sql = "SELECT * FROM rolefeatures WHERE roleId = ?";
   
-      plantcare.query(sql,roleId, (err, results) => {
+      admin.query(sql,roleId, (err, results) => {
         if (err) {
           return reject(err); // Reject promise if an error occurs
         }
@@ -39,14 +39,14 @@ exports.getAllFeatures = () => {
   ) => {
     return new Promise((resolve, reject) => {
       const sql =
-        "INSERT INTO role_features (role_id, position_id, feature_id) VALUES (?, ?, ?)";
+        "INSERT INTO rolefeatures (roleId, positionId, featureId) VALUES (?, ?, ?)";
       const values = [
         role_id,
         position_id,
         feature_id
       ];
   
-      plantcare.query(sql, values, (err, results) => {
+      admin.query(sql, values, (err, results) => {
         if (err) {
           reject(err);
         } else {
@@ -54,14 +54,15 @@ exports.getAllFeatures = () => {
         }
       });
     });
+    
   };
 
 
 
   exports.deleteRoleFeature = (id) => {
     return new Promise((resolve, reject) => {
-      const sql = "DELETE FROM role_features WHERE id = ?";
-      plantcare.query(sql, [id], (err, results) => {
+      const sql = "DELETE FROM rolefeatures WHERE id = ?";
+      admin.query(sql, [id], (err, results) => {
         if (err) {
           return reject(err);
         }

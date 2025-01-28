@@ -1,5 +1,5 @@
 const express = require('express');
-const {  plantcare, collectionofficer, marketPlace, dash } = require('./startup/database');
+const {  admin, plantcare, collectionofficer, marketPlace, dash } = require('./startup/database');
 const routes = require('./routes/Admin');
 const collectionOfficerRoutes = require('./routes/CollectionOfficer');
 const routesNewws = require('./routes/News');
@@ -24,7 +24,14 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 
-
+admin.getConnection((err, connection) => {
+  if (err) {
+    console.error('Error connecting to the database in index.js (admin):', err);
+    return;
+  }
+  console.log('Connected to the MySQL database in server.js (admin).');
+  connection.release();
+});
 
 plantcare.getConnection((err, connection) => {
   if (err) {
@@ -32,7 +39,7 @@ plantcare.getConnection((err, connection) => {
     return;
   }
   console.log('Connected to the MySQL database in server.js (plantcare).');
-  connection.release(); // Release the connection back to the pool
+  connection.release();
 });
 
 collectionofficer.getConnection((err, connection) => {

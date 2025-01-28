@@ -67,11 +67,7 @@ const createMarketPriceTable = () => {
       price DECIMAL(15,2) DEFAULT NULL,
       averagePrice DECIMAL(15,2) DEFAULT NULL,
       createdAt TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-      createdBy INT(11) DEFAULT NULL,
       FOREIGN KEY (varietyId) REFERENCES plant_care.cropvariety(id)
-        ON DELETE CASCADE
-        ON UPDATE CASCADE,
-      FOREIGN KEY (createdBy) REFERENCES plant_care.adminusers(id)
         ON DELETE CASCADE
         ON UPDATE CASCADE,
       FOREIGN KEY (xlindex) REFERENCES xlsxhistory(id)
@@ -207,6 +203,7 @@ const createCollectionOfficer = () => {
       QRcode TEXT DEFAULT NULL,
       status VARCHAR(25) DEFAULT NULL,
       claimStatus BOOLEAN DEFAULT 0,
+      onlineStatus BOOLEAN DEFAULT 0,
       createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (centerId) REFERENCES collectioncenter(id)
         ON DELETE CASCADE
@@ -429,6 +426,72 @@ const createDailyTargetItemsTable = () => {
 };
 
 
+const createOfficerComplainsTable  = () => {
+    const sql = `
+   CREATE TABLE IF NOT EXISTS officercomplains (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    officerId INT DEFAULT NULL,
+    refNo VARCHAR(20) DEFAULT NULL,
+    language VARCHAR(50) DEFAULT NULL,
+    complainCategory VARCHAR(50) DEFAULT NULL,
+    complain TEXT DEFAULT NULL,
+    reply TEXT DEFAULT NULL,
+    status VARCHAR(20) DEFAULT NULL,
+    complainAssign VARCHAR(20) DEFAULT NULL,
+    createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (officerId) REFERENCES collectionofficer(id)
+        ON DELETE CASCADE
+        ON UPDATE CASCADE
+)
+  `;
+    return new Promise((resolve, reject) => {
+        collectionofficer.query(sql, (err, result) => {
+            if (err) {
+                reject('Error creating officercomplains table: ' + err);
+            } else {
+                resolve('officercomplains table created successfully.');
+            }
+        });
+    });
+};
+
+
+
+
+const createOfficerDailyTargetTable  = () => {
+    const sql = `
+  CREATE TABLE officerdailytarget (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  dailyTargetId INT DEFAULT NULL,
+  varietyId INT DEFAULT NULL,
+  officerId INT DEFAULT NULL,
+  grade VARCHAR(10) DEFAULT NULL,
+  target DECIMAL(10,2) DEFAULT NULL,
+  complete DECIMAL(10,2) DEFAULT 0,
+  createdAt TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (dailyTargetId) REFERENCES dailytarget(id) 
+    ON DELETE CASCADE 
+    ON UPDATE CASCADE,
+  FOREIGN KEY (varietyId) REFERENCES plant_care.cropvariety(id) 
+    ON DELETE CASCADE 
+    ON UPDATE CASCADE,
+  FOREIGN KEY (officerId) REFERENCES collectionofficer(id) 
+    ON DELETE CASCADE 
+    ON UPDATE CASCADE
+) 
+  `;
+    return new Promise((resolve, reject) => {
+        collectionofficer.query(sql, (err, result) => {
+            if (err) {
+                reject('Error creating officerdailytarget table: ' + err);
+            } else {
+                resolve('officerdailytarget table created successfully.');
+            }
+        });
+    });
+};
+
+
 
 module.exports = {
     createXlsxHistoryTable,
@@ -442,5 +505,7 @@ module.exports = {
     createFarmerComplains,
     createMarketPriceRequestTable,
     createDailyTargetTable,
-    createDailyTargetItemsTable
+    createDailyTargetItemsTable,
+    createOfficerComplainsTable,
+    createOfficerDailyTargetTable
 };
