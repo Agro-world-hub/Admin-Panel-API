@@ -14,7 +14,6 @@ const { v4: uuidv4 } = require("uuid");
 const uploadFileToS3 = require("../middlewares/s3upload");
 const deleteFromS3 = require("../middlewares/s3delete");
 
-
 const s3 = new AWS.S3({
   accessKeyId: process.env.AWS_ACCESS_KEY_ID,
   secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
@@ -31,44 +30,49 @@ exports.loginAdmin = async (req, res) => {
 
     const { email, password } = req.body;
 
-    // Fetch user from the database
+    // Fetch user and permissions from the database
     const [user] = await adminDao.loginAdmin(email);
 
     if (!user) {
-      // If user is not found
       return res.status(401).json({ error: "User not found." });
     }
 
-    if (user) {
-      // Compare password with hashed password in DB
-      const verify_password = bcrypt.compareSync(password, user.password);
+    const verify_password = bcrypt.compareSync(password, user.password);
 
-      if (!verify_password) {
-        // If password doesn't match
-        return res.status(401).json({ error: "Wrong password." });
-      }
-
-      if (verify_password) {
-        // Generate JWT token
-        const token = jwt.sign(
-          { userId: user.id, role: user.role },
-          process.env.JWT_SECRET,
-          { expiresIn: "5h" }
-        );
-
-        const data = {
-          token,
-          userId: user.id,
-          role: user.role,
-          userName: user.userName,
-        };
-
-        return res.json(data);
-      }
+    if (!verify_password) {
+      return res.status(401).json({ error: "Wrong password." });
     }
 
-    // If user is not found or password doesn't match
-    res.status(401).json({ error: "Invalid email or password." });
+    // Fetch permissions based on the user's role
+    const permissions = await adminDao.getPermissionsByRole(
+      user.role,
+      user.position
+    );
+
+    // Generate JWT token
+    const token = jwt.sign(
+      {
+        userId: user.id,
+        role: user.role,
+        position: user.position,
+        permissions,
+      },
+      process.env.JWT_SECRET,
+      { expiresIn: "5h" }
+    );
+
+    // Construct response data
+    const data = {
+      token,
+      userId: user.id,
+      role: user.role,
+      position: user.position,
+      userName: user.userName,
+      permissions,
+      expiresIn: 18000,
+    };
+
+    res.json(data);
   } catch (err) {
     console.error("Error during login:", err);
     res.status(500).json({ error: "An error occurred during login." });
@@ -81,7 +85,12 @@ exports.getAllAdminUsers = async (req, res) => {
       await ValidateSchema.getAllAdminUsersSchema.validateAsync(req.query);
     const offset = (page - 1) * limit;
 
-    const { total, items } = await adminDao.getAllAdminUsers(limit, offset, role, search);
+    const { total, items } = await adminDao.getAllAdminUsers(
+      limit,
+      offset,
+      role,
+      search
+    );
 
     console.log("Successfully fetched admin users");
     res.json({
@@ -99,37 +108,68 @@ exports.getAllAdminUsers = async (req, res) => {
   }
 };
 
-exports.getMe = (req, res) => {
-  const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
-  console.log(fullUrl);
-  const userId = req.user.userId;
-  const sql = "SELECT id, mail, userName, role FROM adminusers WHERE id = ?";
-  db.query(sql, [userId], (err, results) => {
-    if (err) {
-      console.error("Error executing query:", err);
-      return res
-        .status(500)
-        .json({ error: "An error occurred while fetching user details." });
-    }
-    if (results.length === 0) {
-      return res.status(404).json({ error: "User not found." });
-    }
-    const user = results[0];
-    console.log("Fetch user success");
+// exports.getMe = (req, res) => {
+//   const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
+//   console.log(fullUrl);
+//   const userId = req.user.userId;
+//   const sql = "SELECT id, mail, userName, role FROM adminusers WHERE id = ?";
+//   db.query(sql, [userId], (err, results) => {
+//     if (err) {
+//       console.error("Error executing query:", err);
+//       return res
+//         .status(500)
+//         .json({ error: "An error occurred while fetching user details." });
+//     }
+//     if (results.length === 0) {
+//       return res.status(404).json({ error: "User not found." });
+//     }
+//     const user = results[0];
+//     console.log("Fetch user success");
+//     res.json({
+//       id: user.id,
+//       userName: user.userName,
+//       mail: user.mail,
+//       role: user.role,
+//       password: user.password,
+//     });
+//   });
+// };
+
+exports.getMe = async (req, res) => {
+  try {
+    // Retrieve userId from the request object
+    const userId = req.user.userId;
+
+    // Fetch user details using the DAO function
+    const user = await adminDao.getMeById(userId);
+
+    console.log("Successfully fetched user details");
+
+    // Respond with the user details
     res.json({
       id: user.id,
       userName: user.userName,
       mail: user.mail,
       role: user.role,
-      password: user.password,
     });
-  });
+  } catch (err) {
+    if (err.message === "User not found.") {
+      // User not found
+      return res.status(404).json({ error: "User not found." });
+    }
+
+    console.error("Error fetching user details:", err);
+    res
+      .status(500)
+      .json({ error: "An error occurred while fetching user details." });
+  }
 };
 
 exports.adminCreateUser = async (req, res) => {
   try {
     // Validate the request body
-    const { firstName, lastName, phoneNumber, NICnumber } = await ValidateSchema.adminCreateUserSchema.validateAsync(req.body);
+    const { firstName, lastName, phoneNumber, NICnumber } =
+      await ValidateSchema.adminCreateUserSchema.validateAsync(req.body);
 
     const results = await adminDao.adminCreateUser(
       firstName,
@@ -176,11 +216,6 @@ exports.getAllUsers = async (req, res) => {
     res.status(500).send("An error occurred while fetching data.");
   }
 };
-
-
-
-
-
 
 exports.createOngoingCultivations = async (req, res) => {
   try {
@@ -241,7 +276,6 @@ exports.createNews = async (req, res) => {
 
     const image = await uploadFileToS3(fileBuffer, fileName, "content/image");
 
-
     // Call DAO to save news and the image file as longblob
     const newsId = await adminDao.createNews(
       titleEnglish,
@@ -283,7 +317,6 @@ exports.getAllNews = async (req, res) => {
       await ValidateSchema.getAllNewsSchema.validateAsync(req.query);
     console.log("News:", page, limit, status, createdAt);
 
-
     const offset = (page - 1) * limit;
 
     const result = await adminDao.getAllNews(limit, offset, status, createdAt);
@@ -306,11 +339,6 @@ exports.getAllNews = async (req, res) => {
     res.status(500).json({ error: "An error occurred while fetching news" });
   }
 };
-
-
-
-
-
 
 exports.createCropCalenderAddTask = async (req, res) => {
   try {
@@ -903,14 +931,15 @@ exports.editAdminUser = async (req, res) => {
   const { id } = req.params;
 
   try {
-    const { mail, userName, role } = req.body;
+    const { mail, userName, role, position } = req.body;
 
     // Update admin user in the DAO
     const results = await adminDao.updateAdminUserById(
       id,
       mail,
       userName,
-      role
+      role,
+      position
     );
 
     if (results.affectedRows === 0) {
@@ -1037,17 +1066,14 @@ exports.editAdminUserPassword = async (req, res) => {
   }
 };
 
-
-
-
 exports.deletePlantCareUser = async (req, res) => {
-
   const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
   console.log(fullUrl);
 
-
   try {
-    const { id } = await ValidateSchema.deletePlantCareUserSchema.validateAsync(req.params);
+    const { id } = await ValidateSchema.deletePlantCareUserSchema.validateAsync(
+      req.params
+    );
 
     const user = await adminDao.getUserById(id);
     if (!user) {
@@ -1055,18 +1081,19 @@ exports.deletePlantCareUser = async (req, res) => {
     }
 
     const imageUrl = user.profileImage;
-    
+
     // let s3Key;
 
     // if (imageUrl && imageUrl.startsWith(`https://${process.env.AWS_S3_BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/`)) {
     //   s3Key = imageUrl.split(`https://${process.env.AWS_S3_BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/`)[1];
     // }
-    
 
     const result = await adminDao.deletePlantCareUserById(id);
 
     if (result.affectedRows === 0) {
-      return res.status(404).json({ message: "Failed to delete PlantCare User" });
+      return res
+        .status(404)
+        .json({ message: "Failed to delete PlantCare User" });
     }
 
     if (imageUrl) {
@@ -1089,12 +1116,11 @@ exports.deletePlantCareUser = async (req, res) => {
     }
 
     console.error("Error deleting PlantCare User:", err);
-    return res.status(500).json({ error: "An error occurred while deleting PlantCare User" });
+    return res
+      .status(500)
+      .json({ error: "An error occurred while deleting PlantCare User" });
   }
 };
-
-
-
 
 exports.updatePlantCareUser = async (req, res) => {
   const { id } = req.params;
@@ -1102,7 +1128,14 @@ exports.updatePlantCareUser = async (req, res) => {
   try {
     const validatedBody =
       await ValidateSchema.updatePlantCareUserSchema.validateAsync(req.body);
-    const { firstName, lastName, phoneNumber, NICnumber, district, membership } = validatedBody;
+    const {
+      firstName,
+      lastName,
+      phoneNumber,
+      NICnumber,
+      district,
+      membership,
+    } = validatedBody;
 
     const user = await adminDao.getUserById(id);
     if (!user) {
@@ -1110,7 +1143,6 @@ exports.updatePlantCareUser = async (req, res) => {
     }
 
     const imageUrl = user.profileImage;
-    
 
     await deleteFromS3(imageUrl);
     console.log(imageUrl);
@@ -1118,14 +1150,22 @@ exports.updatePlantCareUser = async (req, res) => {
     if (req.file) {
       const fileBuffer = req.file.buffer;
       const fileName = req.file.originalname;
-      image = await uploadFileToS3(fileBuffer, fileName, "users/profile-images");
-      
+      image = await uploadFileToS3(
+        fileBuffer,
+        fileName,
+        "users/profile-images"
+      );
     }
 
-
-    
-
-    const userData = { firstName, lastName, phoneNumber, NICnumber, district, membership, image };
+    const userData = {
+      firstName,
+      lastName,
+      phoneNumber,
+      NICnumber,
+      district,
+      membership,
+      image,
+    };
 
     const result = await adminDao.updatePlantCareUserById(userData, id);
 
@@ -1148,7 +1188,6 @@ exports.updatePlantCareUser = async (req, res) => {
       .json({ error: "An error occurred while updating PlantCare User" });
   }
 };
-
 
 // exports.createPlantCareUser = async (req, res) => {
 //   try {
@@ -1197,7 +1236,14 @@ exports.createPlantCareUser = async (req, res) => {
     // Validate input data
     const validatedBody = req.body;
 
-    const { firstName, lastName, phoneNumber, NICnumber, district, membership } = validatedBody;
+    const {
+      firstName,
+      lastName,
+      phoneNumber,
+      NICnumber,
+      district,
+      membership,
+    } = validatedBody;
 
     // Ensure a file is uploaded
     if (!req.file) {
@@ -1207,7 +1253,11 @@ exports.createPlantCareUser = async (req, res) => {
     const fileBuffer = req.file.buffer;
     const fileName = req.file.originalname;
 
- const profileImageUrl = await uploadFileToS3(fileBuffer, fileName, "users/profile-images");
+    const profileImageUrl = await uploadFileToS3(
+      fileBuffer,
+      fileName,
+      "users/profile-images"
+    );
 
     const userData = {
       firstName,
@@ -1216,7 +1266,7 @@ exports.createPlantCareUser = async (req, res) => {
       NICnumber,
       district,
       membership,
-      profileImageUrl
+      profileImageUrl,
     };
 
     console.log(userData);
@@ -1244,7 +1294,6 @@ exports.createPlantCareUser = async (req, res) => {
       .json({ error: "An error occurred while creating PlantCare user" });
   }
 };
-
 
 exports.getUserById = async (req, res) => {
   try {
@@ -1381,9 +1430,6 @@ exports.getCurrentAssetRecordById = async (req, res) => {
     });
   }
 };
-
-
-
 
 //delete crop task
 exports.deleteCropTask = async (req, res) => {
@@ -1871,7 +1917,7 @@ exports.addNewTask = async (req, res) => {
     const addedTaskResult = await adminDao.addNewTaskDao(
       task,
       indexId + 1,
-      cropId,
+      cropId
     );
 
     if (addedTaskResult.insertId > 0) {
@@ -1890,7 +1936,6 @@ exports.addNewTask = async (req, res) => {
       .json({ error: "An error occurred while adding the task" });
   }
 };
-
 
 exports.sendMessage = async (req, res) => {
   const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
@@ -1959,7 +2004,6 @@ exports.addNewTaskU = async (req, res) => {
   const cropId = req.params.cropId;
   const onCulscropID = req.params.onCulscropID;
   const indexId = parseInt(req.params.indexId);
-
 
   try {
     const task = req.body;
@@ -2090,8 +2134,6 @@ exports.addNewTaskU = async (req, res) => {
 //   }
 // };
 
-
-
 exports.uploadUsersXLSX = async (req, res) => {
   try {
     if (!req.file) {
@@ -2130,12 +2172,15 @@ exports.uploadUsersXLSX = async (req, res) => {
     } catch (error) {
       console.error("Error reading XLSX file:", error);
       return res.status(400).json({
-        error: "Unable to read the uploaded file. Please ensure it's a valid XLSX or XLS file.",
+        error:
+          "Unable to read the uploaded file. Please ensure it's a valid XLSX or XLS file.",
       });
     }
 
     if (!workbook || !workbook.SheetNames || workbook.SheetNames.length === 0) {
-      return res.status(400).json({ error: "The uploaded file is empty or invalid." });
+      return res
+        .status(400)
+        .json({ error: "The uploaded file is empty or invalid." });
     }
 
     const sheetName = workbook.SheetNames[0];
@@ -2143,7 +2188,9 @@ exports.uploadUsersXLSX = async (req, res) => {
     const data = xlsx.utils.sheet_to_json(worksheet);
 
     if (data.length === 0) {
-      return res.status(400).json({ error: "The uploaded file contains no valid data." });
+      return res
+        .status(400)
+        .json({ error: "The uploaded file contains no valid data." });
     }
 
     // Insert data and check for existing users
@@ -2157,36 +2204,42 @@ exports.uploadUsersXLSX = async (req, res) => {
       xlsx.utils.book_append_sheet(wb, ws, "Existing Users");
 
       // Generate buffer
-      const excelBuffer = xlsx.write(wb, { type: 'buffer', bookType: 'xlsx' });
+      const excelBuffer = xlsx.write(wb, { type: "buffer", bookType: "xlsx" });
 
       // Set headers for file download
-      res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-      res.setHeader('Content-Disposition', 'attachment; filename=existing_users.xlsx');
+      res.setHeader(
+        "Content-Type",
+        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+      );
+      res.setHeader(
+        "Content-Disposition",
+        "attachment; filename=existing_users.xlsx"
+      );
 
       // Send both the file and JSON response
       return res.status(200).send({
         message: "Some users already exist in the database",
         existingUsers: result.existingUsers,
         newUsersInserted: result.insertedRows,
-        file: excelBuffer
+        file: excelBuffer,
       });
     }
 
     // If no existing users, send success response
     return res.status(200).json({
       message: "File uploaded and data inserted successfully",
-      rowsAffected: result.insertedRows
+      rowsAffected: result.insertedRows,
     });
-
   } catch (error) {
     if (error.isJoi) {
       return res.status(400).json({ error: error.details[0].message });
     }
     console.error("Error processing XLSX file:", error);
-    return res.status(500).json({ error: "An error occurred while processing the XLSX file." });
+    return res
+      .status(500)
+      .json({ error: "An error occurred while processing the XLSX file." });
   }
 };
-
 
 exports.getAllRoles = async (req, res) => {
   try {
@@ -2206,8 +2259,25 @@ exports.getAllRoles = async (req, res) => {
   }
 };
 
+exports.getAllPosition = async (req, res) => {
+  const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
+  console.log("Request URL:", fullUrl);
+  try {
+    const positions = await adminDao.getAllPosition();
 
-
+    console.log("Successfully fetched admin roles");
+    res.json({
+      positions,
+    });
+  } catch (err) {
+    if (err.isJoi) {
+      // Validation error
+      return res.status(400).json({ error: err.details[0].message });
+    }
+    console.error("Error executing query:", err);
+    res.status(500).send("An error occurred while fetching data.");
+  }
+};
 
 //delete crop task
 exports.deleteUserCropTask = async (req, res) => {
@@ -2265,7 +2335,7 @@ exports.deleteUserCropTask = async (req, res) => {
 
 //     const offset = (page - 1) * limit;
 
-//     const officerID = parseInt(req.params.officerID); 
+//     const officerID = parseInt(req.params.officerID);
 //     console.log("Officer ID:", officerID);
 //     console.log("Officer ID:", page);
 //     console.log("Officer ID:", offset);
@@ -2294,15 +2364,11 @@ exports.getPaymentSlipReport = async (req, res) => {
     const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
     console.log("Request URL:", fullUrl);
 
-
-
     const date = req.query.date;
-    const page = parseInt(req.query.page) || 1;  // Default to page 1 if no page is provided
-    const limit = parseInt(req.query.limit) || 10;  // Default to limit of 10 if no limit is provided
+    const page = parseInt(req.query.page) || 1; // Default to page 1 if no page is provided
+    const limit = parseInt(req.query.limit) || 10; // Default to limit of 10 if no limit is provided
     const offset = (page - 1) * limit;
     const search = req.query.search;
-
-
 
     const officerID = parseInt(req.params.officerID);
     console.log("Officer ID:", officerID);
@@ -2311,7 +2377,13 @@ exports.getPaymentSlipReport = async (req, res) => {
     console.log("Date Filter:", date);
     console.log("search:", search);
 
-    const { total, items } = await adminDao.getPaymentSlipReport(officerID, limit, offset, date, search);
+    const { total, items } = await adminDao.getPaymentSlipReport(
+      officerID,
+      limit,
+      offset,
+      date,
+      search
+    );
 
     console.log("Successfully fetched farmer payments");
     res.json({
@@ -2326,32 +2398,26 @@ exports.getPaymentSlipReport = async (req, res) => {
   }
 };
 
-
-
 exports.getFarmerListReport = async (req, res) => {
   try {
     // Construct the full URL for logging purposes
     const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
     console.log("Request URL:", fullUrl);
 
-    const id = req.params.id
-    const userId = req.params.userId
+    const id = req.params.id;
+    const userId = req.params.userId;
     console.log(id);
 
     // Fetch farmer list report data from the DAO
     const cropList = await adminDao.getFarmerCropListReport(id);
     const userdetails = await adminDao.getReportfarmerDetails(userId);
 
-    
-
-
     console.log("Successfully fetched farmer list report");
     console.log(userdetails);
 
     // Respond with the farmer list report data
-    // 
+    //
     res.json({ crops: [cropList], farmer: [userdetails] });
-
   } catch (error) {
     console.error("Error fetching farmer list report:", error);
     return res.status(500).json({
@@ -2360,8 +2426,33 @@ exports.getFarmerListReport = async (req, res) => {
   }
 };
 
+// exports.getUserFeedbackDetails = async (req, res) => {
+//   try {
+//     // Construct the full URL for logging purposes
+//     const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
+//     console.log("Request URL:", fullUrl);
 
+//     // Log request parameters if needed
+//     console.log("Fetching user feedback details");
 
+//     // Fetch user feedback details from the DAO
+//     const feedbackDetails = await adminDao.getUserFeedbackDetails();
+//     const feedbackCount = await adminDao.getUserFeedbackCount();
+//     const deletedUserCount = await adminDao.getDeletedUserCount();
+//     console.log(feedbackCount);
+//     console.log("Successfully fetched user feedback details");
+//     console.log(feedbackDetails);
+//     console.log(deletedUserCount);
+
+//     // Respond with the feedback details
+//     res.json({ feedbackDetails, feedbackCount, deletedUserCount });
+//   } catch (error) {
+//     console.error("Error fetching user feedback details:", error);
+//     return res.status(500).json({
+//       error: "An error occurred while fetching user feedback details",
+//     });
+//   }
+// };
 
 exports.getUserFeedbackDetails = async (req, res) => {
   try {
@@ -2369,17 +2460,33 @@ exports.getUserFeedbackDetails = async (req, res) => {
     const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
     console.log("Request URL:", fullUrl);
 
-    // Log request parameters if needed
-    console.log("Fetching user feedback details");
+    // Extract pagination parameters (page and limit) from the query string
+    const { page = 1, limit = 10 } = req.query; // Set default values for page and limit
+    console.log("Pagination:", page, limit);
 
-    // Fetch user feedback details from the DAO
-    const feedbackDetails = await adminDao.getUserFeedbackDetails();
+    // Validate that page and limit are numbers
+    if (isNaN(page) || isNaN(limit) || page < 1 || limit < 1) {
+      return res.status(400).json({ error: "Invalid page or limit" });
+    }
+
+    // Fetch user feedback details from the DAO with pagination
+    const feedbackDetails = await adminDao.getUserFeedbackDetails(page, limit);
+    const feedbackCount = await adminDao.getUserFeedbackCount();
+    const deletedUserCount = await adminDao.getDeletedUserCount();
 
     console.log("Successfully fetched user feedback details");
     console.log(feedbackDetails);
+    console.log("Feedback Count:", feedbackCount);
+    console.log("Deleted User Count:", deletedUserCount);
 
-    // Respond with the feedback details
-    res.json(feedbackDetails);
+    // Respond with the paginated feedback details and count information
+    res.json({
+      feedbackDetails,
+      feedbackCount,
+      deletedUserCount,
+      page,
+      limit,
+    });
   } catch (error) {
     console.error("Error fetching user feedback details:", error);
     return res.status(500).json({
@@ -2388,14 +2495,47 @@ exports.getUserFeedbackDetails = async (req, res) => {
   }
 };
 
+exports.getNextOrderNumber = async (req, res) => {
+  try {
+    const nextOrderNumber = await adminDao.getNextOrderNumber(); // Call the DAO function
+    res.status(200).json({
+      success: true,
+      nextOrderNumber: nextOrderNumber,
+    });
+  } catch (error) {
+    console.error("Error fetching next order number:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to retrieve the next order number.",
+      error: error.message,
+    });
+  }
+};
 
+exports.getAllfeedackList = async (req, res) => {
+  try {
+    const feedbacks = await adminDao.getAllfeedackList();
+
+    console.log("Successfully fetched feedback list");
+    res.json({
+      feedbacks,
+    });
+  } catch (err) {
+    if (err.isJoi) {
+      // Validation error
+      return res.status(400).json({ error: err.details[0].message });
+    }
+    console.error("Error executing query:", err);
+    res.status(500).send("An error occurred while fetching data.");
+  }
+};
 
 exports.createFeedback = async (req, res) => {
   try {
     const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
     console.log("Request URL:", fullUrl);
     console.log(req.body);
-    
+
     await ValidateSchema.createfeedback.validateAsync(req.body);
 
     const {
@@ -2403,7 +2543,7 @@ exports.createFeedback = async (req, res) => {
       colour,
       feedbackEnglish,
       feedbackSinahala,
-      feedbackTamil
+      feedbackTamil,
     } = req.body;
 
     // Call DAO to save news and the image file as longblob
@@ -2415,10 +2555,11 @@ exports.createFeedback = async (req, res) => {
       feedbackTamil
     );
 
-    
-    return res
-      .status(201)
-      .json({ message: "feedback create successfully", id: feedBack, status: true });
+    return res.status(201).json({
+      message: "feedback create successfully",
+      id: feedBack,
+      status: true,
+    });
   } catch (err) {
     if (err.isJoi) {
       return res.status(400).json({ error: err.details[0].message });
@@ -2431,39 +2572,75 @@ exports.createFeedback = async (req, res) => {
   }
 };
 
-
-
-
-exports.getNextOrderNumber = async (req, res) => {
+exports.updateFeedbackOrder = async (req, res) => {
   try {
-    const nextOrderNumber = await adminDao.getNextOrderNumber(); // Call the DAO function
-    res.status(200).json({
-      success: true,
-      nextOrderNumber: nextOrderNumber,
+    const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
+    console.log("Request URL:", fullUrl);
+    const feedbacks = req.body.feedbacks; // Array of {id, orderNumber}
+    const result = await adminDao.updateFeedbackOrder(feedbacks);
+
+    if (result) {
+      return res.status(200).json({
+        status: true,
+        message: "Feedback order updated successfully",
+      });
+    }
+
+    return res.status(400).json({
+      status: false,
+      message: "Failed to update feedback order",
     });
   } catch (error) {
-    console.error('Error fetching next order number:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Failed to retrieve the next order number.',
-      error: error.message,
+    console.error("Error in updateFeedbackOrder:", error);
+    return res.status(500).json({
+      status: false,
+      message: "Internal server error",
     });
   }
 };
 
+exports.deleteFeedback = async (req, res) => {
+  const feedbackId = parseInt(req.params.id, 10);
 
+  if (isNaN(feedbackId)) {
+    return res.status(400).json({ error: "Invalid feedback ID" });
+  }
 
-exports.getAllfeedackList = async (req, res) => {
   try {
-    const feedbacks = await adminDao.getAllfeedackList();
+    // Retrieve the feedback's current orderNumber before deletion
+    const feedback = await adminDao.getFeedbackById(feedbackId);
+    if (!feedback) {
+      return res.status(404).json({ error: "Feedback not found" });
+    }
 
-    console.log("Successfully fetched admin roles");
+    const orderNumber = feedback.orderNumber;
+
+    // Delete feedback and update subsequent order numbers
+    const result = await adminDao.deleteFeedbackAndUpdateOrder(
+      feedbackId,
+      orderNumber
+    );
+
+    return res.status(200).json({
+      message: "Feedback deleted and order updated successfully",
+      result,
+    });
+  } catch (error) {
+    console.error("Error deleting feedback:", error);
+    return res.status(500).json({ error: "Internal server error" });
+  }
+};
+
+exports.getAllfeedackListForBarChart = async (req, res) => {
+  try {
+    const feedbacks = await adminDao.getAllfeedackListForBarChart();
+
+    console.log("Successfully fetched feedback list");
     res.json({
       feedbacks,
     });
   } catch (err) {
     if (err.isJoi) {
-      // Validation error
       return res.status(400).json({ error: err.details[0].message });
     }
     console.error("Error executing query:", err);

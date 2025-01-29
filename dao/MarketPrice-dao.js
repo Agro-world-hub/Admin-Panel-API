@@ -57,20 +57,19 @@ exports.createxlhistory = (xlName) => {
 //     });
 //   };
 
-exports.insertMarketPriceXLSXData = (xlindex, data, createdBy) => {
+exports.insertMarketPriceXLSXData = (xlindex, data) => {
   return new Promise((resolve, reject) => {
     // Step 1: Insert data into the marketprice table
     const marketPriceSQL = `
       INSERT INTO marketprice 
-      (varietyId, xlindex, grade, price, createdBy) 
+      (varietyId, xlindex, grade, price) 
       VALUES ?`;
 
     const marketPriceValues = data.map((row) => [
       row["Variety Id"],
       xlindex,
       row["Grade"],
-      row["Price"],
-      createdBy,
+      row["Price"]
     ]);
 
     collectionofficer.query(marketPriceSQL, [marketPriceValues], (err, marketPriceResult) => {

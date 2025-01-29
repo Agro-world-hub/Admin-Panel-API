@@ -1,3 +1,4 @@
+const seedAdmin = require('./table-seeds/admin-seed');
 const seedPlantCare = require('./table-seeds/plantcareSeed');
 const seedCollection = require('./table-seeds/collection-seed');
 const seedMarketPlace = require('./table-seeds/marketPlace-seed');
@@ -12,6 +13,14 @@ const {createUserActiveStatusEvent} = require('./events/events');
 
 const runSeeds = async () => {
   try {
+
+
+    console.log('Seeding Admin Database ...');
+    await seedAdmin();
+    console.log('===========================================');
+
+
+
     console.log('Seeding PlantCare Database ...');
     await seedPlantCare();
     console.log('===========================================');

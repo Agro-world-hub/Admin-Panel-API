@@ -1,4 +1,5 @@
 const {
+  admin,
   plantcare,
   collectionofficer,
   marketPlace,
@@ -8,10 +9,30 @@ const path = require("path");
 const { Upload } = require("@aws-sdk/lib-storage");
 const Joi = require("joi");
 
+exports.getPermissionsByRole = (role, position) => {
+  return new Promise((resolve, reject) => {
+    const sql = `
+      SELECT rf.featureId, fe.name
+      FROM rolefeatures rf
+      JOIN features fe ON rf.featureId  = fe.id
+      WHERE roleId = ? AND positionId = ?`;
+
+    admin.query(sql, [role, position], (err, results) => {
+      if (err) {
+        reject(err);
+      } else {
+        // Map the results to return an array of permission names
+        const permissions = results.map((row) => row.name);
+        resolve(permissions);
+      }
+    });
+  });
+};
+
 exports.loginAdmin = (email) => {
   return new Promise((resolve, reject) => {
     const sql = "SELECT * FROM adminusers WHERE mail = ?";
-    plantcare.query(sql, [email], (err, results) => {
+    admin.query(sql, [email], (err, results) => {
       if (err) {
         reject(err);
       } else {
@@ -52,11 +73,11 @@ exports.getAllAdminUsers = (limit, offset, role, search) => {
     dataSql += ` ORDER BY AU.created_at DESC LIMIT ? OFFSET ? `;
     dataParms.push(limit, offset);
 
-    plantcare.query(countSql, dataParms, (countErr, countResults) => {
+    admin.query(countSql, dataParms, (countErr, countResults) => {
       if (countErr) {
         reject(countErr);
       } else {
-        plantcare.query(dataSql, dataParms, (dataErr, dataResults) => {
+        admin.query(dataSql, dataParms, (dataErr, dataResults) => {
           if (dataErr) {
             reject(dataErr);
           } else {
@@ -168,13 +189,12 @@ exports.createNews = async (
   descriptionTamil,
   imageBuffer, // accept the image buffer
   status,
-  createdBy,
   publishDate,
   expireDate
 ) => {
   return new Promise((resolve, reject) => {
     const sql =
-      "INSERT INTO content (titleEnglish, titleSinhala, titleTamil, descriptionEnglish, descriptionSinhala, descriptionTamil, image, status, createdBy,publishDate, expireDate) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+      "INSERT INTO content (titleEnglish, titleSinhala, titleTamil, descriptionEnglish, descriptionSinhala, descriptionTamil, image, status,publishDate, expireDate) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
     const values = [
       titleEnglish,
       titleSinhala,
@@ -184,7 +204,6 @@ exports.createNews = async (
       descriptionTamil,
       imageBuffer, // pass the buffer as image
       status,
-      createdBy,
       publishDate,
       expireDate,
     ];
@@ -744,7 +763,7 @@ exports.deleteAdminUserById = (id) => {
   const sql = "DELETE FROM adminusers WHERE id = ?";
 
   return new Promise((resolve, reject) => {
-    plantcare.query(sql, [id], (err, results) => {
+    admin.query(sql, [id], (err, results) => {
       if (err) {
         reject("Error executing delete query: " + err);
       } else {
@@ -754,17 +773,18 @@ exports.deleteAdminUserById = (id) => {
   });
 };
 
-exports.updateAdminUserById = (id, mail, userName, role) => {
+exports.updateAdminUserById = (id, mail, userName, role, position) => {
   const sql = `
         UPDATE adminusers 
         SET 
             mail = ?, 
             userName = ?, 
-            role = ? 
+            role = ?,
+            position = ?
         WHERE id = ?`;
 
   return new Promise((resolve, reject) => {
-    plantcare.query(sql, [mail, userName, role, id], (err, results) => {
+    admin.query(sql, [mail, userName, role, id, position], (err, results) => {
       if (err) {
         reject("Error executing update query: " + err);
       } else {
@@ -774,20 +794,21 @@ exports.updateAdminUserById = (id, mail, userName, role) => {
   });
 };
 
-exports.updateAdminUser = (id, mail, userName, role) => {
+exports.updateAdminUser = (id, mail, userName, role, position) => {
   return new Promise((resolve, reject) => {
     const sql = `
             UPDATE adminusers 
             SET 
                 mail = ?, 
                 userName = ?, 
-                role = ?
+                role = ?,
+                position = ?
             WHERE id = ?
         `;
 
-    const values = [mail, userName, role, id];
+    const values = [mail, userName, role, position, id];
 
-    plantcare.query(sql, values, (err, results) => {
+    admin.query(sql, values, (err, results) => {
       if (err) {
         reject(err);
       } else {
@@ -801,7 +822,7 @@ exports.getAdminUserById = (id) => {
   return new Promise((resolve, reject) => {
     const sql = "SELECT * FROM adminusers WHERE id = ?";
 
-    plantcare.query(sql, [id], (err, results) => {
+    admin.query(sql, [id], (err, results) => {
       if (err) {
         reject(err);
       } else {
@@ -814,7 +835,7 @@ exports.getAdminUserById = (id) => {
 exports.getAdminPasswordById = (id) => {
   return new Promise((resolve, reject) => {
     const sql = "SELECT password FROM adminusers WHERE id = ?";
-    plantcare.query(sql, [id], (err, results) => {
+    admin.query(sql, [id], (err, results) => {
       if (err) {
         reject(err);
       } else {
@@ -828,7 +849,7 @@ exports.getAdminPasswordById = (id) => {
 exports.updateAdminPasswordById = (id, newPassword) => {
   return new Promise((resolve, reject) => {
     const sql = "UPDATE adminusers SET password = ? WHERE id = ?";
-    plantcare.query(sql, [newPassword, id], (err, results) => {
+    admin.query(sql, [newPassword, id], (err, results) => {
       if (err) {
         reject(err);
       } else {
@@ -1000,17 +1021,18 @@ exports.getUserById = (userId) => {
 exports.createAdmin = (adminData, hashedPassword) => {
   return new Promise((resolve, reject) => {
     const sql = `
-            INSERT INTO adminusers (mail, role, userName, password) 
-            VALUES (?, ?, ?, ?)
+            INSERT INTO adminusers (mail, role, position, userName, password) 
+            VALUES (?, ?, ?, ?, ?)
         `;
     const values = [
       adminData.mail,
       adminData.role,
+      adminData.position,
       adminData.userName,
       hashedPassword,
     ];
 
-    plantcare.query(sql, values, (err, results) => {
+    admin.query(sql, values, (err, results) => {
       if (err) {
         return reject(err); // Pass the error back if it occurs
       }
@@ -1653,7 +1675,21 @@ exports.getAllRoles = () => {
   return new Promise((resolve, reject) => {
     const sql = "SELECT * FROM adminroles";
 
-    plantcare.query(sql, (err, results) => {
+    admin.query(sql, (err, results) => {
+      if (err) {
+        return reject(err); // Reject promise if an error occurs
+      }
+
+      resolve(results); // No need to wrap in arrays, return results directly
+    });
+  });
+};
+
+exports.getAllPosition = () => {
+  return new Promise((resolve, reject) => {
+    const sql = "SELECT * FROM adminposition";
+
+    admin.query(sql, (err, results) => {
       if (err) {
         return reject(err); // Reject promise if an error occurs
       }
@@ -2124,86 +2160,98 @@ exports.insertUserXLSXData = (data) => {
 // exports.getUserFeedbackDetails = () => {
 //   return new Promise((resolve, reject) => {
 //     const sql = `
-//       SELECT
-//         du.firstName,
-//         du.lastName,
-//         du.createdAt AS userCreatedAt,
-//         fl.feedback,
-//         uf.createdAt AS feedbackCreatedAt
-//       FROM
-//         userfeedback uf
-//       INNER JOIN
-//         feedbacklist fl
-//       ON
-//         uf.feedbackId = fl.id
-//       INNER JOIN
-//         deleteduser du
-//       ON
-//         uf.deletedUserId = du.id
+// SELECT
+//     du.firstName,
+//     du.lastName,
+//     du.createdAt AS deletedUserCreatedAt,
+//     GROUP_CONCAT(fl.orderNumber ORDER BY fl.orderNumber ASC) AS orderNumbers,
+//     GROUP_CONCAT(fl.feedbackEnglish ORDER BY fl.orderNumber ASC) AS feedbacks
+// FROM
+//     userfeedback uf
+// JOIN
+//     deleteduser du ON uf.deletedUserId = du.id
+// JOIN
+//     feedbacklist fl ON uf.feedbackId = fl.id
+// GROUP BY
+//     du.firstName, du.lastName, du.createdAt
+// ORDER BY
+//     du.createdAt;
+
 //     `;
+
+//     console.log("Executing full SQL query:", sql);
 
 //     plantcare.query(sql, (err, results) => {
 //       if (err) {
-//         return reject(err); // Handle error in the promise
+//         console.error("Error details:", err); // Log the full error details
+//         return reject(
+//           new Error("An error occurred while fetching user feedback details")
+//         );
 //       }
 
-//       // Return the joined result
-//       resolve(results);
+//       console.log("Query Results:", results); // Log the results for debugging
+//       resolve(results); // Resolve the promise with the results
 //     });
 //   });
 // };
 
-exports.getUserFeedbackDetails = () => {
+exports.getUserFeedbackDetails = (page, limit) => {
   return new Promise((resolve, reject) => {
+    const offset = (page - 1) * limit; // Calculate the offset for pagination
+
     const sql = `
-      SELECT 
-        uf.feedbackId,
-        GROUP_CONCAT(DISTINCT CONCAT(du.firstName, ' ', du.lastName)) AS userNames,
-        GROUP_CONCAT(DISTINCT du.createdAt ORDER BY du.createdAt ASC) AS userCreatedAt,
-        fl.feedback,
-        GROUP_CONCAT(uf.createdAt ORDER BY uf.createdAt ASC) AS feedbackCreatedAt
-      FROM 
+    SELECT 
+        du.firstName,
+        du.lastName,
+        du.createdAt AS deletedUserCreatedAt,
+        GROUP_CONCAT(fl.orderNumber ORDER BY fl.orderNumber ASC) AS orderNumbers,
+        GROUP_CONCAT(fl.feedbackEnglish ORDER BY fl.orderNumber ASC) AS feedbacks
+    FROM 
         userfeedback uf
-      INNER JOIN 
-        feedbacklist fl 
-      ON 
-        uf.feedbackId = fl.id
-      INNER JOIN 
-        deleteduser du 
-      ON 
-        uf.deletedUserId = du.id
-      GROUP BY 
-        uf.feedbackId, fl.feedback
+    JOIN 
+        deleteduser du ON uf.deletedUserId = du.id
+    JOIN 
+        feedbacklist fl ON uf.feedbackId = fl.id
+    GROUP BY 
+        du.firstName, du.lastName, du.createdAt
+    ORDER BY 
+        du.createdAt
+    LIMIT ? OFFSET ?;
     `;
 
-    plantcare.query(sql, (err, results) => {
+    console.log("Executing paginated SQL query:", sql);
+
+    plantcare.query(sql, [limit, offset], (err, results) => {
       if (err) {
-        return reject(err); // Handle error in the promise
+        console.error("Error details:", err); // Log the full error details
+        return reject(
+          new Error("An error occurred while fetching user feedback details")
+        );
       }
 
-      // Return the grouped result
-      resolve(results);
+      console.log("Query Results:", results); // Log the results for debugging
+      resolve(results); // Resolve the promise with the results
     });
   });
 };
-
-
 
 exports.createFeedback = async (
   orderNumber,
-  colourcode,
-  feedback
+  feedbackEnglish,
+  feedbackSinahala,
+  feedbackTamil
 ) => {
   return new Promise((resolve, reject) => {
     const sql =
-      "INSERT INTO feedbacklist (orderNumber, colour, feedback) VALUES (?, ?, ?)";
+      "INSERT INTO feedbacklist (orderNumber, feedbackEnglish, feedbackSinahala, feedbackTamil) VALUES (?, ?, ?, ?)";
     const values = [
       orderNumber,
-      colourcode,
-      feedback
+      feedbackEnglish,
+      feedbackSinahala,
+      feedbackTamil,
     ];
 
-    plantcare.query(sql, (err, results) => {
+    plantcare.query(sql, values, (err, results) => {
       if (err) {
         return reject(err); // Handle error in the promise
       }
@@ -2213,7 +2261,6 @@ exports.createFeedback = async (
     });
   });
 };
-
 
 exports.getNextOrderNumber = () => {
   return new Promise((resolve, reject) => {
@@ -2232,11 +2279,9 @@ exports.getNextOrderNumber = () => {
   });
 };
 
-
-
 exports.getAllfeedackList = () => {
   return new Promise((resolve, reject) => {
-    const sql = "SELECT * FROM feedbacklist";
+    const sql = "SELECT * FROM feedbacklist ORDER BY orderNumber";
 
     plantcare.query(sql, (err, results) => {
       if (err) {
@@ -2244,6 +2289,156 @@ exports.getAllfeedackList = () => {
       }
 
       resolve(results); // No need to wrap in arrays, return results directly
+    });
+  });
+};
+
+exports.getUserFeedbackCount = () => {
+  return new Promise((resolve, reject) => {
+    const sql = `
+SELECT COUNT (*) AS Total FROM userfeedback`;
+
+    console.log("Executing full SQL query:", sql);
+
+    plantcare.query(sql, (err, results) => {
+      if (err) {
+        console.error("Error details:", err); // Log the full error details
+        return reject(
+          new Error("An error occurred while fetching user feedback details")
+        );
+      }
+
+      console.log("Query Results:", results); // Log the results for debugging
+      resolve(results[0]); // Resolve the promise with the results
+    });
+  });
+};
+
+exports.getDeletedUserCount = () => {
+  return new Promise((resolve, reject) => {
+    const sql = `
+      SELECT COUNT(*) AS Total FROM deleteduser`;
+
+    console.log("Executing full SQL query:", sql);
+
+    plantcare.query(sql, (err, results) => {
+      if (err) {
+        console.error("Error details:", err); // Log the full error details
+        return reject(
+          new Error("An error occurred while fetching deleted user count")
+        );
+      }
+
+      console.log("Query Results:", results); // Log the results for debugging
+      resolve(results[0]); // Resolve the promise with the results
+    });
+  });
+};
+
+exports.updateFeedbackOrder = async (feedbacks) => {
+  return new Promise((resolve, reject) => {
+    const sql = "UPDATE feedbacklist SET orderNumber = ? WHERE id = ?";
+
+    const queries = feedbacks.map((feedback) => {
+      return new Promise((resolveInner, rejectInner) => {
+        plantcare.query(
+          sql,
+          [feedback.orderNumber, feedback.id],
+          (err, results) => {
+            if (err) {
+              return rejectInner(err);
+            }
+            resolveInner(results);
+          }
+        );
+      });
+    });
+    Promise.all(queries)
+      .then((results) => resolve(results))
+      .catch((err) => reject(err));
+  });
+};
+
+exports.getFeedbackById = async (feedbackId) => {
+  return new Promise((resolve, reject) => {
+    const sql = "SELECT * FROM feedbacklist WHERE id = ?";
+    plantcare.query(sql, [feedbackId], (err, results) => {
+      if (err) {
+        return reject(err);
+      }
+      resolve(results[0]);
+    });
+  });
+};
+
+exports.deleteFeedbackAndUpdateOrder = async (feedbackId, orderNumber) => {
+  return new Promise((resolve, reject) => {
+    const deleteSql = "DELETE FROM feedbacklist WHERE id = ?";
+    const updateSql =
+      "UPDATE feedbacklist SET orderNumber = orderNumber - 1 WHERE orderNumber > ?";
+
+    plantcare.query(deleteSql, [feedbackId], (deleteErr, deleteResults) => {
+      if (deleteErr) {
+        return reject(deleteErr);
+      }
+      plantcare.query(updateSql, [orderNumber], (updateErr, updateResults) => {
+        if (updateErr) {
+          return reject(updateErr);
+        }
+
+        resolve({
+          deleteResults,
+          updateResults,
+        });
+      });
+    });
+  });
+};
+
+exports.getAllfeedackListForBarChart = () => {
+  return new Promise((resolve, reject) => {
+    const sql = `
+      SELECT 
+        fl.orderNumber,
+        COUNT(uf.feedbackId) AS feedbackCount
+      FROM 
+        feedbacklist fl
+      LEFT JOIN 
+        userfeedback uf
+      ON 
+        fl.id = uf.feedbackId
+      GROUP BY 
+        fl.orderNumber
+      ORDER BY 
+        fl.orderNumber;
+    `;
+
+    plantcare.query(sql, (err, results) => {
+      if (err) {
+        return reject(err);
+      }
+
+      resolve(results);
+    });
+  });
+};
+
+exports.getMeById = (userId) => {
+  return new Promise((resolve, reject) => {
+    const sql = `
+      SELECT id, mail, userName, role
+      FROM adminusers
+      WHERE id = ?`;
+
+    admin.query(sql, [userId], (err, results) => {
+      if (err) {
+        reject(err);
+      } else if (results.length === 0) {
+        reject(new Error("User not found."));
+      } else {
+        // Return the user object
+        resolve(results[0]);
+      }
     });
   });
 };

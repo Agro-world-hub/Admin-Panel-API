@@ -1,6 +1,4 @@
 const { createUsersTable } = require('../tables/plantCare-table');
-const { createAdminUserRolesTable } = require('../tables/plantCare-table');
-const { createAdminUsersTable } = require('../tables/plantCare-table');
 const { createContentTable } = require('../tables/plantCare-table');
 const { createCropGroup } = require('../tables/plantCare-table');
 const { createCropVariety } = require('../tables/plantCare-table');
@@ -44,11 +42,6 @@ const seedPlantCare = async () => {
     const messagecreateUsersTable = await createUsersTable();
     console.log(messagecreateUsersTable);
 
-    const messagecreateAdminUserRolesTables = await createAdminUserRolesTable();
-    console.log(messagecreateAdminUserRolesTables);
-
-    const messagecreateAdminUsersTable = await createAdminUsersTable();
-    console.log(messagecreateAdminUsersTable);
 
     const messagecreateContentTable = await createContentTable();
     console.log(messagecreateContentTable);
@@ -140,10 +133,7 @@ const seedPlantCare = async () => {
 
 
     
-    const messageInsertRoles = await insertRoles();
-    console.log(messageInsertRoles);
-    const messageAdminCreate = await createSuperAdmin();
-    console.log(messageAdminCreate);
+    
   } catch (err) {
     console.error('Error seeding seedPlantCare:', err);
   }
