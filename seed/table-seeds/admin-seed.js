@@ -1,5 +1,6 @@
 const { createAdminUserRolesTable } = require('../tables/admin-table');
 const { createAdminUserPositionTable } = require('../tables/admin-table');
+const { createFeaturesCategoryTable } = require('../tables/admin-table');
 const { createFeaturesTable } = require('../tables/admin-table');
 const { createAdminUsersTable } = require('../tables/admin-table');
 const { createRoleFeatures } = require('../tables/admin-table');
@@ -17,6 +18,9 @@ const seedAdmin = async () => {
 
     const messageCreateAdminUserPositionTable = await createAdminUserPositionTable();
     console.log(messageCreateAdminUserPositionTable);
+
+    const messageCreateFeaturesCategoryTable = await createFeaturesCategoryTable();
+    console.log(messageCreateFeaturesCategoryTable);
 
     const messageCreateFeaturesTable = await createFeaturesTable();
     console.log(messageCreateFeaturesTable);

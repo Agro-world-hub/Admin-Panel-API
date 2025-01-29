@@ -1142,15 +1142,18 @@ exports.updatePlantCareUser = async (req, res) => {
       return res.status(404).json({ message: "PlantCare User not found" });
     }
 
-    const imageUrl = user.profileImage;
 
-    await deleteFromS3(imageUrl);
-    console.log(imageUrl);
+
+    if (user.profileImage) {
+      const imageUrl = user.profileImage;
+      await deleteFromS3(imageUrl);
+    }
+    
 
     if (req.file) {
       const fileBuffer = req.file.buffer;
       const fileName = req.file.originalname;
-      image = await uploadFileToS3(
+      profileImage = await uploadFileToS3(
         fileBuffer,
         fileName,
         "users/profile-images"
@@ -1164,7 +1167,7 @@ exports.updatePlantCareUser = async (req, res) => {
       NICnumber,
       district,
       membership,
-      image,
+      profileImage,
     };
 
     const result = await adminDao.updatePlantCareUserById(userData, id);
@@ -2540,7 +2543,6 @@ exports.createFeedback = async (req, res) => {
 
     const {
       orderNumber,
-      colour,
       feedbackEnglish,
       feedbackSinahala,
       feedbackTamil,
@@ -2549,7 +2551,6 @@ exports.createFeedback = async (req, res) => {
     // Call DAO to save news and the image file as longblob
     const feedBack = await adminDao.createFeedback(
       orderNumber,
-      colour,
       feedbackEnglish,
       feedbackSinahala,
       feedbackTamil

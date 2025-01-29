@@ -39,11 +39,34 @@ const createAdminUserPositionTable = () => {
 };
 
 
+const createFeaturesCategoryTable = () => {
+    const sql = `
+    CREATE TABLE IF NOT EXISTS featurecategory (
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      category VARCHAR(100) DEFAULT NULL
+    )
+  `;
+    return new Promise((resolve, reject) => {
+        admin.query(sql, (err, result) => {
+            if (err) {
+                reject('Error creating featurecategory table: ' + err);
+            } else {
+                resolve('featurecategory table created successfully.');
+            }
+        });
+    });
+};
+
+
 const createFeaturesTable = () => {
     const sql = `
     CREATE TABLE IF NOT EXISTS features (
       id INT AUTO_INCREMENT PRIMARY KEY,
-      name VARCHAR(100) DEFAULT NULL
+      name VARCHAR(100) DEFAULT NULL,
+      category INT(11) DEFAULT NULL,
+      FOREIGN KEY (category) REFERENCES featurecategory(id)
+        ON DELETE CASCADE
+        ON UPDATE CASCADE
     )
   `;
     return new Promise((resolve, reject) => {
@@ -119,9 +142,14 @@ const createRoleFeatures = () => {
 
 
 
+
+
+
+
 module.exports = {
     createAdminUserRolesTable,
     createAdminUserPositionTable,
+    createFeaturesCategoryTable,
     createFeaturesTable,
     createAdminUsersTable,
     createRoleFeatures

@@ -74,7 +74,101 @@ const createSalesAgentStarTable = () => {
 
 
 
+
+
+const createCustomerTable = () => {
+    const sql = `
+    CREATE TABLE IF NOT EXISTS customer (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    cusId VARCHAR(15) UNIQUE DEFAULT NULL,
+    title VARCHAR(10) DEFAULT NULL,
+    firstName VARCHAR(50) DEFAULT NULL,
+    lastName VARCHAR(50) DEFAULT NULL,
+    phoneNumber VARCHAR(20) DEFAULT NULL,
+    email VARCHAR(100) UNIQUE DEFAULT NULL,
+    buildingType VARCHAR(20) DEFAULT NULL  
+)
+  `;
+    return new Promise((resolve, reject) => {
+        dash.query(sql, (err, result) => {
+            if (err) {
+                reject('Error creating customer table: ' + err);
+            } else {
+                resolve('customer table created request successfully.');
+            }
+        });
+    });
+};
+
+
+
+
+
+const createHouseTable  = () => {
+    const sql = `
+    CREATE TABLE IF NOT EXISTS house (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    customerId INT DEFAULT NULL,
+    houseNo VARCHAR(50) DEFAULT NULL,
+    streetName VARCHAR(100) DEFAULT NULL,
+    city VARCHAR(50) DEFAULT NULL,
+    FOREIGN KEY (customerId) REFERENCES customer(id) 
+        ON DELETE CASCADE
+        ON UPDATE CASCADE
+)
+  `;
+    return new Promise((resolve, reject) => {
+        dash.query(sql, (err, result) => {
+            if (err) {
+                reject('Error creating house table: ' + err);
+            } else {
+                resolve('house table created request successfully.');
+            }
+        });
+    });
+};
+
+
+
+
+
+
+
+const createApartmentTable = () => {
+    const sql = `
+    CREATE TABLE IF NOT EXISTS apartment (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    customerId INT DEFAULT NULL,
+    buildingNo VARCHAR(50) DEFAULT NULL,
+    buildingName VARCHAR(100) DEFAULT NULL,
+    unitNo VARCHAR(50) DEFAULT NULL,
+    floorNo VARCHAR(10) DEFAULT NULL,
+    houseNo VARCHAR(50) DEFAULT NULL,
+    streetName VARCHAR(100) DEFAULT NULL,
+    city VARCHAR(50) DEFAULT NULL,
+    FOREIGN KEY (customerId) REFERENCES customer(id) 
+        ON DELETE CASCADE
+        ON UPDATE CASCADE
+)
+  `;
+    return new Promise((resolve, reject) => {
+        dash.query(sql, (err, result) => {
+            if (err) {
+                reject('Error creating apartment table: ' + err);
+            } else {
+                resolve('apartment table created request successfully.');
+            }
+        });
+    });
+};
+
+
+
+
 module.exports = {
     createSalesAgentTable,
     createSalesAgentStarTable,
+    createCustomerTable,
+    createHouseTable,
+    createApartmentTable
 };

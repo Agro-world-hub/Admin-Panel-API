@@ -2,7 +2,15 @@ const { admin, plantcare, collectionofficer, marketPlace, dash } = require('../s
 
 exports.getAllFeatures = () => {
     return new Promise((resolve, reject) => {
-      const sql = "SELECT * FROM features";
+      const sql = `
+                  SELECT 
+                    fe.id, 
+                    fe.name,
+                    fc.category
+                  FROM 
+                    features fe
+                  JOIN 
+                    featurecategory fc ON fe.category = fc.id`;
   
       admin.query(sql, (err, results) => {
         if (err) {
