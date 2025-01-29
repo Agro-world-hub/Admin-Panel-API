@@ -8,7 +8,7 @@ const upload = require("../middlewares/uploadMiddleware");
 const uploadfile = multer({ dest: 'uploads/' });
 const path = require("path");
 const fs = require('fs');
-const db = require('../startup/database'); // Adjust this to your database connection
+const {plantcare} = require('../startup/database'); // Adjust this to your database connection
 const XLSX = require('xlsx');
 
 
@@ -61,7 +61,7 @@ const getCropVarietyData = () => {
         cropgroup ON cropvariety.cropGroupId = cropgroup.id
     `;
     return new Promise((resolve, reject) => {
-      db.query(sql, (err, results) => {
+      plantcare.query(sql, (err, results) => {
         if (err) {
           reject(err);
         } else {
