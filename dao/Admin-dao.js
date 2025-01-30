@@ -52,9 +52,10 @@ exports.getAllAdminUsers = (limit, offset, role, search) => {
 
     const dataParms = [];
     let dataSql = `
-      SELECT AU.id, AU.mail, AU.userName, AR.role  
+      SELECT AU.id, AU.mail, AU.userName, AR.role, AP.positions  
       FROM adminusers AU 
-      JOIN adminroles AR ON AU.role = AR.id 
+      JOIN adminroles AR ON AU.role = AR.id
+      JOIN adminposition AP ON AU.position = AP.id
       WHERE 1=1
     `;
 
