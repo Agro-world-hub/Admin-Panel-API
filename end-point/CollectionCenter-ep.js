@@ -182,9 +182,14 @@ exports.createCollectionCenter = async (req, res) => {
       return res.json({ message: "This RegCode allrady exist!", status: false })
     }
 
-    const result = await CollectionCenterDao.addCollectionCenter(regCode, centerName, contact01, contact02, buildingNumber, street, city, district, province, country, contact01Code, contact02Code, companies);
+    const result = await CollectionCenterDao.addCollectionCenter(regCode, centerName, contact01, contact02, buildingNumber, street, city, district, province, country, contact01Code, contact02Code);
 
-    console.log("Crop Collection Center creation success");
+    if (companies && companies.length > 0) {
+      const centerId = result.insertId; // Assuming the ID of the new collection center is returned in `result.insertId`
+      await CollectionCenterDao.addCompaniesToCenter(centerId, companies);
+    }
+
+    console.log(" Collection Center creation success");
     return res.status(201).json({ result: result, status: true });
   } catch (err) {
     if (err.isJoi) {
@@ -270,23 +275,43 @@ exports.updateCollectionCenter = async (req, res) => {
       district,
       province,
       country,
-      companies
-    } = req.body
-    
+      companies // List of company IDs
+    } = req.body;
 
+    // Check if the RegCode already exists
+    // if (regCode) {
+    //   const existRegCode = await CollectionCenterDao.CheckRegCodeExistDAO(regCode);
+    //   if (existRegCode.length > 0) {
+    //     return res.json({ message: "This RegCode already exists!", status: false });
+    //   }
+    // }
 
-    if (regCode) {
-      const existRegCode = await CollectionCenterDao.CheckRegCodeExistDAO(regCode);
-      if (existRegCode.length > 0) {
-        return res.json({ message: "This RegCode allrady exist!", status: false })
-      }
+    // Step 1: Update the collectioncenter table
+    const result = await CollectionCenterDao.updateCollectionCenter(
+      regCode,
+      centerName,
+      code1,
+      contact01,
+      code2,
+      contact02,
+      buildingNumber,
+      street,
+      city,
+      district,
+      province,
+      country,
+      collectionID
+    );
+
+    // Step 2: Delete existing company associations from companycenter table
+    await CollectionCenterDao.deleteCompaniesFromCompanyCenter(collectionID);
+
+    // Step 3: Insert new companies into the companycenter table
+    if (companies && companies.length > 0) {
+      await CollectionCenterDao.insertCompaniesIntoCompanyCenter(companies, collectionID);
     }
 
-
-
-    const result = await CollectionCenterDao.updateCollectionCenter(regCode, centerName,  code1, contact01, code2, contact02, buildingNumber, street, city, district, province, country, companies, collectionID);
-
-    console.log("Crop Collection Center update success");
+    console.log("Collection Center update successful");
     return res.status(201).json({ result: result, status: true });
   } catch (err) {
     if (err.isJoi) {
@@ -295,9 +320,10 @@ exports.updateCollectionCenter = async (req, res) => {
     console.error("Error executing query:", err);
     return res
       .status(500)
-      .json({ error: "An error occurred while creating Crop Calendar tasks" });
+      .json({ error: "An error occurred while updating the Collection Center" });
   }
 };
+
 
 
 

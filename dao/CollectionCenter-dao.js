@@ -18,13 +18,12 @@ exports.addCollectionCenter = (
   province,
   country,
   contact01Code,
-  contact02Code,
-  companies
+  contact02Code
 ) => {
   return new Promise((resolve, reject) => {
     const sql = `INSERT INTO collectioncenter 
-      (regCode, centerName,code1, contact01, code2, contact02, buildingNumber, street, city, district, province, country, companies) 
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?,?,?)`;
+      (regCode, centerName,code1, contact01, code2, contact02, buildingNumber, street, city, district, province, country) 
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?,?)`;
 
     const values = [
       regCode,
@@ -38,8 +37,7 @@ exports.addCollectionCenter = (
       city,
       district,
       province,
-      country,
-      companies,
+      country
     ];
 
     collectionofficer.query(sql, values, (err, results) => {
@@ -52,6 +50,27 @@ exports.addCollectionCenter = (
     });
   });
 };
+
+
+exports.addCompaniesToCenter = (centerId, companies) => {
+  return new Promise((resolve, reject) => {
+    const sql = `INSERT INTO companycenter (centerId, companyId) VALUES (?, ?)`;
+
+    companies.forEach((companyId) => {
+      const values = [centerId, companyId];
+      collectionofficer.query(sql, values, (err, results) => {
+        if (err) {
+          console.error("Error associating company with center:", err);
+          return reject(err);
+        }
+        console.log("Company associated successfully:", results);
+      });
+    });
+
+    resolve();
+  });
+};
+
 
 exports.GetAllCenterDAO = () => {
   return new Promise((resolve, reject) => {
@@ -251,9 +270,31 @@ exports.getAllCenterPage = (limit, offset, searchItem) => {
   });
 };
 
+// exports.getCenterByIdDAO = (id) => {
+//   return new Promise((resolve, reject) => {
+//     const sql = "SELECT *,  FROM collectioncenter JOIN  WHERE id = ?";
+//     collectionofficer.query(sql, [id], (err, results) => {
+//       if (err) {
+//         return reject(err);
+//       }
+//       resolve(results);
+//     });
+//   });
+// };
+
 exports.getCenterByIdDAO = (id) => {
   return new Promise((resolve, reject) => {
-    const sql = "SELECT * FROM collectioncenter WHERE id = ?";
+    const sql = `
+      SELECT 
+        c.*, 
+        GROUP_CONCAT(co.companyNameEnglish) AS companies
+      FROM collectioncenter c
+      LEFT JOIN companycenter cc ON c.id = cc.centerId
+      LEFT JOIN company co ON cc.companyId = co.id
+      WHERE c.id = ?
+      GROUP BY c.id
+    `;
+    
     collectionofficer.query(sql, [id], (err, results) => {
       if (err) {
         return reject(err);
@@ -262,6 +303,8 @@ exports.getCenterByIdDAO = (id) => {
     });
   });
 };
+
+
 
 exports.updateCollectionCenter = (
   regCode,
@@ -276,7 +319,6 @@ exports.updateCollectionCenter = (
   district,
   province,
   country,
-  companies,
   collectionID
 ) => {
   return new Promise((resolve, reject) => {
@@ -293,8 +335,7 @@ exports.updateCollectionCenter = (
       city	 = ?,
       district = ?,
       province  = ?,
-      country = ?,
-      companies = ?
+      country = ?
      WHERE id = ?
       `;
 
@@ -311,7 +352,6 @@ exports.updateCollectionCenter = (
       district,
       province,
       country,
-      companies,
       collectionID,
     ];
 
@@ -325,6 +365,40 @@ exports.updateCollectionCenter = (
     });
   });
 };
+
+
+
+exports.deleteCompaniesFromCompanyCenter = (collectionID) => {
+  return new Promise((resolve, reject) => {
+    const sql = "DELETE FROM companycenter WHERE centerId = ?";
+    collectionofficer.query(sql, [collectionID], (err, results) => {
+      if (err) {
+        console.error("Error deleting companies from companycenter:", err);
+        return reject(err);
+      }
+      console.log("Deleted companies successfully from companycenter:", results);
+      resolve(results);
+    });
+  });
+};
+
+
+exports.insertCompaniesIntoCompanyCenter = (companyIds, collectionID) => {
+  return new Promise((resolve, reject) => {
+    const values = companyIds.map(companyId => [collectionID, companyId]);
+    const sql = "INSERT INTO companycenter (centerId, companyId) VALUES ?";
+
+    collectionofficer.query(sql, [values], (err, results) => {
+      if (err) {
+        console.error("Error inserting companies into companycenter:", err);
+        return reject(err);
+      }
+      console.log("Inserted companies successfully into companycenter:", results);
+      resolve(results);
+    });
+  });
+};
+
 
 exports.sendComplainReply = (complainId, reply) => {
   return new Promise((resolve, reject) => {
