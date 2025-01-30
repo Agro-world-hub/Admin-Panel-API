@@ -2199,6 +2199,9 @@ exports.getUserFeedbackDetails = (page, limit) => {
   return new Promise((resolve, reject) => {
     const offset = (page - 1) * limit; // Calculate the offset for pagination
 
+    const limitInt = parseInt(limit, 10);
+    const offsetInt = parseInt(offset, 10);
+
     const sql = `
     SELECT 
         du.firstName,
@@ -2221,7 +2224,7 @@ exports.getUserFeedbackDetails = (page, limit) => {
 
     console.log("Executing paginated SQL query:", sql);
 
-    plantcare.query(sql, [limit, offset], (err, results) => {
+    plantcare.query(sql, [limitInt, offsetInt], (err, results) => {
       if (err) {
         console.error("Error details:", err); // Log the full error details
         return reject(
