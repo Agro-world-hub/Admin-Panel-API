@@ -64,13 +64,11 @@ exports.createRoleFeature = async (req, res) => {
       feature_id
     );
 
-    return res
-      .status(201)
-      .json({
-        message: "roleFeature created successfully",
-        id: roleFeature,
-        status: true,
-      });
+    return res.status(201).json({
+      message: "roleFeature created successfully",
+      id: roleFeature,
+      status: true,
+    });
   } catch (err) {
     if (err.isJoi) {
       // Validation error
@@ -137,6 +135,37 @@ exports.createAdminRole = async (req, res) => {
     console.error("Error executing query:", err);
     return res.status(500).json({
       error: "An error occurred while creating the admin role",
+    });
+  }
+};
+
+exports.createCategory = async (req, res) => {
+  try {
+    const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
+    console.log("Request URL:", fullUrl);
+    console.log(req.body);
+
+    const { category } = req.body; // Extract category from the request body
+
+    // Call the DAO function to create a new category
+    const categoryId = await PermissionsDao.createCategory(category);
+
+    // Return success response
+    return res.status(201).json({
+      message: "Category created successfully",
+      id: categoryId,
+      status: true,
+    });
+  } catch (err) {
+    if (err.isJoi) {
+      // Handle validation errors (if using Joi or similar validation library)
+      return res.status(400).json({ error: err.details[0].message });
+    }
+
+    // Handle other errors
+    console.error("Error executing query:", err);
+    return res.status(500).json({
+      error: "An error occurred while creating the category",
     });
   }
 };

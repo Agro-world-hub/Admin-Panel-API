@@ -58,6 +58,21 @@ exports.createRoleFeature = async (role_id, position_id, feature_id) => {
   });
 };
 
+exports.createCategory = async (category_id) => {
+  return new Promise((resolve, reject) => {
+    const sql = "INSERT INTO featurecategory (category) VALUES (?)";
+    const values = [category_id];
+
+    admin.query(sql, values, (err, results) => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(results.insertId);
+      }
+    });
+  });
+};
+
 exports.deleteRoleFeature = (id) => {
   return new Promise((resolve, reject) => {
     const sql = "DELETE FROM rolefeatures WHERE id = ?";

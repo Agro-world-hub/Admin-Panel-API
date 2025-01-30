@@ -32,6 +32,12 @@ router.delete(
   permissionEp.deleteMarketPrice
 );
 
-router.post("/create-admin-roles", permissionEp.createAdminRole);
+router.post(
+  "/create-admin-roles",
+  authMiddleware,
+  permissionEp.createAdminRole
+);
+
+router.post("/create-categories", permissionEp.createCategory);
 
 module.exports = router;
