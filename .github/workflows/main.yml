@@ -1,0 +1,71 @@
+name: Docker image build and publish
+on:
+  workflow_dispatch:
+    inputs:
+      path_to_dockerfile:
+        description: Path to the dockerfile (default = 'Dockerfile')
+        default: "Dockerfile"
+        type: string
+      docker_build_dir:
+        description: Docker build directory (default = '.')
+        default: "."
+        type: string
+      image_tag:
+        description: Tag to apply to images.
+        type: string
+        default: latest
+      github_iam_role:
+        description: Name of the IAM Role for adding access to ECR repo
+        default: "github-actions-rmodi"
+        type: string
+      aws_account_id:
+        description: AWS Account ID
+        type: string
+      aws_region:
+        description: Target AWS Region
+        default: "us-west-1"
+        type: string
+
+jobs:
+  docker:
+    runs-on: ubuntu-latest
+
+    env:
+      ECR_REPO_NAME: "adminpanel-api"
+
+    permissions:
+      id-token: write
+      contents: read
+
+    outputs:
+      image_tag: ${{ steps.build-publish.outputs.image_tag }}
+      full_image: ${{ steps.build-publish.outputs.full_image }}
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          role-to-assume: arn:aws:iam::${{ inputs.aws_account_id }}:role/github-actions-rmodi
+          aws-region: ${{ inputs.aws_region }}
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+        with:
+          registries: ${{ inputs.aws_account_id }}
+
+      - name: Build, tag, and push image to Amazon ECR
+        id: build-publish
+        shell: bash
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          ECR_REPOSITORY: ${{ env.ECR_REPO_NAME }}
+          IMAGE_TAG: ${{ inputs.image_tag }}
+        run: |
+          docker build "${{ inputs.docker_build_dir }}" -f "${{ inputs.path_to_dockerfile }}" -t "$ECR_REGISTRY/agroworld/$ECR_REPOSITORY:$IMAGE_TAG"
+          docker push "$ECR_REGISTRY/agroworld/$ECR_REPOSITORY:$IMAGE_TAG"
+          echo "IMAGE $IMAGE_TAG is pushed to $ECR_REGISTRY/$ECR_REPOSITORY"
+          echo "image_tag=$IMAGE_TAG"
+          echo "full_image=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG"
