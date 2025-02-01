@@ -23,7 +23,7 @@ on:
         type: string
       aws_region:
         description: Target AWS Region
-        default: "us-west-1"
+        default: "ap-southeast-2"
         type: string
 
 jobs:
