@@ -5,8 +5,8 @@ const insertPositions = async () => {
     'Associate', 
     'Officer', 
     'Executive', 
-    'Manager', 
-    'Admin'];
+    'Manager'
+    ];
 
   const sql = `
     INSERT INTO adminposition (positions) 

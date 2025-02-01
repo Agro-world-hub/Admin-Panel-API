@@ -8,6 +8,7 @@ const { createRoleFeatures } = require('../tables/admin-table');
 const {createSuperAdmin} = require('../data/admin')
 const {insertRoles} = require('../data/adminRoles')
 const {insertPositions} = require('../data/adminPositions')
+const {insertFeatureCategoriesAndFeatures} = require('../data/featureCtegories')
 
 
 const seedAdmin = async () => {
@@ -45,6 +46,9 @@ const seedAdmin = async () => {
     console.log(messageinsertPositions);
     const messageAdminCreate = await createSuperAdmin();
     console.log(messageAdminCreate);
+
+    const messageInsertFeatureCategoriesAndFeatures = await insertFeatureCategoriesAndFeatures();
+    console.log(messageInsertFeatureCategoriesAndFeatures);
     
 } catch (err) {
     console.error('Error seeding seedAdmin:', err);
