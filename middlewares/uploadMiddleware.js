@@ -19,7 +19,7 @@ const fileFilter = (req, file, cb) => {
 
 // Initialize multer with the memory storage engine and file filter
 const upload = multer({
-  storage: storage, // Store files in memory
+  // storage: storage, // Store files in memory
   limits: { fileSize: 10 * 1024 * 1024 }, // Limit file size to 10MB
   fileFilter: fileFilter
 });

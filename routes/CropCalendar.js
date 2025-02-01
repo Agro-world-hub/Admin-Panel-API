@@ -21,7 +21,7 @@ const storage = multer.diskStorage({
 });
 
 const uploadfile = multer({
-    storage: storage,
+    // storage: storage,
     fileFilter: function (req, file, callback) {
         var ext = path.extname(file.originalname);
         if (ext !== ".xlsx" && ext !== ".xls") {
