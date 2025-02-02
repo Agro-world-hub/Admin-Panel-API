@@ -322,6 +322,8 @@ exports.createCropCallender = async (req, res) => {
 
 exports.uploadXLSX = async (req, res) => {
   try {
+    const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
+    console.log("Request URL:", fullUrl);
     const { id } = req.params;
 
     // Validate the ID parameter
