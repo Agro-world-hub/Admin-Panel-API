@@ -328,19 +328,21 @@ exports.uploadXLSX = async (req, res) => {
     await cropCalendarValidations.uploadXLSXSchema.validateAsync({ id });
 
     // Check if a file was uploaded
+    console.log("Identifying xl");
     if (!req.file) {
       return res.status(400).json({ error: "No file uploaded." });
     }
+    console.log("took the excel");
 
-    console.log("File details:", {
-      fieldname: req.file.fieldname,
-      originalname: req.file.originalname,
-      encoding: req.file.encoding,
-      mimetype: req.file.mimetype,
-      size: req.file.size,
-      path: req.file.path, // Log the path if it exists
-      buffer: req.file.buffer ? "Buffer exists" : "Buffer is undefined",
-    });
+    // console.log("File details:", {
+    //   fieldname: req.file.fieldname,
+    //   originalname: req.file.originalname,
+    //   encoding: req.file.encoding,
+    //   mimetype: req.file.mimetype,
+    //   size: req.file.size,
+    //   path: req.file.path, // Log the path if it exists
+    //   buffer: req.file.buffer ? "Buffer exists" : "Buffer is undefined",
+    // });
 
     // Validate file type
     const allowedExtensions = [".xlsx", ".xls"];
@@ -350,6 +352,8 @@ exports.uploadXLSX = async (req, res) => {
         error: "Invalid file type. Only XLSX and XLS files are allowed.",
       });
     }
+
+    console.log("checked extension");
 
     // Read the XLSX file
     let workbook;
@@ -388,9 +392,10 @@ exports.uploadXLSX = async (req, res) => {
         .json({ error: "The uploaded file contains no valid data." });
     }
 
-    console.log("First row of data:", data[0]);
+    // console.log("First row of data:", data[0]);
 
     // Insert data into the database via DAO
+    console.log("started to get data from xl");
     const rowsAffected = await cropCalendarDao.insertXLSXData(id, data);
 
     // Respond with success
