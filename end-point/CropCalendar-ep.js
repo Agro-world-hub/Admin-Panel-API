@@ -303,6 +303,7 @@ exports.createCropCallender = async (req, res) => {
     );
 
     console.log("Crop Calendar creation success");
+    console.log("xl uploading test 1");
     return res.status(200).json({ cropId , status:true});
   } catch (err) {
     if (err.isJoi) {
