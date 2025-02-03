@@ -307,6 +307,7 @@ const createFarmerComplains  = () => {
     complain TEXT DEFAULT NULL,
     reply TEXT DEFAULT NULL,
     status VARCHAR(20) DEFAULT NULL,
+    adminStatus VARCHAR(20) DEFAULT NULL,
     createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (farmerId) REFERENCES plant_care.users(id)
         ON DELETE CASCADE

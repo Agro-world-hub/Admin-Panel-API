@@ -303,6 +303,7 @@ exports.createCropCallender = async (req, res) => {
     );
 
     console.log("Crop Calendar creation success");
+    console.log("xl uploading test 1");
     return res.status(200).json({ cropId , status:true});
   } catch (err) {
     if (err.isJoi) {
@@ -332,15 +333,15 @@ exports.uploadXLSX = async (req, res) => {
       return res.status(400).json({ error: "No file uploaded." });
     }
 
-    console.log("File details:", {
-      fieldname: req.file.fieldname,
-      originalname: req.file.originalname,
-      encoding: req.file.encoding,
-      mimetype: req.file.mimetype,
-      size: req.file.size,
-      path: req.file.path, // Log the path if it exists
-      buffer: req.file.buffer ? "Buffer exists" : "Buffer is undefined",
-    });
+    // console.log("File details:", {
+    //   fieldname: req.file.fieldname,
+    //   originalname: req.file.originalname,
+    //   encoding: req.file.encoding,
+    //   mimetype: req.file.mimetype,
+    //   size: req.file.size,
+    //   path: req.file.path, // Log the path if it exists
+    //   buffer: req.file.buffer ? "Buffer exists" : "Buffer is undefined",
+    // });
 
     // Validate file type
     const allowedExtensions = [".xlsx", ".xls"];
@@ -388,7 +389,7 @@ exports.uploadXLSX = async (req, res) => {
         .json({ error: "The uploaded file contains no valid data." });
     }
 
-    console.log("First row of data:", data[0]);
+    // console.log("First row of data:", data[0]);
 
     // Insert data into the database via DAO
     const rowsAffected = await cropCalendarDao.insertXLSXData(id, data);
