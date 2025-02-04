@@ -102,10 +102,10 @@ exports.addNewCollectionCenter = async (req, res) => {
 exports.getAllComplains = async (req, res) => {
   try {
     console.log(req.query);
-    const { page, limit, status, searchText } = req.query
+    const { page, limit, status,category, searchText } = req.query
 
 
-    const { results, total } = await CollectionCenterDao.GetAllComplainDAO(page, limit, status, searchText)
+    const { results, total } = await CollectionCenterDao.GetAllComplainDAO(page, limit, status,category, searchText)
 
    
 
@@ -134,7 +134,7 @@ exports.getComplainById = async (req, res) => {
     if (result.length === 0) {
       return res
         .status(404)
-        .json({ message: "No Complain found", data: result[0] });
+        .json({ message: "No Complain foundd", data: result[0] });
     }
 
     console.log("Successfully retrieved collection center");

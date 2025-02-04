@@ -98,7 +98,7 @@ exports.deleteCollectionCenterDAo = async (id) => {
   });
 };
 
-exports.GetAllComplainDAO = (page, limit, status, searchText) => {
+exports.GetAllComplainDAO = (page, limit, status,category, searchText) => {
   return new Promise((resolve, reject) => {
     const Sqlparams = [];
     const Counterparams = [];
@@ -118,36 +118,41 @@ exports.GetAllComplainDAO = (page, limit, status, searchText) => {
     let sql = `
       SELECT 
         fc.id, 
-        fc.refNo, 
-        fc.createdAt, 
-        fc.status, 
-        fc.language, 
-        u.firstName AS farmerName, 
-        cf.id AS officerId, 
-        cf.firstNameEnglish AS officerName, 
-        cc.centerName AS centerName
+        fc.refNo,
+        fc.complainCategory,
+        u.NICnumber AS NIC,
+        u.firstName AS farmerName,
+        u.lastName AS lastName,
+         fc.createdAt,
+         fc.adminStatus AS status,
+         fc.reply
       FROM farmercomplains fc
-      LEFT JOIN collectionofficer cf ON fc.coId = cf.id
-      LEFT JOIN collectioncenter cc ON cf.centerId = cc.id
       LEFT JOIN plant_care.users u ON fc.farmerId = u.id
       WHERE 1 = 1
     `;
 
     // Add filter for status
     if (status) {
-      countSql += " AND fc.status = ? ";
-      sql += " AND fc.status = ? ";
+      countSql += " AND fc.adminStatus = ? ";
+      sql += " AND fc.adminStatus = ? ";
       Sqlparams.push(status);
       Counterparams.push(status);
+    }
+
+    if (category) {
+      countSql += " AND fc.complainCategory = ? ";
+      sql += " AND fc.complainCategory = ? ";
+      Sqlparams.push(category);
+      Counterparams.push(category);
     }
 
     // Add search functionality
     if (searchText) {
       countSql += `
-        AND (fc.refNo LIKE ? OR cc.centerName LIKE ? OR u.firstName LIKE ? OR cf.firstNameEnglish LIKE ?)
+        AND (fc.refNo LIKE ?  OR u.firstName LIKE ?)
       `;
       sql += `
-        AND (fc.refNo LIKE ? OR cc.centerName LIKE ? OR u.firstName LIKE ? OR cf.firstNameEnglish LIKE ?)
+        AND (fc.refNo LIKE ? OR u.firstName LIKE ?)
       `;
       const searchQuery = `%${searchText}%`;
       Sqlparams.push(searchQuery, searchQuery, searchQuery, searchQuery);
@@ -185,9 +190,10 @@ exports.GetAllComplainDAO = (page, limit, status, searchText) => {
 exports.getComplainById = (id) => {
   return new Promise((resolve, reject) => {
     const sql = ` 
-    SELECT fc.id, fc.refNo, fc.createdAt, fc.status, fc.language, fc.complain, fc.reply, u.firstName AS farmerName, u.phoneNumber AS farmerPhone, c.firstNameEnglish as officerName, c.phoneNumber01 AS officerPhone, cc.centerName, cc.contact01 AS CollectionContact
-    FROM farmercomplains fc, collectionofficer c, plant_care.users u , collectioncenter cc
-    WHERE fc.farmerId = u.id AND c.centerId = cc.id AND fc.coId = c.id AND fc.id = ? 
+    SELECT fc.id, fc.refNo, fc.createdAt, fc.language, fc.complain,fc.complainCategory,fc.reply, u.firstName AS firstName, u.lastName AS lastName, u.phoneNumber AS farmerPhone
+    FROM farmercomplains fc
+    LEFT JOIN plant_care.users u ON fc.farmerId = u.id
+    WHERE fc.id = ? 
     `;
     collectionofficer.query(sql, [id], (err, results) => {
       if (err) {
@@ -413,11 +419,11 @@ exports.sendComplainReply = (complainId, reply) => {
 
     const sql = `
       UPDATE farmercomplains 
-      SET reply = ?, status = ? 
+      SET reply = ?, adminStatus = ? 
       WHERE id = ?
     `;
 
-    const status = "Answered";
+    const status = "Closed";
     const values = [reply, status, complainId];
 
     collectionofficer.query(sql, values, (err, results) => {

@@ -303,6 +303,7 @@ exports.createCropCallender = async (req, res) => {
     );
 
     console.log("Crop Calendar creation success");
+    console.log("xl uploading test 1");
     return res.status(200).json({ cropId , status:true});
   } catch (err) {
     if (err.isJoi) {
@@ -332,15 +333,15 @@ exports.uploadXLSX = async (req, res) => {
       return res.status(400).json({ error: "No file uploaded." });
     }
 
-    console.log("File details:", {
-      fieldname: req.file.fieldname,
-      originalname: req.file.originalname,
-      encoding: req.file.encoding,
-      mimetype: req.file.mimetype,
-      size: req.file.size,
-      path: req.file.path, // Log the path if it exists
-      buffer: req.file.buffer ? "Buffer exists" : "Buffer is undefined",
-    });
+    // console.log("File details:", {
+    //   fieldname: req.file.fieldname,
+    //   originalname: req.file.originalname,
+    //   encoding: req.file.encoding,
+    //   mimetype: req.file.mimetype,
+    //   size: req.file.size,
+    //   path: req.file.path, // Log the path if it exists
+    //   buffer: req.file.buffer ? "Buffer exists" : "Buffer is undefined",
+    // });
 
     // Validate file type
     const allowedExtensions = [".xlsx", ".xls"];
@@ -388,7 +389,7 @@ exports.uploadXLSX = async (req, res) => {
         .json({ error: "The uploaded file contains no valid data." });
     }
 
-    console.log("First row of data:", data[0]);
+    // console.log("First row of data:", data[0]);
 
     // Insert data into the database via DAO
     const rowsAffected = await cropCalendarDao.insertXLSXData(id, data);
@@ -526,6 +527,7 @@ exports.updateGroup = async (req, res) => {
   const { cropNameEnglish, cropNameSinhala, cropNameTamil, category, bgColor } = req.body;
   const id = req.params.id;
   const Existname = req.params.name;
+  let image = null;
   console.log(req.params);
   
   try {
@@ -538,20 +540,9 @@ exports.updateGroup = async (req, res) => {
 
     const imageUrl = cropGroup.image;
     console.log(imageUrl)
-    if (imageUrl) {
-      try {
-        await deleteFromS3(imageUrl);
-      } catch (s3Error) {
-        console.error("Failed to delete image from S3:", s3Error);
-        // Optionally handle the failure, e.g., log but not block user deletion
-      }
-    }
+    
 
-    if (req.file) {
-      const fileBuffer = req.file.buffer;
-      const fileName = req.file.originalname;
-      image = await uploadFileToS3(fileBuffer, fileName, "cropgroup/image");
-    }
+  
 
     if (Existname !== cropNameEnglish) {
       const checkCropName = await cropCalendarDao.checkCropGroup(cropNameEnglish)
@@ -560,6 +551,13 @@ exports.updateGroup = async (req, res) => {
       if (checkCropName.length > 0) {
         return res.json({ message: "This crop name is already exist!", status: false })
       }
+    }
+
+    if (req.file) {
+      const fileBuffer = req.file.buffer;
+      const fileName = req.file.originalname;
+      await deleteFromS3(imageUrl);
+      image = await uploadFileToS3(fileBuffer, fileName, "cropgroup/image");
     }
 
 
@@ -583,11 +581,12 @@ exports.updateCropVariety = async (req, res) => {
 
     const imageUrl = cropVariety.image;
 
-    await deleteFromS3(imageUrl);
+    
 
     if (req.file) {
       const fileBuffer = req.file.buffer;
       const fileName = req.file.originalname;
+      await deleteFromS3(imageUrl);
       image = await uploadFileToS3(fileBuffer, fileName, "cropvariety/image");
       updates.image = image;
     }
