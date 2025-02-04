@@ -323,15 +323,19 @@ exports.createCropCallender = async (req, res) => {
 
 exports.uploadXLSX = async (req, res) => {
   try {
+    const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
+    console.log("Request URL:", fullUrl);
     const { id } = req.params;
 
     // Validate the ID parameter
     await cropCalendarValidations.uploadXLSXSchema.validateAsync({ id });
 
     // Check if a file was uploaded
+    console.log("Identifying xl");
     if (!req.file) {
       return res.status(400).json({ error: "No file uploaded." });
     }
+    console.log("took the excel");
 
     // console.log("File details:", {
     //   fieldname: req.file.fieldname,
@@ -351,6 +355,8 @@ exports.uploadXLSX = async (req, res) => {
         error: "Invalid file type. Only XLSX and XLS files are allowed.",
       });
     }
+
+    console.log("checked extension");
 
     // Read the XLSX file
     let workbook;
@@ -392,6 +398,7 @@ exports.uploadXLSX = async (req, res) => {
     // console.log("First row of data:", data[0]);
 
     // Insert data into the database via DAO
+    console.log("started to get data from xl");
     const rowsAffected = await cropCalendarDao.insertXLSXData(id, data);
 
     // Respond with success
