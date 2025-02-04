@@ -527,6 +527,7 @@ exports.updateGroup = async (req, res) => {
   const { cropNameEnglish, cropNameSinhala, cropNameTamil, category, bgColor } = req.body;
   const id = req.params.id;
   const Existname = req.params.name;
+  let image = null;
   console.log(req.params);
   
   try {
@@ -539,20 +540,9 @@ exports.updateGroup = async (req, res) => {
 
     const imageUrl = cropGroup.image;
     console.log(imageUrl)
-    if (imageUrl) {
-      try {
-        await deleteFromS3(imageUrl);
-      } catch (s3Error) {
-        console.error("Failed to delete image from S3:", s3Error);
-        // Optionally handle the failure, e.g., log but not block user deletion
-      }
-    }
+    
 
-    if (req.file) {
-      const fileBuffer = req.file.buffer;
-      const fileName = req.file.originalname;
-      image = await uploadFileToS3(fileBuffer, fileName, "cropgroup/image");
-    }
+  
 
     if (Existname !== cropNameEnglish) {
       const checkCropName = await cropCalendarDao.checkCropGroup(cropNameEnglish)
@@ -561,6 +551,13 @@ exports.updateGroup = async (req, res) => {
       if (checkCropName.length > 0) {
         return res.json({ message: "This crop name is already exist!", status: false })
       }
+    }
+
+    if (req.file) {
+      const fileBuffer = req.file.buffer;
+      const fileName = req.file.originalname;
+      await deleteFromS3(imageUrl);
+      image = await uploadFileToS3(fileBuffer, fileName, "cropgroup/image");
     }
 
 
@@ -584,11 +581,12 @@ exports.updateCropVariety = async (req, res) => {
 
     const imageUrl = cropVariety.image;
 
-    await deleteFromS3(imageUrl);
+    
 
     if (req.file) {
       const fileBuffer = req.file.buffer;
       const fileName = req.file.originalname;
+      await deleteFromS3(imageUrl);
       image = await uploadFileToS3(fileBuffer, fileName, "cropvariety/image");
       updates.image = image;
     }
