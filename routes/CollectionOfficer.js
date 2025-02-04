@@ -5,21 +5,14 @@ const bodyParser = require("body-parser");
 const authMiddleware = require("../middlewares/authMiddleware");
 const multer = require("multer");
 const upload = require("../middlewares/uploadMiddleware");
-// const uploadfile = multer({ dest: 'uploads/' });
+
 const path = require("path");
 
 const router = express.Router();
 
-const storage = multer.diskStorage({
-    destination: function(req, file, cb) {
-        cb(null, 'uploads/')
-    },
-    filename: function(req, file, cb) {
-        cb(null, file.fieldname + '-' + Date.now() + path.extname(file.originalname))
-    }
-});
+
 const uploadfile = multer({
-    storage: storage,
+    
     fileFilter: function(req, file, callback) {
         var ext = path.extname(file.originalname);
         if (ext !== '.xlsx' && ext !== '.xls') {

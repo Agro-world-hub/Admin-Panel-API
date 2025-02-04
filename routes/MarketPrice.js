@@ -4,12 +4,23 @@ const bodyParser = require("body-parser");
 const authMiddleware = require("../middlewares/authMiddleware");
 const multer = require("multer");
 const upload = require("../middlewares/uploadMiddleware");
-// const upload = multer({ storage: multer.memoryStorage() });
-const uploadfile = multer({ dest: 'uploads/' });
 const path = require("path");
 const fs = require('fs');
 const {plantcare} = require('../startup/database'); // Adjust this to your database connection
 const XLSX = require('xlsx');
+
+
+
+const uploadfile = multer({
+    
+    fileFilter: function (req, file, callback) {
+        var ext = path.extname(file.originalname);
+        if (ext !== ".xlsx" && ext !== ".xls") {
+            return callback(new Error("Only Excel files are allowed"));
+        }
+        callback(null, true);
+    },
+});
 
 
 const router = express.Router();
