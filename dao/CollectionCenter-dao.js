@@ -626,9 +626,9 @@ exports.getAllCompanyDAO = () => {
           SELECT 
             COUNT(*) 
           FROM 
-            collectioncenter cc 
+            companycenter cc 
           WHERE 
-            FIND_IN_SET(c.companyNameEnglish, REPLACE(cc.companies, ', ', ',')) > 0
+            c.id = cc.companyId
         ) AS numOfCenters
       FROM 
         company c

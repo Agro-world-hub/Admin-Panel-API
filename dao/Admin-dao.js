@@ -1451,16 +1451,15 @@ exports.getAllTaskIdDao = (cropId) => {
 };
 
 exports.addNewTaskDao = (task, indexId, cropId) => {
-  console.log("Dao Task: ", task);
+  // console.log("Dao Task: ", task);
 
   return new Promise((resolve, reject) => {
     const sql =
-      "INSERT INTO cropcalendardays ( cropId, taskIndex, startingDate, taskTypeEnglish, taskTypeSinhala, taskTypeTamil, taskCategoryEnglish, taskCategorySinhala, taskCategoryTamil, taskEnglish, taskSinhala, taskTamil, taskDescriptionEnglish, taskDescriptionSinhala, taskDescriptionTamil, reqImages, imageLink, videoLink) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+      "INSERT INTO cropcalendardays ( cropId, taskIndex, taskTypeEnglish, taskTypeSinhala, taskTypeTamil, taskCategoryEnglish, taskCategorySinhala, taskCategoryTamil, taskEnglish, taskSinhala, taskTamil, taskDescriptionEnglish, taskDescriptionSinhala, taskDescriptionTamil, reqImages, imageLink, videoLinkEnglish, videoLinkSinhala, videoLinkTamil) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
     const values = [
       cropId,
       indexId,
-      task.startingDate,
       task.taskTypeEnglish,
       task.taskTypeSinhala,
       task.taskTypeTamil,
@@ -1475,11 +1474,14 @@ exports.addNewTaskDao = (task, indexId, cropId) => {
       task.taskDescriptionTamil,
       task.reqImages,
       task.imageLink,
-      task.videoLink,
+      task.videoLinkEnglish,
+      task.videoLinkSinhala,
+      task.videoLinkTamil,
     ];
 
+
     // Ensure that the values array length matches the expected column count
-    if (values.length !== 18) {
+    if (values.length !== 19) {
       return reject(
         new Error("Mismatch between column count and value count.")
       );
@@ -1508,7 +1510,7 @@ exports.addNewReplyDao = (chatId, replyId, replyMessage) => {
         console.error("Error executing query:", err); // Improved error logging
         return reject(err);
       } else {
-        console.log("Insert successful:", results);
+        // console.log("Insert successful:", results);
         resolve(results);
       }
     });
@@ -1567,7 +1569,7 @@ exports.addNewTaskDaoU = (task, indexId, userId, cropId, onCulscropID) => {
 
   return new Promise((resolve, reject) => {
     const sql =
-      "INSERT INTO slavecropcalendardays (userId, onCulscropID, cropCalendarId, taskIndex, startingDate, taskTypeEnglish, taskTypeSinhala, taskTypeTamil, taskCategoryEnglish, taskCategorySinhala, taskCategoryTamil, taskEnglish, taskSinhala, taskTamil, taskDescriptionEnglish, taskDescriptionSinhala, taskDescriptionTamil, reqImages, imageLink, videoLink, status) VALUES (?,?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+      "INSERT INTO slavecropcalendardays (userId, onCulscropID, cropCalendarId, taskIndex, startingDate, taskTypeEnglish, taskTypeSinhala, taskTypeTamil, taskCategoryEnglish, taskCategorySinhala, taskCategoryTamil, taskEnglish, taskSinhala, taskTamil, taskDescriptionEnglish, taskDescriptionSinhala, taskDescriptionTamil, reqImages, imageLink, videoLinkEnglish, videoLinkSinhala, videoLinkTamil, status) VALUES (?,?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?, ?)";
 
     const values = [
       userId,
@@ -1589,12 +1591,15 @@ exports.addNewTaskDaoU = (task, indexId, userId, cropId, onCulscropID) => {
       task.taskDescriptionTamil,
       task.reqImages,
       task.imageLink,
-      task.videoLink,
+      task.videoLinkEnglish,
+      task.videoLinkSinhala,
+      task.videoLinkTamil,
       defStatus,
     ];
 
+
     // Ensure that the values array length matches the expected column count
-    if (values.length !== 21) {
+    if (values.length !== 23) {
       return reject(
         new Error("Mismatch between column count and value count.")
       );
