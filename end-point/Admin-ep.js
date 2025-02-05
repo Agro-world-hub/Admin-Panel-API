@@ -260,8 +260,7 @@ exports.createNews = async (req, res) => {
       descriptionTamil,
       status,
       publishDate,
-      expireDate,
-      createdBy,
+      expireDate
     } = await ValidateSchema.createNewsSchema.validateAsync(req.body, {
       abortEarly: false,
     });
@@ -286,7 +285,6 @@ exports.createNews = async (req, res) => {
       descriptionTamil,
       image,
       status,
-      createdBy,
       publishDate,
       expireDate
     );
