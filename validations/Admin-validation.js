@@ -72,7 +72,6 @@ exports.createNewsSchema = Joi.object({
     descriptionSinhala: Joi.string().required(),
     descriptionTamil: Joi.string().required(),
     status: Joi.string().required(),
-    createdBy: Joi.string().required(),
     publishDate: Joi.date().iso().optional(),
     expireDate: Joi.date().iso().optional()
 });

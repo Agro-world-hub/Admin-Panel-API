@@ -195,7 +195,7 @@ exports.createNews = async (
 ) => {
   return new Promise((resolve, reject) => {
     const sql =
-      "INSERT INTO content (titleEnglish, titleSinhala, titleTamil, descriptionEnglish, descriptionSinhala, descriptionTamil, image, status,publishDate, expireDate) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+      "INSERT INTO content (titleEnglish, titleSinhala, titleTamil, descriptionEnglish, descriptionSinhala, descriptionTamil, image, status, publishDate, expireDate) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
     const values = [
       titleEnglish,
       titleSinhala,
