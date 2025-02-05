@@ -419,12 +419,13 @@ exports.sendComplainReply = (complainId, reply) => {
 
     const sql = `
       UPDATE farmercomplains 
-      SET reply = ?, adminStatus = ? 
+      SET reply = ?, status = ?, adminStatus = ? 
       WHERE id = ?
     `;
 
     const status = "Closed";
-    const values = [reply, status, complainId];
+    const adminStatus = "Closed";
+    const values = [reply, status, adminStatus, complainId];
 
     collectionofficer.query(sql, values, (err, results) => {
       if (err) {
