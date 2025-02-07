@@ -160,7 +160,7 @@ exports.GetAllComplainDAO = (page, limit, status,category, searchText) => {
     }
 
     // Add pagination
-    sql += " LIMIT ? OFFSET ?";
+    sql += " ORDER BY createdAt DESC LIMIT ? OFFSET ?";
     Sqlparams.push(parseInt(limit), parseInt(offset));
 
     // Execute count query to get total records
@@ -423,7 +423,7 @@ exports.sendComplainReply = (complainId, reply) => {
       WHERE id = ?
     `;
 
-    const status = "Closed";
+    const status = "Opened";
     const adminStatus = "Closed";
     const values = [reply, status, adminStatus, complainId];
 

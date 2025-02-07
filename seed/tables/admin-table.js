@@ -141,6 +141,49 @@ const createRoleFeatures = () => {
 };
 
 
+const createComplainCategoryTypeTable = () => {
+    const sql = `
+    CREATE TABLE IF NOT EXISTS complaincategorytype (
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      type VARCHAR(100) DEFAULT NULL
+    )
+  `;
+    return new Promise((resolve, reject) => {
+        admin.query(sql, (err, result) => {
+            if (err) {
+                reject('Error creating complaincategorytype table: ' + err);
+            } else {
+                resolve('complaincategorytype table created successfully.');
+            }
+        });
+    });
+};
+
+
+
+const createComplainCategoryTable = () => {
+    const sql = `
+    CREATE TABLE IF NOT EXISTS complaincategory (
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      type INT(11) DEFAULT NULL,
+      ctegory VARCHAR(100) DEFAULT NULL,
+      FOREIGN KEY (type) REFERENCES complaincategorytype(id)
+        ON DELETE CASCADE
+        ON UPDATE CASCADE
+    )
+  `;
+    return new Promise((resolve, reject) => {
+        admin.query(sql, (err, result) => {
+            if (err) {
+                reject('Error creating adminposition table: ' + err);
+            } else {
+                resolve('adminposition table created successfully.');
+            }
+        });
+    });
+};
+
+
 
 
 
@@ -152,5 +195,7 @@ module.exports = {
     createFeaturesCategoryTable,
     createFeaturesTable,
     createAdminUsersTable,
-    createRoleFeatures
+    createRoleFeatures,
+    createComplainCategoryTypeTable,
+    createComplainCategoryTable
 };
