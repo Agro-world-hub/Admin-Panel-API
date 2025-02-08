@@ -166,7 +166,9 @@ const createComplainCategoryTable = () => {
     CREATE TABLE IF NOT EXISTS complaincategory (
       id INT AUTO_INCREMENT PRIMARY KEY,
       type INT(11) DEFAULT NULL,
-      ctegory VARCHAR(100) DEFAULT NULL,
+      ctegoryEnglish VARCHAR(100) DEFAULT NULL,
+      ctegorySinhala VARCHAR(100) DEFAULT NULL,
+      ctegoryTamil VARCHAR(100) DEFAULT NULL,
       FOREIGN KEY (type) REFERENCES complaincategorytype(id)
         ON DELETE CASCADE
         ON UPDATE CASCADE
