@@ -439,15 +439,18 @@ const createOfficerComplainsTable  = () => {
    CREATE TABLE IF NOT EXISTS officercomplains (
     id INT AUTO_INCREMENT PRIMARY KEY,
     officerId INT DEFAULT NULL,
+    complainCategory INT DEFAULT NULL,
     refNo VARCHAR(20) DEFAULT NULL,
     language VARCHAR(50) DEFAULT NULL,
-    complainCategory VARCHAR(50) DEFAULT NULL,
     complain TEXT DEFAULT NULL,
     reply TEXT DEFAULT NULL,
     status VARCHAR(20) DEFAULT NULL,
     complainAssign VARCHAR(20) DEFAULT NULL,
     createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (officerId) REFERENCES collectionofficer(id)
+        ON DELETE CASCADE
+        ON UPDATE CASCADE,
+    FOREIGN KEY (complainCategory) REFERENCES agro_world_admin.complaincategory(id)
         ON DELETE CASCADE
         ON UPDATE CASCADE
 )
