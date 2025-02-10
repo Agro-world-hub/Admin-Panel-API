@@ -342,4 +342,10 @@ router.delete(
     AdminEp.getAllfeedackListForBarChart
   );
 
+  router.get(
+    "/plantcare-dashboard", 
+    authMiddleware,
+    AdminEp.plantcareDashboard
+  );
+
 module.exports = router;

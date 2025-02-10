@@ -2451,3 +2451,171 @@ exports.getMeById = (userId) => {
     });
   });
 };
+
+exports.activeUsers = (userId) => {
+  return new Promise((resolve, reject) => {
+    const sql = `
+     SELECT COUNT(*) AS active_users_count
+      FROM users
+      WHERE id = 'active'`;
+
+    plantcare.query(sql, [userId], (err, results) => {
+      if (err) {
+        reject(err);
+      }  else {
+        // Return the user object
+        resolve(results[0]);
+      } 
+    });
+  });
+};
+
+
+exports.allUsers = (userId) => {
+  return new Promise((resolve, reject) => {
+    const sql = `
+     SELECT COUNT(*) AS all_farmer_count
+      FROM users`;
+
+    plantcare.query(sql, [userId], (err, results) => {
+      if (err) {
+        reject(err);
+      }  else {
+        // Return the user object
+        resolve(results[0]);
+      } 
+    });
+  });
+};
+
+exports.qrUsers = (userId) => {
+  return new Promise((resolve, reject) => {
+    const sql = `
+     SELECT COUNT(*) AS farmer_qr_count
+      FROM users
+      WHERE farmerQr IS NOT NULL AND farmerQr <> ''
+      `;
+
+    plantcare.query(sql, [userId], (err, results) => {
+      if (err) {
+        reject(err);
+      }  else {
+        // Return the user object
+        resolve(results[0]);
+      } 
+    });
+  });
+};
+
+
+exports.newUsers = (userId) => {
+  return new Promise((resolve, reject) => {
+    const sql = `
+     SELECT COUNT(*) AS new_users_count
+      FROM users
+      WHERE DATE(created_at) = CURRENT_DATE`;
+
+    plantcare.query(sql, [userId], (err, results) => {
+      if (err) {
+        reject(err);
+      }  else {
+        // Return the user object
+        resolve(results[0]);
+      }
+    });
+  });
+};
+
+
+exports.vegEnroll = (userId) => {
+  return new Promise((resolve, reject) => {
+    const sql = `
+    SELECT COUNT(DISTINCT occ.id) AS veg_cultivation_count
+    FROM ongoingcultivationscrops occ
+    JOIN cropcalender cc ON occ.cropCalendar = cc.id
+    JOIN cropvariety cv ON cc.cropVarietyId = cv.id
+    JOIN cropgroup cg ON cv.cropGroupId = cg.id
+    WHERE cg.category = 'Vegetables' ;
+    `;
+
+    plantcare.query(sql, [userId], (err, results) => {
+      if (err) {
+        reject(err);
+      }  else {
+        // Return the user object
+        resolve(results[0]);
+      }
+    });
+  });
+};
+
+
+
+
+exports.grainEnroll = (userId) => {
+  return new Promise((resolve, reject) => {
+    const sql = `
+    SELECT COUNT(DISTINCT occ.id) AS grain_cultivation_count
+    FROM ongoingcultivationscrops occ
+    JOIN cropcalender cc ON occ.cropCalendar = cc.id
+    JOIN cropvariety cv ON cc.cropVarietyId = cv.id
+    JOIN cropgroup cg ON cv.cropGroupId = cg.id
+    WHERE cg.category = 'Grain' ;
+    `;
+
+    plantcare.query(sql, [userId], (err, results) => {
+      if (err) {
+        reject(err);
+      }  else {
+        // Return the user object
+        resolve(results[0]);
+      }
+    });
+  });
+};
+
+
+exports.fruitEnroll = (userId) => {
+  return new Promise((resolve, reject) => {
+    const sql = `
+    SELECT COUNT(DISTINCT occ.id) AS fruit_cultivation_count
+    FROM ongoingcultivationscrops occ
+    JOIN cropcalender cc ON occ.cropCalendar = cc.id
+    JOIN cropvariety cv ON cc.cropVarietyId = cv.id
+    JOIN cropgroup cg ON cv.cropGroupId = cg.id
+    WHERE cg.category = 'Fruit' ;
+    `;
+
+    plantcare.query(sql, [userId], (err, results) => {
+      if (err) {
+        reject(err);
+      }  else {
+        // Return the user object
+        resolve(results[0]);
+      }
+    });
+  });
+};
+
+
+exports.mushEnroll = (userId) => {
+  return new Promise((resolve, reject) => {
+    const sql = `
+    SELECT COUNT(DISTINCT occ.id) AS mush_cultivation_count
+    FROM ongoingcultivationscrops occ
+    JOIN cropcalender cc ON occ.cropCalendar = cc.id
+    JOIN cropvariety cv ON cc.cropVarietyId = cv.id
+    JOIN cropgroup cg ON cv.cropGroupId = cg.id
+    WHERE cg.category = 'Mushrooms' ;
+    `;
+
+    plantcare.query(sql, [userId], (err, results) => {
+      if (err) {
+        reject(err);
+      }  else {
+        // Return the user object
+        resolve(results[0]);
+      }
+    });
+  });
+};

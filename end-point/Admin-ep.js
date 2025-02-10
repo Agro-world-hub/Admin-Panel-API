@@ -2646,3 +2646,40 @@ exports.getAllfeedackListForBarChart = async (req, res) => {
     res.status(500).send("An error occurred while fetching data.");
   }
 };
+
+
+
+exports.plantcareDashboard = async (req, res) => {
+  try {
+    const activeUsers = await adminDao.activeUsers();
+    const newUsers = await adminDao.newUsers();
+    const allUsers = await adminDao.allUsers();
+    const qrUsers = await adminDao.qrUsers();
+    const vegCultivation = await adminDao.vegEnroll();
+    const grainCultivation = await adminDao.grainEnroll();
+    const fruitCultivation = await adminDao.fruitEnroll();
+    const mushCultivation = await adminDao.mushEnroll();
+
+    const data = {
+      active_users: activeUsers.active_users_count,
+      new_users: newUsers.new_users_count,
+      vegCultivation: vegCultivation.veg_cultivation_count,
+      grainCultivation: grainCultivation.grain_cultivation_count,
+      fruitCultivation: fruitCultivation.fruit_cultivation_count,
+      mushCultivation: mushCultivation.mush_cultivation_count,
+      allusers: allUsers.all_farmer_count,
+      qrUsers: qrUsers.farmer_qr_count
+    };
+
+    console.log("Successfully fetched feedback list");
+    res.json({
+      data
+    });
+  } catch (err) {
+    if (err.isJoi) {
+      return res.status(400).json({ error: err.details[0].message });
+    }
+    console.error("Error executing query:", err);
+    res.status(500).send("An error occurred while fetching data.");
+  }
+};
