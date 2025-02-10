@@ -2136,7 +2136,32 @@ exports.addNewTaskU = async (req, res) => {
 //   }
 // };
 
+
 exports.uploadUsersXLSX = async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ error: "No file uploaded." });
+    }
+
+    const workbook = xlsx.read(req.file.buffer, { type: "buffer" });
+    const sheetName = workbook.SheetNames[0];
+    const worksheet = workbook.Sheets[sheetName];
+    const data = xlsx.utils.sheet_to_json(worksheet);
+
+    const result = await adminDao.insertUserXLSXData(data);
+
+    return res.status(200).json({
+      message: "File processed successfully",
+      newUsersInserted: result.insertedRows,
+      existingUsers: result.existingUsers,
+      duplicateEntries: result.duplicateData, // Sending duplicate entries
+    });
+  } catch (error) {
+    return res.status(500).json({ error: error.message });
+  }
+};
+
+exports.uploadUsersXLSXtest = async (req, res) => {
   try {
     if (!req.file) {
       return res.status(400).json({ error: "No file uploaded." });
@@ -2151,6 +2176,8 @@ exports.uploadUsersXLSX = async (req, res) => {
       path: req.file.path,
       buffer: req.file.buffer ? "Buffer exists" : "Buffer is undefined",
     });
+
+    console.log('Files comes');
 
     // Validate file type
     const allowedExtensions = [".xlsx", ".xls"];
@@ -2195,8 +2222,11 @@ exports.uploadUsersXLSX = async (req, res) => {
         .json({ error: "The uploaded file contains no valid data." });
     }
 
+    console.log('getting data');
     // Insert data and check for existing users
     const result = await adminDao.insertUserXLSXData(data);
+
+    console.log('after dao');
 
     // If there are existing users, generate and send XLSX file
     if (result.existingUsers && result.existingUsers.length > 0) {

@@ -5,7 +5,7 @@ const {
   marketPlace,
   dash,
 } = require("../startup/database");
-const path = require("path");
+
 const { Upload } = require("@aws-sdk/lib-storage");
 const Joi = require("joi");
 
@@ -1615,8 +1615,10 @@ exports.addNewTaskDaoU = (task, indexId, userId, cropId, onCulscropID) => {
   });
 };
 
-exports.insertUserXLSXData = (data) => {
+exports.insertUserXLSXDataaaaa = (data) => {
+  console.log('testing 03');
   return new Promise((resolve, reject) => {
+    console.log('testing 03');
     // Define validation schema
     const schema = Joi.object({
       "First Name": Joi.string().trim().min(2).max(50).required(),
@@ -1630,37 +1632,44 @@ exports.insertUserXLSXData = (data) => {
       "NIC Number": Joi.alternatives()
         .try(
           Joi.string().pattern(/^(19\d{9}|\d{9}[vV])$/),
-          Joi.number().integer().min(10000000000).max(199999999999)
+          Joi.number().integer().min(100000000000).max(1999999999999)
         )
         .required(),
+        "Membership": Joi.required(),
+      "District": Joi.required(),
+
     }).required();
 
+
+    console.log('testing 01');
+
     // Validate all data
-    const validatedData = [];
-    for (let i = 0; i < data.length; i++) {
-      const { error, value } = schema.validate(data[i]);
-      if (error) {
-        return reject(
-          new Error(
-            `Validation error in row ${i + 1}: ${error.details[0].message}`
-          )
-        );
-      }
-      validatedData.push(value);
-    }
+    // const validatedData = [];
+    // for (let i = 0; i < data.length; i++) {
+    //   console.log(data[i]);
+    //   const { error, value } = schema.validate(data[i]);
+    //   if (error) {
+    //     return reject(
+    //       new Error(
+    //         `Validation error in row ${i + 1}: ${error.details[0].message}`
+    //       )
+    //     );
+    //   }
+    //   validatedData.push(value);
+    // }
 
     const sql = `
       INSERT INTO users 
-      (firstName, lastName, phoneNumber, NICnumber) 
+      (firstName, lastName, phoneNumber, NICnumber, membership, district) 
       VALUES ?`;
 
-    const values = validatedData.map((row) => [
+    const values = data.map((row) => [
       row["First Name"],
       row["Last Name"],
-      String(row["Phone Number"]).startsWith("+")
-        ? row["Phone Number"]
-        : `+${row["Phone Number"]}`,
+      String(row["Phone Number"]).startsWith("+")? row["Phone Number"]: `+${row["Phone Number"]}`,
       String(row["NIC Number"]),
+      row["Membership"],
+      row["District"],
     ]);
 
     plantcare.query(sql, [values], (err, result) => {
@@ -2025,6 +2034,135 @@ exports.getReportfarmerDetails = (userId) => {
 exports.insertUserXLSXData = (data) => {
   return new Promise(async (resolve, reject) => {
     try {
+      const schema = Joi.object({
+        "First Name": Joi.string().trim().min(2).max(50).required(),
+        "Last Name": Joi.string().trim().min(2).max(50).required(),
+        "Phone Number": Joi.alternatives()
+          .try(
+            Joi.string().pattern(/^\+94\d{9}$/),
+            Joi.number().integer().min(94000000000).max(94999999999)
+          )
+          .required(),
+        "NIC Number": Joi.alternatives()
+          .try(
+            Joi.string().pattern(/^(19\d{9}|\d{9}[vV])$/),
+            Joi.number().integer().min(10000000000).max(199999999999)
+          )
+          .required(),
+        "Membership": Joi.required(),
+        "District": Joi.required(),
+      }).required();
+
+      const validatedData = [];
+      const duplicateData = [];
+      const phoneSet = new Set();
+      const nicSet = new Set();
+
+      // Check for duplicates within the Excel file
+      for (let i = 0; i < data.length; i++) {
+        const { error, value } = schema.validate(data[i]);
+        if (error) {
+          reject(
+            new Error(
+              `Validation error in row ${i + 1}: ${error.details[0].message}`
+            )
+          );
+          return;
+        }
+
+        const phone = String(value["Phone Number"]);
+        const nic = String(value["NIC Number"]);
+
+        if (phoneSet.has(phone) || nicSet.has(nic)) {
+          duplicateData.push({
+            "firstName": value["First Name"],
+            "lastName": value["Last Name"],
+            "phoneNumber": phone,
+            "NICnumber": nic,
+          });
+        } else {
+          phoneSet.add(phone);
+          nicSet.add(nic);
+          validatedData.push(value);
+        }
+      }
+
+      // Database check for existing users
+      const phones = validatedData.map((row) =>
+        String(row["Phone Number"]).startsWith("+")
+          ? row["Phone Number"]
+          : `+${row["Phone Number"]}`
+      );
+      const nics = validatedData.map((row) => String(row["NIC Number"]));
+
+      const existingUsers = await new Promise((resolve, reject) => {
+        const sql = `
+          SELECT firstName, lastName, phoneNumber, NICnumber 
+          FROM users 
+          WHERE phoneNumber IN (?) OR NICnumber IN (?)
+        `;
+        plantcare.query(sql, [phones, nics], (err, results) => {
+          if (err) reject(err);
+          else resolve(results);
+        });
+      });
+
+      // Filter new users
+      const existingPhones = new Set(existingUsers.map((user) => user.phoneNumber));
+      const existingNICs = new Set(existingUsers.map((user) => user.NICnumber));
+
+      const newUsers = validatedData.filter((user) => {
+        const phone = String(user["Phone Number"]);
+        const nic = String(user["NIC Number"]);
+        return !existingPhones.has(phone) && !existingNICs.has(nic);
+      });
+
+      if (newUsers.length > 0) {
+        const sql = `
+          INSERT INTO users 
+          (firstName, lastName, phoneNumber, NICnumber, membership, district) 
+          VALUES ?
+        `;
+        const values = newUsers.map((row) => [
+          row["First Name"],
+          row["Last Name"],
+          String(row["Phone Number"]).startsWith("+")
+            ? row["Phone Number"]
+            : `+${row["Phone Number"]}`,
+          String(row["NIC Number"]),
+          row["Membership"],
+          row["District"],
+        ]);
+
+        await new Promise((resolve, reject) => {
+          plantcare.query(sql, [values], (err, result) => {
+            if (err) reject(err);
+            else resolve(result);
+          });
+        });
+      }
+
+      resolve({
+        message: "Partial data inserted. Some users already exist.",
+        existingUsers,
+        duplicateData, // Duplicates within Excel
+        totalRows: data.length,
+        insertedRows: newUsers.length,
+      });
+    } catch (error) {
+      reject(error);
+    }
+  });
+};
+
+
+
+
+
+
+exports.insertUserXLSXDatatest = (data) => {
+  return new Promise(async (resolve, reject) => {
+    try {
       // Define validation schema
       const schema = Joi.object({
         "First Name": Joi.string().trim().min(2).max(50).required(),
@@ -2041,6 +2179,8 @@ exports.insertUserXLSXData = (data) => {
             Joi.number().integer().min(10000000000).max(199999999999)
           )
           .required(),
+          "Membership": Joi.required(),
+      "District": Joi.required(),
       }).required();
 
       // Validate all data
@@ -2100,7 +2240,7 @@ exports.insertUserXLSXData = (data) => {
         if (newUsers.length > 0) {
           const sql = `
             INSERT INTO users 
-            (firstName, lastName, phoneNumber, NICnumber) 
+            (firstName, lastName, phoneNumber, NICnumber,membership, district) 
             VALUES ?
           `;
 
@@ -2111,6 +2251,8 @@ exports.insertUserXLSXData = (data) => {
               ? row["Phone Number"]
               : `+${row["Phone Number"]}`,
             String(row["NIC Number"]),
+            row["Membership"],
+            row["District"],
           ]);
 
           await new Promise((resolve, reject) => {
@@ -2162,6 +2304,14 @@ exports.insertUserXLSXData = (data) => {
     }
   });
 };
+
+
+
+
+
+
+
+
 
 // exports.getUserFeedbackDetails = () => {
 //   return new Promise((resolve, reject) => {
