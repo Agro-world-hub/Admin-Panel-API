@@ -1135,6 +1135,7 @@ exports.updatePlantCareUser = async (req, res) => {
       membership,
     } = validatedBody;
 
+    let profileImage
     const user = await adminDao.getUserById(id);
     if (!user) {
       return res.status(404).json({ message: "PlantCare User not found" });
@@ -1142,13 +1143,13 @@ exports.updatePlantCareUser = async (req, res) => {
 
 
 
-    if (user.profileImage) {
+    if (req.file) {
+
+
       const imageUrl = user.profileImage;
       await deleteFromS3(imageUrl);
-    }
-    
 
-    if (req.file) {
+
       const fileBuffer = req.file.buffer;
       const fileName = req.file.originalname;
       profileImage = await uploadFileToS3(
@@ -1246,19 +1247,19 @@ exports.createPlantCareUser = async (req, res) => {
       membership,
     } = validatedBody;
 
+    let profileImageUrl
     // Ensure a file is uploaded
-    if (!req.file) {
-      return res.status(400).json({ error: "No file uploaded" });
-    }
-
-    const fileBuffer = req.file.buffer;
+    if (req.file) {
+      const fileBuffer = req.file.buffer;
     const fileName = req.file.originalname;
 
-    const profileImageUrl = await uploadFileToS3(
+    profileImageUrl = await uploadFileToS3(
       fileBuffer,
       fileName,
       "users/profile-images"
     );
+
+    }
 
     const userData = {
       firstName,
