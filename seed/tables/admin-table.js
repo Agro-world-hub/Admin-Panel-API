@@ -141,19 +141,23 @@ const createRoleFeatures = () => {
 };
 
 
-const createComplainCategoryTypeTable = () => {
+
+
+
+
+const createSystemAppTable = () => {
     const sql = `
-    CREATE TABLE IF NOT EXISTS complaincategorytype (
+    CREATE TABLE IF NOT EXISTS systemapplications (
       id INT AUTO_INCREMENT PRIMARY KEY,
-      type VARCHAR(100) DEFAULT NULL
+      appName VARCHAR(100) DEFAULT NULL
     )
   `;
     return new Promise((resolve, reject) => {
         admin.query(sql, (err, result) => {
             if (err) {
-                reject('Error creating complaincategorytype table: ' + err);
+                reject('Error creating systemapplications table: ' + err);
             } else {
-                resolve('complaincategorytype table created successfully.');
+                resolve('systemapplications table created successfully.');
             }
         });
     });
@@ -165,11 +169,15 @@ const createComplainCategoryTable = () => {
     const sql = `
     CREATE TABLE IF NOT EXISTS complaincategory (
       id INT AUTO_INCREMENT PRIMARY KEY,
-      type INT(11) DEFAULT NULL,
-      ctegoryEnglish VARCHAR(100) DEFAULT NULL,
-      ctegorySinhala VARCHAR(100) DEFAULT NULL,
-      ctegoryTamil VARCHAR(100) DEFAULT NULL,
-      FOREIGN KEY (type) REFERENCES complaincategorytype(id)
+      roleId INT DEFAULT NULL,
+      appId INT DEFAULT NULL,
+      categoryEnglish VARCHAR(100) DEFAULT NULL,
+      categorySinhala VARCHAR(100) DEFAULT NULL,
+      categoryTamil VARCHAR(100) DEFAULT NULL,
+      FOREIGN KEY (roleId) REFERENCES adminroles(id)
+        ON DELETE CASCADE
+        ON UPDATE CASCADE,
+      FOREIGN KEY (appId) REFERENCES systemapplications(id)
         ON DELETE CASCADE
         ON UPDATE CASCADE
     )
@@ -177,9 +185,9 @@ const createComplainCategoryTable = () => {
     return new Promise((resolve, reject) => {
         admin.query(sql, (err, result) => {
             if (err) {
-                reject('Error creating adminposition table: ' + err);
+                reject('Error creating complaincategory table: ' + err);
             } else {
-                resolve('adminposition table created successfully.');
+                resolve('complaincategory table created successfully.');
             }
         });
     });
@@ -198,6 +206,8 @@ module.exports = {
     createFeaturesTable,
     createAdminUsersTable,
     createRoleFeatures,
-    createComplainCategoryTypeTable,
+
+
+    createSystemAppTable,
     createComplainCategoryTable
 };
