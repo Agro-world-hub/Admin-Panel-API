@@ -67,6 +67,22 @@ exports.createCategory = async (category_id) => {
       if (err) {
         reject(err);
       } else {
+        resolve({ id: results.insertId }); 
+      }
+    });
+  });
+};
+
+
+exports.createFeature= async (category_id, feature) => {
+  return new Promise((resolve, reject) => {
+    const sql = "INSERT INTO features (name, category) VALUES (?, ?)";
+    const values = [feature, category_id];
+
+    admin.query(sql, values, (err, results) => {
+      if (err) {
+        reject(err);
+      } else {
         resolve(results.insertId);
       }
     });
@@ -96,6 +112,24 @@ exports.createAdminRole = async (role, email) => {
       } else {
         resolve(results.insertId); // Return the ID of the newly inserted row
       }
+    });
+  });
+};
+
+
+
+
+exports.getAllFeatureCategories = () => {
+  return new Promise((resolve, reject) => {
+    const sql = `
+                  SELECT * FROM featurecategory`;
+
+    admin.query(sql, (err, results) => {
+      if (err) {
+        return reject(err); // Reject promise if an error occurs
+      }
+
+      resolve(results); // No need to wrap in arrays, return results directly
     });
   });
 };

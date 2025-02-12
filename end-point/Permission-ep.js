@@ -143,29 +143,73 @@ exports.createCategory = async (req, res) => {
   try {
     const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
     console.log("Request URL:", fullUrl);
-    console.log(req.body);
+    console.log("Request Body:", req.body);
 
-    const { category } = req.body; // Extract category from the request body
+    const { categoryId, newCategory, feature } = req.body;
 
-    // Call the DAO function to create a new category
-    const categoryId = await PermissionsDao.createCategory(category);
+    if (!feature) {
+      return res.status(400).json({
+        error: "Feature is required",
+      });
+    }
 
-    // Return success response
+    let createFeature;
+
+    if (newCategory) {
+      if (!newCategory.trim()) {
+        return res.status(400).json({
+          error: "New category name cannot be empty",
+        });
+      }
+
+      const createdCategory = await PermissionsDao.createCategory(newCategory);
+
+      createFeature = await PermissionsDao.createFeature(createdCategory.id, feature);
+
+    } else if (categoryId) {
+      createFeature = await PermissionsDao.createFeature(categoryId, feature);
+    } else {
+      return res.status(400).json({
+        error: "Either 'newCategory' or 'categoryId' is required",
+      });
+    }
+
     return res.status(201).json({
-      message: "Category created successfully",
-      id: categoryId,
+      message: "Feature created successfully",
+      featureId: createFeature.insertId,
       status: true,
     });
   } catch (err) {
     if (err.isJoi) {
-      // Handle validation errors (if using Joi or similar validation library)
       return res.status(400).json({ error: err.details[0].message });
     }
 
-    // Handle other errors
     console.error("Error executing query:", err);
     return res.status(500).json({
-      error: "An error occurred while creating the category",
+      error: "An error occurred while creating the category or feature",
     });
+  }
+};
+
+
+
+
+exports.getAllFeatureCategories = async (req, res) => {
+  const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
+  console.log("Request URL:", fullUrl);
+  try {
+    const featureCategories = await PermissionsDao.getAllFeatureCategories();
+
+    console.log("Successfully fetched feature categories");
+    res.json({
+      featureCategories,
+    });
+  } catch (err) {
+    if (err.isJoi) {
+      // Validation error
+      return res.status(400).json({ error: err.details[0].message });
+    }
+    console.error("Error executing query:", err);
+    res.status(500).send("An error occurred while fetching data.");
   }
 };

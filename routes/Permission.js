@@ -40,4 +40,13 @@ router.post(
 
 router.post("/create-categories", permissionEp.createCategory);
 
+router.get(
+  "/get-all-feture-categories",
+  authMiddleware,
+  permissionEp.getAllFeatureCategories
+);
+
+
+
+
 module.exports = router;
