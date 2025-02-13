@@ -618,25 +618,36 @@ exports.getOngoingCultivationsWithUserDetails = () => {
 
 exports.getOngoingCultivationsById = (id) => {
   const sql = `
-        SELECT 
-            ongoingcultivationscrops.id AS ongoingcultivationscropsid, 
-            ongoingcultivationscrops.ongoingCultivationId,
-            ongoingcultivationscrops.cropCalendar,
-            cropgroup.cropNameEnglish AS cropName,
-            cropvariety.varietyNameEnglish AS variety,
-            cropcalender.method AS cultivationMethod,
-            cropcalender.natOfCul AS natureOfCultivation,
-            cropcalender.cropDuration AS cropDuration
-        FROM 
-            ongoingcultivationscrops
-        JOIN 
-            cropcalender ON ongoingcultivationscrops.cropCalendar = cropcalender.id
-        JOIN 
-            cropvariety ON cropcalender.cropVarietyId = cropvariety.id
-        JOIN 
-            cropgroup ON cropvariety.cropGroupId = cropgroup.id
-        WHERE
-            ongoingcultivationscrops.ongoingCultivationId = ?`;
+    SELECT 
+      ongoingcultivationscrops.id AS ongoingcultivationscropsid, 
+      ongoingcultivationscrops.ongoingCultivationId,
+      ongoingcultivationscrops.cropCalendar,
+      cropgroup.cropNameEnglish AS cropName,
+      cropvariety.varietyNameEnglish AS variety,
+      cropcalender.method AS cultivationMethod,
+      cropcalender.natOfCul AS natureOfCultivation,
+      cropcalender.cropDuration AS cropDuration,
+      slavecropcalendardays.id AS taskId,
+      cropgeo.longitude,
+      cropgeo.latitude,
+      -- Count total tasks and completed tasks
+      (SELECT COUNT(*) FROM slavecropcalendardays WHERE onCulscropID = ongoingcultivationscrops.id) AS totalTasks,
+      (SELECT COUNT(*) FROM slavecropcalendardays WHERE onCulscropID = ongoingcultivationscrops.id AND status = 'completed') AS completedTasks
+    FROM 
+      ongoingcultivationscrops
+    JOIN 
+      cropcalender ON ongoingcultivationscrops.cropCalendar = cropcalender.id
+    JOIN 
+      cropvariety ON cropcalender.cropVarietyId = cropvariety.id
+    JOIN 
+      cropgroup ON cropvariety.cropGroupId = cropgroup.id
+    LEFT JOIN 
+      slavecropcalendardays ON slavecropcalendardays.onCulscropID = ongoingcultivationscrops.id 
+      AND slavecropcalendardays.reqGeo = 1
+    LEFT JOIN 
+      cropgeo ON cropgeo.taskId = slavecropcalendardays.id
+    WHERE
+      ongoingcultivationscrops.ongoingCultivationId = ?`;
 
   return new Promise((resolve, reject) => {
     plantcare.query(sql, [id], (err, results) => {
@@ -648,6 +659,7 @@ exports.getOngoingCultivationsById = (id) => {
     });
   });
 };
+
 
 exports.getFixedAssetsByCategory = (userId, category) => {
   const validCategories = {

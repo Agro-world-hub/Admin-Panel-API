@@ -641,7 +641,7 @@ const createSlaveCropCalenderDaysTable = () => {
 
 const createCropGeoTable = () => {
     const sql = `
-    CREATE TABLE IF NOT EXISTS cropGeo (
+    CREATE TABLE IF NOT EXISTS cropgeo (
     id INT AUTO_INCREMENT PRIMARY KEY,
     taskId INT(11) DEFAULT NULL,
     longitude DECIMAL(20,15) DEFAULT NULL,
