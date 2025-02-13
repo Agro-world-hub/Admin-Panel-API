@@ -12,8 +12,19 @@ const xlsx = require("xlsx");
 
 const router = express.Router();
 
+router.get(
+    "/get-all-system-applications",
+    authMiddleware,
+    
+    ComplainCategoryEP.getAllSystemApplications
+)
 
-
+router.get(
+    "/get-complain-categories/:id",
+    authMiddleware,
+    
+    ComplainCategoryEP.getComplainCategoriesByAppId
+)
 
 
 
