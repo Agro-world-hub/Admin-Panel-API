@@ -12,9 +12,54 @@ const xlsx = require("xlsx");
 
 const router = express.Router();
 
+router.get(
+    "/get-all-system-applications",
+    authMiddleware,
+    
+    ComplainCategoryEP.getAllSystemApplications
+)
+
+router.get(
+    "/get-complain-categories/:systemAppId",
+    authMiddleware,
+    
+    ComplainCategoryEP.getComplainCategoriesByAppId
+)
+
+router.get(
+    "/get-admin-complain-category",
+    authMiddleware,
+    ComplainCategoryEP.getAdminComplaintsCategory
+)
+
+router.post(
+    "/add-new-complaint-category",
+    authMiddleware,
+    ComplainCategoryEP.AddNewComplaintCategory
+)
 
 
 
+router.post(
+    "/add-new-application/:applicationName",
+    authMiddleware,
+    
+    ComplainCategoryEP.postNewApplication
+)
+
+router.post(
+    "/edit-application",
+    authMiddleware,
+    
+    ComplainCategoryEP.editApplication
+)
+
+router.post(
+    "/delete-application/:systemAppId",
+    authMiddleware,
+    
+    ComplainCategoryEP.deleteApplicationByAppId
+)
 
 
 
