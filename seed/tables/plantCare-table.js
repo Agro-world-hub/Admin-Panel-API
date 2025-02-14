@@ -393,7 +393,7 @@ const createMachToolsFixedAsset = () => {
       asset VARCHAR(50) DEFAULT NULL,
       assetType VARCHAR(25) DEFAULT NULL,
       mentionOther VARCHAR(50) DEFAULT NULL,
-      brand VARCHAR(25) DEFAULT NULL,
+      brand VARCHAR(125) DEFAULT NULL,
       numberOfUnits INT DEFAULT NULL,
       unitPrice DECIMAL(15, 2) DEFAULT NULL,
       totalPrice DECIMAL(15, 2) DEFAULT NULL,

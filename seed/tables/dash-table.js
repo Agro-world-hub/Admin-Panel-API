@@ -164,6 +164,41 @@ const createApartmentTable = () => {
 
 
 
+const createDashcomplainTable = () => {
+    const sql = `
+    CREATE TABLE dashcomplain (
+        id INT(11) NOT NULL AUTO_INCREMENT,
+        saId INT(11) NOT NULL,  
+        refNo VARCHAR(20) NOT NULL,
+        language VARCHAR(50) NOT NULL,
+        complainCategory INT DEFAULT NULL,
+        complain TEXT NOT NULL,
+        reply TEXT,
+        status VARCHAR(20) NOT NULL,
+        createdAt TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        PRIMARY KEY (id),  
+        FOREIGN KEY (saId) REFERENCES salesagent(id)
+            ON DELETE CASCADE
+            ON UPDATE CASCADE,
+        FOREIGN KEY (complainCategory) REFERENCES agro_world_admin.complaincategory(id)
+            ON DELETE CASCADE
+            ON UPDATE CASCADE
+);
+  `;
+    return new Promise((resolve, reject) => {
+        dash.query(sql, (err, result) => {
+            if (err) {
+                reject('Error creating dashcomplain table: ' + err);
+            } else {
+                resolve('dashcomplain table created request successfully.');
+            }
+        });
+    });
+};
+
+
+
+
 
 module.exports = {
     createSalesAgentTable,

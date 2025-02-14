@@ -5,7 +5,8 @@ const createAdminUserRolesTable = () => {
     const sql = `
     CREATE TABLE IF NOT EXISTS adminroles (
       id INT AUTO_INCREMENT PRIMARY KEY,
-      role VARCHAR(100) DEFAULT NULL
+      role VARCHAR(100) DEFAULT NULL,
+      email VARCHAR(100) DEFAULT NULL
     )
   `;
     return new Promise((resolve, reject) => {
