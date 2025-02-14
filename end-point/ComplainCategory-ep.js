@@ -13,28 +13,21 @@ const AWS = require("aws-sdk");
 const { v4: uuidv4 } = require("uuid");
 const uploadFileToS3 = require("../middlewares/s3upload");
 const deleteFromS3 = require("../middlewares/s3delete");
+const ComplainCategoryValidate = require("../validations/ComplainCategory-validation")
 
 exports.getAllSystemApplications = async (req, res) => {
     const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
     console.log(fullUrl);
 
     try {        
-        // Validate query parameters
-        // const validatedQuery = await collectionofficerValidate.getAllCollectionOfficersSchema.validateAsync(req.query);
         
-        // const { page, limit, nic, company } = validatedQuery;
-
-        // Call the DAO to get all collection officers
         const result = await ComplainCategoryDAO.getAllSystemApplicationData();
         console.log('dfdgdgd',result);
 
         console.log("Successfully fetched collection officers");
         return res.status(200).json(result);
     } catch (error) {
-        // if (error.isJoi) {
-        //     // Handle validation error
-        //     return res.status(400).json({ error: error.details[0].message });
-        // }
+        
 
         console.error("Error fetching collection officers:", error);
         return res.status(500).json({ error: "An error occurred while fetching collection officers" });
@@ -42,8 +35,14 @@ exports.getAllSystemApplications = async (req, res) => {
 };
 
 exports.getComplainCategoriesByAppId = async (req, res) => {
+  const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
+  console.log(fullUrl);
     try {
-      const systemAppId = req.params.id; // Get systemAppId from request parameters
+      console.log("going to validate");
+
+      const validatedQuery = await ComplainCategoryValidate.getComplainCategoriesSchema.validateAsync({systemAppId: req.params.systemAppId});
+      const {systemAppId} = validatedQuery;
+      // const systemAppId = req.params.id; 
       console.log("this is",systemAppId);
   
       

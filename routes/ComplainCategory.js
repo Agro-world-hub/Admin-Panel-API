@@ -20,7 +20,7 @@ router.get(
 )
 
 router.get(
-    "/get-complain-categories/:id",
+    "/get-complain-categories/:systemAppId",
     authMiddleware,
     
     ComplainCategoryEP.getComplainCategoriesByAppId

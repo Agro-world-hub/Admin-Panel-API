@@ -35,12 +35,12 @@ exports.getAllSystemApplicationData = () => {
         WHERE cc.appId = ?
         `;
 
-        admin.query(sql, [systemAppId], (err, results) => { // Pass parameters as an array
+        admin.query(sql, [systemAppId], (err, results) => { 
             if (err) {
-                return reject(err); // Reject promise if an error occurs
+                return reject(err); 
             }
             
-            resolve(results); // Resolve the promise with the query results
+            resolve(results); 
         });
     });
 };
