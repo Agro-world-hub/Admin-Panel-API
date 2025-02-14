@@ -61,6 +61,89 @@ exports.getComplainCategoriesByAppId = async (req, res) => {
 };
 
 
+exports.postNewApplication = async (req, res) => {
+    const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
+    console.log(fullUrl);
+      try {
+        // console.log("going to validate");
+  
+        const validatedQuery = await ComplainCategoryValidate.addNewApplicationSchema.validateAsync({applicationName: req.params.applicationName});
+        const {applicationName} = validatedQuery;
+        // const applicationName = req.params.applicationName;
+        console.log("this is",applicationName);
+    
+        
+        const result = await ComplainCategoryDAO.addNewApplicationData(applicationName);
+        console.log(result)
+    
+        if (!result) {
+          return res.status(404).json({ message: 'application did not added successfully' });
+        }
+    
+        res.status(200).json({message: "application added successfully", result});
+      } catch (err) {
+        console.error(err);
+        res.status(500).json({ message: 'Internal server error' });
+      }
+  };
+
+
+  exports.editApplication = async (req, res) => {
+    const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
+    console.log(fullUrl);
+      try {
+        // console.log("going to validate");
+  
+        const validatedQuery = await ComplainCategoryValidate.editApplicationSchema.validateAsync(req.query);
+        const {systemAppId, applicationName} = validatedQuery;
+        // const { systemAppId, applicationName} = req.query;
+        // const { applicationName } = req.body;
+        console.log("this is",systemAppId, applicationName);
+    
+        
+        const result = await ComplainCategoryDAO.editApplicationData(systemAppId, applicationName);
+        console.log(result)
+    
+        if (!result) {
+          return res.status(404).json({ message: 'application did not edited successfully' });
+        }
+    
+        res.status(200).json({message: "application edited successfully", result});
+      } catch (err) {
+        console.error(err);
+        res.status(500).json({ message: 'Internal server error' });
+      }
+  };
+
+  exports.deleteApplicationByAppId = async (req, res) => {
+    const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
+    console.log(fullUrl);
+      try {
+        // console.log("going to validate");
+  
+        const validatedQuery = await ComplainCategoryValidate.deleteApplicationSchema.validateAsync({systemAppId: req.params.systemAppId});
+        const {systemAppId} = validatedQuery;
+        // const systemAppId = req.params.systemAppId; 
+        console.log("this is",systemAppId);
+    
+        
+        const result = await ComplainCategoryDAO.deleteApplicationData(systemAppId);
+        console.log(result)
+    
+        if (!result) {
+          return res.status(404).json({ message: 'application not found' });
+        }
+    
+        res.status(200).json(result);
+      } catch (err) {
+        console.error(err);
+        res.status(500).json({ message: 'Internal server error' });
+      }
+    };
+
+
+
+
 exports.getAdminComplaintsCategory = async (req, res) => {
   const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
   console.log(fullUrl);

@@ -40,6 +40,26 @@ router.post(
 
 
 
+router.post(
+    "/add-new-application/:applicationName",
+    authMiddleware,
+    
+    ComplainCategoryEP.postNewApplication
+)
+
+router.post(
+    "/edit-application",
+    authMiddleware,
+    
+    ComplainCategoryEP.editApplication
+)
+
+router.post(
+    "/delete-application/:systemAppId",
+    authMiddleware,
+    
+    ComplainCategoryEP.deleteApplicationByAppId
+)
 
 
 
