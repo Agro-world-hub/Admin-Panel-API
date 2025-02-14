@@ -44,3 +44,52 @@ exports.getAllSystemApplicationData = () => {
         });
     });
 };
+
+
+exports.addNewApplicationData = (applicationName) => {
+  return new Promise((resolve, reject) => {
+      const sql = `INSERT INTO systemapplications (appName) VALUES (?)`;
+
+      admin.query(sql, [applicationName], (err, results) => {  
+          if (err) {
+              return reject(err); 
+          }
+          
+          resolve(results); 
+      });
+  });
+};
+
+exports.editApplicationData = (systemAppId, applicationName) => {
+  return new Promise((resolve, reject) => {
+    const sql = `UPDATE systemapplications SET appName = ? WHERE id = ?`;
+
+      admin.query(sql, [applicationName, systemAppId], (err, results) => {  
+          if (err) {
+              return reject(err); 
+          }
+          
+          resolve(results); 
+      });
+  });
+};
+
+exports.deleteApplicationData = (systemAppId) => {
+  return new Promise((resolve, reject) => {
+    const sql = `DELETE FROM systemapplications WHERE id = ?`; // Use DELETE instead of UPDATE
+
+    admin.query(sql, [systemAppId], (err, results) => {  
+        if (err) {
+            return reject(err); 
+        }
+        
+        // Check if any row was deleted
+        if (results.affectedRows === 0) {
+          return reject(new Error('No application found with the provided systemAppId'));
+        }
+
+        resolve(results); 
+    });
+  });
+};
+
