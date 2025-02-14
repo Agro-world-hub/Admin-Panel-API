@@ -11,16 +11,21 @@ exports.createMarketPriceXLSX = async (req, res) => {
   try {
     const { xlName } = req.body;
 
-    // Step 1: Insert XLSX history and get the xlindex
+    const xlcount = await marketPriceDao.getAllxlsxlistCount();
+
+    console.log('chalana',xlcount.total);
+
+    if(xlcount.total != 0){
+      return res.status(400).json({ error: "There is an existing file. Please first delete that and try upload again" });
+    }
+
     const xlindex = await marketPriceDao.createxlhistory(xlName);
 
-    // Step 2: Validate if a file was uploaded
     if (!req.file) {
       return res.status(400).json({ error: "No file uploaded." });
     }
     console.log('File received:', req.file.originalname);
 
-    // Step 3: Validate the file type (must be .xlsx or .xls)
     const allowedExtensions = [".xlsx", ".xls"];
     const fileExtension = path.extname(req.file.originalname).toLowerCase();
     if (!allowedExtensions.includes(fileExtension)) {
@@ -30,7 +35,7 @@ exports.createMarketPriceXLSX = async (req, res) => {
     }
     console.log('File type validated:', fileExtension);
 
-    // Step 4: Read the XLSX file
+
     let workbook;
     try {
       if (req.file.buffer) {
@@ -50,12 +55,10 @@ exports.createMarketPriceXLSX = async (req, res) => {
     }
     console.log('File successfully read.');
 
-    // Step 5: Validate the workbook structure
     if (!workbook || !workbook.SheetNames || workbook.SheetNames.length === 0) {
       return res.status(400).json({ error: "The uploaded file is empty or invalid." });
     }
-
-    // Step 6: Extract data from the first sheet
+    
     const sheetName = workbook.SheetNames[0]; // Using the first sheet
     const worksheet = workbook.Sheets[sheetName];
     const data = xlsx.utils.sheet_to_json(worksheet);
@@ -67,17 +70,7 @@ exports.createMarketPriceXLSX = async (req, res) => {
 
     console.log(`Data extracted from XLSX: ${data.length} rows`);
 
-    // Step 7: Check if the date field is present in the data
-    // const extractedDate = data[0]['Date'];
-
-    // Validate the extracted date (customize this logic as per your needs)
-    // if (!extractedDate || isNaN(Date.parse(extractedDate))) {
-    //   return res.status(400).json({ error: "Invalid or missing 'Date' field in the XLSX file." });
-    // }
     
-    // console.log(`Date extracted from XLSX: ${extractedDate}`);
-
-    // Step 8: Insert market price data using xlindex and the extracted date
     const marketPriceResult = await marketPriceDao.insertMarketPriceXLSXData(xlindex, data);
     console.log('Market price data successfully inserted.');
 

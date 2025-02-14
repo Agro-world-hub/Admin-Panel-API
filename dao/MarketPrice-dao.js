@@ -353,3 +353,24 @@ exports.getAllCropNameDAO = () => {
   });
 };
 
+
+
+exports.getAllxlsxlistCount = () => {
+  return new Promise((resolve, reject) => {
+    const countSql = "SELECT COUNT(*) as total FROM xlsxhistory";
+
+
+collectionofficer.query(countSql, (countErr, countResults) => {
+      if (countErr) {
+        reject(countErr);
+      } else {
+         
+        resolve({
+          total: countResults[0].total,
+        });
+      
+      
+      }
+    });
+  });
+};
