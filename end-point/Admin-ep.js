@@ -1830,13 +1830,12 @@ exports.editUserTask = async (req, res) => {
       validatedParams.startingDate,
       validatedParams.reqImages,
       validatedParams.imageLink,
-      validatedParams.videoLink,
+      validatedParams.videoLinkEnglish,
+      validatedParams.videoLinkSinhala,
+      validatedParams.videoLinkTamil,
       validatedParams.id
     );
 
-    if (result.affectedRows === 0) {
-      return res.status(404).json({ message: "Task not found" });
-    }
 
     console.log("Task updated successfully");
     res.status(200).json({ message: "Task updated successfully" });

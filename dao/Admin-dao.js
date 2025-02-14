@@ -1342,14 +1342,16 @@ exports.editUserTask = (
   startingDate,
   reqImages,
   imageLink,
-  videoLink,
+  videoLinkEnglish,
+  videoLinkSinhala,
+  videoLinkTamil,
   id
 ) => {
   return new Promise((resolve, reject) => {
     const sql = `
             UPDATE slavecropcalendardays 
             SET taskEnglish=?, taskSinhala=?, taskTamil=?, taskTypeEnglish=?, taskTypeSinhala=?, taskTypeTamil=?, 
-                taskCategoryEnglish=?, taskCategorySinhala=?, taskCategoryTamil=? , startingDate=?, reqImages=?,imageLink=?, videoLink= ?
+                taskCategoryEnglish=?, taskCategorySinhala=?, taskCategoryTamil=? , startingDate=?, reqImages=?,imageLink=?, videoLinkEnglish= ?, videoLinkSinhala= ?, videoLinkTamil= ?
             WHERE id = ?
         `;
     const values = [
@@ -1365,7 +1367,9 @@ exports.editUserTask = (
       startingDate,
       reqImages,
       imageLink,
-      videoLink,
+      videoLinkEnglish,
+      videoLinkSinhala,
+      videoLinkTamil,
       id,
     ];
 
