@@ -26,6 +26,20 @@ router.get(
     ComplainCategoryEP.getComplainCategoriesByAppId
 )
 
+router.get(
+    "/get-admin-complain-category",
+    authMiddleware,
+    ComplainCategoryEP.getAdminComplaintsCategory
+)
+
+router.post(
+    "/add-new-complaint-category",
+    authMiddleware,
+    ComplainCategoryEP.AddNewComplaintCategory
+)
+
+
+
 
 
 
