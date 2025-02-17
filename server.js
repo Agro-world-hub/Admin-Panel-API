@@ -9,6 +9,7 @@ const MarketPlace = require('./routes/MarketPlace');
 const CropCalendar = require('./routes/CropCalendar');
 const Permission = require('./routes/Permission');
 const ComplainCategory = require('./routes/ComplainCategory');
+const Stakeholder = require('./routes/stakeholder')
 require('dotenv').config();
 const cors = require('cors');
 
@@ -84,6 +85,7 @@ app.use('/api/market-place', MarketPlace);
 app.use('/api/crop-calendar', CropCalendar);
 app.use('/api/permission', Permission);
 app.use('/api/complain', ComplainCategory);
+app.use('/api/stakeholder', Stakeholder)
 app.use('/uploads', express.static('uploads'));
 
 app.get('/test', (req, res) => {
