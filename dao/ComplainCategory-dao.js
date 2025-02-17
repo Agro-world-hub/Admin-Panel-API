@@ -29,6 +29,7 @@ exports.getComplainCategoryData = (systemAppId) => {
   return new Promise((resolve, reject) => {
     const sql = `
         SELECT 
+        cc.id,
         cc.categoryEnglish
         
         FROM complaincategory cc
@@ -151,3 +152,54 @@ exports.deleteApplicationData = (systemAppId) => {
   });
 };
 
+
+
+exports.getCategoriDetailsByIdDao = (id) => {
+  return new Promise((resolve, reject) => {
+    const sql = `
+        SELECT *
+        FROM complaincategory 
+        WHERE id = ?
+        `;
+
+    admin.query(sql, [id], (err, results) => {
+      if (err) {
+        return reject(err);
+      }
+
+      resolve(results[0]);
+    });
+  });
+};
+
+
+
+exports.EditComplainCategoryDao = (data) => {
+  return new Promise((resolve, reject) => {
+    const sql = `
+      UPDATE complaincategory 
+      SET 
+        roleId = ?, 
+        appId = ?, 
+        categoryEnglish = ?, 
+        categorySinhala = ?, 
+        categoryTamil = ?
+      WHERE id = ?
+      `;
+
+    admin.query(sql, [
+      data.roleId,
+      data.appId,
+      data.categoryEnglish,
+      data.categorySinhala,
+      data.categoryTamil,
+      data.id
+    ],
+      (err, results) => {
+        if (err) {
+          return reject(err);
+        }
+        resolve(results);
+      });
+  });
+};

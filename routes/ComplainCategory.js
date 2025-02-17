@@ -15,14 +15,14 @@ const router = express.Router();
 router.get(
     "/get-all-system-applications",
     authMiddleware,
-    
+
     ComplainCategoryEP.getAllSystemApplications
 )
 
 router.get(
     "/get-complain-categories/:systemAppId",
     authMiddleware,
-    
+
     ComplainCategoryEP.getComplainCategoriesByAppId
 )
 
@@ -43,22 +43,34 @@ router.post(
 router.post(
     "/add-new-application/:applicationName",
     authMiddleware,
-    
+
     ComplainCategoryEP.postNewApplication
 )
 
 router.post(
     "/edit-application",
     authMiddleware,
-    
+
     ComplainCategoryEP.editApplication
 )
 
 router.post(
     "/delete-application/:systemAppId",
     authMiddleware,
-    
+
     ComplainCategoryEP.deleteApplicationByAppId
+)
+
+router.get(
+    "/get-categori-details-by-id/:id",
+    authMiddleware,
+    ComplainCategoryEP.getCategoriesDetailsById
+)
+
+router.patch(
+    "/edit-complaint-category",
+    authMiddleware,
+    ComplainCategoryEP.EditComplaintCategory
 )
 
 
