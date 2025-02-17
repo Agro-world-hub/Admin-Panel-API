@@ -28,3 +28,18 @@ exports.addNewApplicationSchema = Joi.object({
 
 });
 
+
+exports.IdParamsSchema = Joi.object({
+    id: Joi.number().integer().required(),
+
+});
+
+
+exports.EditComplainCategorySchema = Joi.object({
+    id: Joi.number().integer().required(),
+    roleId: Joi.number().integer().required(),
+    appId: Joi.number().integer().required(),
+    categoryEnglish: Joi.string().required(),
+    categorySinhala: Joi.string().required(),
+    categoryTamil: Joi.string().required()
+});
