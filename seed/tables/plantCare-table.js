@@ -235,6 +235,8 @@ const createOngoingCultivationsCropsTable = () => {
       extentha DECIMAL(15, 2) DEFAULT NULL,
       extentac DECIMAL(15, 2) DEFAULT NULL,
       extentp DECIMAL(15, 2) DEFAULT NULL,
+      longitude DECIMAL(20, 15) DEFAULT NULL,
+      latitude DECIMAL(20, 15) DEFAULT NULL,
       createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (ongoingCultivationId) REFERENCES ongoingcultivations(id)
         ON DELETE CASCADE
