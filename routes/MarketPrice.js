@@ -117,13 +117,13 @@ const getCropVarietyData = () => {
       // Create a worksheet and workbook
       const worksheet = XLSX.utils.json_to_sheet(formattedData);
       const workbook = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(workbook, worksheet, 'CropData');
+      XLSX.utils.book_append_sheet(workbook, worksheet, 'Market Price Template');
   
       // Write the workbook to a buffer
       const excelBuffer = XLSX.write(workbook, { type: 'buffer', bookType: 'xlsx' });
   
       // Set headers for file download
-      res.setHeader('Content-Disposition', 'attachment; filename="CropData.xlsx"');
+      res.setHeader('Content-Disposition', 'attachment; filename="Market Price Template.xlsx"');
       res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
       
       // Send the file to the client

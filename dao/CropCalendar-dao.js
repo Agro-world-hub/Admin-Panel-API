@@ -228,7 +228,6 @@ exports.insertXLSXData = (cropId, data) => {
       "Video Link Sinhala": Joi.string(),
       "Video Link Tamil": Joi.string(),
       "Required Images": Joi.number(),
-      "Require Geo": Joi.number(),
     }).required();
 
     // Validate all data
@@ -250,7 +249,7 @@ exports.insertXLSXData = (cropId, data) => {
         (cropId, taskIndex, days, taskTypeEnglish, taskTypeSinhala, taskTypeTamil, 
         taskCategoryEnglish, taskCategorySinhala, taskCategoryTamil, 
         taskEnglish, taskSinhala, taskTamil, 
-        taskDescriptionEnglish, taskDescriptionSinhala, taskDescriptionTamil, imageLink, videoLinkEnglish, videoLinkSinhala, videoLinkTamil, reqImages, reqGeo) 
+        taskDescriptionEnglish, taskDescriptionSinhala, taskDescriptionTamil, imageLink, videoLinkEnglish, videoLinkSinhala, videoLinkTamil, reqImages) 
         VALUES ?`;
 
     const values = validatedData.map((row) => [
@@ -273,8 +272,7 @@ exports.insertXLSXData = (cropId, data) => {
       row["Video Link English"],
       row["Video Link Sinhala"],
       row["Video Link Tamil"],
-      row["Required Images"],
-      row["Require Geo"],
+      row["Required Images"]
     ]);
 
     plantcare.query(sql, [values], (err, result) => {
