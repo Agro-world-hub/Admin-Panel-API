@@ -628,8 +628,8 @@ exports.getOngoingCultivationsById = (id) => {
       cropcalender.natOfCul AS natureOfCultivation,
       cropcalender.cropDuration AS cropDuration,
       slavecropcalendardays.id AS taskId,
-      cropgeo.longitude,
-      cropgeo.latitude,
+      ongoingcultivationscrops.longitude,
+      ongoingcultivationscrops.latitude,
       -- Count total tasks and completed tasks
       (SELECT COUNT(*) FROM slavecropcalendardays WHERE onCulscropID = ongoingcultivationscrops.id) AS totalTasks,
       (SELECT COUNT(*) FROM slavecropcalendardays WHERE onCulscropID = ongoingcultivationscrops.id AND status = 'completed') AS completedTasks
@@ -644,8 +644,6 @@ exports.getOngoingCultivationsById = (id) => {
     LEFT JOIN 
       slavecropcalendardays ON slavecropcalendardays.onCulscropID = ongoingcultivationscrops.id 
       AND slavecropcalendardays.reqGeo = 1
-    LEFT JOIN 
-      cropgeo ON cropgeo.taskId = slavecropcalendardays.id
     WHERE
       ongoingcultivationscrops.ongoingCultivationId = ?`;
 

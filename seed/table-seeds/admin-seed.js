@@ -12,6 +12,7 @@ const {createSuperAdmin} = require('../data/admin')
 const {insertRoles} = require('../data/adminRoles')
 const {insertPositions} = require('../data/adminPositions')
 const {insertFeatureCategoriesAndFeatures} = require('../data/featureCtegories')
+const {applications} = require('../data/applications')
 
 
 const seedAdmin = async () => {
@@ -60,6 +61,8 @@ const seedAdmin = async () => {
     const messageInsertFeatureCategoriesAndFeatures = await insertFeatureCategoriesAndFeatures();
     console.log(messageInsertFeatureCategoriesAndFeatures);
     
+    const messageInsertFapplications = await applications();
+    console.log(messageInsertFapplications);
 } catch (err) {
     console.error('Error seeding seedAdmin:', err);
   }

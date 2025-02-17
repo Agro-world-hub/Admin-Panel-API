@@ -178,7 +178,6 @@ const createCropCalenderDaysTable = () => {
     videoLinkSinhala TEXT DEFAULT NULL,
     videoLinkTamil TEXT DEFAULT NULL,
     reqImages INT(11) DEFAULT NULL,
-    reqGeo BOOLEAN DEFAULT NULL,
     createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (cropId) REFERENCES cropcalender(id)
         ON DELETE CASCADE
@@ -614,7 +613,6 @@ const createSlaveCropCalenderDaysTable = () => {
       videoLinkSinhala TEXT DEFAULT NULL,
       videoLinkTamil TEXT DEFAULT NULL,
       reqImages INT(11) DEFAULT NULL,
-      reqGeo BOOLEAN DEFAULT NULL,
       createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (userId) REFERENCES users(id)
           ON DELETE CASCADE
@@ -639,29 +637,6 @@ const createSlaveCropCalenderDaysTable = () => {
 };
 
 
-const createCropGeoTable = () => {
-    const sql = `
-    CREATE TABLE IF NOT EXISTS cropgeo (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    taskId INT(11) DEFAULT NULL,
-    longitude DECIMAL(20,15) DEFAULT NULL,
-    latitude DECIMAL(20,15) DEFAULT NULL,
-    createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (taskId) REFERENCES slavecropcalendardays(id)
-        ON DELETE CASCADE
-        ON UPDATE CASCADE
-);
-  `;
-    return new Promise((resolve, reject) => {
-        plantcare.query(sql, (err, result) => {
-            if (err) {
-                reject('Error creating cropGeo table: ' + err);
-            } else {
-                resolve('cropGeo table created successfully.');
-            }
-        });
-    });
-};
 
 
 const createTaskImages = () => {
@@ -871,7 +846,6 @@ module.exports = {
     createOwnershipSharedFixedAsset,
     createCurrentAssetRecord,
     createSlaveCropCalenderDaysTable,
-    createCropGeoTable,
     createTaskImages,
     createUserBankDetails,
 

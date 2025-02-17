@@ -20,7 +20,6 @@ const { createOwnershipSharedFixedAsset } = require('../tables/plantCare-table')
 const { createCurrentAssetRecord } = require('../tables/plantCare-table');
 const { createCurrentAssetTable } = require('../tables/plantCare-table');
 const { createSlaveCropCalenderDaysTable } = require('../tables/plantCare-table');
-const { createCropGeoTable } = require('../tables/plantCare-table');
 const { createTaskImages } = require('../tables/plantCare-table');
 const { createUserBankDetails } = require('../tables/plantCare-table');
 
@@ -29,9 +28,6 @@ const { createDeletedUserTable } = require('../tables/plantCare-table');
 const { createUserFeedbackTable } = require('../tables/plantCare-table');
 
 
-
-const {createSuperAdmin} = require('../data/admin')
-const {insertRoles} = require('../data/adminRoles')
 
 
     
@@ -106,8 +102,6 @@ const seedPlantCare = async () => {
     const messageSlaveCropCalenderDaysTable = await createSlaveCropCalenderDaysTable();
     console.log(messageSlaveCropCalenderDaysTable);
 
-    const messageCreateCropGeoTable = await createCropGeoTable();
-    console.log(messageCreateCropGeoTable);
 
     const messageCreateTaskImages= await createTaskImages();
     console.log(messageCreateTaskImages);

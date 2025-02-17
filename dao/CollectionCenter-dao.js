@@ -98,19 +98,112 @@ exports.deleteCollectionCenterDAo = async (id) => {
   });
 };
 
-exports.GetAllComplainDAO = (page, limit, status,category, searchText) => {
+// exports.GetAllComplainDAO = (page, limit, status,category, searchText) => {
+//   return new Promise((resolve, reject) => {
+//     const Sqlparams = [];
+//     const Counterparams = [];
+//     const offset = (page - 1) * limit;
+
+//     // SQL to count total records
+//     let countSql = `
+//       SELECT COUNT(*) AS total
+//       FROM farmercomplains fc
+//       LEFT JOIN plant_care.users u ON fc.farmerId = u.id
+//       LEFT JOIN agro_world_admin.complaincategory cc ON fc.complainCategory = cc.id
+//       LEFT JOIN agro_world_admin.adminroles ar ON cc.roleId = ar.id
+//       WHERE 1 = 1
+//     `;
+
+//     // SQL to fetch paginated data
+//     let sql = `
+//       SELECT 
+//         fc.id, 
+//         fc.refNo,
+//         u.NICnumber AS NIC,
+//         u.firstName AS farmerName,
+//         u.lastName AS lastName,
+//         cc.categoryEnglish AS complainCategory,
+//         ar.role,
+//         fc.createdAt,
+//         fc.adminStatus AS status,
+//         fc.reply
+//       FROM farmercomplains fc
+//       LEFT JOIN plant_care.users u ON fc.farmerId = u.id
+//       LEFT JOIN agro_world_admin.complaincategory cc ON fc.complainCategory = cc.id
+//       LEFT JOIN agro_world_admin.adminroles ar ON cc.roleId = ar.id
+//       WHERE 1 = 1
+//     `;
+
+//     // Add filter for status
+//     if (status) {
+//       countSql += " AND fc.adminStatus = ? ";
+//       sql += " AND fc.adminStatus = ? ";
+//       Sqlparams.push(status);
+//       Counterparams.push(status);
+//     }
+
+//     if (category) {
+//       countSql += " AND ar.role = ? ";  // Referencing ar.role now works
+//       sql += " AND ar.role = ? ";
+//       Sqlparams.push(category);
+//       Counterparams.push(category);
+//     }
+
+//     // Add search functionality
+//     if (searchText) {
+//       countSql += `
+//         AND (fc.refNo LIKE ?  OR u.firstName LIKE ?)
+//       `;
+//       sql += `
+//         AND (fc.refNo LIKE ? OR u.firstName LIKE ?)
+//       `;
+//       const searchQuery = `%${searchText}%`;
+//       Sqlparams.push(searchQuery, searchQuery, searchQuery, searchQuery);
+//       Counterparams.push(searchQuery, searchQuery, searchQuery, searchQuery);
+//     }
+
+//     // Add pagination
+//     sql += " ORDER BY createdAt DESC LIMIT ? OFFSET ?";
+//     Sqlparams.push(parseInt(limit), parseInt(offset));
+
+//     // Execute count query to get total records
+//     collectionofficer.query(
+//       countSql,
+//       Counterparams,
+//       (countErr, countResults) => {
+//         if (countErr) {
+//           return reject(countErr); // Handle count query error
+//         }
+
+//         const total = countResults[0]?.total || 0;
+
+//         // Execute main query to get paginated results
+//         collectionofficer.query(sql, Sqlparams, (dataErr, results) => {
+//           if (dataErr) {
+//             return reject(dataErr); // Handle data query error
+//           }
+
+//           resolve({ results, total });
+//         });
+//       }
+//     );
+//   });
+// };
+
+
+exports.GetAllComplainDAO = (page, limit, status, category, searchText) => {
   return new Promise((resolve, reject) => {
     const Sqlparams = [];
     const Counterparams = [];
     const offset = (page - 1) * limit;
 
-    // SQL to count total records
+    // SQL to count total records - Added missing JOINs
     let countSql = `
       SELECT COUNT(*) AS total
       FROM farmercomplains fc
-      LEFT JOIN collectionofficer cf ON fc.coId = cf.id
-      LEFT JOIN collectioncenter cc ON cf.centerId = cc.id
       LEFT JOIN plant_care.users u ON fc.farmerId = u.id
+      LEFT JOIN agro_world_admin.complaincategory cc ON fc.complainCategory = cc.id
+      LEFT JOIN agro_world_admin.adminroles ar ON cc.roleId = ar.id
       WHERE 1 = 1
     `;
 
@@ -119,15 +212,18 @@ exports.GetAllComplainDAO = (page, limit, status,category, searchText) => {
       SELECT 
         fc.id, 
         fc.refNo,
-        fc.complainCategory,
         u.NICnumber AS NIC,
         u.firstName AS farmerName,
         u.lastName AS lastName,
-         fc.createdAt,
-         fc.adminStatus AS status,
-         fc.reply
+        cc.categoryEnglish AS complainCategory,
+        ar.role,
+        fc.createdAt,
+        fc.adminStatus AS status,
+        fc.reply
       FROM farmercomplains fc
       LEFT JOIN plant_care.users u ON fc.farmerId = u.id
+      LEFT JOIN agro_world_admin.complaincategory cc ON fc.complainCategory = cc.id
+      LEFT JOIN agro_world_admin.adminroles ar ON cc.roleId = ar.id
       WHERE 1 = 1
     `;
 
@@ -139,9 +235,10 @@ exports.GetAllComplainDAO = (page, limit, status,category, searchText) => {
       Counterparams.push(status);
     }
 
+    // Fixed category filter to use the correct alias
     if (category) {
-      countSql += " AND fc.complainCategory = ? ";
-      sql += " AND fc.complainCategory = ? ";
+      countSql += " AND ar.role = ? ";
+      sql += " AND ar.role = ? ";
       Sqlparams.push(category);
       Counterparams.push(category);
     }
@@ -149,18 +246,18 @@ exports.GetAllComplainDAO = (page, limit, status,category, searchText) => {
     // Add search functionality
     if (searchText) {
       countSql += `
-        AND (fc.refNo LIKE ?  OR u.firstName LIKE ?)
+        AND (fc.refNo LIKE ? OR u.firstName LIKE ?)
       `;
       sql += `
         AND (fc.refNo LIKE ? OR u.firstName LIKE ?)
       `;
       const searchQuery = `%${searchText}%`;
-      Sqlparams.push(searchQuery, searchQuery, searchQuery, searchQuery);
-      Counterparams.push(searchQuery, searchQuery, searchQuery, searchQuery);
+      Sqlparams.push(searchQuery, searchQuery);
+      Counterparams.push(searchQuery, searchQuery);
     }
 
     // Add pagination
-    sql += " ORDER BY createdAt DESC LIMIT ? OFFSET ?";
+    sql += " ORDER BY fc.createdAt DESC LIMIT ? OFFSET ?";
     Sqlparams.push(parseInt(limit), parseInt(offset));
 
     // Execute count query to get total records
@@ -169,7 +266,7 @@ exports.GetAllComplainDAO = (page, limit, status,category, searchText) => {
       Counterparams,
       (countErr, countResults) => {
         if (countErr) {
-          return reject(countErr); // Handle count query error
+          return reject(countErr);
         }
 
         const total = countResults[0]?.total || 0;
@@ -177,7 +274,7 @@ exports.GetAllComplainDAO = (page, limit, status,category, searchText) => {
         // Execute main query to get paginated results
         collectionofficer.query(sql, Sqlparams, (dataErr, results) => {
           if (dataErr) {
-            return reject(dataErr); // Handle data query error
+            return reject(dataErr);
           }
 
           resolve({ results, total });
@@ -187,12 +284,14 @@ exports.GetAllComplainDAO = (page, limit, status,category, searchText) => {
   });
 };
 
+
 exports.getComplainById = (id) => {
   return new Promise((resolve, reject) => {
     const sql = ` 
-    SELECT fc.id, fc.refNo, fc.createdAt, fc.language, fc.complain,fc.complainCategory,fc.reply, u.firstName AS firstName, u.lastName AS lastName, u.phoneNumber AS farmerPhone
+    SELECT fc.id, fc.refNo, fc.createdAt, fc.language, fc.complain,fc.complainCategory,fc.reply, u.firstName AS firstName, u.lastName AS lastName, u.phoneNumber AS farmerPhone, cc.categoryEnglish AS complainCategory
     FROM farmercomplains fc
     LEFT JOIN plant_care.users u ON fc.farmerId = u.id
+    LEFT JOIN agro_world_admin.complaincategory cc ON fc.complainCategory = cc.id
     WHERE fc.id = ? 
     `;
     collectionofficer.query(sql, [id], (err, results) => {
