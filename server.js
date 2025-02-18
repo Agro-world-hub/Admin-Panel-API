@@ -78,6 +78,7 @@ dash.getConnection((err, connection) => {
 app.use("", heathRoutes);
 app.use(cors());
 app.use(process.env.AUTHOR, routes);
+
 app.use(process.env.AUTHOR, collectionOfficerRoutes);
 app.use(process.env.AUTHOR, routesNewws);
 app.use(process.env.AUTHOR, CollectionCenterRoutes);
@@ -87,6 +88,9 @@ app.use('/api/crop-calendar', CropCalendar);
 app.use('/api/permission', Permission);
 app.use('/api/complain', ComplainCategory);
 app.use('/api/stakeholder', Stakeholder)
+
+
+
 app.use('/uploads', express.static('uploads'));
 
 app.get('/test', (req, res) => {
