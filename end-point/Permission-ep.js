@@ -213,3 +213,32 @@ exports.getAllFeatureCategories = async (req, res) => {
     res.status(500).send("An error occurred while fetching data.");
   }
 };
+
+
+exports.editFeatureName = async (req, res) => {
+  const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
+  console.log("Request URL:", fullUrl);
+  try {
+    const validateData = await ValidateSchema.editFeatureNameSchema.validateAsync(req.body);
+    console.log(validateData);
+    
+
+    const result = await PermissionsDao.editFeatureName(validateData);
+
+    console.log(result);
+    if (result.affectedRows === 0) {
+      return res.json({ status: false, message: "Unsuccessfull, Try again Later!" })
+    }
+    console.log("Successfully fetched admin roles");
+
+    res.status(200).json({ status: true, message: "Successfuly Edited Feature Name!" });
+
+  } catch (err) {
+    if (err.isJoi) {
+      // Validation error
+      return res.status(400).json({ error: err.details[0].message });
+    }
+    console.error("Error executing query:", err);
+    res.status(500).send("An error occurred while fetching data.");
+  }
+};

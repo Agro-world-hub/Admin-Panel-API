@@ -133,3 +133,21 @@ exports.getAllFeatureCategories = () => {
     });
   });
 };
+
+exports.editFeatureName = (data) => {
+  return new Promise((resolve, reject) => {
+    const sql = `
+                  UPDATE features
+                  SET name = ?
+                  WHERE id = ?
+              `;
+
+    admin.query(sql,[data.name, data.id], (err, results) => {
+      if (err) {
+        return reject(err); // Reject promise if an error occurs
+      }
+
+      resolve(results); // No need to wrap in arrays, return results directly
+    });
+  });
+};
