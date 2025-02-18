@@ -643,7 +643,6 @@ exports.getOngoingCultivationsById = (id) => {
       cropgroup ON cropvariety.cropGroupId = cropgroup.id
     LEFT JOIN 
       slavecropcalendardays ON slavecropcalendardays.onCulscropID = ongoingcultivationscrops.id 
-      AND slavecropcalendardays.reqGeo = 1
     WHERE
       ongoingcultivationscrops.ongoingCultivationId = ?`;
 
