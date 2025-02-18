@@ -711,7 +711,7 @@ exports.getFixedAssetsByCategory = (userId, category) => {
             LEFT JOIN
                 machtoolsfixedassetwarranty ON machtoolsfixedasset.id = machtoolsfixedassetwarranty.machToolsId
             WHERE 
-                fixedasset.userId = ?;
+                fixedasset.userId = ? AND fixedasset.category = 'Machine and Vehicles';
         `,
     "Tools and Equipments": `
             SELECT
@@ -732,7 +732,7 @@ exports.getFixedAssetsByCategory = (userId, category) => {
             LEFT JOIN
                 machtoolsfixedassetwarranty ON machtoolsfixedasset.id = machtoolsfixedassetwarranty.machToolsId
             WHERE 
-                fixedasset.userId = ?;
+                fixedasset.userId = ? AND fixedasset.category = 'Tools';
         `,
   };
 
