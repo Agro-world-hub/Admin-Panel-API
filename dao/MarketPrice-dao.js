@@ -256,7 +256,7 @@ exports.getXLSXFilePath = async (fileName) => {
 // };
 
 
-exports.getAllMarketPriceDAO = (limit, offset, crop, grade) => {
+exports.getAllMarketPriceDAO = (crop, grade, search) => {
   return new Promise((resolve, reject) => {
     const params = [];
     const countParams = [];
@@ -297,12 +297,17 @@ exports.getAllMarketPriceDAO = (limit, offset, crop, grade) => {
       countParams.push(grade);
     }
 
-    sql += ` ORDER BY cg.cropNameEnglish, cv.varietyNameEnglish, m.grade LIMIT ? OFFSET ?`;
-    params.push(parseInt(limit));
-    params.push(parseInt(offset));
+    if (search) {
+      sql += " AND cg.cropNameEnglish LIKE ?";
+      countSql += " AND cg.cropNameEnglish LIKE ?";
+      const searchQuery = `%${search}%`;
+      params.push(searchQuery);
+      countParams.push(searchQuery);
+    }
 
-    console.log("SQL Query:", sql);
-    console.log("SQL Params:", params);
+    sql += ` ORDER BY cg.cropNameEnglish, cv.varietyNameEnglish, m.grade`;
+   
+    
 
     // Execute the count query
     collectionofficer.query(countSql, countParams, (countErr, countResults) => {

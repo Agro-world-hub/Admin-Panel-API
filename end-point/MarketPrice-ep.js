@@ -201,13 +201,13 @@ exports.downloadXLSXFile = async (req, res) => {
 
 exports.getAllMarketPrice = async (req, res) => {
   try {
-    const { page = 1, limit = 10, crop, grade } = req.query;
+    const {crop, grade, search } = req.query;
 
     // Calculate offset
-    const offset = (page - 1) * limit;
+    // const offset = (page - 1) * limit;
 
     // Fetch data from DAO
-    const { results, total } = await marketPriceDao.getAllMarketPriceDAO(limit, offset, crop, grade);
+    const { results, total } = await marketPriceDao.getAllMarketPriceDAO(crop, grade, search);
 
     console.log("Successfully fetched market prices");
     return res.status(200).json({ results, total });
