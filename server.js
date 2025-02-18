@@ -10,6 +10,7 @@ const CropCalendar = require('./routes/CropCalendar');
 const Permission = require('./routes/Permission');
 const ComplainCategory = require('./routes/ComplainCategory');
 const Stakeholder = require('./routes/stakeholder')
+const heathRoutes = require('./routes/heathRoutes')
 require('dotenv').config();
 const cors = require('cors');
 
@@ -74,7 +75,7 @@ dash.getConnection((err, connection) => {
 
 
 
-
+app.use("", heathRoutes);
 app.use(cors());
 app.use(process.env.AUTHOR, routes);
 app.use(process.env.AUTHOR, collectionOfficerRoutes);
