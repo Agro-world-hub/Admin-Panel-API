@@ -291,7 +291,7 @@ exports.createCropCallender = async (req, res) => {
 
     const checkExist = await cropCalendarDao.checkExistanceCropCalander(varietyId, cultivationMethod, natureOfCultivation);
     if(checkExist.length > 0){
-      return res.json({message:"This crop calander allready exist !", status:false})
+      return res.json({message:"Crop Calendar already exitsts. Please delete the added file and re-create !", status:false})
     }
 
     const cropId = await cropCalendarDao.createCropCallender(
