@@ -657,7 +657,6 @@ exports.getOngoingCultivationsById = (id) => {
   });
 };
 
-
 exports.getFixedAssetsByCategory = (userId, category) => {
   const validCategories = {
     "Building and Infrastructures": `
@@ -1492,7 +1491,6 @@ exports.addNewTaskDao = (task, indexId, cropId) => {
       task.videoLinkTamil,
     ];
 
-
     // Ensure that the values array length matches the expected column count
     if (values.length !== 19) {
       return reject(
@@ -1610,7 +1608,6 @@ exports.addNewTaskDaoU = (task, indexId, userId, cropId, onCulscropID) => {
       defStatus,
     ];
 
-
     // Ensure that the values array length matches the expected column count
     if (values.length !== 23) {
       return reject(
@@ -1629,9 +1626,9 @@ exports.addNewTaskDaoU = (task, indexId, userId, cropId, onCulscropID) => {
 };
 
 exports.insertUserXLSXDataaaaa = (data) => {
-  console.log('testing 03');
+  console.log("testing 03");
   return new Promise((resolve, reject) => {
-    console.log('testing 03');
+    console.log("testing 03");
     // Define validation schema
     const schema = Joi.object({
       "First Name": Joi.string().trim().min(2).max(50).required(),
@@ -1648,13 +1645,11 @@ exports.insertUserXLSXDataaaaa = (data) => {
           Joi.number().integer().min(100000000000).max(1999999999999)
         )
         .required(),
-        "Membership": Joi.required(),
-      "District": Joi.required(),
-
+      Membership: Joi.required(),
+      District: Joi.required(),
     }).required();
 
-
-    console.log('testing 01');
+    console.log("testing 01");
 
     // Validate all data
     // const validatedData = [];
@@ -1679,7 +1674,9 @@ exports.insertUserXLSXDataaaaa = (data) => {
     const values = data.map((row) => [
       row["First Name"],
       row["Last Name"],
-      String(row["Phone Number"]).startsWith("+")? row["Phone Number"]: `+${row["Phone Number"]}`,
+      String(row["Phone Number"]).startsWith("+")
+        ? row["Phone Number"]
+        : `+${row["Phone Number"]}`,
       String(row["NIC Number"]),
       row["Membership"],
       row["District"],
@@ -2062,8 +2059,8 @@ exports.insertUserXLSXData = (data) => {
             Joi.number().integer().min(10000000000).max(199999999999)
           )
           .required(),
-        "Membership": Joi.required(),
-        "District": Joi.required(),
+        Membership: Joi.required(),
+        District: Joi.required(),
       }).required();
 
       const validatedData = [];
@@ -2088,10 +2085,10 @@ exports.insertUserXLSXData = (data) => {
 
         if (phoneSet.has(phone) || nicSet.has(nic)) {
           duplicateData.push({
-            "firstName": value["First Name"],
-            "lastName": value["Last Name"],
-            "phoneNumber": phone,
-            "NICnumber": nic,
+            firstName: value["First Name"],
+            lastName: value["Last Name"],
+            phoneNumber: phone,
+            NICnumber: nic,
           });
         } else {
           phoneSet.add(phone);
@@ -2121,7 +2118,9 @@ exports.insertUserXLSXData = (data) => {
       });
 
       // Filter new users
-      const existingPhones = new Set(existingUsers.map((user) => user.phoneNumber));
+      const existingPhones = new Set(
+        existingUsers.map((user) => user.phoneNumber)
+      );
       const existingNICs = new Set(existingUsers.map((user) => user.NICnumber));
 
       const newUsers = validatedData.filter((user) => {
@@ -2168,11 +2167,6 @@ exports.insertUserXLSXData = (data) => {
   });
 };
 
-
-
-
-
-
 exports.insertUserXLSXDatatest = (data) => {
   return new Promise(async (resolve, reject) => {
     try {
@@ -2192,8 +2186,8 @@ exports.insertUserXLSXDatatest = (data) => {
             Joi.number().integer().min(10000000000).max(199999999999)
           )
           .required(),
-          "Membership": Joi.required(),
-      "District": Joi.required(),
+        Membership: Joi.required(),
+        District: Joi.required(),
       }).required();
 
       // Validate all data
@@ -2317,14 +2311,6 @@ exports.insertUserXLSXDatatest = (data) => {
     }
   });
 };
-
-
-
-
-
-
-
-
 
 // exports.getUserFeedbackDetails = () => {
 //   return new Promise((resolve, reject) => {
@@ -2625,14 +2611,13 @@ exports.activeUsers = (userId) => {
     plantcare.query(sql, [userId], (err, results) => {
       if (err) {
         reject(err);
-      }  else {
+      } else {
         // Return the user object
         resolve(results[0]);
-      } 
+      }
     });
   });
 };
-
 
 exports.allUsers = (userId) => {
   return new Promise((resolve, reject) => {
@@ -2643,10 +2628,10 @@ exports.allUsers = (userId) => {
     plantcare.query(sql, [userId], (err, results) => {
       if (err) {
         reject(err);
-      }  else {
+      } else {
         // Return the user object
         resolve(results[0]);
-      } 
+      }
     });
   });
 };
@@ -2662,14 +2647,13 @@ exports.qrUsers = (userId) => {
     plantcare.query(sql, [userId], (err, results) => {
       if (err) {
         reject(err);
-      }  else {
+      } else {
         // Return the user object
         resolve(results[0]);
-      } 
+      }
     });
   });
 };
-
 
 exports.newUsers = (userId) => {
   return new Promise((resolve, reject) => {
@@ -2681,14 +2665,13 @@ exports.newUsers = (userId) => {
     plantcare.query(sql, [userId], (err, results) => {
       if (err) {
         reject(err);
-      }  else {
+      } else {
         // Return the user object
         resolve(results[0]);
       }
     });
   });
 };
-
 
 exports.vegEnroll = (userId) => {
   return new Promise((resolve, reject) => {
@@ -2704,16 +2687,13 @@ exports.vegEnroll = (userId) => {
     plantcare.query(sql, [userId], (err, results) => {
       if (err) {
         reject(err);
-      }  else {
+      } else {
         // Return the user object
         resolve(results[0]);
       }
     });
   });
 };
-
-
-
 
 exports.grainEnroll = (userId) => {
   return new Promise((resolve, reject) => {
@@ -2729,14 +2709,13 @@ exports.grainEnroll = (userId) => {
     plantcare.query(sql, [userId], (err, results) => {
       if (err) {
         reject(err);
-      }  else {
+      } else {
         // Return the user object
         resolve(results[0]);
       }
     });
   });
 };
-
 
 exports.fruitEnroll = (userId) => {
   return new Promise((resolve, reject) => {
@@ -2752,14 +2731,13 @@ exports.fruitEnroll = (userId) => {
     plantcare.query(sql, [userId], (err, results) => {
       if (err) {
         reject(err);
-      }  else {
+      } else {
         // Return the user object
         resolve(results[0]);
       }
     });
   });
 };
-
 
 exports.mushEnroll = (userId) => {
   return new Promise((resolve, reject) => {
@@ -2775,9 +2753,22 @@ exports.mushEnroll = (userId) => {
     plantcare.query(sql, [userId], (err, results) => {
       if (err) {
         reject(err);
-      }  else {
+      } else {
         // Return the user object
         resolve(results[0]);
+      }
+    });
+  });
+};
+
+exports.updateAdminRoleById = (id, role, email) => {
+  const sql = `UPDATE adminroles SET role = ?, email = ? WHERE id = ?`;
+  return new Promise((resolve, reject) => {
+    admin.query(sql, [role, email, id], (err, results) => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(results);
       }
     });
   });

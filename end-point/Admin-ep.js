@@ -260,7 +260,7 @@ exports.createNews = async (req, res) => {
       descriptionTamil,
       status,
       publishDate,
-      expireDate
+      expireDate,
     } = await ValidateSchema.createNewsSchema.validateAsync(req.body, {
       abortEarly: false,
     });
@@ -1135,20 +1135,15 @@ exports.updatePlantCareUser = async (req, res) => {
       membership,
     } = validatedBody;
 
-    let profileImage
+    let profileImage;
     const user = await adminDao.getUserById(id);
     if (!user) {
       return res.status(404).json({ message: "PlantCare User not found" });
     }
 
-
-
     if (req.file) {
-
-
       const imageUrl = user.profileImage;
       await deleteFromS3(imageUrl);
-
 
       const fileBuffer = req.file.buffer;
       const fileName = req.file.originalname;
@@ -1247,18 +1242,17 @@ exports.createPlantCareUser = async (req, res) => {
       membership,
     } = validatedBody;
 
-    let profileImageUrl
+    let profileImageUrl;
     // Ensure a file is uploaded
     if (req.file) {
       const fileBuffer = req.file.buffer;
-    const fileName = req.file.originalname;
+      const fileName = req.file.originalname;
 
-    profileImageUrl = await uploadFileToS3(
-      fileBuffer,
-      fileName,
-      "users/profile-images"
-    );
-
+      profileImageUrl = await uploadFileToS3(
+        fileBuffer,
+        fileName,
+        "users/profile-images"
+      );
     }
 
     const userData = {
@@ -1836,7 +1830,6 @@ exports.editUserTask = async (req, res) => {
       validatedParams.id
     );
 
-
     console.log("Task updated successfully");
     res.status(200).json({ message: "Task updated successfully" });
   } catch (error) {
@@ -2135,7 +2128,6 @@ exports.addNewTaskU = async (req, res) => {
 //   }
 // };
 
-
 exports.uploadUsersXLSX = async (req, res) => {
   try {
     if (!req.file) {
@@ -2176,7 +2168,7 @@ exports.uploadUsersXLSXtest = async (req, res) => {
       buffer: req.file.buffer ? "Buffer exists" : "Buffer is undefined",
     });
 
-    console.log('Files comes');
+    console.log("Files comes");
 
     // Validate file type
     const allowedExtensions = [".xlsx", ".xls"];
@@ -2221,11 +2213,11 @@ exports.uploadUsersXLSXtest = async (req, res) => {
         .json({ error: "The uploaded file contains no valid data." });
     }
 
-    console.log('getting data');
+    console.log("getting data");
     // Insert data and check for existing users
     const result = await adminDao.insertUserXLSXData(data);
 
-    console.log('after dao');
+    console.log("after dao");
 
     // If there are existing users, generate and send XLSX file
     if (result.existingUsers && result.existingUsers.length > 0) {
@@ -2569,12 +2561,8 @@ exports.createFeedback = async (req, res) => {
 
     await ValidateSchema.createfeedback.validateAsync(req.body);
 
-    const {
-      orderNumber,
-      feedbackEnglish,
-      feedbackSinahala,
-      feedbackTamil,
-    } = req.body;
+    const { orderNumber, feedbackEnglish, feedbackSinahala, feedbackTamil } =
+      req.body;
 
     // Call DAO to save news and the image file as longblob
     const feedBack = await adminDao.createFeedback(
@@ -2677,8 +2665,6 @@ exports.getAllfeedackListForBarChart = async (req, res) => {
   }
 };
 
-
-
 exports.plantcareDashboard = async (req, res) => {
   try {
     const activeUsers = await adminDao.activeUsers();
@@ -2698,12 +2684,12 @@ exports.plantcareDashboard = async (req, res) => {
       fruitCultivation: fruitCultivation.fruit_cultivation_count,
       mushCultivation: mushCultivation.mush_cultivation_count,
       allusers: allUsers.all_farmer_count,
-      qrUsers: qrUsers.farmer_qr_count
+      qrUsers: qrUsers.farmer_qr_count,
     };
 
     console.log("Successfully fetched feedback list");
     res.json({
-      data
+      data,
     });
   } catch (err) {
     if (err.isJoi) {
@@ -2711,5 +2697,41 @@ exports.plantcareDashboard = async (req, res) => {
     }
     console.error("Error executing query:", err);
     res.status(500).send("An error occurred while fetching data.");
+  }
+};
+
+exports.updateAdminRoleById = async (req, res) => {
+  try {
+    const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
+    console.log("Request URL:", fullUrl);
+
+    // Ensure request body has required fields
+    if (!req.body || !req.body.id || !req.body.role || !req.body.email) {
+      return res.status(400).json({
+        status: false,
+        message: "Missing required fields: id, role, or email",
+      });
+    }
+
+    const { id, role, email } = req.body;
+    const result = await adminDao.updateAdminRoleById(id, role, email);
+
+    if (result?.affectedRows > 0) {
+      return res.status(200).json({
+        status: true,
+        message: "Admin role updated successfully",
+      });
+    }
+
+    return res.status(400).json({
+      status: false,
+      message: "Failed to update admin role",
+    });
+  } catch (error) {
+    console.error("Error updating admin role:", error);
+    return res.status(500).json({
+      status: false,
+      message: "Internal server error",
+    });
   }
 };
