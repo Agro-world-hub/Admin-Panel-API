@@ -47,6 +47,13 @@ router.get(
 );
 
 
+router.patch(
+  "/edit-feature-name",
+  authMiddleware,
+  permissionEp.editFeatureName
+);
+
+
 
 
 module.exports = router;
