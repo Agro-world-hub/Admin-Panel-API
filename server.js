@@ -81,10 +81,10 @@ app.use(process.env.AUTHOR, collectionOfficerRoutes);
 app.use(process.env.AUTHOR, routesNewws);
 app.use(process.env.AUTHOR, CollectionCenterRoutes);
 app.use(process.env.MARKETPRICE, MarketPrice);
-app.use('/agro-api/admin-api/market-place', MarketPlace);
-app.use('/agro-api/admin-api/crop-calendar', CropCalendar);
-app.use('/agro-api/admin-api/permission', Permission);
-app.use('/agro-api/admin-api/complain', ComplainCategory);
+app.use('/api/market-place', MarketPlace);
+app.use('/api/crop-calendar', CropCalendar);
+app.use('/api/permission', Permission);
+app.use('/api/complain', ComplainCategory);
 
 
 
