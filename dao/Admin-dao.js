@@ -793,7 +793,7 @@ exports.updateAdminUserById = (id, mail, userName, role, position) => {
         WHERE id = ?`;
 
   return new Promise((resolve, reject) => {
-    admin.query(sql, [mail, userName, role, id, position], (err, results) => {
+    admin.query(sql, [mail, userName, role, position, id], (err, results) => {
       if (err) {
         reject("Error executing update query: " + err);
       } else {
