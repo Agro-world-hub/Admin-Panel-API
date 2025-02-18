@@ -111,6 +111,23 @@ exports.getAdminUsersByPosition = () => {
     });
   };
 
+  exports.getActiveCollectionOfficers = () => {
+    return new Promise((resolve, reject) => {
+      const sql = `
+      SELECT COUNT(*) AS activeOfficerCount FROM collectionofficer WHERE status = 'Approved';
+            `;
+      collectionofficer.query(sql, (err, results) => {
+        if (err) {
+          return reject(err); // Reject promise if an error occurs
+        }
+        console.log('result', results);
+  
+        resolve(results); // Resolve the promise with the query results
+      });
+    });
+  };
+
+
   exports.getPlantCareUserByQrRegistration = () => {
     return new Promise((resolve, reject) => {
       const sql = `

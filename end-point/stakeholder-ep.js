@@ -51,12 +51,13 @@ exports.getAdminUserData = async (req, res) => {
         const collectionOfficersByPosition = await StakeholderDao.getCollectionOfficersByPosition();
         const newCollectionOfficers = await StakeholderDao.getNewCollectionOfficers();
         const allCollectionOfficers = await StakeholderDao.getAllCollectionOfficers();
+        const activeCollectionOfficers = await StakeholderDao.getActiveCollectionOfficers();
   
     //   const result = await ComplainCategoryDAO.getAllSystemApplicationData();
     //   console.log('dfdgdgd', adminUsersByPosition, newAdminUsers, allAdminUsers);
   
     //   console.log("Successfully fetched collection officers");
-      return res.status(200).json({collectionOfficersByPosition, newCollectionOfficers, allCollectionOfficers});
+      return res.status(200).json({collectionOfficersByPosition, newCollectionOfficers, allCollectionOfficers, activeCollectionOfficers});
     } catch (error) {
   
   
