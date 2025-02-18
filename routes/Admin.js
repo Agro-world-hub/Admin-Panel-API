@@ -12,9 +12,7 @@ const xlsx = require("xlsx");
 
 const router = express.Router();
 
-
 const uploadfile = multer({
- 
   fileFilter: function (req, file, callback) {
     var ext = path.extname(file.originalname);
     if (ext !== ".xlsx" && ext !== ".xls") {
@@ -298,54 +296,38 @@ router.get(
   AdminEp.getFarmerListReport
 );
 
-router.post(
-  "/create-feedback",
-  authMiddleware,
-  AdminEp.createFeedback
-);
+router.post("/create-feedback", authMiddleware, AdminEp.createFeedback);
 
-
+router.get("/opt-out-feedbacks", AdminEp.getUserFeedbackDetails);
 
 router.get(
-  "/opt-out-feedbacks", 
-  AdminEp.getUserFeedbackDetails
+  "/next-order-number",
+  // authMiddleware,
+  AdminEp.getNextOrderNumber
 );
 
 router.get(
-    '/next-order-number',
-    // authMiddleware,
-    AdminEp.getNextOrderNumber
-);
-
-router.get(
-  "/get-all-feedbacks", 
+  "/get-all-feedbacks",
   // authMiddleware,
   AdminEp.getAllfeedackList
 );
 
+router.put("/update-feedback-order", AdminEp.updateFeedbackOrder);
 
-router.put(
-  '/update-feedback-order', 
-  AdminEp.updateFeedbackOrder
+router.delete("/feedback/:id", authMiddleware, AdminEp.deleteFeedback);
+
+router.get(
+  "/get-all-feedbacks-for-bar-chart",
+  authMiddleware,
+  AdminEp.getAllfeedackListForBarChart
 );
 
+router.get("/plantcare-dashboard", authMiddleware, AdminEp.plantcareDashboard);
 
-router.delete(
-  '/feedback/:id',
-    authMiddleware,
-    AdminEp.deleteFeedback
-  );
-
-  router.get(
-    "/get-all-feedbacks-for-bar-chart", 
-    authMiddleware,
-    AdminEp.getAllfeedackListForBarChart
-  );
-
-  router.get(
-    "/plantcare-dashboard", 
-    authMiddleware,
-    AdminEp.plantcareDashboard
-  );
+router.put(
+  "/update-role-permission",
+  authMiddleware,
+  AdminEp.updateAdminRoleById
+);
 
 module.exports = router;
