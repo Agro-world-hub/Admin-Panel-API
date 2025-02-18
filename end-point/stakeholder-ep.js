@@ -74,12 +74,13 @@ exports.getAdminUserData = async (req, res) => {
         const plantCareUserByQrRegistration = await StakeholderDao.getPlantCareUserByQrRegistration();
         const newPlantCareUsers = await StakeholderDao.getNewPlantCareUsers();
         const allPlantCareUsers = await StakeholderDao.getAllPlantCareUsers();
+        const activePlantCareUsers = await StakeholderDao.getActivePlantCareUsers();
   
     //   const result = await ComplainCategoryDAO.getAllSystemApplicationData();
     //   console.log('dfdgdgd', adminUsersByPosition, newAdminUsers, allAdminUsers);
   
     //   console.log("Successfully fetched collection officers");
-      return res.status(200).json({plantCareUserByQrRegistration, newPlantCareUsers, allPlantCareUsers});
+      return res.status(200).json({plantCareUserByQrRegistration, newPlantCareUsers, allPlantCareUsers, activePlantCareUsers});
     } catch (error) {
   
   

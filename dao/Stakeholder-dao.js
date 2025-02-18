@@ -169,6 +169,24 @@ exports.getAdminUsersByPosition = () => {
     });
   };
 
+  exports.getActivePlantCareUsers = () => {
+    return new Promise((resolve, reject) => {
+      const sql = `
+      SELECT COUNT(*) AS activePlantCareUserCount FROM users WHERE activeStatus = 'active'
+            `;
+      plantcare.query(sql, (err, results) => {
+        if (err) {
+          return reject(err); // Reject promise if an error occurs
+        }
+        console.log('result', results);
+  
+        resolve(results); // Resolve the promise with the query results
+      });
+    });
+  };
+
+  
+
   exports.getActiveSalesAgents = () => {
     return new Promise((resolve, reject) => {
       const sql = `
