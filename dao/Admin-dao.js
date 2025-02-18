@@ -618,7 +618,7 @@ exports.getOngoingCultivationsWithUserDetails = () => {
 
 exports.getOngoingCultivationsById = (id) => {
   const sql = `
-    SELECT 
+    SELECT DISTINCT
       ongoingcultivationscrops.id AS ongoingcultivationscropsid, 
       ongoingcultivationscrops.ongoingCultivationId,
       ongoingcultivationscrops.cropCalendar,
@@ -627,10 +627,8 @@ exports.getOngoingCultivationsById = (id) => {
       cropcalender.method AS cultivationMethod,
       cropcalender.natOfCul AS natureOfCultivation,
       cropcalender.cropDuration AS cropDuration,
-      slavecropcalendardays.id AS taskId,
       ongoingcultivationscrops.longitude,
       ongoingcultivationscrops.latitude,
-      -- Count total tasks and completed tasks
       (SELECT COUNT(*) FROM slavecropcalendardays WHERE onCulscropID = ongoingcultivationscrops.id) AS totalTasks,
       (SELECT COUNT(*) FROM slavecropcalendardays WHERE onCulscropID = ongoingcultivationscrops.id AND status = 'completed') AS completedTasks
     FROM 
