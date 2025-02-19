@@ -1029,13 +1029,14 @@ exports.getAdminById = async (req, res) => {
   }
 };
 
+
 exports.editAdminUserPassword = async (req, res) => {
   try {
     // Validate the request body
     const { id, currentPassword, newPassword } =
       await ValidateSchema.editAdminUserPasswordSchema.validateAsync(req.body);
 
-    // Retrieve the current password from the DAO
+    // Retrieve the current hashed password from the DAO
     const passwordResults = await adminDao.getAdminPasswordById(id);
 
     if (passwordResults.length === 0) {
@@ -1044,13 +1045,18 @@ exports.editAdminUserPassword = async (req, res) => {
 
     const existingPassword = passwordResults[0].password;
 
-    // Check if the provided current password matches the existing password
-    if (existingPassword !== currentPassword) {
+    // Check if the provided current password matches the existing hashed password
+    const isMatch = await bcrypt.compare(currentPassword, existingPassword);
+    
+    if (!isMatch) {
       return res.status(400).json({ error: "Current password is incorrect" });
     }
 
-    // Update the password using the DAO
-    await adminDao.updateAdminPasswordById(id, newPassword);
+    // Hash the new password before storing it in the database
+    const hashedNewPassword = await bcrypt.hash(newPassword, 10);  // 10 is the salt rounds
+
+    // Update the password using the DAO with the hashed new password
+    await adminDao.updateAdminPasswordById(id, hashedNewPassword);
 
     console.log("Password updated successfully");
     return res.status(200).json({ message: "Password updated successfully" });
@@ -1066,6 +1072,7 @@ exports.editAdminUserPassword = async (req, res) => {
       .json({ error: "An error occurred while updating the password" });
   }
 };
+
 
 exports.deletePlantCareUser = async (req, res) => {
   const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
