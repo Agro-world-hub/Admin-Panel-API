@@ -542,7 +542,7 @@ exports.updateGroup = async (req, res) => {
 
     const cropGroup = await cropCalendarDao.getGroupByIds3(id);
     if (!cropGroup) {
-      return res.status(404).json({ message: "Crop roup not found" });
+      return res.status(404).json({ message: "Crop group not found" });
     }
 
     const imageUrl = cropGroup.image;
@@ -569,7 +569,7 @@ exports.updateGroup = async (req, res) => {
 
 
     await cropCalendarDao.updateGroup({ cropNameEnglish, cropNameSinhala, cropNameTamil, category, bgColor, image }, id);
-    res.json({ message: 'Crop group updated successfully.', status:true });
+    res.json({ message: 'Crop Group updated Successfully.', status:true });
   } catch (err) {
     console.error('Error updating crop group:', err);
     res.status(500).send('An error occurred while updating the crop group.');
