@@ -1,7 +1,7 @@
 const CollectionCenterDao = require('../dao/CollectionCenter-dao')
 const ValidateSchema = require('../validations/CollectionCenter-validation')
 exports.getAllCollectionCenter = async (req, res) => {
-  
+
   try {
     const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
     console.log("Request URL:", fullUrl);
@@ -102,12 +102,12 @@ exports.addNewCollectionCenter = async (req, res) => {
 exports.getAllComplains = async (req, res) => {
   try {
     console.log(req.query);
-    const { page, limit, status,category, searchText } = req.query
+    const { page, limit, status, category, searchText } = req.query
 
 
-    const { results, total } = await CollectionCenterDao.GetAllComplainDAO(page, limit, status,category, searchText)
+    const { results, total } = await CollectionCenterDao.GetAllComplainDAO(page, limit, status, category, searchText)
 
-   
+
 
     console.log("Successfully retrieved all collection center");
     res.json({ results, total });
@@ -368,7 +368,7 @@ exports.getForCreateId = async (req, res) => {
     const results = await CollectionCenterDao.getForCreateId(role);
 
     if (results.length === 0) {
-      return res.json({ result: {empId:"00001"}, status: true })
+      return res.json({ result: { empId: "00001" }, status: true })
     }
 
     res.status(200).json({ result: results[0], status: true });
@@ -413,7 +413,7 @@ exports.createCompany = async (req, res) => {
       foConCode,
       foConNum,
       foEmail
-    } =  req.body
+    } = req.body
 
 
     const newsId = await CollectionCenterDao.createCompany(
@@ -460,9 +460,9 @@ exports.createCompany = async (req, res) => {
 
 exports.getAllCompanyList = async (req, res) => {
   const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
-    console.log("Request URL:", fullUrl);
+  console.log("Request URL:", fullUrl);
   try {
-    
+
 
     const result = await CollectionCenterDao.GetAllCompanyList()
 
@@ -490,7 +490,7 @@ exports.getAllCompanyList = async (req, res) => {
 
 exports.getAllManagerList = async (req, res) => {
   const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
-    console.log("Request URL:", fullUrl);
+  console.log("Request URL:", fullUrl);
   try {
     const companyId = req.params.companyId
     const centerId = req.params.centerId
@@ -557,21 +557,21 @@ exports.getAllCompanies = async (req, res) => {
   }
 };
 
-exports.getCompanyById = async(req, res) =>{
-  try{
-    const {id} = req.params;
+exports.getCompanyById = async (req, res) => {
+  try {
+    const { id } = req.params;
 
     const results = await CollectionCenterDao.getCompanyDAO(id);
 
-    if(results.length === 0){
+    if (results.length === 0) {
       return res.status(404).json({ error: "Company not found" });
     }
 
     console.log("Successfully retrieved company");
     console.log(results[0]);
-    
+
     res.json(results[0]);
-  }catch(err){
+  } catch (err) {
     console.error("Error fetching company:", err);
     res.status(500).json({ error: "An error occurred while fetching the company" });
   }
@@ -656,26 +656,75 @@ exports.updateCompany = async (req, res) => {
   }
 };
 
-exports.deleteCompany = async (req, res) =>{
-  try{
+exports.deleteCompany = async (req, res) => {
+  try {
     const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
     console.log("Request URL:", fullUrl);
-    
+
     const id = req.params.id;
 
     const affectedRows = await CollectionCenterDao.deleteCompanyById(id);
 
-    if (affectedRows === 0){
+    if (affectedRows === 0) {
       return res.status(404).json({ message: "Company not found" });
-    }else{
+    } else {
       console.log("Company deleted successfully");
-      return res.status(200).json({ status:true});
+      return res.status(200).json({ status: true });
     }
-  }catch(err){
-    if(err.isJoi){
+  } catch (err) {
+    if (err.isJoi) {
       return res.status(400).json({ error: err.details[0].message });
     }
     console.error("Error deleting company:", err);
-    return res.status(500).json({error:"An error occurred while deleting the company"})
+    return res.status(500).json({ error: "An error occurred while deleting the company" })
   }
 }
+
+
+exports.getAllCropCatogory = async (req, res) => {
+  const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
+  console.log(fullUrl);
+  try {
+    const result = await CollectionCenterDao.getAllCropNameDAO()
+
+    console.log("Successfully fetched gatogory");
+    return res.status(200).json(result);
+  } catch (error) {
+    if (error.isJoi) {
+      // Handle validation error
+      return res.status(400).json({ error: error.details[0].message });
+    }
+    console.error("Error fetching crop names and verity:", error);
+    return res.status(500).json({ error: "An error occurred while fetching crop names and verity" });
+  }
+}
+
+
+exports.addDailyTarget = async (req, res) => {
+  try {
+    const target = req.body;
+    const userId = req.user.userId;
+
+    console.log(target);
+    
+
+    const targetId = await CollectionCenterDao.createDailyTargetDao(target, userId);
+    if (!targetId) {
+      return res.json({ message: "Faild create target try again!", status: false })
+    }
+
+    for (let i = 0; i < target.TargetItems.length; i++) {
+      await CollectionCenterDao.createDailyTargetItemsDao(target.TargetItems[i], targetId);
+    }
+    console.log("Daily Target Created Successfully");
+    res.json({ message: "Daily Target Created Successfully!", status: true })
+  } catch (err) {
+    if (err.isJoi) {
+      // Validation error
+      console.error("Validation error:", err.details[0].message);
+      return res.status(400).json({ error: err.details[0].message });
+    }
+    console.error("Error fetching news:", err);
+    res.status(500).json({ error: "An error occurred while fetching news" });
+  }
+};

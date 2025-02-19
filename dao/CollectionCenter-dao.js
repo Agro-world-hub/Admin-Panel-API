@@ -399,7 +399,7 @@ exports.getCenterByIdDAO = (id) => {
       WHERE c.id = ?
       GROUP BY c.id
     `;
-    
+
     collectionofficer.query(sql, [id], (err, results) => {
       if (err) {
         return reject(err);
@@ -639,7 +639,7 @@ exports.GetAllCompanyList = () => {
 exports.GetAllManagerList = (companyId, centerId) => {
   return new Promise((resolve, reject) => {
     const sql = "SELECT id, firstNameEnglish, lastNameEnglish FROM collectionofficer WHERE companyId=? AND centerId=?";
-    collectionofficer.query(sql,[companyId, centerId], (err, results) => {
+    collectionofficer.query(sql, [companyId, centerId], (err, results) => {
       if (err) {
         return reject(err);
       }
@@ -752,10 +752,10 @@ exports.getAllCompanyDAO = () => {
 
 exports.getCompanyDAO = (id) => {
   return new Promise((resolve, reject) => {
-    const sql = `SELECT * FROM company WHERE id = ?`; 
+    const sql = `SELECT * FROM company WHERE id = ?`;
     collectionofficer.query(sql, [id], (err, results) => {
       if (err) {
-        return reject(err); 
+        return reject(err);
       }
       resolve(results);
     });
@@ -860,3 +860,91 @@ exports.deleteCompanyById = async (id) => {
   });
 };
 
+
+exports.getAllCropNameDAO = () => {
+  return new Promise((resolve, reject) => {
+    const sql = `
+          SELECT cg.id AS cropId, cv.id AS varietyId, cg.cropNameEnglish, cv.varietyNameEnglish AS varietyEnglish 
+          FROM cropvariety cv, cropgroup cg
+          WHERE cg.id = cv.cropGroupId
+      `;
+
+    plantcare.query(sql, (err, results) => {
+      if (err) {
+        return reject(err);
+      }
+
+      const groupedData = {};
+
+      results.forEach((item) => {
+        const { cropNameEnglish, varietyEnglish, varietyId, cropId } = item;
+
+
+        if (!groupedData[cropNameEnglish]) {
+          groupedData[cropNameEnglish] = {
+            cropId: cropId,
+            variety: [],
+          };
+        }
+
+        groupedData[cropNameEnglish].variety.push({
+          id: varietyId,
+          varietyEnglish: varietyEnglish,
+        });
+      });
+
+      const formattedResult = Object.keys(groupedData).map((cropName) => ({
+        cropId: groupedData[cropName].cropId,
+        cropNameEnglish: cropName,
+        variety: groupedData[cropName].variety,
+      }));
+
+      resolve(formattedResult);
+    });
+  });
+};
+
+
+exports.createDailyTargetDao = (target, userId) => {
+  return new Promise((resolve, reject) => {
+      const sql = `
+         INSERT INTO dailytarget (centerId, companyId, fromDate, toDate, fromTime, toTime)
+         VALUES (?, ?, ?, ?, ?, ?)
+      `
+      collectionofficer.query(sql, [
+          parseInt(target.centerId),
+          parseInt(target.companyId),
+          target.fromDate,
+          target.toDate,
+          target.fromTime,
+          target.toTime,
+          userId
+      ], (err, results) => {
+          if (err) {
+              return reject(err);
+          }
+          resolve(results.insertId);
+      });
+  });
+};
+
+exports.createDailyTargetItemsDao = (data, targetId) => {
+  return new Promise((resolve, reject) => {
+      const sql = `
+         INSERT INTO dailytargetitems (targetId, varietyId, qtyA, qtyB, qtyC)
+         VALUES (?, ?, ?, ?, ?)
+      `
+      collectionofficer.query(sql, [
+          parseInt(targetId),
+          data.varietyId,
+          data.qtyA,
+          data.qtyB,
+          data.qtyC
+      ], (err, results) => {
+          if (err) {
+              return reject(err);
+          }
+          resolve(results.insertId);
+      });
+  });
+};
