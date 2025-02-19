@@ -2,7 +2,6 @@ const jwt = require("jsonwebtoken");
 const db = require("../startup/database");
 const bodyParser = require("body-parser");
 const fs = require("fs");
-const path = require("path");
 const xlsx = require("xlsx");
 const collectionofficerDao = require("../dao/CollectionOfficer-dao");
 const collectionofficerValidate = require('../validations/CollectionOfficer-validation');

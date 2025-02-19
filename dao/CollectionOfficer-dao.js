@@ -488,6 +488,8 @@ exports.getCollectionOfficerEmailDao = (id) => {
   });
 };
 
+
+
 exports.SendGeneratedPasswordDao = async (
   email,
   password,
@@ -497,9 +499,10 @@ exports.SendGeneratedPasswordDao = async (
   try {
     const doc = new PDFDocument();
 
-    const pdfPath = `./uploads/register_details_${empId}.pdf`;
-
-    doc.pipe(fs.createWriteStream(pdfPath));
+    // Create a buffer to hold the PDF in memory
+    const pdfBuffer = [];
+    doc.on('data', pdfBuffer.push.bind(pdfBuffer));
+    doc.on('end', () => {});
 
     const watermarkPath = "./assets/bg.png";
     doc.opacity(0.2).image(watermarkPath, 100, 300, { width: 400 }).opacity(1);
@@ -575,6 +578,11 @@ exports.SendGeneratedPasswordDao = async (
 
     doc.end();
 
+    // Wait until the PDF is fully created and available in the buffer
+    await new Promise(resolve => doc.on('end', resolve));
+
+    const pdfData = Buffer.concat(pdfBuffer); // Concatenate the buffer data
+
     const transporter = nodemailer.createTransport({
       host: "smtp.gmail.com",
       port: 465, // or 587 for TLS
@@ -596,7 +604,7 @@ exports.SendGeneratedPasswordDao = async (
       attachments: [
         {
           filename: `password_${empId}.pdf`, // PDF file name
-          path: pdfPath, // Path to the generated PDF
+          content: pdfData, // Attach the PDF buffer directly
         },
       ],
     };
@@ -611,6 +619,7 @@ exports.SendGeneratedPasswordDao = async (
     return { success: false, message: "Failed to send email.", error };
   }
 };
+
 
 exports.UpdateCollectionOfficerStatusAndPasswordDao = (params) => {
   return new Promise((resolve, reject) => {

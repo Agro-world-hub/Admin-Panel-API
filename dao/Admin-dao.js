@@ -2582,7 +2582,7 @@ exports.getAllfeedackListForBarChart = () => {
 exports.getMeById = (userId) => {
   return new Promise((resolve, reject) => {
     const sql = `
-      SELECT id, mail, userName, role
+      SELECT id, mail, userName, role, position
       FROM adminusers
       WHERE id = ?`;
 

@@ -151,6 +151,7 @@ exports.getMe = async (req, res) => {
       userName: user.userName,
       mail: user.mail,
       role: user.role,
+      position: user.position,
     });
   } catch (err) {
     if (err.message === "User not found.") {
@@ -965,11 +966,13 @@ exports.editAdminUserWithoutId = async (req, res) => {
 
   try {
     // Validate the request body
-    const { id, mail, userName, role } =
+    const { id, mail, userName, role, position } =
       await ValidateSchema.editAdminUserWithoutIdSchema.validateAsync(req.body);
 
+      console.log(id, mail, userName, role, position );
+
     // Call DAO to update the user
-    const results = await adminDao.updateAdminUser(id, mail, userName, role);
+    const results = await adminDao.updateAdminUser(id, mail, userName, role, position);
 
     if (results.affectedRows === 0) {
       return res
@@ -1662,10 +1665,10 @@ exports.editUserTaskStatus = async (req, res) => {
     let newStatus;
 
     // Toggle between 'Draft' and 'Published'
-    if (currentStatus === "Pending") {
+    if (currentStatus === "pending") {
       newStatus = "completed";
     } else if (currentStatus === "completed") {
-      newStatus = "Pending";
+      newStatus = "pending";
     } else {
       return res.status(400).json({ error: "Invalid current status" });
     }

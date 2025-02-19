@@ -205,8 +205,11 @@ exports.editAdminUserWithoutIdSchema = Joi.object({
         'string.min': 'Username must be at least 3 characters long',
         'any.required': 'Username is required'
     }),
-    role: Joi.string().required().messages({
+    role: Joi.number().required().messages({
         'any.required': 'Role is required'
+    }),
+    position: Joi.number().required().messages({
+        'any.required': 'Position is required'
     })
 });
 
