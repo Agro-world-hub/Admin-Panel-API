@@ -130,4 +130,16 @@ router.delete(
     CollectionCenterEp.deleteCompany
 )
 
+router.get(
+    '/get-crop-category',
+    authMiddleware,
+    CollectionCenterEp.getAllCropCatogory
+)
+
+router.post(
+    "/create-daily-target",
+    authMiddleware,
+    CollectionCenterEp.addDailyTarget
+)
+
 module.exports = router;
