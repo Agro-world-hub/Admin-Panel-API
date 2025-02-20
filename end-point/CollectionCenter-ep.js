@@ -730,11 +730,9 @@ exports.getAllCropCatogory = async (req, res) => {
       return res.status(400).json({ error: error.details[0].message });
     }
     console.error("Error fetching crop names and verity:", error);
-    return res
-      .status(500)
-      .json({
-        error: "An error occurred while fetching crop names and verity",
-      });
+    return res.status(500).json({
+      error: "An error occurred while fetching crop names and verity",
+    });
   }
 };
 
@@ -772,5 +770,46 @@ exports.addDailyTarget = async (req, res) => {
     }
     console.error("Error fetching news:", err);
     res.status(500).json({ error: "An error occurred while fetching news" });
+  }
+};
+
+exports.getCenterDashbord = async (req, res) => {
+  const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
+  console.log(fullUrl);
+
+  try {
+    const { id } = req.params;
+    const officerCount =
+      await CollectionCenterDao.getCenterNameAndOficerCountDao(id);
+    const transCount = await CollectionCenterDao.getTransactionCountDao(id);
+    const transAmountCount =
+      await CollectionCenterDao.getTransactionAmountCountDao(id);
+    const resentCollection = await CollectionCenterDao.getReseantCollectionDao(
+      id
+    );
+    const totExpences = await CollectionCenterDao.getTotExpencesDao(id);
+    const difExpences = await CollectionCenterDao.differenceBetweenExpences(id);
+
+    const limitedResentCollection = resentCollection.slice(0, 5);
+
+    console.log("Successfully fetched gatogory");
+    return res.status(200).json({
+      officerCount,
+      transCount,
+      transAmountCount,
+      limitedResentCollection,
+      totExpences,
+      difExpences,
+    });
+  } catch (error) {
+    if (error.isJoi) {
+      // Handle validation error
+      return res.status(400).json({ error: error.details[0].message });
+    }
+
+    console.error("Error fetching crop names and verity:", error);
+    return res.status(500).json({
+      error: "An error occurred while fetching crop names and verity",
+    });
   }
 };

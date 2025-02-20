@@ -939,3 +939,163 @@ exports.createDailyTargetItemsDao = (data, targetId) => {
     );
   });
 };
+
+exports.getTransactionCountDao = (centerId) => {
+  return new Promise((resolve, reject) => {
+    const sql = `
+          SELECT COUNT(RFP.id) AS transactionCount
+          FROM registeredfarmerpayments RFP, collectionofficer COF
+          WHERE DATE(RFP.createdAt) = '2024-12-31' AND RFP.collectionOfficerId = COF.id AND COF.centerId = ?
+          GROUP BY DATE(RFP.createdAt);
+
+      `;
+    collectionofficer.query(sql, [centerId], (err, results) => {
+      if (err) {
+        return reject(err);
+      }
+      resolve(results[0]);
+    });
+  });
+};
+
+exports.getTransactionAmountCountDao = (centerId) => {
+  return new Promise((resolve, reject) => {
+    const sql = `
+          SELECT SUM(gradeAprice)+SUM(gradeBprice)+SUM(gradeCprice) AS transAmountCount
+          FROM registeredfarmerpayments RFP, farmerpaymentscrops FPC, collectionofficer COF
+          WHERE DATE(RFP.createdAt) = '2024-12-31' AND RFP.collectionOfficerId = COF.id AND RFP.id = FPC.registerFarmerId AND COF.centerId = ?
+          GROUP BY DATE(RFP.createdAt);
+
+      `;
+    collectionofficer.query(sql, [centerId], (err, results) => {
+      if (err) {
+        return reject(err);
+      }
+      resolve(results[0]);
+    });
+  });
+};
+
+exports.getReseantCollectionDao = (centerId) => {
+  return new Promise((resolve, reject) => {
+    const sql = `
+          SELECT CG.cropNameEnglish, CV.varietyNameEnglish, 
+                 SUM(FPC.gradeAprice) AS totAprice, SUM(FPC.gradeBprice) AS totBprice, SUM(FPC.gradeCprice) AS totCprice, 
+                 SUM(FPC.gradeAquan) AS totAqty, SUM(FPC.gradeBquan) AS totBqty, SUM(FPC.gradeCquan) AS totCqty, 
+                 DATE(RFP.createdAt) AS date 
+          FROM registeredfarmerpayments RFP
+          JOIN farmerpaymentscrops FPC ON RFP.id = FPC.registerFarmerId
+          JOIN collectionofficer COF ON RFP.collectionOfficerId = COF.id
+          JOIN plant_care.cropvariety CV ON FPC.cropId = CV.id
+          JOIN plant_care.cropgroup CG ON CV.cropGroupId = CG.id
+          WHERE DATE(RFP.createdAt) = '2024-12-31' 
+          AND COF.centerId = ?
+          GROUP BY CG.cropNameEnglish, CV.varietyNameEnglish, DATE(RFP.createdAt)
+          ORDER BY DATE(RFP.createdAt)
+          LIMIT 5
+      `;
+
+    collectionofficer.query(sql, [centerId], (err, results) => {
+      if (err) {
+        return reject(err);
+      }
+
+      // Corrected transformation of data
+      const transformData = results.flatMap((item) => {
+        const entries = [];
+
+        if (item.totAqty !== undefined) {
+          entries.push({
+            cropNameEnglish: item.cropNameEnglish,
+            varietyNameEnglish: item.varietyNameEnglish,
+            totPrice: item.totAprice,
+            totQty: item.totAqty,
+            grade: "A",
+            date: item.date,
+          });
+        }
+
+        if (item.totBqty !== undefined) {
+          entries.push({
+            cropNameEnglish: item.cropNameEnglish,
+            varietyNameEnglish: item.varietyNameEnglish,
+            totPrice: item.totBprice,
+            totQty: item.totBqty,
+            grade: "B",
+            date: item.date,
+          });
+        }
+
+        if (item.totCqty !== undefined) {
+          entries.push({
+            cropNameEnglish: item.cropNameEnglish,
+            varietyNameEnglish: item.varietyNameEnglish,
+            totPrice: item.totCprice,
+            totQty: item.totCqty,
+            grade: "C",
+            date: item.date,
+          });
+        }
+
+        return entries;
+      });
+
+      resolve(transformData);
+    });
+  });
+};
+
+exports.getTotExpencesDao = (centerId) => {
+  return new Promise((resolve, reject) => {
+    const sql = `
+      SELECT 
+          SUM(FPC.gradeAprice) + SUM(FPC.gradeBprice) + SUM(FPC.gradeCprice) AS totExpences
+      FROM registeredfarmerpayments RFP
+      JOIN farmerpaymentscrops FPC ON RFP.id = FPC.registerFarmerId
+      JOIN collectionofficer COF ON RFP.collectionOfficerId = COF.id
+      WHERE RFP.createdAt >= DATE_SUB(NOW(), INTERVAL 30 DAY) 
+      AND COF.centerId = ?
+      `;
+    collectionofficer.query(sql, [centerId], (err, results) => {
+      if (err) {
+        return reject(err);
+      }
+      resolve(results[0]);
+    });
+  });
+};
+
+exports.differenceBetweenExpences = (centerId) => {
+  return new Promise((resolve, reject) => {
+    const sql = `
+      SELECT 
+          YEAR(RFP.createdAt) AS year,
+          MONTH(RFP.createdAt) AS month,
+          SUM(FPC.gradeAprice) + SUM(FPC.gradeBprice) + SUM(FPC.gradeCprice) AS monthexpences
+      FROM registeredfarmerpayments RFP
+      JOIN farmerpaymentscrops FPC ON RFP.id = FPC.registerFarmerId
+      JOIN collectionofficer COF ON RFP.collectionOfficerId = COF.id
+      WHERE COF.centerId = ?
+      GROUP BY YEAR(RFP.createdAt), MONTH(RFP.createdAt)
+      ORDER BY YEAR(RFP.createdAt) DESC, MONTH(RFP.createdAt) DESC
+      LIMIT 2;
+      `;
+    collectionofficer.query(sql, [centerId], (err, results) => {
+      if (err) {
+        return reject(err);
+      }
+
+      if (results.length < 2) {
+        return reject(new Error("Not enough data to compare two months."));
+      }
+
+      const difExpences =
+        ((results[0].monthexpences - results[1].monthexpences) /
+          results[0].monthexpences) *
+        100;
+      const roundedDifExpences = parseFloat(difExpences.toFixed(2));
+
+      resolve(roundedDifExpences);
+    });
+  });
+};
