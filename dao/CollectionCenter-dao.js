@@ -37,7 +37,7 @@ exports.addCollectionCenter = (
       city,
       district,
       province,
-      country
+      country,
     ];
 
     collectionofficer.query(sql, values, (err, results) => {
@@ -50,7 +50,6 @@ exports.addCollectionCenter = (
     });
   });
 };
-
 
 exports.addCompaniesToCenter = (centerId, companies) => {
   return new Promise((resolve, reject) => {
@@ -70,7 +69,6 @@ exports.addCompaniesToCenter = (centerId, companies) => {
     resolve();
   });
 };
-
 
 exports.GetAllCenterDAO = () => {
   return new Promise((resolve, reject) => {
@@ -116,8 +114,8 @@ exports.deleteCollectionCenterDAo = async (id) => {
 
 //     // SQL to fetch paginated data
 //     let sql = `
-//       SELECT 
-//         fc.id, 
+//       SELECT
+//         fc.id,
 //         fc.refNo,
 //         u.NICnumber AS NIC,
 //         u.firstName AS farmerName,
@@ -189,7 +187,6 @@ exports.deleteCollectionCenterDAo = async (id) => {
 //     );
 //   });
 // };
-
 
 exports.GetAllComplainDAO = (page, limit, status, category, searchText) => {
   return new Promise((resolve, reject) => {
@@ -283,7 +280,6 @@ exports.GetAllComplainDAO = (page, limit, status, category, searchText) => {
     );
   });
 };
-
 
 exports.getComplainById = (id) => {
   return new Promise((resolve, reject) => {
@@ -399,7 +395,7 @@ exports.getCenterByIdDAO = (id) => {
       WHERE c.id = ?
       GROUP BY c.id
     `;
-    
+
     collectionofficer.query(sql, [id], (err, results) => {
       if (err) {
         return reject(err);
@@ -408,8 +404,6 @@ exports.getCenterByIdDAO = (id) => {
     });
   });
 };
-
-
 
 exports.updateCollectionCenter = (
   regCode,
@@ -471,8 +465,6 @@ exports.updateCollectionCenter = (
   });
 };
 
-
-
 exports.deleteCompaniesFromCompanyCenter = (collectionID) => {
   return new Promise((resolve, reject) => {
     const sql = "DELETE FROM companycenter WHERE centerId = ?";
@@ -481,16 +473,18 @@ exports.deleteCompaniesFromCompanyCenter = (collectionID) => {
         console.error("Error deleting companies from companycenter:", err);
         return reject(err);
       }
-      console.log("Deleted companies successfully from companycenter:", results);
+      console.log(
+        "Deleted companies successfully from companycenter:",
+        results
+      );
       resolve(results);
     });
   });
 };
 
-
 exports.insertCompaniesIntoCompanyCenter = (companyIds, collectionID) => {
   return new Promise((resolve, reject) => {
-    const values = companyIds.map(companyId => [collectionID, companyId]);
+    const values = companyIds.map((companyId) => [collectionID, companyId]);
     const sql = "INSERT INTO companycenter (centerId, companyId) VALUES ?";
 
     collectionofficer.query(sql, [values], (err, results) => {
@@ -498,12 +492,14 @@ exports.insertCompaniesIntoCompanyCenter = (companyIds, collectionID) => {
         console.error("Error inserting companies into companycenter:", err);
         return reject(err);
       }
-      console.log("Inserted companies successfully into companycenter:", results);
+      console.log(
+        "Inserted companies successfully into companycenter:",
+        results
+      );
       resolve(results);
     });
   });
 };
-
 
 exports.sendComplainReply = (complainId, reply) => {
   return new Promise((resolve, reject) => {
@@ -638,8 +634,9 @@ exports.GetAllCompanyList = () => {
 
 exports.GetAllManagerList = (companyId, centerId) => {
   return new Promise((resolve, reject) => {
-    const sql = "SELECT id, firstNameEnglish, lastNameEnglish FROM collectionofficer WHERE companyId=? AND centerId=?";
-    collectionofficer.query(sql,[companyId, centerId], (err, results) => {
+    const sql =
+      "SELECT id, firstNameEnglish, lastNameEnglish FROM collectionofficer WHERE companyId=? AND centerId=?";
+    collectionofficer.query(sql, [companyId, centerId], (err, results) => {
       if (err) {
         return reject(err);
       }
@@ -683,20 +680,20 @@ exports.generateRegCode = (province, district, city, callback) => {
 // exports.getAllCompanyDAO = () => {
 //   return new Promise((resolve, reject) => {
 //     const sql = `
-//       SELECT 
+//       SELECT
 //         c.companyNameEnglish AS companyName,
 //         c.email AS companyEmail,
 //         c.status,
 //         SUM(CASE WHEN co.jobRole = 'Collection Center Head' THEN 1 ELSE 0 END) AS numOfHeads,
 //         SUM(CASE WHEN co.jobRole = 'Collection Center Manager' THEN 1 ELSE 0 END) AS numOfManagers,
 //         SUM(CASE WHEN co.jobRole = 'Collection Officer' THEN 1 ELSE 0 END) AS numOfOfficers
-//       FROM 
+//       FROM
 //         company c
-//       LEFT JOIN 
-//         collectionofficer co 
-//       ON 
+//       LEFT JOIN
+//         collectionofficer co
+//       ON
 //         c.id = co.companyId
-//       GROUP BY 
+//       GROUP BY
 //         c.id
 //     `;
 //     collectionofficer.query(sql, (err, results) => {
@@ -707,7 +704,6 @@ exports.generateRegCode = (province, district, city, callback) => {
 //     });
 //   });
 // };
-
 
 exports.getAllCompanyDAO = () => {
   return new Promise((resolve, reject) => {
@@ -747,21 +743,17 @@ exports.getAllCompanyDAO = () => {
   });
 };
 
-
-
-
 exports.getCompanyDAO = (id) => {
   return new Promise((resolve, reject) => {
-    const sql = `SELECT * FROM company WHERE id = ?`; 
+    const sql = `SELECT * FROM company WHERE id = ?`;
     collectionofficer.query(sql, [id], (err, results) => {
       if (err) {
-        return reject(err); 
+        return reject(err);
       }
       resolve(results);
     });
   });
 };
-
 
 exports.updateCompany = (
   id,
@@ -860,3 +852,179 @@ exports.deleteCompanyById = async (id) => {
   });
 };
 
+exports.getCenterNameAndOficerCountDao = (centerId) => {
+  return new Promise((resolve, reject) => {
+    const sql = `
+         SELECT CC.id, CC.centerName, COUNT(COF.id) AS officerCount
+         FROM collectioncenter CC, collectionofficer COF
+         WHERE CC.id = ? AND CC.id = COF.centerId
+         GROUP BY CC.id, CC.centerName
+      `;
+    collectionofficer.query(sql, [centerId], (err, results) => {
+      if (err) {
+        return reject(err);
+      }
+      resolve(results[0]);
+    });
+  });
+};
+
+exports.getTransactionCountDao = (centerId) => {
+  return new Promise((resolve, reject) => {
+    const sql = `
+          SELECT COUNT(RFP.id) AS transactionCount
+          FROM registeredfarmerpayments RFP, collectionofficer COF
+          WHERE DATE(RFP.createdAt) = '2024-12-31' AND RFP.collectionOfficerId = COF.id AND COF.centerId = ?
+          GROUP BY DATE(RFP.createdAt);
+
+      `;
+    collectionofficer.query(sql, [centerId], (err, results) => {
+      if (err) {
+        return reject(err);
+      }
+      resolve(results[0]);
+    });
+  });
+};
+
+exports.getTransactionAmountCountDao = (centerId) => {
+  return new Promise((resolve, reject) => {
+    const sql = `
+          SELECT SUM(gradeAprice)+SUM(gradeBprice)+SUM(gradeCprice) AS transAmountCount
+          FROM registeredfarmerpayments RFP, farmerpaymentscrops FPC, collectionofficer COF
+          WHERE DATE(RFP.createdAt) = '2024-12-31' AND RFP.collectionOfficerId = COF.id AND RFP.id = FPC.registerFarmerId AND COF.centerId = ?
+          GROUP BY DATE(RFP.createdAt);
+
+      `;
+    collectionofficer.query(sql, [centerId], (err, results) => {
+      if (err) {
+        return reject(err);
+      }
+      resolve(results[0]);
+    });
+  });
+};
+
+exports.getReseantCollectionDao = (centerId) => {
+  return new Promise((resolve, reject) => {
+    const sql = `
+          SELECT CG.cropNameEnglish, CV.varietyNameEnglish, 
+                 SUM(FPC.gradeAprice) AS totAprice, SUM(FPC.gradeBprice) AS totBprice, SUM(FPC.gradeCprice) AS totCprice, 
+                 SUM(FPC.gradeAquan) AS totAqty, SUM(FPC.gradeBquan) AS totBqty, SUM(FPC.gradeCquan) AS totCqty, 
+                 DATE(RFP.createdAt) AS date 
+          FROM registeredfarmerpayments RFP
+          JOIN farmerpaymentscrops FPC ON RFP.id = FPC.registerFarmerId
+          JOIN collectionofficer COF ON RFP.collectionOfficerId = COF.id
+          JOIN plant_care.cropvariety CV ON FPC.cropId = CV.id
+          JOIN plant_care.cropgroup CG ON CV.cropGroupId = CG.id
+          WHERE DATE(RFP.createdAt) = '2024-12-31' 
+          AND COF.centerId = ?
+          GROUP BY CG.cropNameEnglish, CV.varietyNameEnglish, DATE(RFP.createdAt)
+          ORDER BY DATE(RFP.createdAt)
+          LIMIT 5
+      `;
+
+    collectionofficer.query(sql, [centerId], (err, results) => {
+      if (err) {
+        return reject(err);
+      }
+
+      // Corrected transformation of data
+      const transformData = results.flatMap((item) => {
+        const entries = [];
+
+        if (item.totAqty !== undefined) {
+          entries.push({
+            cropNameEnglish: item.cropNameEnglish,
+            varietyNameEnglish: item.varietyNameEnglish,
+            totPrice: item.totAprice,
+            totQty: item.totAqty,
+            grade: "A",
+            date: item.date,
+          });
+        }
+
+        if (item.totBqty !== undefined) {
+          entries.push({
+            cropNameEnglish: item.cropNameEnglish,
+            varietyNameEnglish: item.varietyNameEnglish,
+            totPrice: item.totBprice,
+            totQty: item.totBqty,
+            grade: "B",
+            date: item.date,
+          });
+        }
+
+        if (item.totCqty !== undefined) {
+          entries.push({
+            cropNameEnglish: item.cropNameEnglish,
+            varietyNameEnglish: item.varietyNameEnglish,
+            totPrice: item.totCprice,
+            totQty: item.totCqty,
+            grade: "C",
+            date: item.date,
+          });
+        }
+
+        return entries;
+      });
+
+      resolve(transformData);
+    });
+  });
+};
+
+exports.getTotExpencesDao = (centerId) => {
+  return new Promise((resolve, reject) => {
+    const sql = `
+      SELECT 
+          SUM(FPC.gradeAprice) + SUM(FPC.gradeBprice) + SUM(FPC.gradeCprice) AS totExpences
+      FROM registeredfarmerpayments RFP
+      JOIN farmerpaymentscrops FPC ON RFP.id = FPC.registerFarmerId
+      JOIN collectionofficer COF ON RFP.collectionOfficerId = COF.id
+      WHERE RFP.createdAt >= DATE_SUB(NOW(), INTERVAL 30 DAY) 
+      AND COF.centerId = ?
+      `;
+    collectionofficer.query(sql, [centerId], (err, results) => {
+      if (err) {
+        return reject(err);
+      }
+      resolve(results[0]);
+    });
+  });
+};
+
+exports.differenceBetweenExpences = (centerId) => {
+  return new Promise((resolve, reject) => {
+    const sql = `
+      SELECT 
+          YEAR(RFP.createdAt) AS year,
+          MONTH(RFP.createdAt) AS month,
+          SUM(FPC.gradeAprice) + SUM(FPC.gradeBprice) + SUM(FPC.gradeCprice) AS monthexpences
+      FROM registeredfarmerpayments RFP
+      JOIN farmerpaymentscrops FPC ON RFP.id = FPC.registerFarmerId
+      JOIN collectionofficer COF ON RFP.collectionOfficerId = COF.id
+      WHERE COF.centerId = ?
+      GROUP BY YEAR(RFP.createdAt), MONTH(RFP.createdAt)
+      ORDER BY YEAR(RFP.createdAt) DESC, MONTH(RFP.createdAt) DESC
+      LIMIT 2;
+      `;
+    collectionofficer.query(sql, [centerId], (err, results) => {
+      if (err) {
+        return reject(err);
+      }
+
+      if (results.length < 2) {
+        return reject(new Error("Not enough data to compare two months."));
+      }
+
+      const difExpences =
+        ((results[0].monthexpences - results[1].monthexpences) /
+          results[0].monthexpences) *
+        100;
+      const roundedDifExpences = parseFloat(difExpences.toFixed(2));
+
+      resolve(roundedDifExpences);
+    });
+  });
+};

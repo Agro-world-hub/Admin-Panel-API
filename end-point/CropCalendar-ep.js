@@ -5,7 +5,7 @@ const fs = require("fs");
 const path = require("path");
 const xlsx = require("xlsx");
 const cropCalendarDao = require("../dao/CropCalendar-dao");
-const cropCalendarValidations = require('../validations/CropCalendar-validation');
+const cropCalendarValidations = require("../validations/CropCalendar-validation");
 const mime = require("mime-types");
 const deleteFromS3 = require("../middlewares/s3delete");
 const uploadFileToS3 = require("../middlewares/s3upload");
@@ -28,11 +28,6 @@ exports.allCropGroups = async (req, res) => {
   }
 };
 
-
-
-
-
-
 exports.createCropGroup = async (req, res) => {
   try {
     const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
@@ -44,28 +39,33 @@ exports.createCropGroup = async (req, res) => {
       cropNameSinhala,
       cropNameTamil,
       category,
-      bgColor
+      bgColor,
     } = req.body;
     console.log(req.body);
-    
 
     if (!req.file) {
       return res.status(400).json({ error: "No file uploaded" });
     }
 
-    const checkCropName = await cropCalendarDao.checkCropGroup(cropNameEnglish)
+    const checkCropName = await cropCalendarDao.checkCropGroup(cropNameEnglish);
     console.log(checkCropName);
 
     if (checkCropName.length > 0) {
-      return res.json({ message: "This crop name is already exist!", status: false })
+      return res.json({
+        message: "This crop name is already exist!",
+        status: false,
+      });
     }
-
 
     // Get file buffer (binary data)
     const fileBuffer = req.file.buffer;
     const fileName = req.file.originalname;
 
-    const profileImageUrl = await uploadFileToS3(fileBuffer, fileName, "cropgroup/image");
+    const profileImageUrl = await uploadFileToS3(
+      fileBuffer,
+      fileName,
+      "cropgroup/image"
+    );
 
     // Call DAO to save news and the image file as longblob
     const newsId = await cropCalendarDao.createCropGroup(
@@ -78,9 +78,11 @@ exports.createCropGroup = async (req, res) => {
     );
 
     console.log("crop group creation success");
-    return res
-      .status(201)
-      .json({ message: "crop group created successfully", id: newsId, status: true });
+    return res.status(201).json({
+      message: "crop group created successfully",
+      id: newsId,
+      status: true,
+    });
   } catch (err) {
     if (err.isJoi) {
       // Validation error
@@ -94,22 +96,20 @@ exports.createCropGroup = async (req, res) => {
   }
 };
 
-
-
-
-
-
-
-
 exports.getAllCropGroups = async (req, res) => {
   try {
     const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
     console.log(fullUrl);
     const { page, limit } =
-      await cropCalendarValidations.getAllCropCalendarSchema.validateAsync(req.query);
+      await cropCalendarValidations.getAllCropCalendarSchema.validateAsync(
+        req.query
+      );
     const offset = (page - 1) * limit;
 
-    const { total, items } = await cropCalendarDao.getAllCropGroups(limit, offset);
+    const { total, items } = await cropCalendarDao.getAllCropGroups(
+      limit,
+      offset
+    );
 
     console.log("Successfully fetched crop groups");
     res.json({
@@ -127,21 +127,16 @@ exports.getAllCropGroups = async (req, res) => {
   }
 };
 
-
-
-
-
-
-
 exports.deleteCropGroup = async (req, res) => {
   try {
     const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
     console.log("Request URL:", fullUrl);
 
     // Validate the request parameters
-    const { id } = await cropCalendarValidations.deleteCropCalenderSchema.validateAsync(
-      req.params
-    );
+    const { id } =
+      await cropCalendarValidations.deleteCropCalenderSchema.validateAsync(
+        req.params
+      );
 
     const cropGroup = await cropCalendarDao.getGroupByIds3(id);
     if (!cropGroup) {
@@ -149,7 +144,7 @@ exports.deleteCropGroup = async (req, res) => {
     }
 
     const imageUrl = cropGroup.image;
-    console.log(imageUrl)
+    console.log(imageUrl);
     if (imageUrl) {
       try {
         await deleteFromS3(imageUrl);
@@ -158,7 +153,6 @@ exports.deleteCropGroup = async (req, res) => {
         // Optionally handle the failure, e.g., log but not block user deletion
       }
     }
-
 
     const affectedRows = await cropCalendarDao.deleteCropGroup(id);
 
@@ -181,9 +175,6 @@ exports.deleteCropGroup = async (req, res) => {
   }
 };
 
-
-
-
 exports.createCropVariety = async (req, res) => {
   try {
     const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
@@ -199,7 +190,7 @@ exports.createCropVariety = async (req, res) => {
       descriptionEnglish,
       descriptionSinhala,
       descriptionTamil,
-      bgColor
+      bgColor,
     } = req.body;
 
     if (!req.file) {
@@ -207,18 +198,27 @@ exports.createCropVariety = async (req, res) => {
     }
 
     // Get file buffer (binary data)
-   
-    const checkCropVerityName = await cropCalendarDao.checkCropVerity(groupId, varietyNameEnglish)
+
+    const checkCropVerityName = await cropCalendarDao.checkCropVerity(
+      groupId,
+      varietyNameEnglish
+    );
 
     if (checkCropVerityName.length > 0) {
-      return res.json({ message: "This crop verity name is already exist!", status: false })
+      return res.json({
+        message: "This crop verity name is already exist!",
+        status: false,
+      });
     }
 
     const fileBuffer = req.file.buffer;
     const fileName = req.file.originalname;
 
-    const image = await uploadFileToS3(fileBuffer, fileName, "cropvariety/image");
-
+    const image = await uploadFileToS3(
+      fileBuffer,
+      fileName,
+      "cropvariety/image"
+    );
 
     // Call DAO to save news and the image file as longblob
     const newsId = await cropCalendarDao.createCropVariety(
@@ -234,9 +234,11 @@ exports.createCropVariety = async (req, res) => {
     );
 
     console.log("crop variety creation success");
-    return res
-      .status(201)
-      .json({ message: "crop variety created successfully", id: newsId, status:true });
+    return res.status(201).json({
+      message: "crop variety created successfully",
+      id: newsId,
+      status: true,
+    });
   } catch (err) {
     if (err.isJoi) {
       // Validation error
@@ -249,8 +251,6 @@ exports.createCropVariety = async (req, res) => {
       .json({ error: "An error occurred while creating crop variety" });
   }
 };
-
-
 
 exports.allCropVariety = async (req, res) => {
   try {
@@ -274,8 +274,6 @@ exports.allCropVariety = async (req, res) => {
   }
 };
 
-
-
 exports.createCropCallender = async (req, res) => {
   try {
     const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
@@ -286,12 +284,19 @@ exports.createCropCallender = async (req, res) => {
       cultivationMethod,
       natureOfCultivation,
       cropDuration,
-      suitableAreas
+      suitableAreas,
     } = req.body;
 
-    const checkExist = await cropCalendarDao.checkExistanceCropCalander(varietyId, cultivationMethod, natureOfCultivation);
-    if(checkExist.length > 0){
-      return res.json({message:"This crop calander allready exist !", status:false})
+    const checkExist = await cropCalendarDao.checkExistanceCropCalander(
+      varietyId,
+      cultivationMethod,
+      natureOfCultivation
+    );
+    if (checkExist.length > 0) {
+      return res.json({
+        message: "This crop calander allready exist !",
+        status: false,
+      });
     }
 
     const cropId = await cropCalendarDao.createCropCallender(
@@ -304,7 +309,7 @@ exports.createCropCallender = async (req, res) => {
 
     console.log("Crop Calendar creation success");
     console.log("xl uploading test 1");
-    return res.status(200).json({ cropId , status:true});
+    return res.status(200).json({ cropId, status: true });
   } catch (err) {
     if (err.isJoi) {
       return res.status(400).json({ error: err.details[0].message });
@@ -316,10 +321,6 @@ exports.createCropCallender = async (req, res) => {
       .json({ error: "An error occurred while creating Crop Calendar" });
   }
 };
-
-
-
-
 
 exports.uploadXLSX = async (req, res) => {
   try {
@@ -417,16 +418,12 @@ exports.uploadXLSX = async (req, res) => {
   }
 };
 
-
-
 exports.getAllVarietyByGroup = async (req, res) => {
   try {
     const cropGroupId = req.params.cropGroupId;
     const groups = await cropCalendarDao.getAllVarietyByGroup(cropGroupId);
 
     console.log(groups?.cropGroupId);
-
-    
 
     console.log("Successfully fetched crop groups");
     res.json({
@@ -442,17 +439,16 @@ exports.getAllVarietyByGroup = async (req, res) => {
   }
 };
 
-
-
 exports.deleteCropVariety = async (req, res) => {
   try {
     const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
     console.log("Request URL:", fullUrl);
 
     // Validate the request parameters
-    const { id } = await cropCalendarValidations.deleteCropCalenderSchema.validateAsync(
-      req.params
-    );
+    const { id } =
+      await cropCalendarValidations.deleteCropCalenderSchema.validateAsync(
+        req.params
+      );
 
     const cropVariety = await cropCalendarDao.getVarietyByIds3(id);
 
@@ -481,9 +477,6 @@ exports.deleteCropVariety = async (req, res) => {
   }
 };
 
-
-
-
 exports.getGroupById = async (req, res) => {
   try {
     const id = req.params.id;
@@ -504,7 +497,6 @@ exports.getGroupById = async (req, res) => {
     res.status(500).send("An error occurred while fetching data.");
   }
 };
-
 
 exports.getVarietyById = async (req, res) => {
   try {
@@ -527,36 +519,34 @@ exports.getVarietyById = async (req, res) => {
   }
 };
 
-
-
 exports.updateGroup = async (req, res) => {
-
-  const { cropNameEnglish, cropNameSinhala, cropNameTamil, category, bgColor } = req.body;
+  const { cropNameEnglish, cropNameSinhala, cropNameTamil, category, bgColor } =
+    req.body;
   const id = req.params.id;
   const Existname = req.params.name;
   let image = null;
   console.log(req.params);
-  
-  try {
-    
 
+  try {
     const cropGroup = await cropCalendarDao.getGroupByIds3(id);
     if (!cropGroup) {
       return res.status(404).json({ message: "Crop roup not found" });
     }
 
     const imageUrl = cropGroup.image;
-    console.log(imageUrl)
-    
-
-  
+    console.log(imageUrl);
 
     if (Existname !== cropNameEnglish) {
-      const checkCropName = await cropCalendarDao.checkCropGroup(cropNameEnglish)
+      const checkCropName = await cropCalendarDao.checkCropGroup(
+        cropNameEnglish
+      );
       console.log(checkCropName);
 
       if (checkCropName.length > 0) {
-        return res.json({ message: "This crop name is already exist!", status: false })
+        return res.json({
+          message: "This crop name is already exist!",
+          status: false,
+        });
       }
     }
 
@@ -567,12 +557,21 @@ exports.updateGroup = async (req, res) => {
       image = await uploadFileToS3(fileBuffer, fileName, "cropgroup/image");
     }
 
-
-    await cropCalendarDao.updateGroup({ cropNameEnglish, cropNameSinhala, cropNameTamil, category, bgColor, image }, id);
-    res.json({ message: 'Crop group updated successfully.', status:true });
+    await cropCalendarDao.updateGroup(
+      {
+        cropNameEnglish,
+        cropNameSinhala,
+        cropNameTamil,
+        category,
+        bgColor,
+        image,
+      },
+      id
+    );
+    res.json({ message: "Crop group updated successfully.", status: true });
   } catch (err) {
-    console.error('Error updating crop group:', err);
-    res.status(500).send('An error occurred while updating the crop group.');
+    console.error("Error updating crop group:", err);
+    res.status(500).send("An error occurred while updating the crop group.");
   }
 };
 
@@ -581,14 +580,11 @@ exports.updateCropVariety = async (req, res) => {
     const id = req.params.id;
     const updates = req.body;
     let image = null;
-    console.log('Request body:', req.body);
-
+    console.log("Request body:", req.body);
 
     const cropVariety = await cropCalendarDao.getVarietyByIds3(id);
 
     const imageUrl = cropVariety.image;
-
-    
 
     if (req.file) {
       const fileBuffer = req.file.buffer;
@@ -598,26 +594,28 @@ exports.updateCropVariety = async (req, res) => {
       updates.image = image;
     }
 
-    
-
     await cropCalendarDao.updateCropVariety(id, updates);
-    res.json({ message: 'Crop variety updated successfully.' });
+    res.json({ message: "Crop variety updated successfully." });
   } catch (err) {
-    console.error('Error updating crop variety:', err);
-    res.status(500).send('An error occurred while updating the crop variety.');
+    console.error("Error updating crop variety:", err);
+    res.status(500).send("An error occurred while updating the crop variety.");
   }
 };
-
 
 exports.getAllCropCalender = async (req, res) => {
   try {
     const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
     console.log(fullUrl);
     const { page, limit } =
-      await cropCalendarValidations.getAllCropCalendarSchema.validateAsync(req.query);
+      await cropCalendarValidations.getAllCropCalendarSchema.validateAsync(
+        req.query
+      );
     const offset = (page - 1) * limit;
 
-    const { total, items } = await cropCalendarDao.getAllCropCalendars(limit, offset);
+    const { total, items } = await cropCalendarDao.getAllCropCalendars(
+      limit,
+      offset
+    );
 
     console.log("Successfully fetched crop caledars");
     res.json({
@@ -635,9 +633,6 @@ exports.getAllCropCalender = async (req, res) => {
   }
 };
 
-
-
-
 exports.editCropCalender = async (req, res) => {
   const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
   console.log("Request URL:", fullUrl);
@@ -649,7 +644,7 @@ exports.editCropCalender = async (req, res) => {
 
     const affectedRows = await cropCalendarDao.updateCropCalender(
       id,
-      updateData,
+      updateData
     );
 
     console.log(updateData);
@@ -674,17 +669,16 @@ exports.editCropCalender = async (req, res) => {
   }
 };
 
-
-
 exports.deleteCropCalender = async (req, res) => {
   try {
     const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
     console.log("Request URL:", fullUrl);
 
     // Validate the request parameters
-    const { id } = await cropCalendarValidations.deleteCropCalenderSchema.validateAsync(
-      req.params
-    );
+    const { id } =
+      await cropCalendarValidations.deleteCropCalenderSchema.validateAsync(
+        req.params
+      );
 
     const affectedRows = await cropCalendarDao.deleteCropCalender(id);
 
@@ -707,8 +701,6 @@ exports.deleteCropCalender = async (req, res) => {
   }
 };
 
-
-
 exports.getAllTaskByCropId = async (req, res) => {
   const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
   console.log("Request URL:", fullUrl);
@@ -720,7 +712,9 @@ exports.getAllTaskByCropId = async (req, res) => {
   try {
     // Validate request parameters (cropId)
     const validatedParams =
-      await cropCalendarValidations.getAllTaskByCropIdSchema.validateAsync(req.params);
+      await cropCalendarValidations.getAllTaskByCropIdSchema.validateAsync(
+        req.params
+      );
 
     // Fetch the data from the DAO
     const { total, results } = await cropCalendarDao.getAllTaskByCropId(
@@ -747,10 +741,16 @@ exports.getAllTaskByCropId = async (req, res) => {
   }
 };
 
-
 exports.updateVariety = async (req, res) => {
-
-  const { varietyNameEnglish, varietyNameSinhala, varietyNameTamil, descriptionEnglish, descriptionSinhala, descriptionTamil, bgColor } = req.body;
+  const {
+    varietyNameEnglish,
+    varietyNameSinhala,
+    varietyNameTamil,
+    descriptionEnglish,
+    descriptionSinhala,
+    descriptionTamil,
+    bgColor,
+  } = req.body;
   const id = req.params.id;
   try {
     let imageData = null;
@@ -758,11 +758,22 @@ exports.updateVariety = async (req, res) => {
       imageData = req.file.buffer; // Store the binary image data from req.file
     }
 
-
-    await cropCalendarDao.updateVariety({ varietyNameEnglish, varietyNameSinhala, varietyNameTamil, descriptionEnglish, descriptionSinhala, descriptionTamil, bgColor, image: imageData }, id);
-    res.json({ message: 'Crop group updated successfully.' });
+    await cropCalendarDao.updateVariety(
+      {
+        varietyNameEnglish,
+        varietyNameSinhala,
+        varietyNameTamil,
+        descriptionEnglish,
+        descriptionSinhala,
+        descriptionTamil,
+        bgColor,
+        image: imageData,
+      },
+      id
+    );
+    res.json({ message: "Crop group updated successfully." });
   } catch (err) {
-    console.error('Error updating crop group:', err);
-    res.status(500).send('An error occurred while updating the crop group.');
+    console.error("Error updating crop group:", err);
+    res.status(500).send("An error occurred while updating the crop group.");
   }
 };
