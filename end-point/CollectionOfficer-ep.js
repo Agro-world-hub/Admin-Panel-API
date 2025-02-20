@@ -17,27 +17,85 @@ const s3 = new AWS.S3({
     region: process.env.AWS_REGION,
 });
 
+// exports.createCollectionOfficer = async (req, res) => {
+//     const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
+//     console.log(fullUrl);
+
+//     try {
+       
+//         const officerData = JSON.parse(req.body.officerData);
+        
+//         if (req.body.file) {
+//             console.log('image recieved');
+//            }
+
+//         const isExistingNIC = await collectionofficerDao.checkNICExist(
+//             officerData.nic
+//         );
+
+//         const isExistingEmail = await collectionofficerDao.checkEmailExist(
+//             officerData.email
+//         );
+
+        
+
+//         if (isExistingNIC) {
+//             return res.status(500).json({ 
+//                 error: "NIC already exists"
+//             });
+//         }
+
+//         if (isExistingEmail) {
+//             return res.status(500).json({ 
+//                 error: "email already exists"
+//             });
+//         }
+
+//         let profileImageUrl = null;
+//         // Ensure a file is uploaded
+//     if (req.body.file) {
+//         const base64String = req.body.file.split(",")[1]; // Extract the Base64 content
+//         const mimeType = req.body.file.match(/data:(.*?);base64,/)[1]; // Extract MIME type
+//         const fileBuffer = Buffer.from(base64String, "base64"); // Decode Base64 to buffer
+
+//         const fileExtension = mimeType.split("/")[1]; // Extract file extension from MIME type
+//         const fileName = `${officerData.firstNameEnglish}_${officerData.lastNameEnglish}.${fileExtension}`;
+  
+//          profileImageUrl = await uploadFileToS3(fileBuffer, fileName, "collectionofficer/image");
+//       }
+      
+  
+      
+  
+
+//         const resultsPersonal = await collectionofficerDao.createCollectionOfficerPersonal(officerData, profileImageUrl);
+   
+        
+//         console.log("Collection Officer created successfully");
+//         return res.status(201).json({ message: "Collection Officer created successfully", id: resultsPersonal.insertId, status:true });
+//     } catch (error) {
+//         if (error.isJoi) {
+//             // Handle validation error
+//             return res.status(400).json({ error: error.details[0].message });
+//         }
+
+//         console.error("Error creating collection officer:", error);
+//         return res.status(500).json({ error: "An error occurred while creating the collection officer" });
+//     }
+// };
+
+
+
+
 exports.createCollectionOfficer = async (req, res) => {
     const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
     console.log(fullUrl);
 
     try {
-       
         const officerData = JSON.parse(req.body.officerData);
-        
-        if (req.body.file) {
-            console.log('image recieved');
-           }
 
-        const isExistingNIC = await collectionofficerDao.checkNICExist(
-            officerData.nic
-        );
-
-        const isExistingEmail = await collectionofficerDao.checkEmailExist(
-            officerData.email
-        );
-
-        
+        const isExistingNIC = await collectionofficerDao.checkNICExist(officerData.nic);
+        const isExistingEmail = await collectionofficerDao.checkEmailExist(officerData.email);
 
         if (isExistingNIC) {
             return res.status(500).json({ 
@@ -47,34 +105,37 @@ exports.createCollectionOfficer = async (req, res) => {
 
         if (isExistingEmail) {
             return res.status(500).json({ 
-                error: "email already exists"
+                error: "Email already exists"
             });
         }
 
-        // Ensure a file is uploaded
-    if (!req.body.file) {
-        return res.status(400).json({ error: "No file uploaded" });
-      }
-      
-  
-      const base64String = req.body.file.split(",")[1]; // Extract the Base64 content
-        const mimeType = req.body.file.match(/data:(.*?);base64,/)[1]; // Extract MIME type
-        const fileBuffer = Buffer.from(base64String, "base64"); // Decode Base64 to buffer
+        let profileImageUrl = null;  // Default to null if no image is provided
 
-        const fileExtension = mimeType.split("/")[1]; // Extract file extension from MIME type
-        const fileName = `${officerData.firstNameEnglish}_${officerData.lastNameEnglish}.${fileExtension}`;
-  
-   const profileImageUrl = await uploadFileToS3(fileBuffer, fileName, "collectionofficer/image");
-  
+        // Check if an image file is provided
+        if (req.body.file) {
+            try {
+                const base64String = req.body.file.split(",")[1]; // Extract the Base64 content
+                const mimeType = req.body.file.match(/data:(.*?);base64,/)[1]; // Extract MIME type
+                const fileBuffer = Buffer.from(base64String, "base64"); // Decode Base64 to buffer
 
+                const fileExtension = mimeType.split("/")[1]; // Extract file extension from MIME type
+                const fileName = `${officerData.firstNameEnglish}_${officerData.lastNameEnglish}.${fileExtension}`;
+
+                // Upload image to S3
+                profileImageUrl = await uploadFileToS3(fileBuffer, fileName, "collectionofficer/image");
+            } catch (err) {
+                console.error("Error processing image file:", err);
+                return res.status(400).json({ error: "Invalid file format or file upload error" });
+            }
+        }
+
+        // Save officer data (without image if no image is uploaded)
         const resultsPersonal = await collectionofficerDao.createCollectionOfficerPersonal(officerData, profileImageUrl);
-   
-        
+
         console.log("Collection Officer created successfully");
-        return res.status(201).json({ message: "Collection Officer created successfully", id: resultsPersonal.insertId, status:true });
+        return res.status(201).json({ message: "Collection Officer created successfully", id: resultsPersonal.insertId, status: true });
     } catch (error) {
         if (error.isJoi) {
-            // Handle validation error
             return res.status(400).json({ error: error.details[0].message });
         }
 
@@ -82,6 +143,9 @@ exports.createCollectionOfficer = async (req, res) => {
         return res.status(500).json({ error: "An error occurred while creating the collection officer" });
     }
 };
+
+
+
 
 //get all collection officer
 exports.getAllCollectionOfficers = async (req, res) => {
@@ -421,22 +485,29 @@ exports.updateCollectionOfficerDetails = async (req, res) => {
     const officerData = JSON.parse(req.body.officerData);
     const qrCode = await collectionofficerDao.getQrImage(id);
 
-    const qrImageUrl = qrCode.image;
+    let qrImageUrl;
   
-    await deleteFromS3(qrImageUrl);
+    let profileImageUrl = null;
    
     if (req.body.file){
         console.log('Recieved');
+         qrImageUrl = qrCode.image;
+         if(qrImageUrl){
+            await deleteFromS3(qrImageUrl);
+         }
+       
+
+        const base64String = req.body.file.split(",")[1]; // Extract the Base64 content
+        const mimeType = req.body.file.match(/data:(.*?);base64,/)[1]; // Extract MIME type
+        const fileBuffer = Buffer.from(base64String, "base64"); // Decode Base64 to buffer
+    
+        const fileExtension = mimeType.split("/")[1]; // Extract file extension from MIME type
+        const fileName = `${officerData.firstNameEnglish}_${officerData.lastNameEnglish}.${fileExtension}`;
+      
+       profileImageUrl = await uploadFileToS3(fileBuffer, fileName, "collectionofficer/image");
         
     }
-    const base64String = req.body.file.split(",")[1]; // Extract the Base64 content
-    const mimeType = req.body.file.match(/data:(.*?);base64,/)[1]; // Extract MIME type
-    const fileBuffer = Buffer.from(base64String, "base64"); // Decode Base64 to buffer
-
-    const fileExtension = mimeType.split("/")[1]; // Extract file extension from MIME type
-    const fileName = `${officerData.firstNameEnglish}_${officerData.lastNameEnglish}.${fileExtension}`;
-  
-   const profileImageUrl = await uploadFileToS3(fileBuffer, fileName, "collectionofficer/image");
+   
     const {  
         centerId,
         companyId,
