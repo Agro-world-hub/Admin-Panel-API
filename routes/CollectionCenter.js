@@ -1,145 +1,129 @@
-const express = require('express');
-const db = require('../startup/database');
-const bodyParser = require('body-parser');
-const authMiddleware = require('../middlewares/authMiddleware');
+const express = require("express");
+const db = require("../startup/database");
+const bodyParser = require("body-parser");
+const authMiddleware = require("../middlewares/authMiddleware");
 const upload = require("../middlewares/uploadMiddleware");
 const path = require("path");
-const CollectionCenterEp = require('../end-point/CollectionCenter-ep')
-
+const CollectionCenterEp = require("../end-point/CollectionCenter-ep");
 
 const router = express.Router();
 
 router.post(
-    "/add-collection-center",
-    authMiddleware,
-    CollectionCenterEp.addNewCollectionCenter);
+  "/add-collection-center",
+  authMiddleware,
+  CollectionCenterEp.addNewCollectionCenter
+);
 
 router.get(
-    "/get-all-center",
-    authMiddleware,
-    CollectionCenterEp.getAllCollectionCenter
-)
+  "/get-all-center",
+  authMiddleware,
+  CollectionCenterEp.getAllCollectionCenter
+);
 
 //delete collection center
 router.delete(
-    "/delete-collection-center/:id",
-    authMiddleware,
-    CollectionCenterEp.deleteCollectionCenter
-)
+  "/delete-collection-center/:id",
+  authMiddleware,
+  CollectionCenterEp.deleteCollectionCenter
+);
 
 //get all complains
 router.get(
-    "/get-all-complains",
-    authMiddleware,
-    CollectionCenterEp.getAllComplains
-)
+  "/get-all-complains",
+  authMiddleware,
+  CollectionCenterEp.getAllComplains
+);
 
 router.get(
-    "/get-complain-by-id/:id",
-    authMiddleware,
-    CollectionCenterEp.getComplainById
-)
+  "/get-complain-by-id/:id",
+  authMiddleware,
+  CollectionCenterEp.getComplainById
+);
 
 router.post(
-    "/create-collection-center",
-    authMiddleware,
-    CollectionCenterEp.createCollectionCenter
-)
-
-
+  "/create-collection-center",
+  authMiddleware,
+  CollectionCenterEp.createCollectionCenter
+);
 
 router.get(
-    "/get-all-centerpage",
-    authMiddleware,
-    CollectionCenterEp.getAllCollectionCenterPage
-)
+  "/get-all-centerpage",
+  authMiddleware,
+  CollectionCenterEp.getAllCollectionCenterPage
+);
 
 router.get(
-    "/get-center-by-id/:id",
-    authMiddleware,
-    CollectionCenterEp.getCenterById
-)
+  "/get-center-by-id/:id",
+  authMiddleware,
+  CollectionCenterEp.getCenterById
+);
 
 router.patch(
-    "/update-center/:id",
-    authMiddleware,
-    CollectionCenterEp.updateCollectionCenter
-)
+  "/update-center/:id",
+  authMiddleware,
+  CollectionCenterEp.updateCollectionCenter
+);
 
 router.put(
-    "/reply-complain/:id/",
-    authMiddleware,
-    CollectionCenterEp.sendComplainReply
-)
-
-router.get(
-    "/get-last-emp-id/:role",
-    authMiddleware,
-    CollectionCenterEp.getForCreateId
-)
-
-
-router.post(
-    "/create-company",
-    authMiddleware,
-    CollectionCenterEp.createCompany
+  "/reply-complain/:id/",
+  authMiddleware,
+  CollectionCenterEp.sendComplainReply
 );
 
 router.get(
-    "/get-all-company",
-    // authMiddleware,
-    CollectionCenterEp.getAllCompanies
-)
-
-
-router.get(
-    "/get-all-company-list",
-    authMiddleware,
-    CollectionCenterEp.getAllCompanyList
-)
-
-
-router.get(
-    "/get-all-manager-list/:companyId/:centerId",
-    authMiddleware,
-    CollectionCenterEp.getAllManagerList
-)
-
-
+  "/get-last-emp-id/:role",
+  authMiddleware,
+  CollectionCenterEp.getForCreateId
+);
 
 router.post(
-    '/generate-regcode', 
-    CollectionCenterEp.generateRegCode
+  "/create-company",
+  authMiddleware,
+  CollectionCenterEp.createCompany
 );
+
+router.get(
+  "/get-all-company",
+  // authMiddleware,
+  CollectionCenterEp.getAllCompanies
+);
+
+router.get(
+  "/get-all-company-list",
+  authMiddleware,
+  CollectionCenterEp.getAllCompanyList
+);
+
+router.get(
+  "/get-all-manager-list/:companyId/:centerId",
+  authMiddleware,
+  CollectionCenterEp.getAllManagerList
+);
+
+router.post("/generate-regcode", CollectionCenterEp.generateRegCode);
 
 router.patch(
-    "/update-company/:id",
-    // authMiddleware,
-    CollectionCenterEp.updateCompany
-)
+  "/update-company/:id",
+  // authMiddleware,
+  CollectionCenterEp.updateCompany
+);
 
 router.get(
-    "/get-company-by-id/:id",
-    // authMiddleware,
-    CollectionCenterEp.getCompanyById
-)
+  "/get-company-by-id/:id",
+  // authMiddleware,
+  CollectionCenterEp.getCompanyById
+);
 
 router.delete(
-    "/delete-company/:id",
-    // authMiddleware,
-    CollectionCenterEp.deleteCompany
-)
+  "/delete-company/:id",
+  // authMiddleware,
+  CollectionCenterEp.deleteCompany
+);
 
 router.get(
-    '/get-crop-category',
-    authMiddleware,
-    CollectionCenterEp.getAllCropCatogory
-)
-
-router.post(
-    "/create-daily-target",
-    authMiddleware,
-    CollectionCenterEp.addDailyTarget
-)
+  "/get-center-dashboard/:id",
+  authMiddleware,
+  CollectionCenterEp.getCenterDashbord
+);
 
 module.exports = router;

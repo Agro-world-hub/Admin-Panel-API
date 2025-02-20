@@ -37,7 +37,7 @@ exports.addCollectionCenter = (
       city,
       district,
       province,
-      country
+      country,
     ];
 
     collectionofficer.query(sql, values, (err, results) => {
@@ -50,7 +50,6 @@ exports.addCollectionCenter = (
     });
   });
 };
-
 
 exports.addCompaniesToCenter = (centerId, companies) => {
   return new Promise((resolve, reject) => {
@@ -70,7 +69,6 @@ exports.addCompaniesToCenter = (centerId, companies) => {
     resolve();
   });
 };
-
 
 exports.GetAllCenterDAO = () => {
   return new Promise((resolve, reject) => {
@@ -116,8 +114,8 @@ exports.deleteCollectionCenterDAo = async (id) => {
 
 //     // SQL to fetch paginated data
 //     let sql = `
-//       SELECT 
-//         fc.id, 
+//       SELECT
+//         fc.id,
 //         fc.refNo,
 //         u.NICnumber AS NIC,
 //         u.firstName AS farmerName,
@@ -189,7 +187,6 @@ exports.deleteCollectionCenterDAo = async (id) => {
 //     );
 //   });
 // };
-
 
 exports.GetAllComplainDAO = (page, limit, status, category, searchText) => {
   return new Promise((resolve, reject) => {
@@ -283,7 +280,6 @@ exports.GetAllComplainDAO = (page, limit, status, category, searchText) => {
     );
   });
 };
-
 
 exports.getComplainById = (id) => {
   return new Promise((resolve, reject) => {
@@ -409,8 +405,6 @@ exports.getCenterByIdDAO = (id) => {
   });
 };
 
-
-
 exports.updateCollectionCenter = (
   regCode,
   centerName,
@@ -471,8 +465,6 @@ exports.updateCollectionCenter = (
   });
 };
 
-
-
 exports.deleteCompaniesFromCompanyCenter = (collectionID) => {
   return new Promise((resolve, reject) => {
     const sql = "DELETE FROM companycenter WHERE centerId = ?";
@@ -481,16 +473,18 @@ exports.deleteCompaniesFromCompanyCenter = (collectionID) => {
         console.error("Error deleting companies from companycenter:", err);
         return reject(err);
       }
-      console.log("Deleted companies successfully from companycenter:", results);
+      console.log(
+        "Deleted companies successfully from companycenter:",
+        results
+      );
       resolve(results);
     });
   });
 };
 
-
 exports.insertCompaniesIntoCompanyCenter = (companyIds, collectionID) => {
   return new Promise((resolve, reject) => {
-    const values = companyIds.map(companyId => [collectionID, companyId]);
+    const values = companyIds.map((companyId) => [collectionID, companyId]);
     const sql = "INSERT INTO companycenter (centerId, companyId) VALUES ?";
 
     collectionofficer.query(sql, [values], (err, results) => {
@@ -498,12 +492,14 @@ exports.insertCompaniesIntoCompanyCenter = (companyIds, collectionID) => {
         console.error("Error inserting companies into companycenter:", err);
         return reject(err);
       }
-      console.log("Inserted companies successfully into companycenter:", results);
+      console.log(
+        "Inserted companies successfully into companycenter:",
+        results
+      );
       resolve(results);
     });
   });
 };
-
 
 exports.sendComplainReply = (complainId, reply) => {
   return new Promise((resolve, reject) => {
@@ -638,7 +634,8 @@ exports.GetAllCompanyList = () => {
 
 exports.GetAllManagerList = (companyId, centerId) => {
   return new Promise((resolve, reject) => {
-    const sql = "SELECT id, firstNameEnglish, lastNameEnglish FROM collectionofficer WHERE companyId=? AND centerId=?";
+    const sql =
+      "SELECT id, firstNameEnglish, lastNameEnglish FROM collectionofficer WHERE companyId=? AND centerId=?";
     collectionofficer.query(sql, [companyId, centerId], (err, results) => {
       if (err) {
         return reject(err);
@@ -683,20 +680,20 @@ exports.generateRegCode = (province, district, city, callback) => {
 // exports.getAllCompanyDAO = () => {
 //   return new Promise((resolve, reject) => {
 //     const sql = `
-//       SELECT 
+//       SELECT
 //         c.companyNameEnglish AS companyName,
 //         c.email AS companyEmail,
 //         c.status,
 //         SUM(CASE WHEN co.jobRole = 'Collection Center Head' THEN 1 ELSE 0 END) AS numOfHeads,
 //         SUM(CASE WHEN co.jobRole = 'Collection Center Manager' THEN 1 ELSE 0 END) AS numOfManagers,
 //         SUM(CASE WHEN co.jobRole = 'Collection Officer' THEN 1 ELSE 0 END) AS numOfOfficers
-//       FROM 
+//       FROM
 //         company c
-//       LEFT JOIN 
-//         collectionofficer co 
-//       ON 
+//       LEFT JOIN
+//         collectionofficer co
+//       ON
 //         c.id = co.companyId
-//       GROUP BY 
+//       GROUP BY
 //         c.id
 //     `;
 //     collectionofficer.query(sql, (err, results) => {
@@ -707,7 +704,6 @@ exports.generateRegCode = (province, district, city, callback) => {
 //     });
 //   });
 // };
-
 
 exports.getAllCompanyDAO = () => {
   return new Promise((resolve, reject) => {
@@ -747,9 +743,6 @@ exports.getAllCompanyDAO = () => {
   });
 };
 
-
-
-
 exports.getCompanyDAO = (id) => {
   return new Promise((resolve, reject) => {
     const sql = `SELECT * FROM company WHERE id = ?`;
@@ -761,7 +754,6 @@ exports.getCompanyDAO = (id) => {
     });
   });
 };
-
 
 exports.updateCompany = (
   id,
@@ -860,7 +852,6 @@ exports.deleteCompanyById = async (id) => {
   });
 };
 
-
 exports.getAllCropNameDAO = () => {
   return new Promise((resolve, reject) => {
     const sql = `
@@ -878,7 +869,6 @@ exports.getAllCropNameDAO = () => {
 
       results.forEach((item) => {
         const { cropNameEnglish, varietyEnglish, varietyId, cropId } = item;
-
 
         if (!groupedData[cropNameEnglish]) {
           groupedData[cropNameEnglish] = {
@@ -904,47 +894,48 @@ exports.getAllCropNameDAO = () => {
   });
 };
 
-
 exports.createDailyTargetDao = (target, userId) => {
   return new Promise((resolve, reject) => {
-      const sql = `
+    const sql = `
          INSERT INTO dailytarget (centerId, companyId, fromDate, toDate, fromTime, toTime)
          VALUES (?, ?, ?, ?, ?, ?)
-      `
-      collectionofficer.query(sql, [
-          parseInt(target.centerId),
-          parseInt(target.companyId),
-          target.fromDate,
-          target.toDate,
-          target.fromTime,
-          target.toTime,
-          userId
-      ], (err, results) => {
-          if (err) {
-              return reject(err);
-          }
-          resolve(results.insertId);
-      });
+      `;
+    collectionofficer.query(
+      sql,
+      [
+        parseInt(target.centerId),
+        parseInt(target.companyId),
+        target.fromDate,
+        target.toDate,
+        target.fromTime,
+        target.toTime,
+        userId,
+      ],
+      (err, results) => {
+        if (err) {
+          return reject(err);
+        }
+        resolve(results.insertId);
+      }
+    );
   });
 };
 
 exports.createDailyTargetItemsDao = (data, targetId) => {
   return new Promise((resolve, reject) => {
-      const sql = `
+    const sql = `
          INSERT INTO dailytargetitems (targetId, varietyId, qtyA, qtyB, qtyC)
          VALUES (?, ?, ?, ?, ?)
-      `
-      collectionofficer.query(sql, [
-          parseInt(targetId),
-          data.varietyId,
-          data.qtyA,
-          data.qtyB,
-          data.qtyC
-      ], (err, results) => {
-          if (err) {
-              return reject(err);
-          }
-          resolve(results.insertId);
-      });
+      `;
+    collectionofficer.query(
+      sql,
+      [parseInt(targetId), data.varietyId, data.qtyA, data.qtyB, data.qtyC],
+      (err, results) => {
+        if (err) {
+          return reject(err);
+        }
+        resolve(results.insertId);
+      }
+    );
   });
 };
