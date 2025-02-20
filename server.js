@@ -72,30 +72,30 @@ dash.getConnection((err, connection) => {
   connection.release();
 });
 
-
-
+// Add base path for all routes
+const BASE_PATH = '/agro-api/admin-api';
 
 app.use("", heathRoutes);
 app.use(cors());
-app.use(process.env.AUTHOR, routes);
+app.use(BASE_PATH + process.env.AUTHOR, routes);
 
-app.use(process.env.AUTHOR, collectionOfficerRoutes);
-app.use(process.env.AUTHOR, routesNewws);
-app.use(process.env.AUTHOR, CollectionCenterRoutes);
-app.use(process.env.MARKETPRICE, MarketPrice);
-app.use('/api/market-place', MarketPlace);
-app.use('/api/crop-calendar', CropCalendar);
-app.use('/api/permission', Permission);
-app.use('/api/complain', ComplainCategory);
-app.use('/api/stakeholder', Stakeholder)
+app.use(BASE_PATH + process.env.AUTHOR, collectionOfficerRoutes);
+app.use(BASE_PATH + process.env.AUTHOR, routesNewws);
+app.use(BASE_PATH + process.env.AUTHOR, CollectionCenterRoutes);
+app.use(BASE_PATH + process.env.MARKETPRICE, MarketPrice);
+app.use(BASE_PATH + '/api/market-place', MarketPlace);
+app.use(BASE_PATH + '/api/crop-calendar', CropCalendar);
+app.use(BASE_PATH + '/api/permission', Permission);
+app.use(BASE_PATH + '/api/complain', ComplainCategory);
+app.use(BASE_PATH + '/api/stakeholder', Stakeholder)
 
 
 
 app.use('/uploads', express.static('uploads'));
 
-app.get('/test', (req, res) => {
+app.get(BASE_PATH + '/test', (req, res) => {
   res.send('Test route is working!');
-  console.log('tset toute is working');
+  console.log('test route is working');
 });
 
 app.listen(port, () => {
