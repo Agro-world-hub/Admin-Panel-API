@@ -1099,3 +1099,20 @@ exports.differenceBetweenExpences = (centerId) => {
     });
   });
 };
+
+exports.getCenterNameAndOficerCountDao = (centerId) => {
+  return new Promise((resolve, reject) => {
+    const sql = `
+         SELECT CC.id, CC.centerName, COUNT(COF.id) AS officerCount
+         FROM collectioncenter CC, collectionofficer COF
+         WHERE CC.id = ? AND CC.id = COF.centerId
+         GROUP BY CC.id, CC.centerName
+      `;
+    collectionofficer.query(sql, [centerId], (err, results) => {
+      if (err) {
+        return reject(err);
+      }
+      resolve(results[0]);
+    });
+  });
+};
