@@ -236,6 +236,9 @@ exports.getAllCollectionCenterPage = async (req, res) => {
       searchItem
     );
 
+    console.log(items);
+    
+
     console.log(page);
     console.log(limit);
     console.log(searchItem);
