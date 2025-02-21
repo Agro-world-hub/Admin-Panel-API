@@ -314,7 +314,32 @@ exports.CheckRegCodeExistDAO = (regCode) => {
 exports.getAllCenterPage = (limit, offset, searchItem) => {
   return new Promise((resolve, reject) => {
     let countSql = "SELECT COUNT(*) as total FROM collectioncenter";
-    let sql = "SELECT * FROM collectioncenter";
+    let sql = `
+      SELECT 
+          C.id,
+          C.regCode,
+          C.centerName,
+          C.code1,
+          C.contact01,
+          C.code2,
+          C.contact02,
+          C.buildingNumber,
+          C.street,
+          C.city,
+          C.district,
+          C.province,
+          C.country,
+          (
+              SELECT GROUP_CONCAT(
+                  CONCAT(COM.id, ':', COM.companyNameEnglish) SEPARATOR '; '
+              )
+              FROM company COM
+              JOIN companycenter CMC ON CMC.companyId = COM.id
+              WHERE CMC.centerId = C.id
+          ) AS companies
+      FROM collectioncenter C
+    `;
+
     const searchParams = [];
     const dataParams = [];
 
@@ -326,50 +351,40 @@ exports.getAllCenterPage = (limit, offset, searchItem) => {
       searchParams.push(searchQuery, searchQuery);
     }
 
-    sql += " ORDER BY createdAt DESC LIMIT ? OFFSET ?";
+    sql += " ORDER BY C.createdAt DESC LIMIT ? OFFSET ?";
     dataParams.push(...searchParams, limit, offset);
 
-    // Count total matching records
-    collectionofficer.query(
-      countSql,
-      searchParams,
-      (countErr, countResults) => {
-        if (countErr) {
-          return reject(countErr);
+    collectionofficer.query(countSql, searchParams, (countErr, countResults) => {
+      if (countErr) {
+        return reject(countErr);
+      }
+
+      const total = countResults[0].total;
+
+      collectionofficer.query(sql, dataParams, (dataErr, dataResults) => {
+        if (dataErr) {
+          return reject(dataErr);
         }
 
-        const total = countResults[0].total;
+        const processedDataResults = dataResults.map((center) => ({
+          ...center,
+          companies: center.companies
+            ? center.companies.split("; ").map((company) => {
+                const [id, name] = company.split(":");
+                return { id: parseInt(id, 10), companyNameEnglish: name };
+              })
+            : []
+        }));
 
-        // Fetch the paginated records
-        collectionofficer.query(sql, dataParams, (dataErr, dataResults) => {
-          if (dataErr) {
-            return reject(dataErr);
-          }
-
-          // Process results (no profileImage in collectioncenter schema)
-          const processedDataResults = dataResults.map((center) => ({
-            id: center.id,
-            regCode: center.regCode,
-            centerName: center.centerName,
-            contact01: center.contact01,
-            contact02: center.contact02,
-            buildingNumber: center.buildingNumber,
-            street: center.street,
-            district: center.district,
-            province: center.province,
-            createdAt: center.createdAt,
-          }));
-
-          // Resolve with total count and processed results
-          resolve({
-            total: total,
-            items: processedDataResults,
-          });
+        resolve({
+          total: total,
+          items: processedDataResults,
         });
-      }
-    );
+      });
+    });
   });
 };
+
 
 // exports.getCenterByIdDAO = (id) => {
 //   return new Promise((resolve, reject) => {
@@ -1086,7 +1101,8 @@ exports.differenceBetweenExpences = (centerId) => {
       }
 
       if (results.length < 2) {
-        return reject(new Error("Not enough data to compare two months."));
+        // return reject(new Error("Not enough data to compare two months."));
+        return resolve (100)
       }
 
       const difExpences =
