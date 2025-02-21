@@ -2,7 +2,7 @@ const { admin } = require('../../startup/database');
 
 const insertFeatureCategoriesAndFeatures = async () => {
   const category = 'Plantcare User'; // Single category
-  const features = ['Add plantcare user', 'Edit Plantcare User', 'Delete plantcare user']; // Three features
+  const features = ['Add Plantcare user', 'Edit Plantcare User', 'Delete Plantcare User']; // Three features
 
   try {
     return new Promise((resolve, reject) => {

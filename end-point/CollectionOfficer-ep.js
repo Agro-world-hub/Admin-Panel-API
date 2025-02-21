@@ -506,6 +506,8 @@ exports.updateCollectionOfficerDetails = async (req, res) => {
       
        profileImageUrl = await uploadFileToS3(fileBuffer, fileName, "collectionofficer/image");
         
+    }else{
+        profileImageUrl =qrCode.image;
     }
    
     const {  
