@@ -1237,21 +1237,27 @@ exports.getAllUserTaskByCropId = (cropId, userId, limit, offset) => {
 
     const dataSql = `
       SELECT 
-        slavecropcalendardays.id AS slavecropcalendardaysId,
-        slavecropcalendardays.cropCalendarId,
-        slavecropcalendardays.taskIndex, 
-        slavecropcalendardays.startingDate, 
-        slavecropcalendardays.taskEnglish,
-        slavecropcalendardays.imageLink,
-        slavecropcalendardays.videoLinkEnglish,
-        slavecropcalendardays.videoLinkSinhala,
-        slavecropcalendardays.videoLinkTamil,
-        slavecropcalendardays.status
+          slavecropcalendardays.id AS slavecropcalendardaysId,
+          slavecropcalendardays.cropCalendarId,
+          slavecropcalendardays.taskIndex, 
+          slavecropcalendardays.startingDate, 
+          slavecropcalendardays.taskEnglish,
+          slavecropcalendardays.imageLink,
+          slavecropcalendardays.videoLinkEnglish,
+          slavecropcalendardays.videoLinkSinhala,
+          slavecropcalendardays.videoLinkTamil,
+          slavecropcalendardays.status,
+          GROUP_CONCAT(taskimages.image SEPARATOR ', ') AS imageUploads
       FROM 
-        slavecropcalendardays
+          slavecropcalendardays
+      LEFT JOIN
+          taskimages
+      ON
+          slavecropcalendardays.id = taskimages.slaveId
       WHERE 
-        slavecropcalendardays.cropCalendarId = ? 
-        AND slavecropcalendardays.userId = ?
+          slavecropcalendardays.cropCalendarId = ? 
+          AND slavecropcalendardays.userId = ? 
+      GROUP BY slavecropcalendardays.id
       ORDER BY slavecropcalendardays.taskIndex
       LIMIT ? OFFSET ?`;
 
