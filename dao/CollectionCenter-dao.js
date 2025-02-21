@@ -1100,16 +1100,18 @@ exports.differenceBetweenExpences = (centerId) => {
         return reject(err);
       }
 
+      let roundedDifExpences = 100
+
       if (results.length < 2) {
         // return reject(new Error("Not enough data to compare two months."));
-        return resolve (100)
+        return resolve (roundedDifExpences)
       }
 
       const difExpences =
         ((results[0].monthexpences - results[1].monthexpences) /
           results[0].monthexpences) *
         100;
-      const roundedDifExpences = parseFloat(difExpences.toFixed(2));
+       roundedDifExpences = parseFloat(difExpences.toFixed(2));
 
       resolve(roundedDifExpences);
     });
