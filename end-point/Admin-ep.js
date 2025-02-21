@@ -1632,10 +1632,17 @@ exports.getAllUsersTaskByCropId = async (req, res) => {
 
     console.log("Successfully fetched user tasks for crop ID:", cropId);
 
+    const formattedItems = items.map((task) => ({
+      ...task,
+      images: task.imageUploads ? task.imageUploads.split(", ") : [], // Convert images string to array
+    }));
+
+    console.log(formattedItems);
+
     // Send response with paginated tasks and total count
     res.json({
       total,
-      items,
+      items: formattedItems,
     });
   } catch (error) {
     if (error.isJoi) {
