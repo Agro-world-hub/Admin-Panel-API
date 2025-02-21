@@ -75,7 +75,14 @@ exports.loginAdmin = async (req, res) => {
     res.json(data);
   } catch (err) {
     console.error("Error during login:", err);
-    res.status(500).json({ error: "An error occurred during login." });
+    
+    if (err.isJoi) {
+      // Validation error
+      return res.status(400).json({ error: "Invalid input data", details: err.details });
+    }
+    
+    // For any other unexpected errors, keep the 500 status
+    res.status(500).json({ error: "An internal server error occurred." });
   }
 };
 
