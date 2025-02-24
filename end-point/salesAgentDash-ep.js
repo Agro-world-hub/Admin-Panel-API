@@ -20,12 +20,12 @@ exports.getAllSalesAgents = async (req, res) => {
     console.log(fullUrl);
     try {
   
-        const { page, limit, searchText, status } = req.query;
+        const { page, limit, searchText, status, date } = req.query;
         console.log(status);
     //   const { centerId, page, limit, grade, searchText } = await TargetValidate.getAllPriceDetailSchema.validateAsync(req.query);
       // const { items, total } = await PriceListDAO.getAllPriceListDao(centerId, page, limit, grade, searchText);
   
-      const { items, total } = await SalesAgentDAO.getAllSalesAgentsDao(page, limit, searchText, status);
+      const { items, total } = await SalesAgentDAO.getAllSalesAgentsDao(page, limit, searchText, status, date);
   
       console.log({ items, total });
   

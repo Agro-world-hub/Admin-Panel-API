@@ -3,7 +3,7 @@ const { Upload } = require("@aws-sdk/lib-storage");
 const Joi = require("joi");
 
 
-exports.getAllSalesAgentsDao = (page, limit, searchText, status) => {
+exports.getAllSalesAgentsDao = (page, limit, searchText, status, date) => {
     return new Promise((resolve, reject) => {
         const offset = (page - 1) * limit;
         let countSql = `
@@ -17,6 +17,7 @@ exports.getAllSalesAgentsDao = (page, limit, searchText, status) => {
             salesagent.firstName, 
             salesagent.lastName, 
             salesagent.empId,
+            salesagent.createdAt,
             salesagentstars.completed, 
             salesagentstars.target,
             CONCAT(salesagentstars.completed, '/', salesagentstars.target) AS targetCompletion,
@@ -32,16 +33,13 @@ exports.getAllSalesAgentsDao = (page, limit, searchText, status) => {
         const countParams = [];
         const dataParams = [];
         
+        let whereClauses = [];
+        
         // Handling Search Query
         if (searchText) {
-            countSql += `
-            WHERE (salesagent.firstName LIKE ? 
-            OR salesagent.lastName LIKE ? 
-            OR salesagent.empId LIKE ?)`;
-            dataSql += `
-            WHERE (salesagent.firstName LIKE ? 
-            OR salesagent.lastName LIKE ? 
-            OR salesagent.empId LIKE ?)`;
+            whereClauses.push(`(salesagent.firstName LIKE ? 
+                OR salesagent.lastName LIKE ? 
+                OR salesagent.empId LIKE ?)`);
             
             const searchPattern = `%${searchText}%`;
             countParams.push(searchPattern, searchPattern, searchPattern);
@@ -50,23 +48,29 @@ exports.getAllSalesAgentsDao = (page, limit, searchText, status) => {
         
         // Handling Status Filter
         if (status) {
-            const statusCondition = `
+            whereClauses.push(`
             (CASE 
                 WHEN salesagentstars.completed > salesagentstars.target THEN 'Exceeded'
                 WHEN salesagentstars.completed = salesagentstars.target THEN 'Completed'
                 ELSE 'Pending'
-            END = ?)`;
-            
-            if (searchText) {
-                countSql += ` AND ${statusCondition}`;
-                dataSql += ` AND ${statusCondition}`;
-            } else {
-                countSql += ` WHERE ${statusCondition}`;
-                dataSql += ` WHERE ${statusCondition}`;
-            }
+            END = ?)`);
             
             countParams.push(status);
             dataParams.push(status);
+        }
+        
+        // Handling Date Filter
+        if (date) {
+            whereClauses.push(`DATE(salesagent.createdAt) = DATE(?)`);
+            
+            countParams.push(date);
+            dataParams.push(date);
+        }
+        
+        // Adding WHERE clauses to queries
+        if (whereClauses.length > 0) {
+            countSql += ` WHERE ${whereClauses.join(' AND ')}`;
+            dataSql += ` WHERE ${whereClauses.join(' AND ')}`;
         }
         
         dataSql += " LIMIT ? OFFSET ?";
