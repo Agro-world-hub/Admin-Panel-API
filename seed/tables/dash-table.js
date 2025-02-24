@@ -86,7 +86,8 @@ const createCustomerTable = () => {
     lastName VARCHAR(50) DEFAULT NULL,
     phoneNumber VARCHAR(20) DEFAULT NULL,
     email VARCHAR(100) UNIQUE DEFAULT NULL,
-    buildingType VARCHAR(20) DEFAULT NULL  
+    buildingType VARCHAR(20) DEFAULT NULL 
+    
 )
   `;
     return new Promise((resolve, reject) => {
