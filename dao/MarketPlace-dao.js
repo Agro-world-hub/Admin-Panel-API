@@ -11,7 +11,7 @@ exports.getAllCropNameDAO = () => {
           WHERE cg.id = cv.cropGroupId
       `;
 
-      plantcare.query(sql, (err, results) => {
+    plantcare.query(sql, (err, results) => {
       if (err) {
         return reject(err);
       }
@@ -22,13 +22,6 @@ exports.getAllCropNameDAO = () => {
         const { cropNameEnglish, varietyEnglish, varietyId, cropId, image } =
           item;
 
-        // Convert image to base64 if available
-        let base64Image = null;
-        if (image) {
-          base64Image = Buffer.from(image).toString("base64");
-          const mimeType = "image/png"; // Set MIME type (adjust if necessary)
-          base64Image = `data:${mimeType};base64,${base64Image}`;
-        }
 
         if (!groupedData[cropNameEnglish]) {
           groupedData[cropNameEnglish] = {
@@ -40,7 +33,7 @@ exports.getAllCropNameDAO = () => {
         groupedData[cropNameEnglish].variety.push({
           id: varietyId,
           varietyEnglish: varietyEnglish,
-          image: base64Image, // Store the Base64 image string
+          image: image, // Store the Base64 image string
         });
       });
 
@@ -272,7 +265,7 @@ exports.getAllProductCropCatogoryDAO = () => {
           WHERE mpi.cropId = cv.id AND cv.cropGroupId = cg.id
       `;
 
-      marketPlace.query(sql, (err, results) => {
+    marketPlace.query(sql, (err, results) => {
       if (err) {
         return reject(err);
       }
