@@ -270,3 +270,57 @@ exports.createPackage = async (req, res) => {
       .json({ error: "An error occurred while creating marcket product", status: false });
   }
 }
+
+
+exports.getProductById = async (req, res) => {
+  try {
+    const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
+    console.log("Request URL:", fullUrl);
+
+
+    const { id } = await MarketPriceValidate.IdparamsSchema.validateAsync(req.params);
+
+    const result = await MarketPlaceDao.getProductById(id);
+
+    res.json(result);
+    console.log("Successfully fetched marketplace items");
+  } catch (error) {
+    console.error("Error fetching marketplace items:", error);
+    return res.status(500).json({
+      error: "An error occurred while fetching marketplace items",
+    });
+  }
+};
+
+
+exports.editMarketProduct = async (req, res) => {
+  try {
+    const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
+    console.log("Request URL:", fullUrl);
+    // const product = await MarketPriceValidate.AddProductValidation.validateAsync(req.body)
+    const { id } = await MarketPriceValidate.IdparamsSchema.validateAsync(req.params);
+
+    const result = await MarketPlaceDao.updateMarketProductDao(req.body, id)
+    console.log(result);
+    if (result.affectedRows === 0) {
+      return res
+        .json({ message: "marcket product update unsuccessfully", result: result, status: fals });
+
+    }
+
+    console.log("marcket product creation success");
+    res
+      .status(201)
+      .json({ message: "marcket product created successfully", result: result, status: true });
+  } catch (err) {
+    if (err.isJoi) {
+      // Validation error
+      return res.status(400).json({ error: err.details[0].message, status: false });
+    }
+
+    console.error("Error executing query:", err);
+    return res
+      .status(500)
+      .json({ error: "An error occurred while creating marcket product", status: false });
+  }
+}

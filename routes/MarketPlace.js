@@ -60,4 +60,17 @@ router.post(
     authMiddleware,
     marketPlaceEp.createPackage
 )
+
+router.get(
+    '/get-product-by-id/:id',
+    authMiddleware,
+    marketPlaceEp.getProductById
+)
+
+router.patch(
+    '/edit-market-product/:id',
+    authMiddleware,
+    marketPlaceEp.editMarketProduct
+)
+
 module.exports = router;

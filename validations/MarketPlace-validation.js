@@ -41,3 +41,7 @@ exports.couponQuaryParamSchema = Joi.object({
 exports.deleteCoupenSchema = Joi.object({
     id: Joi.number().integer().positive().required()
 });
+
+exports.IdparamsSchema = Joi.object({
+    id: Joi.number().integer().positive().required()
+});
