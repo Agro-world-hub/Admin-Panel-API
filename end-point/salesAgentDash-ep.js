@@ -13,6 +13,7 @@ const AWS = require("aws-sdk");
 const { v4: uuidv4 } = require("uuid");
 const uploadFileToS3 = require("../middlewares/s3upload");
 const deleteFromS3 = require("../middlewares/s3delete");
+const SalesDashValidate = require("../validations/SalesAgentDash-validation")
 
 
 exports.getAllSalesAgents = async (req, res) => {
@@ -20,9 +21,10 @@ exports.getAllSalesAgents = async (req, res) => {
     console.log(fullUrl);
     try {
   
-        const { page, limit, searchText, status, date } = req.query;
-        console.log(status);
-    //   const { centerId, page, limit, grade, searchText } = await TargetValidate.getAllPriceDetailSchema.validateAsync(req.query);
+        // const { page, limit, searchText, status, date } = req.query;
+        // console.log(status);
+      const {page, limit, searchText, status, date } = await SalesDashValidate.getAllSalesAgentsSchema.validateAsync(req.query);
+      console.log({page, limit, searchText, status, date });
       // const { items, total } = await PriceListDAO.getAllPriceListDao(centerId, page, limit, grade, searchText);
   
       const { items, total } = await SalesAgentDAO.getAllSalesAgentsDao(page, limit, searchText, status, date);
