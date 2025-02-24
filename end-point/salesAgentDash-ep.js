@@ -20,6 +20,8 @@ exports.getAllSalesAgents = async (req, res) => {
     const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
     console.log(fullUrl);
     try {
+
+      console.log(req.user);
   
         // const { page, limit, searchText, status, date } = req.query;
         // console.log(status);
