@@ -9,7 +9,10 @@ const MarketPlace = require('./routes/MarketPlace');
 const CropCalendar = require('./routes/CropCalendar');
 const Permission = require('./routes/Permission');
 const ComplainCategory = require('./routes/ComplainCategory');
-const Stakeholder = require('./routes/stakeholder')
+const Stakeholder = require('./routes/stakeholder');
+const SalesAgentDash = require('./routes/SalesAgentDash')
+
+
 const heathRoutes = require('./routes/heathRoutes')
 require('dotenv').config();
 const cors = require('cors');
@@ -87,7 +90,8 @@ app.use(BASE_PATH + '/api/market-place', MarketPlace);
 app.use(BASE_PATH + '/api/crop-calendar', CropCalendar);
 app.use(BASE_PATH + '/api/permission', Permission);
 app.use(BASE_PATH + '/api/complain', ComplainCategory);
-app.use(BASE_PATH + '/api/stakeholder', Stakeholder)
+app.use(BASE_PATH + '/api/stakeholder', Stakeholder);
+app.use(BASE_PATH + '/api/sales-agent-dash', SalesAgentDash);
 
 
 
