@@ -8,7 +8,7 @@ const {
 
   const Joi = require("joi");
 
-  exports.getAllCustomers = () => {
+exports.getAllCustomers = () => {
     return new Promise((resolve, reject) => {
       const sql = `
         SELECT 
@@ -20,10 +20,12 @@ const {
           c.phoneNumber, 
           c.email, 
           c.buildingType, 
-          s.empId AS salesAgent,
+          s.empId AS salesAgentEmpId,  -- Get empId from salesagent
+          s.firstName AS salesAgentFirstName,  -- Get firstName from salesagent
+          s.lastName AS salesAgentLastName,  -- Get lastName from salesagent
           c.created_at 
         FROM customer c
-        LEFT JOIN salesagent s ON c.salesAgent = s.id
+        LEFT JOIN salesagent s ON c.salesAgent = s.id  -- Correctly join salesagent table
         ORDER BY c.created_at DESC`;
   
       dash.query(sql, (err, results) => {
@@ -34,4 +36,7 @@ const {
       });
     });
   };
+
+  
+  
   
