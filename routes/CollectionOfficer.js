@@ -12,8 +12,8 @@ const router = express.Router();
 
 
 const uploadfile = multer({
-    
-    fileFilter: function(req, file, callback) {
+
+    fileFilter: function (req, file, callback) {
         var ext = path.extname(file.originalname);
         if (ext !== '.xlsx' && ext !== '.xls') {
             return callback(new Error('Only Excel files are allowed'))
@@ -87,8 +87,8 @@ router.get(
 );
 
 router.put(
-    '/update-officer-details/:id', 
-    authMiddleware, 
+    '/update-officer-details/:id',
+    authMiddleware,
     upload.single("image"),
     CollectionOfficerEp.updateCollectionOfficerDetails
 );
@@ -103,10 +103,15 @@ router.get(
 // Define the new route to fetch daily data for a specific collection officer
 router.get(
     "/get-daily-report",
-     authMiddleware,
-     CollectionOfficerEp.getDailyReport
-    );
+    authMiddleware,
+    CollectionOfficerEp.getDailyReport
+);
 
+router.get(
+    "/collection-officer/get-collection-officer/:id",
+    authMiddleware,
+    CollectionOfficerEp.getCollectionOfficerById
+)
 
 
 

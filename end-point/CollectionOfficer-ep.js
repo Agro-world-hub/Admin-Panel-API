@@ -632,3 +632,23 @@ exports.getDailyReport = async (req, res) => {
     }
   };
   
+
+  exports.getCollectionOfficerById = async (req, res) => {
+    try {
+        const id = req.params.id;
+        const officerData = await collectionofficerDao.getOfficerByIdDAO(id);
+
+        if (!officerData) {
+            return res.status(404).json({ error: "Collection Officer not found" });
+        }
+
+        console.log("Successfully fetched collection officer, company, and bank details");
+        res.json({ officerData });
+    } catch (err) {
+        if (err.isJoi) {
+            return res.status(400).json({ error: err.details[0].message });
+        }
+        console.error("Error executing query:", err);
+        res.status(500).send("An error occurred while fetching data.");
+    }
+};
