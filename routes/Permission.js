@@ -54,6 +54,13 @@ router.patch(
 );
 
 
+router.patch(
+  "/edit-category-name",
+  authMiddleware,
+  permissionEp.editCategoryName
+);
+
+
 
 
 module.exports = router;

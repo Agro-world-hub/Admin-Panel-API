@@ -7,3 +7,8 @@ exports.editFeatureNameSchema = Joi.object({
     id: Joi.number().integer().required(),
     name: Joi.string().required(),
 });
+
+exports.editCategoryNameSchema = Joi.object({
+    id: Joi.number().integer().required(),
+    name: Joi.string().required(),
+});

@@ -12,6 +12,7 @@ exports.getAllFeatures = () => {
                   SELECT 
                     fe.id, 
                     fe.name,
+                    fc.id AS categoryId,
                     fc.category
                   FROM 
                     features fe
@@ -140,6 +141,25 @@ exports.editFeatureName = (data) => {
     const sql = `
                   UPDATE features
                   SET name = ?
+                  WHERE id = ?
+              `;
+
+    admin.query(sql,[data.name, data.id], (err, results) => {
+      if (err) {
+        return reject(err); // Reject promise if an error occurs
+      }
+
+      resolve(results); // No need to wrap in arrays, return results directly
+    });
+  });
+};
+
+
+exports.editCategoryName = (data) => {
+  return new Promise((resolve, reject) => {
+    const sql = `
+                  UPDATE featurecategory
+                  SET category = ?
                   WHERE id = ?
               `;
 
