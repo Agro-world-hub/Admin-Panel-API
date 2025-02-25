@@ -44,3 +44,51 @@ exports.getAllSalesAgents = async (req, res) => {
       return res.status(500).json({ error: "An error occurred while fetching the price list" });
     }
   };
+
+  exports.saveTarget = async (req, res) => {
+    const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
+    console.log(fullUrl);
+    try {
+
+      console.log(req.body);
+      const userId = req.user.userId;
+
+      
+      const {startDate, targetValue} = req.body;
+      console.log(startDate);
+
+      const { results } = await SalesAgentDAO.saveTargetDao(startDate, targetValue, userId);
+  
+      
+      console.log("Successfully retrieved price list");
+      
+      res.status(200).json(results);
+    } catch (error) {
+      // if (error.isJoi) {
+      //   return res.status(400).json({ error: error.details[0].message });
+      // }
+  
+      console.error("Error retrieving price list:", error);
+      return res.status(500).json({ error: "An error occurred while fetching the price list" });
+    }
+  };
+
+  exports.getDailyTarget = async (req, res) => {
+    const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
+    console.log(fullUrl);
+    try {
+
+      
+      const { results } = await SalesAgentDAO.getDailyTarget();
+      console.log(results);
+  
+      res.status(200).json(results);
+    } catch (error) {
+      // if (error.isJoi) {
+      //   return res.status(400).json({ error: error.details[0].message });
+      // }
+  
+      console.error("Error retrieving price list:", error);
+      return res.status(500).json({ error: "An error occurred while fetching the price list" });
+    }
+  };

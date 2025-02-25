@@ -18,4 +18,16 @@ router.get(
     salesAgentDashEp.getAllSalesAgents
 )
 
+router.post(
+    '/save-target',
+    authMiddleware,
+    salesAgentDashEp.saveTarget
+)
+
+router.get(
+    '/get-daily-target',
+    authMiddleware,
+    salesAgentDashEp.getDailyTarget
+)
+
 module.exports = router;
