@@ -98,26 +98,46 @@ exports.getAllSalesAgentsDao = (page, limit, searchText, status, date) => {
     });
 };
 
+exports.saveTargetDao = (startDate, targetValue, userId) => {
+    return new Promise((resolve, reject) => {
+      const sql = `
+      UPDATE target 
+      SET startDate = ?, 
+          targetValue = ?, 
+          createdBy = ?, 
+          createdAt = NOW() 
+      WHERE id = 1;
+      
+      `; 
+
+      dash.query(sql, [startDate, targetValue, userId], (err, results) => {
+        if (err) {
+          return reject(err); // Reject if an error occurs
+        }
+
+        resolve({ success: true, insertId: results.insertId }); 
+      });
+    });
+};
+
+exports.getDailyTarget = () => {
+    return new Promise((resolve, reject) => {
+      const sql = `
+        SELECT targetValue FROM target WHERE target.id = 1
+      `; 
+
+      dash.query(sql, (err, results) => {
+        if (err) {
+          return reject(err); // Reject if an error occurs
+        }
+
+        resolve({ results }); 
+      });
+    });
+};
 
 
 
-         // if (grade) {
-        //     countSql += " AND MP.grade LIKE ?";
-        //     dataSql += " AND MP.grade LIKE ?";
-        //     countParams.push(grade);
-        //     dataParams.push(grade);
-        // }
 
-        // if (searchText) {
-        //     const searchCondition = `
-        //         AND (
-        //             CG.cropNameEnglish LIKE ?
-        //             OR CV.varietyNameEnglish LIKE ?
-        //         )
-        //     `;
-        //     countSql += searchCondition;
-        //     dataSql += searchCondition;
-        //     const searchValue = `%${searchText}%`;
-        //     countParams.push(searchValue, searchValue);
-        //     dataParams.push(searchValue, searchValue);
-        // }
+
+       
