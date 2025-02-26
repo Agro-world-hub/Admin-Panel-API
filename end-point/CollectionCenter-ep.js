@@ -504,9 +504,11 @@ exports.getAllCompanyList = async (req, res) => {
 exports.getAllManagerList = async (req, res) => {
   const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
   console.log("Request URL:", fullUrl);
+  
   try {
     const companyId = req.params.companyId;
     const centerId = req.params.centerId;
+    console.log(companyId, centerId);
 
     const result = await CollectionCenterDao.GetAllManagerList(
       companyId,
