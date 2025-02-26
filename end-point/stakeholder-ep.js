@@ -15,16 +15,14 @@ const uploadFileToS3 = require("../middlewares/s3upload");
 const deleteFromS3 = require("../middlewares/s3delete");
 
 exports.getAdminUserData = async (req, res) => {
-
-}
-
-exports.getAdminUserData = async (req, res) => {
     const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
     console.log(fullUrl);
   
     try {
 
         const adminUsersByPosition = await StakeholderDao.getAdminUsersByPosition();
+        const TodayAdminUsers = await StakeholderDao.getTodayRegAdmin();
+
         const newAdminUsers = await StakeholderDao.getNewAdminUsers();
         const allAdminUsers = await StakeholderDao.getAllAdminUsers();
   
@@ -33,7 +31,14 @@ exports.getAdminUserData = async (req, res) => {
   
     //   console.log("Successfully fetched collection officers");
     //   return res.status(200).json(adminUsersByPosition, newAdminUsers, allAdminUsers);
-    return res.status(200).json({newAdminUsers, allAdminUsers, adminUsersByPosition});
+    // return res.status(200).json({newAdminUsers, allAdminUsers, adminUsersByPosition});
+    res.status(200).json(
+      {
+        firstRow:{
+        adminUsersByPosition:adminUsersByPosition, 
+        todayAdmin:TodayAdminUsers 
+      }
+    })
     } catch (error) {
   
   
