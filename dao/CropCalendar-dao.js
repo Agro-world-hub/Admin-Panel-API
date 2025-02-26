@@ -6,7 +6,7 @@ const path = require('path');
 
 exports.allCropGroups = () => {
   return new Promise((resolve, reject) => {
-    const sql = "SELECT id, cropNameEnglish FROM cropgroup";
+    const sql = "SELECT id, cropNameEnglish FROM cropgroup ORDER BY cropNameEnglish ASC";
 
     plantcare.query(sql, (err, results) => {
       if (err) {
@@ -157,7 +157,7 @@ exports.createCropVariety = async (
 exports.allCropVariety = (cropGroupId) => {
   return new Promise((resolve, reject) => {
 
-    const sql = "SELECT id, varietyNameEnglish FROM cropvariety WHERE cropGroupId = ?";  // Use parameterized query with "?"
+    const sql = "SELECT id, varietyNameEnglish FROM cropvariety WHERE cropGroupId = ? ORDER BY varietyNameEnglish ASC";  // Use parameterized query with "?"
 
     plantcare.query(sql, [cropGroupId], (err, results) => {  // Pass cropGroupId in an array as the second argument
       if (err) {
