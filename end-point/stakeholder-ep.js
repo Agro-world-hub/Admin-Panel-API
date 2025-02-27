@@ -22,9 +22,18 @@ exports.getAdminUserData = async (req, res) => {
 
         const adminUsersByPosition = await StakeholderDao.getAdminUsersByPosition();
         const TodayAdminUsers = await StakeholderDao.getTodayRegAdmin();
+
         const QRfarmers = await StakeholderDao.getPlantCareUserByQrRegistration();
         const TodayFarmers = await StakeholderDao.getNewPlantCareUsers();
         const activeFarmers = await StakeholderDao.getActivePlantCareUsers();
+
+        const jobRoleOfficerCount = await StakeholderDao.getCollectionOfficersByPosition();
+        const newOfficerCount = await StakeholderDao.getNewCollectionOfficers();
+        const activeOfficers = await StakeholderDao.getActiveCollectionOfficers();
+
+
+
+
 
 
         // const allAdminUsers = await StakeholderDao.getAllAdminUsers();
@@ -45,6 +54,11 @@ exports.getAdminUserData = async (req, res) => {
         QRfarmers:QRfarmers,
         TodayFarmers:TodayFarmers,
         activeFarmers:activeFarmers
+      },
+      thirdRow:{
+        jobRoleOfficerCount:jobRoleOfficerCount,
+        newOfficerCount:newOfficerCount,
+        activeOfficers:activeOfficers
       }
     })
     } catch (error) {
@@ -55,6 +69,8 @@ exports.getAdminUserData = async (req, res) => {
     }
   };
 
+
+  // not use fulshould be removed
   exports.getCollectionOfficerData = async (req, res) => {
     const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
     console.log(fullUrl);

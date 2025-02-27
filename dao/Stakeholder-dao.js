@@ -65,17 +65,29 @@ exports.getAllAdminUsers = () => {
 exports.getCollectionOfficersByPosition = () => {
   return new Promise((resolve, reject) => {
     const sql = `
-            SELECT CO.jobRole AS positionName, COUNT(CO.id) AS officerCount
-            FROM collectionofficer CO
-            GROUP BY CO.jobRole
+            SELECT 
+                CASE 
+                    WHEN jobRole = 'Collection Center Head' THEN 'CCH'
+                    WHEN jobRole = 'Collection Center Manager' THEN 'CCM'
+                    WHEN jobRole = 'Collection Officer' THEN 'COO'
+                    WHEN jobRole = 'Customer Officer' THEN 'CUO'
+                END AS job,
+                COUNT(id) AS officerCount
+            FROM collectionofficer
+            GROUP BY job;
+
             `;
     collectionofficer.query(sql, (err, results) => {
       if (err) {
         return reject(err); // Reject promise if an error occurs
       }
-      console.log('result', results);
+      // console.log('result--->', results);
+      const formattedResult = results.reduce((acc, item) => {
+        acc[item.job] = item;
+        return acc;
+      }, {})
 
-      resolve(results); // Resolve the promise with the query results
+      resolve(formattedResult); // Resolve the promise with the query results
     });
   });
 };
@@ -84,21 +96,22 @@ exports.getCollectionOfficersByPosition = () => {
 exports.getNewCollectionOfficers = () => {
   return new Promise((resolve, reject) => {
     const sql = `
-              SELECT COUNT(*) AS newOfficersCount FROM collectionofficer WHERE DATE(createdAt) = CURDATE();
+              SELECT COUNT(*) AS count FROM collectionofficer WHERE DATE(createdAt) = CURDATE();
 
             `;
     collectionofficer.query(sql, (err, results) => {
       if (err) {
         return reject(err); // Reject promise if an error occurs
       }
-      console.log('result', results);
+      // console.log('result collectionofficer count', results[0]);
 
-      resolve(results); // Resolve the promise with the query results
+      resolve(results[0].count); // Resolve the promise with the query results
     });
   });
 };
 
 
+//not usefull
 exports.getAllCollectionOfficers = () => {
   return new Promise((resolve, reject) => {
     const sql = `
@@ -124,9 +137,9 @@ exports.getActiveCollectionOfficers = () => {
       if (err) {
         return reject(err); // Reject promise if an error occurs
       }
-      console.log('result', results);
+      // console.log('result', results);
 
-      resolve(results); // Resolve the promise with the query results
+      resolve(results[0].activeOfficerCount); // Resolve the promise with the query results
     });
   });
 };
@@ -148,12 +161,12 @@ exports.getPlantCareUserByQrRegistration = () => {
       if (err) {
         return reject(err); // Reject promise if an error occurs
       }
-      console.log('result', results);
+      // console.log('result', results);
       const formattedResult = results.reduce((acc, item) => {
         acc[item.qrStatus] = item;
         return acc;
       }, {})
-      console.log('formatterResult-->', formattedResult);
+      // console.log('formatterResult-->', formattedResult);
 
       resolve(formattedResult); // Resolve the promise with the query results
     });
@@ -171,14 +184,14 @@ exports.getNewPlantCareUsers = () => {
       if (err) {
         return reject(err); // Reject promise if an error occurs
       }
-      console.log('result', results);
+      // console.log('result', results);
 
       resolve(results[0].newPlantCareUserCount); // Resolve the promise with the query results
     });
   });
 };
 
-//nit use
+//not use
 exports.getAllPlantCareUsers = () => {
   return new Promise((resolve, reject) => {
     const sql = `
@@ -204,7 +217,7 @@ exports.getActivePlantCareUsers = () => {
       if (err) {
         return reject(err); // Reject promise if an error occurs
       }
-      console.log('result', results);
+      // console.log('result', results);
 
       resolve(results[0].activePlantCareUserCount); // Resolve the promise with the query results
     });
@@ -277,7 +290,7 @@ exports.getTodayRegAdmin = () => {
       if (err) {
         return reject(err); // Reject promise if an error occurs
       }
-      console.log('Today ->', results);
+      // console.log('Today ->', results);
       
       resolve(results[0]); // Resolve the promise with the query results
     });
