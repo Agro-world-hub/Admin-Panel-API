@@ -22,9 +22,12 @@ exports.getAdminUserData = async (req, res) => {
 
         const adminUsersByPosition = await StakeholderDao.getAdminUsersByPosition();
         const TodayAdminUsers = await StakeholderDao.getTodayRegAdmin();
+        const QRfarmers = await StakeholderDao.getPlantCareUserByQrRegistration();
+        const TodayFarmers = await StakeholderDao.getNewPlantCareUsers();
+        const activeFarmers = await StakeholderDao.getActivePlantCareUsers();
 
-        const newAdminUsers = await StakeholderDao.getNewAdminUsers();
-        const allAdminUsers = await StakeholderDao.getAllAdminUsers();
+
+        // const allAdminUsers = await StakeholderDao.getAllAdminUsers();
   
     //   const result = await ComplainCategoryDAO.getAllSystemApplicationData();
     //   console.log('dfdgdgd', adminUsersByPosition, newAdminUsers, allAdminUsers);
@@ -37,6 +40,11 @@ exports.getAdminUserData = async (req, res) => {
         firstRow:{
         adminUsersByPosition:adminUsersByPosition, 
         todayAdmin:TodayAdminUsers 
+      },
+      secondRow:{
+        QRfarmers:QRfarmers,
+        TodayFarmers:TodayFarmers,
+        activeFarmers:activeFarmers
       }
     })
     } catch (error) {
@@ -71,6 +79,7 @@ exports.getAdminUserData = async (req, res) => {
     }
   };
 
+  //should be removed
   exports.getPlantCareUserData = async (req, res) => {
     const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
     console.log(fullUrl);
@@ -84,7 +93,6 @@ exports.getAdminUserData = async (req, res) => {
   
     //   const result = await ComplainCategoryDAO.getAllSystemApplicationData();
     //   console.log('dfdgdgd', adminUsersByPosition, newAdminUsers, allAdminUsers);
-  
     //   console.log("Successfully fetched collection officers");
       return res.status(200).json({plantCareUserByQrRegistration, newPlantCareUsers, allPlantCareUsers, activePlantCareUsers});
     } catch (error) {

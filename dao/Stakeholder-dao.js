@@ -15,12 +15,12 @@ exports.getAdminUsersByPosition = () => {
       if (err) {
         return reject(err); // Reject promise if an error occurs
       }
-      console.log('result', results);
+      // console.log('result', results);
       const formattedResult = results.reduce((acc, item) => {
         acc[item.positionName] = item;
         return acc;
       }, {})
-      console.log('formatterResult-->', formattedResult);
+      // console.log('formatterResult-->', formattedResult);
       resolve(formattedResult); // Resolve the promise with the query results
     });
   });
@@ -44,7 +44,7 @@ exports.getNewAdminUsers = () => {
   });
 };
 
-
+//not use
 exports.getAllAdminUsers = () => {
   return new Promise((resolve, reject) => {
     const sql = `
@@ -137,20 +137,25 @@ exports.getPlantCareUserByQrRegistration = () => {
     const sql = `
       SELECT 
         CASE 
-            WHEN farmerQr IS NOT NULL AND farmerQr <> '' THEN 'With QR Code'
-            ELSE 'Without QR Code'
-        END AS qr_status,
-        COUNT(*) AS user_count
+            WHEN farmerQr IS NOT NULL AND farmerQr <> '' THEN 'QrCode'
+            ELSE 'notQrCode'
+        END AS qrStatus,
+        COUNT(*) AS count
       FROM users
-      GROUP BY qr_status;
+      GROUP BY qrStatus;
             `;
     plantcare.query(sql, (err, results) => {
       if (err) {
         return reject(err); // Reject promise if an error occurs
       }
       console.log('result', results);
+      const formattedResult = results.reduce((acc, item) => {
+        acc[item.qrStatus] = item;
+        return acc;
+      }, {})
+      console.log('formatterResult-->', formattedResult);
 
-      resolve(results); // Resolve the promise with the query results
+      resolve(formattedResult); // Resolve the promise with the query results
     });
   });
 };
@@ -168,12 +173,12 @@ exports.getNewPlantCareUsers = () => {
       }
       console.log('result', results);
 
-      resolve(results); // Resolve the promise with the query results
+      resolve(results[0].newPlantCareUserCount); // Resolve the promise with the query results
     });
   });
 };
 
-
+//nit use
 exports.getAllPlantCareUsers = () => {
   return new Promise((resolve, reject) => {
     const sql = `
@@ -201,7 +206,7 @@ exports.getActivePlantCareUsers = () => {
       }
       console.log('result', results);
 
-      resolve(results); // Resolve the promise with the query results
+      resolve(results[0].activePlantCareUserCount); // Resolve the promise with the query results
     });
   });
 };
