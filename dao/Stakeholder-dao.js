@@ -191,22 +191,7 @@ exports.getNewPlantCareUsers = () => {
   });
 };
 
-//not use
-exports.getAllPlantCareUsers = () => {
-  return new Promise((resolve, reject) => {
-    const sql = `
-      SELECT COUNT(*) AS totalPlantCareUserCount FROM users
-            `;
-    plantcare.query(sql, (err, results) => {
-      if (err) {
-        return reject(err); // Reject promise if an error occurs
-      }
-      console.log('result', results);
 
-      resolve(results); // Resolve the promise with the query results
-    });
-  });
-};
 
 exports.getActivePlantCareUsers = () => {
   return new Promise((resolve, reject) => {
@@ -235,9 +220,9 @@ exports.getActiveSalesAgents = () => {
       if (err) {
         return reject(err); // Reject promise if an error occurs
       }
-      console.log('result', results);
+      // console.log('result', results);
 
-      resolve(results); // Resolve the promise with the query results
+      resolve(results[0]); // Resolve the promise with the query results
     });
   });
 };
@@ -253,9 +238,9 @@ exports.getNewSalesAgents = () => {
       if (err) {
         return reject(err); // Reject promise if an error occurs
       }
-      console.log('result', results);
+      // console.log('result', results);
 
-      resolve(results); // Resolve the promise with the query results
+      resolve(results[0]); // Resolve the promise with the query results
     });
   });
 };
@@ -265,14 +250,14 @@ exports.getAllSalesAgents = () => {
   return new Promise((resolve, reject) => {
     const sql = `
       SELECT COUNT(*) AS totalSaleAgents FROM salesagent
-            `;
+    `;
     dash.query(sql, (err, results) => {
       if (err) {
         return reject(err); // Reject promise if an error occurs
       }
-      console.log('result', results);
+      // console.log('result', results);
 
-      resolve(results); // Resolve the promise with the query results
+      resolve(results[0]); // Resolve the promise with the query results
     });
   });
 };
