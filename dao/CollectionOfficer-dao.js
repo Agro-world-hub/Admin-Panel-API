@@ -155,7 +155,6 @@ exports.checkEmailExist = (email) => {
 //   });
 // };
 
-
 exports.createCollectionOfficerPersonal = (officerData, profileImageUrl) => {
   return new Promise(async (resolve, reject) => {
     try {
@@ -179,7 +178,7 @@ exports.createCollectionOfficerPersonal = (officerData, profileImageUrl) => {
       console.log(qrcodeURL);
 
       // If no image URL, set it to null
-      const imageUrl = profileImageUrl || null;  // Use null if profileImageUrl is not provided
+      const imageUrl = profileImageUrl || null; // Use null if profileImageUrl is not provided
 
       const sql = `
                 INSERT INTO collectionofficer (
@@ -225,7 +224,7 @@ exports.createCollectionOfficerPersonal = (officerData, profileImageUrl) => {
           officerData.accNumber,
           officerData.bankName,
           officerData.branchName,
-          imageUrl,  // Use the potentially null image URL
+          imageUrl, // Use the potentially null image URL
           qrcodeURL,
         ],
         (err, results) => {
@@ -241,7 +240,6 @@ exports.createCollectionOfficerPersonal = (officerData, profileImageUrl) => {
     }
   });
 };
-
 
 exports.getQrImage = (id) => {
   return new Promise((resolve, reject) => {
@@ -576,8 +574,6 @@ exports.getCollectionOfficerEmailDao = (id) => {
   });
 };
 
-
-
 exports.SendGeneratedPasswordDao = async (
   email,
   password,
@@ -589,8 +585,8 @@ exports.SendGeneratedPasswordDao = async (
 
     // Create a buffer to hold the PDF in memory
     const pdfBuffer = [];
-    doc.on('data', pdfBuffer.push.bind(pdfBuffer));
-    doc.on('end', () => {});
+    doc.on("data", pdfBuffer.push.bind(pdfBuffer));
+    doc.on("end", () => {});
 
     const watermarkPath = "./assets/bg.png";
     doc.opacity(0.2).image(watermarkPath, 100, 300, { width: 400 }).opacity(1);
@@ -667,7 +663,7 @@ exports.SendGeneratedPasswordDao = async (
     doc.end();
 
     // Wait until the PDF is fully created and available in the buffer
-    await new Promise(resolve => doc.on('end', resolve));
+    await new Promise((resolve) => doc.on("end", resolve));
 
     const pdfData = Buffer.concat(pdfBuffer); // Concatenate the buffer data
 
@@ -707,7 +703,6 @@ exports.SendGeneratedPasswordDao = async (
     return { success: false, message: "Failed to send email.", error };
   }
 };
-
 
 exports.UpdateCollectionOfficerStatusAndPasswordDao = (params) => {
   return new Promise((resolve, reject) => {
@@ -1030,7 +1025,7 @@ exports.updateOfficerDetails = (
       accNumber,
       bankName,
       branchName,
-      profileImageUrl
+      profileImageUrl,
     ];
 
     sql += ` WHERE id = ?`;
@@ -1107,7 +1102,7 @@ exports.getDailyReport = (collectionOfficerId, fromDate, toDate) => {
 
 exports.getOfficerByIdDAO = (id) => {
   return new Promise((resolve, reject) => {
-      const sql = `
+    const sql = `
           SELECT 
               COF.*,
               COM.companyNameEnglish,
@@ -1117,67 +1112,85 @@ exports.getOfficerByIdDAO = (id) => {
           WHERE 
            COF.centerId = CEN.id AND COF.companyId = COM.id AND COF.id = ?`;
 
-      collectionofficer.query(sql, [id], (err, results) => {
-          if (err) {
-              return reject(err); // Reject promise if an error occurs
-          }
+    collectionofficer.query(sql, [id], (err, results) => {
+      if (err) {
+        return reject(err); // Reject promise if an error occurs
+      }
 
-          if (results.length === 0) {
-              return resolve(null); // No officer found
-          }
+      if (results.length === 0) {
+        return resolve(null); // No officer found
+      }
 
-          const officer = results[0];
+      const officer = results[0];
 
-          // Process image field if present
-          if (officer.image) {
-              const base64Image = Buffer.from(officer.image).toString("base64");
-              officer.image = `data:image/png;base64,${base64Image}`;
-          }
+      // Process image field if present
+      if (officer.image) {
+        const base64Image = Buffer.from(officer.image).toString("base64");
+        officer.image = `data:image/png;base64,${base64Image}`;
+      }
 
-          // Process QRcode field if present
-          if (officer.QRcode) {
-              const base64QRcode = Buffer.from(officer.QRcode).toString("base64");
-              officer.QRcode = `data:image/png;base64,${base64QRcode}`;
-          }
+      // Process QRcode field if present
+      if (officer.QRcode) {
+        const base64QRcode = Buffer.from(officer.QRcode).toString("base64");
+        officer.QRcode = `data:image/png;base64,${base64QRcode}`;
+      }
 
-          const empIdWithoutPrefix = officer.empId ? officer.empId.substring(3) : null;
+      const empIdWithoutPrefix = officer.empId
+        ? officer.empId.substring(3)
+        : null;
 
-          resolve({
-              collectionOfficer: {
-                  id: officer.id,
-                  firstNameEnglish: officer.firstNameEnglish,
-                  firstNameSinhala: officer.firstNameSinhala,
-                  firstNameTamil: officer.firstNameTamil,
-                  lastNameEnglish: officer.lastNameEnglish,
-                  lastNameSinhala: officer.lastNameSinhala,
-                  lastNameTamil: officer.lastNameTamil,
-                  phoneNumber01: officer.phoneNumber01,
-                  phoneNumber02: officer.phoneNumber02,
-                  phoneCode01: officer.phoneCode01,
-                  phoneCode02: officer.phoneCode02,
-                  image: officer.image,
-                  QRcode: officer.QRcode,
-                  nic: officer.nic,
-                  email: officer.email,
-                  passwordUpdated: officer.passwordUpdated,
-                  houseNumber: officer.houseNumber,
-                  streetName: officer.streetName,
-                  city: officer.city,
-                  district: officer.district,
-                  province: officer.province,
-                  country: officer.country,
-                  languages: officer.languages,
-                  empId: empIdWithoutPrefix,
-                  jobRole: officer.jobRole,
-                  employeeType: officer.empType,
-                  accHolderName: officer.accHolderName,
-                  accNumber: officer.accNumber,
-                  bankName: officer.bankName,
-                  branchName: officer.branchName,
-                  companyNameEnglish: officer.companyNameEnglish,
-                  centerName: officer.centerName
-              },
-          });
+      resolve({
+        collectionOfficer: {
+          id: officer.id,
+          firstNameEnglish: officer.firstNameEnglish,
+          firstNameSinhala: officer.firstNameSinhala,
+          firstNameTamil: officer.firstNameTamil,
+          lastNameEnglish: officer.lastNameEnglish,
+          lastNameSinhala: officer.lastNameSinhala,
+          lastNameTamil: officer.lastNameTamil,
+          phoneNumber01: officer.phoneNumber01,
+          phoneNumber02: officer.phoneNumber02,
+          phoneCode01: officer.phoneCode01,
+          phoneCode02: officer.phoneCode02,
+          image: officer.image,
+          QRcode: officer.QRcode,
+          nic: officer.nic,
+          email: officer.email,
+          passwordUpdated: officer.passwordUpdated,
+          houseNumber: officer.houseNumber,
+          streetName: officer.streetName,
+          city: officer.city,
+          district: officer.district,
+          province: officer.province,
+          country: officer.country,
+          languages: officer.languages,
+          empId: empIdWithoutPrefix,
+          jobRole: officer.jobRole,
+          employeeType: officer.empType,
+          accHolderName: officer.accHolderName,
+          accNumber: officer.accNumber,
+          bankName: officer.bankName,
+          branchName: officer.branchName,
+          companyNameEnglish: officer.companyNameEnglish,
+          centerName: officer.centerName,
+        },
       });
+    });
+  });
+};
+
+exports.disclaimOfficerDetailsDao = (id) => {
+  return new Promise((resolve, reject) => {
+    const sql = `
+          UPDATE collectionofficer
+          SET centerId = NULL, irmId = NULL, claimStatus = 0
+          WHERE id = ?
+      `;
+    collectionofficer.query(sql, [id], (err, results) => {
+      if (err) {
+        return reject(err);
+      }
+      resolve(results);
+    });
   });
 };
