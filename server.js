@@ -10,7 +10,8 @@ const CropCalendar = require('./routes/CropCalendar');
 const Permission = require('./routes/Permission');
 const ComplainCategory = require('./routes/ComplainCategory');
 const Stakeholder = require('./routes/stakeholder');
-const SalesAgentDash = require('./routes/SalesAgentDash')
+const SalesAgentDash = require('./routes/SalesAgentDash');
+const TargetRoutes  =require('./routes/Target');
 
 
 const heathRoutes = require('./routes/heathRoutes')
@@ -93,7 +94,8 @@ app.use(BASE_PATH + '/api/permission', Permission);
 app.use(BASE_PATH + '/api/complain', ComplainCategory);
 app.use(BASE_PATH + '/api/stakeholder', Stakeholder);
 app.use(BASE_PATH + '/api/sales-agent-dash', SalesAgentDash);
-app.use(BASE_PATH + '/api/dash', DashRoutes)
+app.use(BASE_PATH + '/api/dash', DashRoutes);
+app.use(BASE_PATH + '/api/target', TargetRoutes)
 
 
 
