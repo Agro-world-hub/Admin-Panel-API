@@ -6,16 +6,16 @@ const xlsx = require("xlsx");
 const collectionofficerDao = require("../dao/CollectionOfficer-dao");
 const collectionofficerValidate = require("../validations/CollectionOfficer-validation");
 const bcrypt = require("bcryptjs");
-const AWS = require("aws-sdk");
+
 const { v4: uuidv4 } = require("uuid");
 const uploadFileToS3 = require("../middlewares/s3upload");
 const deleteFromS3 = require("../middlewares/s3delete");
 
-const s3 = new AWS.S3({
-  accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-  secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
-  region: process.env.AWS_REGION,
-});
+// const s3 = new AWS.S3({
+//   accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+//   secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+//   region: process.env.AWS_REGION,
+// });
 
 // exports.createCollectionOfficer = async (req, res) => {
 //     const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;

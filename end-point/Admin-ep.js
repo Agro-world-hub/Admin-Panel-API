@@ -9,16 +9,12 @@ const adminDao = require("../dao/Admin-dao");
 const ValidateSchema = require("../validations/Admin-validation");
 const { type } = require("os");
 const bcrypt = require("bcryptjs");
-const AWS = require("aws-sdk");
+
 const { v4: uuidv4 } = require("uuid");
 const uploadFileToS3 = require("../middlewares/s3upload");
 const deleteFromS3 = require("../middlewares/s3delete");
 
-const s3 = new AWS.S3({
-  accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-  secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
-  region: process.env.AWS_REGION,
-});
+
 
 exports.loginAdmin = async (req, res) => {
   const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;

@@ -9,7 +9,7 @@ const SalesAgentDAO = require("../dao/SalesAgentDash-dao");
 const ValidateSchema = require("../validations/Admin-validation");
 const { type } = require("os");
 const bcrypt = require("bcryptjs");
-const AWS = require("aws-sdk");
+
 const { v4: uuidv4 } = require("uuid");
 const uploadFileToS3 = require("../middlewares/s3upload");
 const deleteFromS3 = require("../middlewares/s3delete");

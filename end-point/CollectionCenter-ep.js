@@ -1,5 +1,6 @@
 const CollectionCenterDao = require("../dao/CollectionCenter-dao");
 const ValidateSchema = require("../validations/CollectionCenter-validation");
+
 exports.getAllCollectionCenter = async (req, res) => {
   try {
     const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;

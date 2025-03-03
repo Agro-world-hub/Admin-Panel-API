@@ -1,10 +1,13 @@
-const AWS = require("aws-sdk");
+const { S3Client, PutObjectCommand } = require("@aws-sdk/client-s3");
 const { v4: uuidv4 } = require("uuid");
 
-const s3 = new AWS.S3({
-  accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-  secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+// Create S3 client once (outside of functions)
+const s3Client = new S3Client({
   region: process.env.AWS_REGION,
+  credentials: {
+    accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+  },
 });
 
 /**
@@ -18,20 +21,27 @@ const uploadFileToS3 = async (fileBuffer, fileName, keyPrefix) => {
   try {
     const fileExtension = fileName.split(".").pop(); // Get file extension
     const uniqueFileName = `${uuidv4()}.${fileExtension}`; // Generate a unique file name
-    const s3Params = {
+    const key = `${keyPrefix}/${uniqueFileName}`;
+    
+    const putObjectParams = {
       Bucket: process.env.AWS_S3_BUCKET_NAME,
-      Key: `${keyPrefix}/${uniqueFileName}`, // Full path in the bucket
+      Key: key, // Full path in the bucket
       Body: fileBuffer,
       ContentType: `image/${fileExtension}`, // Assuming an image, adjust if needed
       ACL: "public-read", // File visibility
     };
 
-    const result = await s3.upload(s3Params).promise();
-    return result.Location; // Return the file URL
+    // Create and send the PutObjectCommand
+    const command = new PutObjectCommand(putObjectParams);
+    await s3Client.send(command);
+    
+    // Construct the URL manually since v3 doesn't return the URL directly
+    const fileUrl = `https://${process.env.AWS_S3_BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/${key}`;
+    return fileUrl;
   } catch (error) {
     console.error("Error uploading to S3:", error);
     throw new Error("Failed to upload file to S3");
   }
 };
 
-module.exports =  uploadFileToS3 ;
+module.exports = uploadFileToS3;
