@@ -8,16 +8,15 @@ exports.getAllSystemApplicationData = () => {
           SELECT 
           sa.id AS systemAppId,
           sa.appName AS systemAppName,
-          COUNT(cc.id) AS categoryCount
+          (SELECT COUNT(*) FROM complaincategory WHERE appId = sa.id) AS categoryCount
           FROM systemapplications sa
-          LEFT JOIN complaincategory cc ON sa.id = cc.appId AND cc.roleId = 2
-          GROUP BY sa.id, sa.appName;
+          
           `;
     admin.query(sql, (err, results) => {
       if (err) {
         return reject(err); // Reject promise if an error occurs
       }
-      console.log('result', results);
+      // console.log('result', results);
 
       resolve(results); // Resolve the promise with the query results
     });
