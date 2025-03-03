@@ -22,6 +22,17 @@ const uploadfile = multer({
   },
 });
 
+
+
+router.post(
+  "/create-plant-care-user",
+  authMiddleware,
+  upload.single("image"),
+  AdminEp.createPlantCareUser
+);
+
+
+
 router.post("/login", AdminEp.loginAdmin);
 
 router.get("/get-all-admin-users", authMiddleware, AdminEp.getAllAdminUsers);
