@@ -1076,6 +1076,7 @@ exports.getCurrentAssetRecordById = (currentAssetId) => {
                    totalPrice, createdAt  
             FROM currentassetrecord 
             WHERE currentAssetId = ?
+            ORDER BY createdAt DESC
         `;
     const values = [currentAssetId];
 
