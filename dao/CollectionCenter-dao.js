@@ -351,7 +351,7 @@ exports.getAllCenterPage = (limit, offset, searchItem) => {
       searchParams.push(searchQuery, searchQuery);
     }
 
-    sql += " ORDER BY C.createdAt DESC LIMIT ? OFFSET ?";
+    sql += " ORDER BY C.regCode ASC LIMIT ? OFFSET ?";
     dataParams.push(...searchParams, limit, offset);
 
     collectionofficer.query(countSql, searchParams, (countErr, countResults) => {
@@ -720,9 +720,9 @@ exports.generateRegCode = (province, district, city, callback) => {
 //   });
 // };
 
-exports.getAllCompanyDAO = () => {
+exports.getAllCompanyDAO = (search) => {
   return new Promise((resolve, reject) => {
-    const sql = `
+    let sql = `
       SELECT 
         c.id,
         c.companyNameEnglish AS companyName,
@@ -746,10 +746,21 @@ exports.getAllCompanyDAO = () => {
         collectionofficer co 
       ON 
         c.id = co.companyId
-      GROUP BY 
-        c.id
     `;
-    collectionofficer.query(sql, (err, results) => {
+    const params = [];
+
+
+    if (search) {
+      sql +=" WHERE c.companyNameEnglish LIKE ?";
+      const searchQuery = `%${search}%`;
+      params.push(searchQuery);
+    }
+
+    sql += " GROUP BY c.id ORDER BY companyName ASC";
+
+
+
+    collectionofficer.query(sql,params, (err, results) => {
       if (err) {
         return reject(err);
       }

@@ -559,12 +559,11 @@ exports.generateRegCode = (req, res) => {
 exports.getAllCompanies = async (req, res) => {
   try {
     console.log(req.query);
-    const { status = null, searchText = "" } = req.query;
+    const { status = null, search} = req.query;
 
     // Call the DAO function
     const results = await CollectionCenterDao.getAllCompanyDAO(
-      status,
-      searchText
+      search
     );
 
     console.log("Successfully retrieved all companies");
