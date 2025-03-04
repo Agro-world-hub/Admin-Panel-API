@@ -495,12 +495,19 @@ exports.updateCropVariety = (id, updates) => {
 
 
 
-exports.getAllCropCalendars = (limit, offset) => {
+exports.getAllCropCalendars = (limit, offset, searchText) => {
   return new Promise((resolve, reject) => {
-    const countSql = "SELECT COUNT(*) AS total FROM cropcalender";
-    const dataSql = `
+    // 🔹 Ensure JOINs are included in COUNT query
+    let countSql = `
+      SELECT COUNT(*) AS total 
+      FROM cropcalender
+      LEFT JOIN cropvariety ON cropcalender.cropVarietyId = cropvariety.id
+      LEFT JOIN cropgroup ON cropvariety.cropGroupId = cropgroup.id
+    `;
+
+    let dataSql = `
       SELECT 
-      cropcalender.id,
+        cropcalender.id,
         cropcalender.method,
         cropcalender.natOfCul,
         cropcalender.cropDuration,
@@ -509,20 +516,43 @@ exports.getAllCropCalendars = (limit, offset) => {
         cropvariety.varietyNameEnglish
       FROM 
         cropcalender
-      LEFT JOIN 
-        cropvariety ON cropcalender.cropVarietyId = cropvariety.id
-      LEFT JOIN 
-        cropgroup ON cropvariety.cropGroupId = cropgroup.id
-      ORDER BY 
-        cropcalender.createdAt DESC
-      LIMIT ? OFFSET ?;
+      LEFT JOIN cropvariety ON cropcalender.cropVarietyId = cropvariety.id
+      LEFT JOIN cropgroup ON cropvariety.cropGroupId = cropgroup.id
     `;
 
-    plantcare.query(countSql, (countErr, countResults) => {
+    const countParams = [];
+    const dataParams = [];
+
+    if (searchText) {
+      const searchCondition = `
+          WHERE (
+              cropgroup.cropNameEnglish LIKE ?
+              OR cropvariety.varietyNameEnglish LIKE ?
+              OR cropgroup.category LIKE ?
+              OR cropcalender.method LIKE ?
+              OR cropcalender.natOfCul LIKE ?
+              OR cropcalender.cropDuration LIKE ?
+          )
+      `;
+      countSql += searchCondition;  // 🔹 Add WHERE condition to COUNT query
+      dataSql += searchCondition;
+      const searchValue = `%${searchText}%`;
+      countParams.push(searchValue, searchValue, searchValue, searchValue, searchValue, searchValue);
+      dataParams.push(searchValue, searchValue, searchValue, searchValue, searchValue, searchValue);
+    }
+
+    // 🔹 Ensure limit & offset are integers
+    limit = parseInt(limit, 10) || 10; // Default limit to 10 if not provided
+    offset = parseInt(offset, 10) || 0; // Default offset to 0 if not provided
+
+    dataSql += " ORDER BY cropcalender.createdAt DESC LIMIT ? OFFSET ?";
+    dataParams.push(limit, offset);
+
+    plantcare.query(countSql, countParams, (countErr, countResults) => {
       if (countErr) {
         reject(countErr);
       } else {
-        plantcare.query(dataSql, [limit, offset], (dataErr, dataResults) => {
+        plantcare.query(dataSql, dataParams, (dataErr, dataResults) => {
           if (dataErr) {
             reject(dataErr);
           } else {
@@ -536,7 +566,6 @@ exports.getAllCropCalendars = (limit, offset) => {
     });
   });
 };
-
 
 
 exports.updateCropCalender = async (id, updateData) => {
