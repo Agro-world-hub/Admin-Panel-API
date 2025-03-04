@@ -909,7 +909,7 @@ exports.getAllCropNameDAO = () => {
   });
 };
 
-exports.createDailyTargetDao = (target, userId) => {
+exports.createDailyTargetDao = (target) => {
   return new Promise((resolve, reject) => {
     const sql = `
          INSERT INTO dailytarget (centerId, companyId, fromDate, toDate, fromTime, toTime)
@@ -923,8 +923,7 @@ exports.createDailyTargetDao = (target, userId) => {
         target.fromDate,
         target.toDate,
         target.fromTime,
-        target.toTime,
-        userId,
+        target.toTime
       ],
       (err, results) => {
         if (err) {

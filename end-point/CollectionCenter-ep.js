@@ -742,16 +742,16 @@ exports.getAllCropCatogory = async (req, res) => {
   }
 };
 
+//tis
 exports.addDailyTarget = async (req, res) => {
   try {
     const target = req.body;
-    const userId = req.user.userId;
+    // const userId = req.user.userId;
 
     console.log(target);
 
     const targetId = await CollectionCenterDao.createDailyTargetDao(
-      target,
-      userId
+      target
     );
     if (!targetId) {
       return res.json({
