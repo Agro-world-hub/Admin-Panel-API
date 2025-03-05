@@ -1144,3 +1144,80 @@ exports.getCenterNameAndOficerCountDao = (centerId) => {
     });
   });
 };
+
+
+exports.getcompanyHeadData = (companyId, limit, offset, searchText) => {
+  return new Promise((resolve, reject) => {
+    
+    let countSql = `
+      
+      SELECT COUNT(*) AS total 
+      FROM collectionofficer
+      WHERE companyId = ? AND jobRole = 'Collection Center Head'
+    `;
+
+    let dataSql = `
+      SELECT 
+        collectionofficer.empId,
+        collectionofficer.firstNameEnglish,
+        collectionofficer.lastNameEnglish,
+        collectionofficer.email,
+        collectionofficer.status,
+        collectionofficer.phoneCode01,
+        collectionofficer.phoneNumber01,
+        collectionofficer.phoneCode02,
+        collectionofficer.phoneNumber02,
+        collectionofficer.createdAt
+      FROM 
+        collectionofficer
+      WHERE companyId = ? AND jobRole = 'Collection Center Head'
+    `;
+
+    const countParams = [companyId];
+    const dataParams = [companyId];
+
+    if (searchText) {
+      const searchCondition = `
+          AND (
+            collectionofficer.empID LIKE ?
+              OR collectionofficer.firstNameEnglish LIKE ?
+              OR collectionofficer.lastNameEnglish LIKE ?
+              OR collectionofficer.email LIKE ?
+              OR collectionofficer.status LIKE ?
+              OR collectionofficer.phoneNumber01 LIKE ?
+              OR collectionofficer.phoneNumber02 LIKE ?
+              OR collectionofficer.createdAt LIKE ?
+          )
+      `;
+      countSql += searchCondition;  // 
+      dataSql += searchCondition;
+      const searchValue = `%${searchText}%`;
+      countParams.push(searchValue, searchValue, searchValue, searchValue, searchValue, searchValue, searchValue, searchValue);
+      dataParams.push(searchValue, searchValue, searchValue, searchValue, searchValue, searchValue, searchValue, searchValue);
+    }
+
+    
+    limit = parseInt(limit, 10) || 10; // Default limit to 10 if not provided
+    offset = parseInt(offset, 10) || 0; // Default offset to 0 if not provided
+
+    dataSql += "LIMIT ? OFFSET ?";
+    dataParams.push(limit, offset);
+
+    collectionofficer.query(countSql, countParams, (countErr, countResults) => {
+      if (countErr) {
+        reject(countErr);
+      } else {
+        collectionofficer.query(dataSql, dataParams, (dataErr, dataResults) => {
+          if (dataErr) {
+            reject(dataErr);
+          } else {
+            resolve({
+              total: countResults[0].total,
+              items: dataResults,
+            });
+          }
+        });
+      }
+    });
+  });
+};

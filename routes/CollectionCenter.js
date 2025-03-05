@@ -138,4 +138,10 @@ router.post(
   CollectionCenterEp.addDailyTarget
 )
 
+router.get(
+  "/get-company-head",
+  authMiddleware,
+  CollectionCenterEp.getCompanyHead
+)
+
 module.exports = router;
