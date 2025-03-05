@@ -144,4 +144,10 @@ router.get(
   CollectionCenterEp.getCompanyHead
 )
 
+router.delete(
+  "/delete-company-head/:id", 
+  authMiddleware, 
+  CollectionCenterEp.deleteCompanyHead
+);
+
 module.exports = router;

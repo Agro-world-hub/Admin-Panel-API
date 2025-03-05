@@ -855,3 +855,35 @@ exports.getCompanyHead = async (req, res) => {
     res.status(500).send("An error occurred while fetching data.");
   }
 };
+
+exports.deleteCompanyHead = async (req, res) => {
+  try {
+    const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
+    console.log("Request URL:", fullUrl);
+
+    // Validate the request parameters
+    const { id } =
+      await ValidateSchema.deleteCompanyHeadSchema.validateAsync(
+        req.params
+      );
+
+    const affectedRows = await CollectionCenterDao.deleteCompanyHeadData(id);
+
+    if (affectedRows === 0) {
+      return res.status(404).json({ message: "company head not found" });
+    } else {
+      console.log("company head deleted successfully");
+      return res.status(200).json({ status: true });
+    }
+  } catch (err) {
+    if (err.isJoi) {
+      // Validation error
+      return res.status(400).json({ error: err.details[0].message });
+    }
+
+    console.error("Error deleting company head:", err);
+    return res
+      .status(500)
+      .json({ error: "An error occurred while deleting company head" });
+  }
+};

@@ -26,3 +26,7 @@ exports.getByIdShema = Joi.object({
 exports.getRoleShema = Joi.object({
     role: Joi.string().required(),
 })
+
+exports.deleteCompanyHeadSchema = Joi.object({
+    id: Joi.number().integer().positive().required()
+});

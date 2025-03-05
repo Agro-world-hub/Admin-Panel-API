@@ -1158,6 +1158,7 @@ exports.getcompanyHeadData = (companyId, limit, offset, searchText) => {
 
     let dataSql = `
       SELECT 
+        collectionofficer.id,
         collectionofficer.empId,
         collectionofficer.firstNameEnglish,
         collectionofficer.lastNameEnglish,
@@ -1217,6 +1218,19 @@ exports.getcompanyHeadData = (companyId, limit, offset, searchText) => {
             });
           }
         });
+      }
+    });
+  });
+};
+
+exports.deleteCompanyHeadData = async (id) => {
+  return new Promise((resolve, reject) => {
+    const sql = "DELETE FROM collectionofficer WHERE id = ?";
+    collectionofficer.query(sql, [id], (err, results) => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(results.affectedRows);
       }
     });
   });
