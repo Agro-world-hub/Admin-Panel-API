@@ -1124,16 +1124,16 @@ exports.getOfficerByIdDAO = (id) => {
       const officer = results[0];
 
       // Process image field if present
-      if (officer.image) {
-        const base64Image = Buffer.from(officer.image).toString("base64");
-        officer.image = `data:image/png;base64,${base64Image}`;
-      }
+      // if (officer.image) {
+      //   const base64Image = Buffer.from(officer.image).toString("base64");
+      //   officer.image = `data:image/png;base64,${base64Image}`;
+      // }
 
       // Process QRcode field if present
-      if (officer.QRcode) {
-        const base64QRcode = Buffer.from(officer.QRcode).toString("base64");
-        officer.QRcode = `data:image/png;base64,${base64QRcode}`;
-      }
+      // if (officer.QRcode) {
+      //   const base64QRcode = Buffer.from(officer.QRcode).toString("base64");
+      //   officer.QRcode = `data:image/png;base64,${base64QRcode}`;
+      // }
 
       const empIdWithoutPrefix = officer.empId
         ? officer.empId.substring(3)

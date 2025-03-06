@@ -103,12 +103,14 @@ exports.insertMarketPriceXLSXData = (xlindex, data) => {
         for (let i = 0; i < totalInsertedRows; i++) {
           const marketPriceId = marketPriceIds + i;
           const price = marketPriceValues[i][3]; // Fetch price from marketPriceValues
+          const updatedPrice = marketPriceValues[i][3];
 
           collectionCenters.forEach((center) => {
             marketPriceServeValues.push([
               marketPriceId,
               xlindex,
               price, // Use the price as newPrice
+              updatedPrice,
               center.id,
             ]);
           });
@@ -117,7 +119,7 @@ exports.insertMarketPriceXLSXData = (xlindex, data) => {
         // Step 3: Insert data into the marketpriceserve table
         const marketPriceServeSQL = `
           INSERT INTO marketpriceserve 
-          (marketPriceId, xlindex, price, collectionCenterId) 
+          (marketPriceId, xlindex, price, updatedPrice, collectionCenterId) 
           VALUES ?`;
 
           collectionofficer.query(marketPriceServeSQL, [marketPriceServeValues], (err, marketPriceServeResult) => {
