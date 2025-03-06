@@ -273,6 +273,7 @@ exports.getAllCollectionOfficers = (page, limit, searchNIC, companyid) => {
                 coff.lastNameEnglish,
                 coff.empId,
                 coff.status,
+                coff.claimStatus,
                 coff.phoneCode01,
                 coff.phoneNumber01,
                 coff.nic,
