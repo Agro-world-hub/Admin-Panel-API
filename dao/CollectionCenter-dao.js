@@ -1150,7 +1150,6 @@ exports.getcompanyHeadData = (companyId, limit, offset, searchText) => {
   return new Promise((resolve, reject) => {
     
     let countSql = `
-      
       SELECT COUNT(*) AS total 
       FROM collectionofficer
       WHERE companyId = ? AND jobRole = 'Collection Center Head'
@@ -1190,18 +1189,18 @@ exports.getcompanyHeadData = (companyId, limit, offset, searchText) => {
               OR collectionofficer.createdAt LIKE ?
           )
       `;
-      countSql += searchCondition;  // 
+      countSql += searchCondition;
       dataSql += searchCondition;
       const searchValue = `%${searchText}%`;
       countParams.push(searchValue, searchValue, searchValue, searchValue, searchValue, searchValue, searchValue, searchValue);
       dataParams.push(searchValue, searchValue, searchValue, searchValue, searchValue, searchValue, searchValue, searchValue);
     }
 
-    
     limit = parseInt(limit, 10) || 10; // Default limit to 10 if not provided
     offset = parseInt(offset, 10) || 0; // Default offset to 0 if not provided
 
-    dataSql += "LIMIT ? OFFSET ?";
+    // Add ORDER BY before LIMIT
+    dataSql += ` ORDER BY collectionofficer.createdAt DESC LIMIT ? OFFSET ?`;
     dataParams.push(limit, offset);
 
     collectionofficer.query(countSql, countParams, (countErr, countResults) => {
@@ -1222,6 +1221,7 @@ exports.getcompanyHeadData = (companyId, limit, offset, searchText) => {
     });
   });
 };
+
 
 exports.deleteCompanyHeadData = async (id) => {
   return new Promise((resolve, reject) => {
