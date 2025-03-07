@@ -11,6 +11,7 @@ const path = require("path");
 const router = express.Router();
 
 const uploadfile = multer({
+  
   fileFilter: function (req, file, callback) {
     var ext = path.extname(file.originalname);
     if (ext !== ".xlsx" && ext !== ".xls") {
@@ -26,6 +27,8 @@ router.post(
   upload.single("image"),
   CollectionOfficerEp.createCollectionOfficer
 );
+
+
 
 router.get(
   "/collection-officer/get-all-collection-officers",
@@ -112,6 +115,20 @@ router.put(
   "/disclaim-officer/:id",
   authMiddleware,
   CollectionOfficerEp.disclaimOfficer
+);
+
+router.post(
+  "/collection-officer/create-center-head",
+  authMiddleware,
+  upload.single("image"),
+  CollectionOfficerEp.createCenterHead
+);
+
+router.put(
+  "/update-center-head-details/:id",
+  authMiddleware,
+  upload.single("image"),
+  CollectionOfficerEp.updateCenterHeadDetails
 );
 
 module.exports = router;
