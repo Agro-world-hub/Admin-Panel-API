@@ -20,6 +20,12 @@ router.get(
   CollectionCenterEp.getAllCollectionCenter
 );
 
+router.get(
+  "/get-all-center-by-company/:companyId",
+  authMiddleware,
+  CollectionCenterEp.getAllCollectionCenterByCompany
+);
+
 //delete collection center
 router.delete(
   "/delete-collection-center/:id",

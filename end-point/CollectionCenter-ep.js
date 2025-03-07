@@ -27,6 +27,36 @@ exports.getAllCollectionCenter = async (req, res) => {
   }
 };
 
+
+
+exports.getAllCollectionCenterByCompany = async (req, res) => {
+  try {
+    const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
+    console.log("Request URL:", fullUrl);
+
+    const companyId = req.params.companyId;
+    const result = await CollectionCenterDao.GetCentersByCompanyIdDAO(companyId);
+
+    if (result.length === 0) {
+      return res
+        .status(404)
+        .json({ message: "No news items found", data: result });
+    }
+
+    console.log("Successfully retrieved all collection center");
+    res.json(result);
+  } catch (err) {
+    if (err.isJoi) {
+      // Validation error
+      console.error("Validation error:", err.details[0].message);
+      return res.status(400).json({ error: err.details[0].message });
+    }
+
+    console.error("Error fetching news:", err);
+    res.status(500).json({ error: "An error occurred while fetching news" });
+  }
+};
+
 //delete collection center
 exports.deleteCollectionCenter = async (req, res) => {
   try {

@@ -82,6 +82,24 @@ exports.GetAllCenterDAO = () => {
   });
 };
 
+exports.GetCentersByCompanyIdDAO = (companyId) => {
+  return new Promise((resolve, reject) => {
+    const sql = `
+      SELECT c.* 
+      FROM collectioncenter c
+      JOIN companycenter cc ON c.id = cc.centerId
+      WHERE cc.companyId = ?
+    `;
+    collectionofficer.query(sql, [companyId], (err, results) => {
+      if (err) {
+        return reject(err);
+      }
+      resolve(results);
+    });
+  });
+};
+
+
 //delete collection center
 exports.deleteCollectionCenterDAo = async (id) => {
   return new Promise((resolve, reject) => {
