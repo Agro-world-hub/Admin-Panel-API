@@ -163,7 +163,7 @@ exports.getAllComplains = async (req, res) => {
 exports.getAllCenterComplains = async (req, res) => {
   try {
     console.log(req.query);
-    const { page, limit, status, category, comCategory, searchText } = req.query;
+    const { page, limit, status, category, comCategory,filterCompany, searchText } = req.query;
 
     const { results, total } = await CollectionCenterDao.GetAllCenterComplainDAO(
       page,
@@ -171,6 +171,7 @@ exports.getAllCenterComplains = async (req, res) => {
       status,
       category,
       comCategory,
+      filterCompany,
       searchText
     );
 
@@ -1073,6 +1074,37 @@ exports.GetComplainCategoriesByRoleSuper = async (req, res) => {
 
     const result = await CollectionCenterDao.GetComplainCategoriesByRoleSuper(
       appId
+    );
+
+    if (result.length === 0) {
+      return res
+        .status(404)
+        .json({ message: "No complain categories not found", data: result });
+    }
+
+    console.log("Successfully retrieved all complain categories");
+    res.json(result);
+  } catch (err) {
+    if (err.isJoi) {
+      // Validation error
+      console.error("Validation error:", err.details[0].message);
+      return res.status(400).json({ error: err.details[0].message });
+    }
+
+    console.error("Error fetching news:", err);
+    res.status(500).json({ error: "An error occurred while complain categories" });
+  }
+};
+
+
+
+exports.GetAllCompanyForOfficerComplain = async (req, res) => {
+  const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
+  console.log("Request URL:", fullUrl);
+  
+  try {
+    
+    const result = await CollectionCenterDao.GetAllCompanyForOfficerComplain(
     );
 
     if (result.length === 0) {

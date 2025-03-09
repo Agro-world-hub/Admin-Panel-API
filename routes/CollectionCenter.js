@@ -187,5 +187,11 @@ router.get(
   CollectionCenterEp.GetComplainCategoriesByRoleSuper
 );
 
+router.get(
+  "/get-all-comppany-for-officer-complain",
+  authMiddleware,
+  CollectionCenterEp.GetAllCompanyForOfficerComplain
+);
+
 
 module.exports = router;

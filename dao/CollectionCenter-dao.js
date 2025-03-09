@@ -310,7 +310,7 @@ exports.GetAllComplainDAO = (page, limit, status, category, comCategory, searchT
 
 
 
-exports.GetAllCenterComplainDAO = (page, limit, status, category, comCategory, searchText) => {
+exports.GetAllCenterComplainDAO = (page, limit, status, category, comCategory, filterCompany, searchText) => {
   return new Promise((resolve, reject) => {
     const Sqlparams = [];
     const Counterparams = [];
@@ -334,6 +334,7 @@ exports.GetAllCenterComplainDAO = (page, limit, status, category, comCategory, s
         oc.id, 
         oc.refNo,
         co.empId AS empId,
+        co.firstNameEnglish AS officerName,
         c.companyNameEnglish AS companyName,
         cc.categoryEnglish AS complainCategory,
         ar.role,
@@ -374,13 +375,20 @@ exports.GetAllCenterComplainDAO = (page, limit, status, category, comCategory, s
       Counterparams.push(comCategory);
     }
 
+    if (filterCompany) {
+      countSql += " AND c.id = ? ";
+      sql += " AND c.id = ? ";
+      Sqlparams.push(filterCompany);
+      Counterparams.push(filterCompany);
+    }
+
     // Add search functionality
     if (searchText) {
       countSql += `
-        AND (oc.refNo LIKE ? OR co.empId LIKE ?)
+        AND (oc.refNo LIKE ? OR co.empId LIKE ? OR coc.regCode LIKE ?)
       `;
       sql += `
-        AND (oc.refNo LIKE ? OR co.empId LIKE ?)
+        AND (oc.refNo LIKE ? OR co.empId LIKE ? OR coc.regCode LIKE ?)
       `;
       const searchQuery = `%${searchText}%`;
       Sqlparams.push(searchQuery, searchQuery);
@@ -1461,6 +1469,19 @@ exports.GetComplainCategoriesByRoleSuper= (appId) => {
     const sql =
       "SELECT id, categoryEnglish FROM complaincategory WHERE appId=?";
       admin.query(sql, [appId], (err, results) => {
+      if (err) {
+        return reject(err);
+      }
+      resolve(results);
+    });
+  });
+};
+
+exports.GetAllCompanyForOfficerComplain= () => {
+  return new Promise((resolve, reject) => {
+    const sql =
+      "SELECT id, companyNameEnglish FROM company";
+      collectionofficer.query(sql, (err, results) => {
       if (err) {
         return reject(err);
       }
