@@ -310,7 +310,7 @@ exports.GetAllComplainDAO = (page, limit, status, category, comCategory, searchT
 
 
 
-exports.GetAllCenterComplainDAO = (page, limit, status, category, searchText) => {
+exports.GetAllCenterComplainDAO = (page, limit, status, category, comCategory, searchText) => {
   return new Promise((resolve, reject) => {
     const Sqlparams = [];
     const Counterparams = [];
@@ -365,6 +365,13 @@ exports.GetAllCenterComplainDAO = (page, limit, status, category, searchText) =>
       sql += " AND ar.role = ? ";
       Sqlparams.push(category);
       Counterparams.push(category);
+    }
+
+    if (comCategory) {
+      countSql += " AND oc.complainCategory = ? ";
+      sql += " AND oc.complainCategory = ? ";
+      Sqlparams.push(comCategory);
+      Counterparams.push(comCategory);
     }
 
     // Add search functionality
@@ -1436,11 +1443,11 @@ exports.deleteCompanyHeadData = async (id) => {
 
 
 
-exports.GetComplainCategoriesByRole= (roleId) => {
+exports.GetComplainCategoriesByRole= (roleId, appId) => {
   return new Promise((resolve, reject) => {
     const sql =
-      "SELECT id, categoryEnglish FROM complaincategory WHERE roleId=?";
-      admin.query(sql, [roleId], (err, results) => {
+      "SELECT id, categoryEnglish FROM complaincategory WHERE roleId=? AND appId=?";
+      admin.query(sql, [roleId, appId], (err, results) => {
       if (err) {
         return reject(err);
       }
@@ -1449,11 +1456,11 @@ exports.GetComplainCategoriesByRole= (roleId) => {
   });
 };
 
-exports.GetComplainCategoriesByRoleSuper= (roleId) => {
+exports.GetComplainCategoriesByRoleSuper= (appId) => {
   return new Promise((resolve, reject) => {
     const sql =
-      "SELECT id, categoryEnglish FROM complaincategory";
-      admin.query(sql, [roleId], (err, results) => {
+      "SELECT id, categoryEnglish FROM complaincategory WHERE appId=?";
+      admin.query(sql, [appId], (err, results) => {
       if (err) {
         return reject(err);
       }
@@ -1461,3 +1468,5 @@ exports.GetComplainCategoriesByRoleSuper= (roleId) => {
     });
   });
 };
+
+

@@ -163,13 +163,14 @@ exports.getAllComplains = async (req, res) => {
 exports.getAllCenterComplains = async (req, res) => {
   try {
     console.log(req.query);
-    const { page, limit, status, category, searchText } = req.query;
+    const { page, limit, status, category, comCategory, searchText } = req.query;
 
     const { results, total } = await CollectionCenterDao.GetAllCenterComplainDAO(
       page,
       limit,
       status,
       category,
+      comCategory,
       searchText
     );
 
@@ -1032,11 +1033,12 @@ exports.GetComplainCategoriesByRole = async (req, res) => {
   
   try {
     const roleId = req.params.roleId;
-   
+    const appId = req.params.appId;
     console.log(roleId);
 
     const result = await CollectionCenterDao.GetComplainCategoriesByRole(
-      roleId
+      roleId,
+      appId
     );
 
     if (result.length === 0) {
@@ -1066,11 +1068,11 @@ exports.GetComplainCategoriesByRoleSuper = async (req, res) => {
   
   try {
     
-   
+    const appId = req.params.appId;
    
 
     const result = await CollectionCenterDao.GetComplainCategoriesByRoleSuper(
-     
+      appId
     );
 
     if (result.length === 0) {

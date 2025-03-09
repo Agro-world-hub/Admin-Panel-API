@@ -175,14 +175,14 @@ router.delete(
 );
 
 router.get(
-  "/get-all-complain-category-list/:roleId",
+  "/get-all-complain-category-list/:roleId/:appId",
   authMiddleware,
   CollectionCenterEp.GetComplainCategoriesByRole
 );
 
 
 router.get(
-  "/get-all-complain-category-list-super",
+  "/get-all-complain-category-list-super/:appId",
   authMiddleware,
   CollectionCenterEp.GetComplainCategoriesByRoleSuper
 );
