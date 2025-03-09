@@ -157,6 +157,36 @@ exports.getAllComplains = async (req, res) => {
   }
 };
 
+
+
+exports.getAllCenterComplains = async (req, res) => {
+  try {
+    console.log(req.query);
+    const { page, limit, status, category, searchText } = req.query;
+
+    const { results, total } = await CollectionCenterDao.GetAllCenterComplainDAO(
+      page,
+      limit,
+      status,
+      category,
+      searchText
+    );
+
+    console.log("Successfully retrieved all collection center");
+    res.json({ results, total });
+  } catch (err) {
+    if (err.isJoi) {
+      // Validation error
+      console.error("Validation error:", err.details[0].message);
+      return res.status(400).json({ error: err.details[0].message });
+    }
+
+    console.error("Error fetching news:", err);
+    res.status(500).json({ error: "An error occurred while fetching news" });
+  }
+};
+
+
 //get complain by id
 exports.getComplainById = async (req, res) => {
   try {
@@ -171,7 +201,7 @@ exports.getComplainById = async (req, res) => {
         .json({ message: "No Complain foundd", data: result[0] });
     }
 
-    console.log("Successfully retrieved collection center");
+    console.log("Successfully retrieved Farmer Complain");
     res.json(result[0]);
   } catch (err) {
     if (err.isJoi) {
@@ -184,6 +214,39 @@ exports.getComplainById = async (req, res) => {
     res.status(500).json({ error: "An error occurred while fetching news" });
   }
 };
+
+
+
+exports.getCenterComplainById = async (req, res) => {
+  try {
+    const id = req.params.id;
+
+    const result = await CollectionCenterDao.getCenterComplainById(id);
+    console.log(result[0]);
+
+    if (result.length === 0) {
+      return res
+        .status(404)
+        .json({ message: "No Center Complain founded", data: result[0] });
+    }
+
+    console.log("Successfully retrieved collection center Complains");
+    res.json(result[0]);
+  } catch (err) {
+    if (err.isJoi) {
+      // Validation error
+      console.error("Validation error:", err.details[0].message);
+      return res.status(400).json({ error: err.details[0].message });
+    }
+
+    console.error("Error fetching news:", err);
+    res.status(500).json({ error: "An error occurred while fetching center complains" });
+  }
+};
+
+
+
+
 
 exports.createCollectionCenter = async (req, res) => {
   try {
@@ -416,6 +479,47 @@ exports.sendComplainReply = async (req, res) => {
       .json({ error: "An error occurred while creating Reply tasks" });
   }
 };
+
+
+
+
+exports.sendCenterComplainReply = async (req, res) => {
+  try {
+    const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
+    console.log(fullUrl);
+
+    const complaignId = req.params.id;
+
+    const reply = req.body.reply;
+    console.log("Collection Centre Complain : ", complaignId, reply);
+
+    if (reply == null) {
+      return res.status(401).json({ error: "Reply can not be empty" });
+    }
+
+    const result = await CollectionCenterDao.sendCenterComplainReply(
+      complaignId,
+      reply
+    );
+
+    console.log("Send Reply Success");
+    return res.status(201).json({ result: result, status: true });
+  } catch (err) {
+    if (err.isJoi) {
+      return res
+        .status(400)
+        .json({ error: err.details[0].message, status: false });
+    }
+    console.error("Error executing query:", err);
+    return res
+      .status(500)
+      .json({ error: "An error occurred while creating Reply tasks" });
+  }
+};
+
+
+
+
 
 exports.getForCreateId = async (req, res) => {
   try {

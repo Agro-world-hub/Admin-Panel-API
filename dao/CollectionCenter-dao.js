@@ -299,6 +299,107 @@ exports.GetAllComplainDAO = (page, limit, status, category, searchText) => {
   });
 };
 
+
+
+
+exports.GetAllCenterComplainDAO = (page, limit, status, category, searchText) => {
+  return new Promise((resolve, reject) => {
+    const Sqlparams = [];
+    const Counterparams = [];
+    const offset = (page - 1) * limit;
+
+    // SQL to count total records - Added missing JOINs
+    let countSql = `
+      SELECT COUNT(*) AS total
+      FROM officercomplains oc
+      LEFT JOIN collectionofficer co ON oc.officerId = co.id
+      LEFT JOIN agro_world_admin.complaincategory cc ON oc.complainCategory = cc.id
+      LEFT JOIN  company c ON co.companyId = c.id
+      LEFT JOIN  collectioncenter coc ON co.centerId = coc.id
+      LEFT JOIN agro_world_admin.adminroles ar ON cc.roleId = ar.id
+      WHERE 1 = 1
+    `;
+
+    // SQL to fetch paginated data
+    let sql = `
+      SELECT 
+        oc.id, 
+        oc.refNo,
+        co.empId AS empId,
+        c.companyNameEnglish AS companyName,
+        cc.categoryEnglish AS complainCategory,
+        ar.role,
+        oc.createdAt,
+        oc.complain,
+        oc.complainAssign AS status,
+        oc.reply,
+        coc.regCode
+      FROM officercomplains oc
+     LEFT JOIN collectionofficer co ON oc.officerId = co.id
+      LEFT JOIN agro_world_admin.complaincategory cc ON oc.complainCategory = cc.id
+      LEFT JOIN  company c ON co.companyId = c.id
+      LEFT JOIN  collectioncenter coc ON co.centerId = coc.id
+      LEFT JOIN agro_world_admin.adminroles ar ON cc.roleId = ar.id
+      WHERE 1 = 1
+    `;
+
+    // Add filter for status
+    if (status) {
+      countSql += " AND oc.complainAssign = ? ";
+      sql += " AND oc.complainAssign = ? ";
+      Sqlparams.push(status);
+      Counterparams.push(status);
+    }
+
+    // Fixed category filter to use the correct alias
+    if (category) {
+      countSql += " AND ar.role = ? ";
+      sql += " AND ar.role = ? ";
+      Sqlparams.push(category);
+      Counterparams.push(category);
+    }
+
+    // Add search functionality
+    if (searchText) {
+      countSql += `
+        AND (oc.refNo LIKE ? OR co.empId LIKE ?)
+      `;
+      sql += `
+        AND (oc.refNo LIKE ? OR co.empId LIKE ?)
+      `;
+      const searchQuery = `%${searchText}%`;
+      Sqlparams.push(searchQuery, searchQuery);
+      Counterparams.push(searchQuery, searchQuery);
+    }
+
+    // Add pagination
+    sql += " ORDER BY oc.createdAt DESC LIMIT ? OFFSET ?";
+    Sqlparams.push(parseInt(limit), parseInt(offset));
+
+    // Execute count query to get total records
+    collectionofficer.query(
+      countSql,
+      Counterparams,
+      (countErr, countResults) => {
+        if (countErr) {
+          return reject(countErr);
+        }
+
+        const total = countResults[0]?.total || 0;
+
+        // Execute main query to get paginated results
+        collectionofficer.query(sql, Sqlparams, (dataErr, results) => {
+          if (dataErr) {
+            return reject(dataErr);
+          }
+
+          resolve({ results, total });
+        });
+      }
+    );
+  });
+};
+
 exports.getComplainById = (id) => {
   return new Promise((resolve, reject) => {
     const sql = ` 
@@ -316,6 +417,31 @@ exports.getComplainById = (id) => {
     });
   });
 };
+
+
+
+
+exports.getCenterComplainById = (id) => {
+  return new Promise((resolve, reject) => {
+    const sql = ` 
+    SELECT oc.id, oc.refNo, oc.createdAt, oc.language, oc.complain, oc.complainCategory, oc.reply, cof.firstNameEnglish AS firstName, cof.lastNameEnglish AS lastName, cof.phoneCode01, cof.phoneNumber01,  cc.categoryEnglish AS complainCategory
+    FROM officercomplains oc
+    LEFT JOIN collectionofficer cof ON oc.officerId = cof.id
+    LEFT JOIN agro_world_admin.complaincategory cc ON oc.complainCategory = cc.id
+    WHERE oc.id = ? 
+    `;
+    collectionofficer.query(sql, [id], (err, results) => {
+      if (err) {
+        return reject(err);
+      }
+      resolve(results);
+    });
+  });
+};
+
+
+
+
 
 exports.CheckRegCodeExistDAO = (regCode) => {
   return new Promise((resolve, reject) => {
@@ -574,6 +700,52 @@ exports.sendComplainReply = (complainId, reply) => {
     });
   });
 };
+
+
+
+exports.sendCenterComplainReply = (complainId, reply) => {
+  return new Promise((resolve, reject) => {
+    // Input validation
+    if (!complainId) {
+      return reject(new Error("Complain ID is required"));
+    }
+
+    if (reply === undefined || reply === null || reply.trim() === "") {
+      return reject(new Error("Reply cannot be empty"));
+    }
+
+    const sql = `
+      UPDATE officercomplains 
+      SET reply = ?, status = ?, complainAssign = ? 
+      WHERE id = ?
+    `;
+
+    const status = "Opened";
+    const adminStatus = "Closed";
+    const values = [reply, status, adminStatus, complainId];
+
+    collectionofficer.query(sql, values, (err, results) => {
+      if (err) {
+        console.error("Database error details:", err);
+        return reject(err);
+      }
+
+      if (results.affectedRows === 0) {
+        console.warn(`No record found with id: ${complainId}`);
+        return reject(new Error(`No record found with id: ${complainId}`));
+      }
+
+      console.log("Update successful:", results);
+      resolve({
+        message: "Reply sent successfully",
+        affectedRows: results.affectedRows,
+      });
+    });
+  });
+};
+
+
+
 
 exports.getForCreateId = (role) => {
   return new Promise((resolve, reject) => {

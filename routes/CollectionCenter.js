@@ -41,9 +41,21 @@ router.get(
 );
 
 router.get(
+  "/get-all-center-complains",
+  authMiddleware,
+  CollectionCenterEp.getAllCenterComplains
+);
+
+router.get(
   "/get-complain-by-id/:id",
   authMiddleware,
   CollectionCenterEp.getComplainById
+);
+
+router.get(
+  "/get-center-complain-by-id/:id",
+  authMiddleware,
+  CollectionCenterEp.getCenterComplainById
 );
 
 router.post(
@@ -74,6 +86,12 @@ router.put(
   "/reply-complain/:id/",
   authMiddleware,
   CollectionCenterEp.sendComplainReply
+);
+
+router.put(
+  "/reply-center-complain/:id/",
+  authMiddleware,
+  CollectionCenterEp.sendCenterComplainReply
 );
 
 router.get(
