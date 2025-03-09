@@ -1,4 +1,5 @@
 const {
+  admin,
   plantcare,
   collectionofficer,
   marketPlace,
@@ -206,7 +207,7 @@ exports.deleteCollectionCenterDAo = async (id) => {
 //   });
 // };
 
-exports.GetAllComplainDAO = (page, limit, status, category, searchText) => {
+exports.GetAllComplainDAO = (page, limit, status, category, comCategory, searchText) => {
   return new Promise((resolve, reject) => {
     const Sqlparams = [];
     const Counterparams = [];
@@ -258,17 +259,24 @@ exports.GetAllComplainDAO = (page, limit, status, category, searchText) => {
       Counterparams.push(category);
     }
 
+    if (comCategory) {
+      countSql += " AND fc.complainCategory = ? ";
+      sql += " AND fc.complainCategory = ? ";
+      Sqlparams.push(comCategory);
+      Counterparams.push(comCategory);
+    }
+
     // Add search functionality
     if (searchText) {
       countSql += `
-        AND (fc.refNo LIKE ? OR u.firstName LIKE ?)
+        AND (fc.refNo LIKE ? OR u.firstName LIKE ? OR u.lastName LIKE ? OR u.NICnumber LIKE ?)
       `;
       sql += `
-        AND (fc.refNo LIKE ? OR u.firstName LIKE ?)
+        AND (fc.refNo LIKE ? OR u.firstName LIKE ? OR u.lastName LIKE ? OR u.NICnumber LIKE ?)
       `;
       const searchQuery = `%${searchText}%`;
-      Sqlparams.push(searchQuery, searchQuery);
-      Counterparams.push(searchQuery, searchQuery);
+      Sqlparams.push(searchQuery, searchQuery, searchQuery , searchQuery);
+      Counterparams.push(searchQuery, searchQuery, searchQuery, searchQuery);
     }
 
     // Add pagination
@@ -1422,6 +1430,34 @@ exports.deleteCompanyHeadData = async (id) => {
       } else {
         resolve(results.affectedRows);
       }
+    });
+  });
+};
+
+
+
+exports.GetComplainCategoriesByRole= (roleId) => {
+  return new Promise((resolve, reject) => {
+    const sql =
+      "SELECT id, categoryEnglish FROM complaincategory WHERE roleId=?";
+      admin.query(sql, [roleId], (err, results) => {
+      if (err) {
+        return reject(err);
+      }
+      resolve(results);
+    });
+  });
+};
+
+exports.GetComplainCategoriesByRoleSuper= (roleId) => {
+  return new Promise((resolve, reject) => {
+    const sql =
+      "SELECT id, categoryEnglish FROM complaincategory";
+      admin.query(sql, [roleId], (err, results) => {
+      if (err) {
+        return reject(err);
+      }
+      resolve(results);
     });
   });
 };

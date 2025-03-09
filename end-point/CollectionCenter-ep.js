@@ -133,13 +133,14 @@ exports.addNewCollectionCenter = async (req, res) => {
 exports.getAllComplains = async (req, res) => {
   try {
     console.log(req.query);
-    const { page, limit, status, category, searchText } = req.query;
+    const { page, limit, status, category, comCategory, searchText } = req.query;
 
     const { results, total } = await CollectionCenterDao.GetAllComplainDAO(
       page,
       limit,
       status,
       category,
+      comCategory,
       searchText
     );
 
@@ -1019,5 +1020,75 @@ exports.deleteCompanyHead = async (req, res) => {
     return res
       .status(500)
       .json({ error: "An error occurred while deleting company head" });
+  }
+};
+
+
+
+
+exports.GetComplainCategoriesByRole = async (req, res) => {
+  const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
+  console.log("Request URL:", fullUrl);
+  
+  try {
+    const roleId = req.params.roleId;
+   
+    console.log(roleId);
+
+    const result = await CollectionCenterDao.GetComplainCategoriesByRole(
+      roleId
+    );
+
+    if (result.length === 0) {
+      return res
+        .status(404)
+        .json({ message: "No complain categories not found", data: result });
+    }
+
+    console.log("Successfully retrieved all complain categories");
+    res.json(result);
+  } catch (err) {
+    if (err.isJoi) {
+      // Validation error
+      console.error("Validation error:", err.details[0].message);
+      return res.status(400).json({ error: err.details[0].message });
+    }
+
+    console.error("Error fetching news:", err);
+    res.status(500).json({ error: "An error occurred while complain categories" });
+  }
+};
+
+
+exports.GetComplainCategoriesByRoleSuper = async (req, res) => {
+  const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
+  console.log("Request URL:", fullUrl);
+  
+  try {
+    
+   
+   
+
+    const result = await CollectionCenterDao.GetComplainCategoriesByRoleSuper(
+     
+    );
+
+    if (result.length === 0) {
+      return res
+        .status(404)
+        .json({ message: "No complain categories not found", data: result });
+    }
+
+    console.log("Successfully retrieved all complain categories");
+    res.json(result);
+  } catch (err) {
+    if (err.isJoi) {
+      // Validation error
+      console.error("Validation error:", err.details[0].message);
+      return res.status(400).json({ error: err.details[0].message });
+    }
+
+    console.error("Error fetching news:", err);
+    res.status(500).json({ error: "An error occurred while complain categories" });
   }
 };

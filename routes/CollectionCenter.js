@@ -174,4 +174,18 @@ router.delete(
   CollectionCenterEp.deleteCompanyHead
 );
 
+router.get(
+  "/get-all-complain-category-list/:roleId",
+  authMiddleware,
+  CollectionCenterEp.GetComplainCategoriesByRole
+);
+
+
+router.get(
+  "/get-all-complain-category-list-super",
+  authMiddleware,
+  CollectionCenterEp.GetComplainCategoriesByRoleSuper
+);
+
+
 module.exports = router;
