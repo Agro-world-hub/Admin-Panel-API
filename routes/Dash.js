@@ -10,4 +10,16 @@ router.get(
     DashEp.getAllCustomers
 )
 
+router.get(
+    "/get-all-sales-agents",
+    authMiddleware,
+    DashEp.getAllSalesAgents
+)
+
+router.delete(
+    "/delete-sales-agent/:id", 
+    authMiddleware, 
+    DashEp.deleteSalesAgent
+  );
+
 module.exports = router;
