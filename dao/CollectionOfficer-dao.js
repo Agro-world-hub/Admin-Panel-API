@@ -253,6 +253,114 @@ exports.getQrImage = (id) => {
   });
 };
 
+// exports.getAllCollectionOfficers = (page, limit, searchNIC, companyid) => {
+//   return new Promise((resolve, reject) => {
+//     const offset = (page - 1) * limit;
+
+//     let countSql = `
+//             SELECT COUNT(*) as total
+//             FROM collectionofficer coff
+//             JOIN company cm ON coff.companyId  = cm.id
+//             JOIN collectioncenter cc ON coff.centerId = cc.id
+//             WHERE 1 = 1
+//         `;
+
+//     let dataSql = `
+//             SELECT
+//                 coff.id,
+//                 coff.image,
+//                 coff.firstNameEnglish,
+//                 coff.lastNameEnglish,
+//                 coff.empId,
+//                 coff.status,
+//                 coff.claimStatus,
+//                 coff.jobRole,
+//                 coff.phoneCode01,
+//                 coff.phoneNumber01,
+//                 coff.nic,
+//                 cm.companyNameEnglish,
+//                 cc.centerName
+//             FROM collectionofficer coff
+//             JOIN company cm ON coff.companyId  = cm.id
+//             JOIN collectioncenter cc ON coff.centerId = cc.id
+//             WHERE 1 = 1
+//         `;
+
+//     const countParams = [];
+//     const dataParams = [];
+
+//     // Apply filters for company ID
+//     if (companyid) {
+//       countSql += " AND cm.id = ?";
+//       dataSql += " AND cm.id = ?";
+//       countParams.push(companyid);
+//       dataParams.push(companyid);
+//     }
+
+//     // Apply search filters for NIC or related fields
+//     if (searchNIC) {
+//       const searchCondition = `
+//                 AND (
+//                     coff.nic LIKE ?
+//                     OR coff.firstNameEnglish LIKE ?
+//                     OR cm.companyNameEnglish LIKE ?
+//                     OR coff.phoneNumber01 LIKE ?
+//                     OR coff.phoneNumber02 LIKE ?
+//                     OR coff.district LIKE ?
+//                     OR coff.empId LIKE ?
+//                 )
+//             `;
+//       countSql += searchCondition;
+//       dataSql += searchCondition;
+//       const searchValue = `%${searchNIC}%`;
+//       countParams.push(
+//         searchValue,
+//         searchValue,
+//         searchValue,
+//         searchValue,
+//         searchValue,
+//         searchValue,
+//         searchValue
+//       );
+//       dataParams.push(
+//         searchValue,
+//         searchValue,
+//         searchValue,
+//         searchValue,
+//         searchValue,
+//         searchValue,
+//         searchValue
+//       );
+//     }
+
+//     dataSql += " ORDER BY coff.createdAt DESC";
+
+//     // Add pagination to the data query
+//     dataSql += " LIMIT ? OFFSET ?";
+//     dataParams.push(limit, offset);
+
+//     // Execute count query
+//     collectionofficer.query(countSql, countParams, (countErr, countResults) => {
+//       if (countErr) {
+//         console.error("Error in count query:", countErr);
+//         return reject(countErr);
+//       }
+
+//       const total = countResults[0].total;
+
+//       // Execute data query
+//       collectionofficer.query(dataSql, dataParams, (dataErr, dataResults) => {
+//         if (dataErr) {
+//           console.error("Error in data query:", dataErr);
+//           return reject(dataErr);
+//         }
+
+//         resolve({ items: dataResults, total });
+//       });
+//     });
+//   });
+// };
+
 exports.getAllCollectionOfficers = (page, limit, searchNIC, companyid) => {
   return new Promise((resolve, reject) => {
     const offset = (page - 1) * limit;
@@ -260,8 +368,8 @@ exports.getAllCollectionOfficers = (page, limit, searchNIC, companyid) => {
     let countSql = `
             SELECT COUNT(*) as total
             FROM collectionofficer coff
-            JOIN company cm ON coff.companyId  = cm.id
-            JOIN collectioncenter cc ON coff.centerId = cc.id
+            JOIN company cm ON coff.companyId = cm.id
+            LEFT JOIN collectioncenter cc ON coff.centerId = cc.id
             WHERE 1 = 1
         `;
 
@@ -281,8 +389,8 @@ exports.getAllCollectionOfficers = (page, limit, searchNIC, companyid) => {
                 cm.companyNameEnglish,
                 cc.centerName
             FROM collectionofficer coff
-            JOIN company cm ON coff.companyId  = cm.id
-            JOIN collectioncenter cc ON coff.centerId = cc.id
+            JOIN company cm ON coff.companyId = cm.id
+            LEFT JOIN collectioncenter cc ON coff.centerId = cc.id
             WHERE 1 = 1
         `;
 
@@ -1102,6 +1210,75 @@ exports.getDailyReport = (collectionOfficerId, fromDate, toDate) => {
   });
 };
 
+// exports.getOfficerByIdDAO = (id) => {
+//   return new Promise((resolve, reject) => {
+//     const sql = `
+//           SELECT 
+//               COF.*,
+//               COM.companyNameEnglish,
+//               CEN.centerName
+//           FROM 
+//               collectionofficer COF, company COM, collectioncenter CEN
+//           WHERE 
+//            COF.centerId = CEN.id AND COF.companyId = COM.id AND COF.id = ?`;
+
+//     collectionofficer.query(sql, [id], (err, results) => {
+//       if (err) {
+//         return reject(err); // Reject promise if an error occurs
+//       }
+
+//       if (results.length === 0) {
+//         return resolve(null); // No officer found
+//       }
+
+//       const officer = results[0];
+
+//       const empIdWithoutPrefix = officer.empId
+//         ? officer.empId.substring(3)
+//         : null;
+
+//       resolve({
+//         collectionOfficer: {
+//           id: officer.id,
+//           firstNameEnglish: officer.firstNameEnglish,
+//           firstNameSinhala: officer.firstNameSinhala,
+//           firstNameTamil: officer.firstNameTamil,
+//           lastNameEnglish: officer.lastNameEnglish,
+//           lastNameSinhala: officer.lastNameSinhala,
+//           lastNameTamil: officer.lastNameTamil,
+//           phoneNumber01: officer.phoneNumber01,
+//           phoneNumber02: officer.phoneNumber02,
+//           phoneCode01: officer.phoneCode01,
+//           phoneCode02: officer.phoneCode02,
+//           image: officer.image,
+//           QRcode: officer.QRcode,
+//           status: officer.status,
+//           claimStatus: officer.claimStatus,
+//           nic: officer.nic,
+//           email: officer.email,
+//           passwordUpdated: officer.passwordUpdated,
+//           houseNumber: officer.houseNumber,
+//           streetName: officer.streetName,
+//           city: officer.city,
+//           district: officer.district,
+//           province: officer.province,
+//           country: officer.country,
+//           languages: officer.languages,
+//           empId: empIdWithoutPrefix,
+//           jobRole: officer.jobRole,
+//           employeeType: officer.empType,
+//           accHolderName: officer.accHolderName,
+//           accNumber: officer.accNumber,
+//           bankName: officer.bankName,
+//           branchName: officer.branchName,
+//           companyNameEnglish: officer.companyNameEnglish,
+//           centerName: officer.centerName,
+//         },
+//       });
+//     });
+//   });
+// };
+
 exports.getOfficerByIdDAO = (id) => {
   return new Promise((resolve, reject) => {
     const sql = `
@@ -1110,9 +1287,13 @@ exports.getOfficerByIdDAO = (id) => {
               COM.companyNameEnglish,
               CEN.centerName
           FROM 
-              collectionofficer COF, company COM, collectioncenter CEN
+              collectionofficer COF
+          JOIN 
+              company COM ON COF.companyId = COM.id
+          LEFT JOIN 
+              collectioncenter CEN ON COF.centerId = CEN.id
           WHERE 
-           COF.centerId = CEN.id AND COF.companyId = COM.id AND COF.id = ?`;
+              COF.id = ?`;
 
     collectionofficer.query(sql, [id], (err, results) => {
       if (err) {
@@ -1124,18 +1305,6 @@ exports.getOfficerByIdDAO = (id) => {
       }
 
       const officer = results[0];
-
-      // Process image field if present
-      // if (officer.image) {
-      //   const base64Image = Buffer.from(officer.image).toString("base64");
-      //   officer.image = `data:image/png;base64,${base64Image}`;
-      // }
-
-      // Process QRcode field if present
-      // if (officer.QRcode) {
-      //   const base64QRcode = Buffer.from(officer.QRcode).toString("base64");
-      //   officer.QRcode = `data:image/png;base64,${base64QRcode}`;
-      // }
 
       const empIdWithoutPrefix = officer.empId
         ? officer.empId.substring(3)
