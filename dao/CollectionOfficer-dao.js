@@ -1156,6 +1156,8 @@ exports.getOfficerByIdDAO = (id) => {
           phoneCode02: officer.phoneCode02,
           image: officer.image,
           QRcode: officer.QRcode,
+          status: officer.status,
+          claimStatus: officer.claimStatus,
           nic: officer.nic,
           email: officer.email,
           passwordUpdated: officer.passwordUpdated,
