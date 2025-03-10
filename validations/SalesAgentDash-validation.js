@@ -8,3 +8,7 @@ exports.getAllSalesAgentsSchema = Joi.object({
     status: Joi.string().optional(),
     searchText: Joi.string().optional()
 });
+
+exports.deleteSalesAgentSchema = Joi.object({
+    id: Joi.number().integer().positive().required()
+});

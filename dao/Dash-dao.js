@@ -92,7 +92,149 @@ const getAllCustomers = () => {
     });
 };
 
-module.exports = { getAllCustomers };
+const getAllSalesAgents = (page, limit, searchText, status) => {
+    return new Promise((resolve, reject) => {
+        const offset = (page - 1) * limit;
+
+        let countSql = `
+            SELECT COUNT(*) as total
+            FROM salesagent
+        `;
+
+        let dataSql = `
+            SELECT
+                salesagent.id,
+                salesagent.empId,
+                salesagent.firstName,
+                salesagent.lastName,
+                salesagent.status,
+                salesagent.phoneCode1,
+                salesagent.phoneNumber1,
+                salesagent.nic
+            FROM salesagent
+        `;
+
+        const countParams = [];
+        const dataParams = [];
+
+        let whereConditions = []; // Store WHERE conditions
+
+        if (searchText) {
+            whereConditions.push(`
+                (
+                    salesagent.nic LIKE ?
+                    OR salesagent.firstName LIKE ?
+                    OR salesagent.lastName LIKE ?
+                    OR salesagent.phoneNumber1 LIKE ?
+                    OR salesagent.phoneCode1 LIKE ?
+                    OR salesagent.empId LIKE ?
+                    OR salesagent.status LIKE ?
+                )
+            `);
+
+            const searchValue = `%${searchText}%`;
+            countParams.push(searchValue, searchValue, searchValue, searchValue, searchValue, searchValue, searchValue);
+            dataParams.push(searchValue, searchValue, searchValue, searchValue, searchValue, searchValue, searchValue);
+        }
+
+        if (status) {
+            whereConditions.push(`salesagent.status = ?`);
+            countParams.push(status);
+            dataParams.push(status);
+        }
+
+        // Append WHERE conditions if any exist
+        if (whereConditions.length > 0) {
+            countSql += " WHERE " + whereConditions.join(" AND ");
+            dataSql += " WHERE " + whereConditions.join(" AND ");
+        }
+
+        // Add pagination at the end, so LIMIT and OFFSET are always numbers
+        dataSql += " LIMIT ? OFFSET ?";
+        dataParams.push(parseInt(limit), parseInt(offset)); // Ensure they are integers
+
+        // Execute count query
+        dash.query(countSql, countParams, (countErr, countResults) => {
+            if (countErr) {
+                console.error("Error in count query:", countErr);
+                return reject(countErr);
+            }
+
+            const total = countResults[0].total;
+
+            // Execute data query
+            dash.query(dataSql, dataParams, (dataErr, dataResults) => {
+                if (dataErr) {
+                    console.error("Error in data query:", dataErr);
+                    return reject(dataErr);
+                }
+
+                resolve({ items: dataResults, total });
+            });
+        });
+    });
+};
 
 
+const deleteSalesAgent = async (id) => {
+    return new Promise((resolve, reject) => {
+      const sql = "DELETE FROM salesagent WHERE id = ?";
+      dash.query(sql, [id], (err, results) => {
+        if (err) {
+          reject(err);
+        } else {
+          resolve(results.affectedRows);
+        }
+      });
+    });
+  };
+
+
+
+
+module.exports = { getAllCustomers, getAllSalesAgents, deleteSalesAgent };
+
+// Apply filters for company ID
+    //   if (companyid) {
+    //     countSql += " AND cm.id = ?";
+    //     dataSql += " AND cm.id = ?";
+    //     countParams.push(companyid);
+    //     dataParams.push(companyid);
+    //   }
+  
+      // Apply search filters for NIC or related fields
+    //   if (searchNIC) {
+    //     const searchCondition = `
+    //               AND (
+    //                   coff.nic LIKE ?
+    //                   OR coff.firstNameEnglish LIKE ?
+    //                   OR cm.companyNameEnglish LIKE ?
+    //                   OR coff.phoneNumber01 LIKE ?
+    //                   OR coff.phoneNumber02 LIKE ?
+    //                   OR coff.district LIKE ?
+    //                   OR coff.empId LIKE ?
+    //               )
+    //           `;
+    //     countSql += searchCondition;
+    //     dataSql += searchCondition;
+    //     const searchValue = `%${searchNIC}%`;
+    //     countParams.push(
+    //       searchValue,
+    //       searchValue,
+    //       searchValue,
+    //       searchValue,
+    //       searchValue,
+    //       searchValue,
+    //       searchValue
+    //     );
+    //     dataParams.push(
+    //       searchValue,
+    //       searchValue,
+    //       searchValue,
+    //       searchValue,
+    //       searchValue,
+    //       searchValue,
+    //       searchValue
+    //     );
+    //   }
 
