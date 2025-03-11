@@ -171,7 +171,7 @@ exports.getAllCustomers = async (req, res) => {
           
   
           const fileExtension = mimeType.split("/")[1]; // Extract file extension from MIME type
-          const fileName = `${officerData.firstNameEnglish}_${officerData.lastNameEnglish}.${fileExtension}`;
+          const fileName = `${officerData.firstName}_${officerData.lastName}.${fileExtension}`;
   
           // Upload image to S3
   
@@ -212,5 +212,201 @@ exports.getAllCustomers = async (req, res) => {
       return res.status(500).json({
         error: "An error occurred while creating the Center Head",
       });
+    }
+  };
+
+  exports.getSalesAgentDataById = async (req, res) => {
+    try {
+      const id = req.params.id;
+      const officerData = await DashDao.getSalesAgentDataById(id);
+  
+      if (!officerData) {
+        return res.status(404).json({ error: "Collection Officer not found" });
+      }
+  
+      console.log(
+        "Successfully fetched collection officer, company, and bank details"
+      );
+      res.json({ officerData });
+    } catch (err) {
+      if (err.isJoi) {
+        return res.status(400).json({ error: err.details[0].message });
+      }
+      console.error("Error executing query:", err);
+      res.status(500).send("An error occurred while fetching data.");
+    }
+  };
+
+
+  exports.updateSalesAgentDetails = async (req, res) => {
+    const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
+    console.log(fullUrl);
+    const { id } = req.params;
+  
+    const officerData = JSON.parse(req.body.officerData);
+    // const qrCode = await collectionofficerDao.getQrImage(id);
+  
+    // let qrImageUrl;
+  
+    let profileImageUrl = null;
+  
+    if (req.body.file) {
+      console.log("Recieved");
+      // qrImageUrl = qrCode.image;
+      // if (qrImageUrl) {
+      //   await deleteFromS3(qrImageUrl);
+      // }
+  
+      const base64String = req.body.file.split(",")[1]; // Extract the Base64 content
+      const mimeType = req.body.file.match(/data:(.*?);base64,/)[1]; // Extract MIME type
+      const fileBuffer = Buffer.from(base64String, "base64"); // Decode Base64 to buffer
+  
+      const fileExtension = mimeType.split("/")[1]; // Extract file extension from MIME type
+      const fileName = `${officerData.firstName}_${officerData.lastName}.${fileExtension}`;
+  
+      profileImageUrl = await uploadFileToS3(
+        fileBuffer,
+        fileName,
+        "salesagent/image"
+      );
+    } else {
+      // profileImageUrl = qrCode.image;
+      profileImageUrl = null;
+    }
+  
+    const {
+      
+      firstName,
+      lastName,
+      empId,
+      empType,
+      phoneCode1,
+      phoneNumber1,
+      phoneCode2,
+      phoneNumber2,
+      nic,
+      email,
+      houseNumber,
+      streetName,
+      city,
+      district,
+      province,
+      country,
+      accHolderName,
+      accNumber,
+      bankName,
+      branchName,
+    } = officerData;
+    console.log(empId);
+  
+    try {
+      await DashDao.updateSalesAgentDetails(
+        id,
+       
+        firstName,
+        lastName,
+        empId,
+        empType,
+        phoneCode1,
+        phoneNumber1,
+        phoneCode2,
+        phoneNumber2,
+        nic,
+        email,
+        houseNumber,
+        streetName,
+        city,
+        district,
+        province,
+        country,
+        accHolderName,
+        accNumber,
+        bankName,
+        branchName,
+        profileImageUrl
+      );
+      res.json({ message: "Collection officer details updated successfully" });
+    } catch (err) {
+      console.error("Error updating collection officer details:", err);
+      res
+        .status(500)
+        .json({ error: "Failed to update collection officer details" });
+    }
+  };
+
+  exports.UpdateStatusAndSendPassword = async (req, res) => {
+    try {
+      const { id, status } = req.params;
+  
+      // Validate input
+      if (!id || !status) {
+        return res
+          .status(400)
+          .json({ message: "ID and status are required.", status: false });
+      }
+  
+      // Fetch officer details by ID
+      const officerData = await DashDao.getSalesAgentEmailDao(
+        id
+      );
+      if (!officerData) {
+        return res
+          .status(404)
+          .json({ message: "Collection officer not found.", status: false });
+      }
+  
+      // Destructure email, firstNameEnglish, and empId from fetched data
+      const { email, firstName, empId } = officerData;
+      console.log(`Email: ${email}, Name: ${firstName}, Emp ID: ${empId}`);
+  
+      // Generate a new random password
+      const generatedPassword = Math.random().toString(36).slice(-8); // Example: 8-character random password
+  
+      const hashedPassword = await bcrypt.hash(generatedPassword, 10);
+  
+      // Update status and password in the database
+      const updateResult =
+        await DashDao.UpdateSalesAgentStatusAndPasswordDao({
+          id,
+          status,
+          password: hashedPassword,
+        });
+  
+      if (updateResult.affectedRows === 0) {
+        return res.status(400).json({
+          message: "Failed to update status and password.",
+          status: false,
+        });
+      }
+  
+      // If status is 'Approved', send the password email
+      if (status === "Approved") {
+        const emailResult = await DashDao.SendGeneratedPasswordDao(
+          email,
+          generatedPassword,
+          empId,
+          firstName
+        );
+  
+        if (!emailResult.success) {
+          return res.status(500).json({
+            message: "Failed to send password email.",
+            error: emailResult.error,
+          });
+        }
+      }
+  
+      // Return success response with empId and email
+      res.status(200).json({
+        message: "Status updated and password sent successfully.",
+        status: true,
+        data: {
+          empId, // Include empId for reference
+          email, // Include the email sent to
+        },
+      });
+    } catch (error) {
+      console.error("Error:", error);
+      res.status(500).json({ message: "An error occurred.", error });
     }
   };

@@ -55,4 +55,22 @@ router.post(
     DashEp.createSalesAgent
 );
 
+router.get(
+    "/get-sales-agent-details/:id",
+    authMiddleware,
+    DashEp.getSalesAgentDataById
+  );
+
+router.put(
+    "/update-sales-agent-details/:id",
+    authMiddleware,
+    upload.single("image"),
+    DashEp.updateSalesAgentDetails
+);
+
+router.get(
+  "/update-status/:id/:status",
+  authMiddleware,
+  DashEp.UpdateStatusAndSendPassword
+);
 module.exports = router;
