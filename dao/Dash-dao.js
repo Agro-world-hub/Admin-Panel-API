@@ -190,9 +190,144 @@ const deleteSalesAgent = async (id) => {
   };
 
 
+const getForCreateId = (role) => {
+    return new Promise((resolve, reject) => {
+      const sql =
+        "SELECT empId FROM salesagent WHERE empId LIKE ? ORDER BY empId DESC LIMIT 1";
+      dash.query(sql, [`${role}%`], (err, results) => {
+        if (err) {
+          return reject(err);
+        }
+  
+        if (results.length > 0) {
+          const numericPart = parseInt(results[0].empId.substring(3), 10);
+  
+          const incrementedValue = numericPart + 1;
+  
+          results[0].empId = incrementedValue.toString().padStart(4, "0");
+          console.log(results[0].empId);
+        }
+  
+        resolve(results);
+      });
+    });
+  };
+
+const checkNICExist = (nic) => {
+    return new Promise((resolve, reject) => {
+      const sql = `
+              SELECT COUNT(*) AS count 
+              FROM salesagent 
+              WHERE nic = ?
+          `;
+  
+      dash.query(sql, [nic], (err, results) => {
+        if (err) {
+          return reject(err);
+        }
+        resolve(results[0].count > 0); // Return true if either NIC or email exists
+      });
+    });
+  };
+  
+const checkEmailExist = (email) => {
+    return new Promise((resolve, reject) => {
+      const sql = `
+              SELECT COUNT(*) AS count 
+              FROM salesagent 
+              WHERE email = ?
+          `;
+  
+      dash.query(sql, [email], (err, results) => {
+        if (err) {
+          return reject(err);
+        }
+        resolve(results[0].count > 0); // Return true if either NIC or email exists
+      });
+    });
+  };
+
+const createSalesAgent = (officerData, profileImageUrl) => {
+    return new Promise(async (resolve, reject) => {
+      try {
+        // Prepare data for QR code generation
+        // const qrData = `
+        //       {
+        //           "empId": "${officerData.empId}",
+        //       }
+        //       `;
+  
+        // const qrCodeBase64 = await QRCode.toDataURL(qrData);
+        // const qrCodeBuffer = Buffer.from(
+        //   qrCodeBase64.replace(/^data:image\/png;base64,/, ""),
+        //   "base64"
+        // );
+        // const qrcodeURL = await uploadFileToS3(
+        //   qrCodeBuffer,
+        //   `${officerData.empId}.png`,
+        //   "collectionofficer/QRcode"
+        // );
+        // console.log(qrcodeURL);
+  
+        // If no image URL, set it to null
+        const imageUrl = profileImageUrl || null; // Use null if profileImageUrl is not provided
+  
+        const sql = `
+                  INSERT INTO salesagent (
+                      firstName, lastName, empId, empType, phoneCode1, phoneNumber1, phoneCode2, phoneNumber2,
+                      nic, email, houseNumber, streetName, city, district, province, country,
+                      accHolderName, accNumber, bankName, branchName, status
+                  ) VALUES (
+                           ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,
+                           ?, ?, ?, ?, ?, ?, ?, ?, ?,?, 'Not Approved')
+              `;
+  
+        // Database query with QR image data added
+        dash.query(
+          sql,
+          [
+            
+            officerData.firstName,
+            officerData.lastName,
+            officerData.empId,
+            officerData.empType,
+            officerData.phoneCode1,
+            officerData.phoneNumber1,
+            officerData.phoneCode2,
+            officerData.phoneNumber2,
+            officerData.nic,
+            officerData.email,
+            officerData.houseNumber,
+            officerData.streetName,
+            officerData.city,
+            officerData.district,
+            officerData.province,
+            officerData.country,
+            officerData.accHolderName,
+            officerData.accNumber,
+            officerData.bankName,
+            officerData.branchName,
+            // imageUrl, 
+          ],
+          (err, results) => {
+            if (err) {
+              console.log(err);
+              return reject(err); // Reject promise if an error occurs
+            }
+            resolve(results); // Resolve the promise with the query results
+          }
+        );
+      } catch (error) {
+        reject(error); // Reject if any error occurs during QR code generation
+      }
+    });
+  };
 
 
-module.exports = { getAllCustomers, getAllSalesAgents, deleteSalesAgent };
+
+
+module.exports = { getAllCustomers, getAllSalesAgents, deleteSalesAgent, getForCreateId, checkNICExist, checkEmailExist, 
+    createSalesAgent };
 
 // Apply filters for company ID
     //   if (companyid) {

@@ -1,8 +1,28 @@
 const express = require("express");
-const authMiddleware = require("../middlewares/authMiddleware");
+
 const DashEp = require("../end-point/Dash-ep");
+
+const db = require("../startup/database");
+const CollectionOfficerEp = require("../end-point/CollectionOfficer-ep");
+const bodyParser = require("body-parser");
+const authMiddleware = require("../middlewares/authMiddleware");
+const multer = require("multer");
+const upload = require("../middlewares/uploadMiddleware");
+
 const path = require("path");
+
 const router = express.Router();
+
+const uploadfile = multer({
+  
+  fileFilter: function (req, file, callback) {
+    var ext = path.extname(file.originalname);
+    if (ext !== ".xlsx" && ext !== ".xls") {
+      return callback(new Error("Only Excel files are allowed"));
+    }
+    callback(null, true);
+  },
+});
 
 router.get(
     "/get-all-customers",
@@ -21,5 +41,18 @@ router.delete(
     authMiddleware, 
     DashEp.deleteSalesAgent
   );
+
+router.get(
+    "/get-last-sales-agent-id", 
+    authMiddleware, 
+    DashEp.getForCreateId
+  );
+
+router.post(
+    "/create-sales-agent",
+    authMiddleware,
+    upload.single("image"),
+    DashEp.createSalesAgent
+);
 
 module.exports = router;
