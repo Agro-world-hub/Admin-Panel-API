@@ -969,8 +969,10 @@ exports.editAdminUserWithoutId = async (req, res) => {
 
   try {
     // Validate the request body
-    const { id, mail, userName, role, position } =
-      await ValidateSchema.editAdminUserWithoutIdSchema.validateAsync(req.body);
+    // const { id, mail, userName, role, position } =
+    //   await ValidateSchema.editAdminUserWithoutIdSchema.validateAsync(req.body);
+
+    const { id, mail, userName, role, position } = req.body;
 
       console.log(id, mail, userName, role, position );
 

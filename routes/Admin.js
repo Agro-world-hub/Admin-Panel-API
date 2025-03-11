@@ -287,7 +287,7 @@ router.post(
 
 router.post(
   "/upload-user-xlsx",
-  authMiddleware,
+  // authMiddleware,
   uploadfile.single("file"),
   AdminEp.uploadUsersXLSX
 );
@@ -304,7 +304,7 @@ router.get(
 
 router.get(
   "/farmer-list-report/:id/:userId",
-  authMiddleware,
+  // authMiddleware,
   AdminEp.getFarmerListReport
 );
 

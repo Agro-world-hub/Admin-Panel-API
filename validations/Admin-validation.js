@@ -207,9 +207,6 @@ exports.editAdminUserWithoutIdSchema = Joi.object({
     }),
     role: Joi.number().required().messages({
         'any.required': 'Role is required'
-    }),
-    position: Joi.number().required().messages({
-        'any.required': 'Position is required'
     })
 });
 

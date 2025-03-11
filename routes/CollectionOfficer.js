@@ -50,14 +50,14 @@ router.get(
 
 router.get(
   "/collection-officer/district-report/:district",
-  authMiddleware,
+  // authMiddleware,
   CollectionOfficerEp.getCollectionOfficerDistrictReports
 );
 
 //province report
 router.get(
   "/collection-officer/province-report/:province",
-  authMiddleware,
+  // authMiddleware,
   CollectionOfficerEp.getCollectionOfficerProvinceReports
 );
 
@@ -101,7 +101,7 @@ router.get(
 // Define the new route to fetch daily data for a specific collection officer
 router.get(
   "/get-daily-report",
-  authMiddleware,
+  // authMiddleware,
   CollectionOfficerEp.getDailyReport
 );
 
