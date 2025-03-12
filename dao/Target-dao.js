@@ -1,32 +1,37 @@
-const {plantcare, collectionofficer, marketPlace, dash} = require('../startup/database')
+const {
+  plantcare,
+  collectionofficer,
+  marketPlace,
+  dash,
+} = require("../startup/database");
 
 // exports.getOfficerTargetDao = (userId, status, search) => {
 //     return new Promise((resolve, reject) => {
 //         let sql =
-//             `SELECT 
-//             ODT.id, 
-//             ODT.dailyTargetId, 
-//             ODT.varietyId, 
-//             CV.varietyNameEnglish, 
-//             CG.cropNameEnglish, 
-//             ODT.target, 
-//             ODT.grade, 
-//             ODT.complete, 
-//             DT.toDate, 
-//             DT.toTime, 
+//             `SELECT
+//             ODT.id,
+//             ODT.dailyTargetId,
+//             ODT.varietyId,
+//             CV.varietyNameEnglish,
+//             CG.cropNameEnglish,
+//             ODT.target,
+//             ODT.grade,
+//             ODT.complete,
+//             DT.toDate,
+//             DT.toTime,
 //             CO.empId,
-//             CASE 
+//             CASE
 //                 WHEN ODT.target > ODT.complete THEN 'Pending'
 //                 WHEN ODT.target < ODT.complete THEN 'Exceeded'
 //                 WHEN ODT.target = ODT.complete THEN 'Completed'
 //             END AS status,
-//             CASE 
+//             CASE
 //                 WHEN ODT.complete > ODT.target THEN 0.00
 //                 ELSE ODT.target - ODT.complete
 //             END AS remaining
-//         FROM dailytarget DT 
-//         JOIN officerdailytarget ODT ON ODT.dailyTargetId = DT.id 
-//         JOIN plant_care.cropvariety CV ON ODT.varietyId = CV.id 
+//         FROM dailytarget DT
+//         JOIN officerdailytarget ODT ON ODT.dailyTargetId = DT.id
+//         JOIN plant_care.cropvariety CV ON ODT.varietyId = CV.id
 //         JOIN plant_care.cropgroup CG ON CV.cropGroupId = CG.id
 //         JOIN collectionofficer CO ON ODT.officerId = CO.id
 //         WHERE CO.id = ?`;
@@ -36,7 +41,7 @@ const {plantcare, collectionofficer, marketPlace, dash} = require('../startup/da
 //         // Add the status condition if it is provided
 //         if (status) {
 //             sql += ` AND (
-//                 CASE 
+//                 CASE
 //                     WHEN ODT.target > ODT.complete THEN 'Pending'
 //                     WHEN ODT.target < ODT.complete THEN 'Exceeded'
 //                     WHEN ODT.target = ODT.complete THEN 'Completed'
@@ -64,10 +69,56 @@ const {plantcare, collectionofficer, marketPlace, dash} = require('../startup/da
 //     });
 // };
 
-exports.getOfficerTargetDao = (userId) => {
-    return new Promise((resolve, reject) => {
-        let sql =
-            `SELECT 
+// exports.getOfficerTargetDao = (userId) => {
+//     return new Promise((resolve, reject) => {
+//         let sql =
+//             `SELECT
+//             ODT.id,
+//             ODT.dailyTargetId,
+//             ODT.varietyId,
+//             CV.varietyNameEnglish,
+//             CG.cropNameEnglish,
+//             ODT.target,
+//             ODT.grade,
+//             ODT.complete,
+//             DT.toDate,
+//             DT.toTime,
+//             CO.empId,
+//             CASE
+//                 WHEN ODT.target > ODT.complete THEN 'Pending'
+//                 WHEN ODT.target < ODT.complete THEN 'Exceeded'
+//                 WHEN ODT.target = ODT.complete THEN 'Completed'
+//             END AS status,
+//             CASE
+//                 WHEN ODT.complete > ODT.target THEN 0.00
+//                 ELSE ODT.target - ODT.complete
+//             END AS remaining
+//         FROM dailytarget DT
+//         JOIN officerdailytarget ODT ON ODT.dailyTargetId = DT.id
+//         JOIN plant_care.cropvariety CV ON ODT.varietyId = CV.id
+//         JOIN plant_care.cropgroup CG ON CV.cropGroupId = CG.id
+//         JOIN collectionofficer CO ON ODT.officerId = CO.id
+//         WHERE CO.id = ?`;
+
+//         const params = [userId];
+
+//         console.log("Executing SQL:", sql);
+//         console.log("With Parameters:", params);
+
+//         collectionofficer.query(sql, params, (err, results) => {
+//             if (err) {
+//                 console.error("Error executing query:", err);
+//                 return reject(err);
+//             }
+//             console.log("Query Results:", results);
+//             resolve(results);
+//         });
+//     });
+// };
+
+exports.getOfficerTargetDao = (userId, searchQuery) => {
+  return new Promise((resolve, reject) => {
+    let sql = `SELECT 
             ODT.id, 
             ODT.dailyTargetId, 
             ODT.varietyId, 
@@ -95,18 +146,23 @@ exports.getOfficerTargetDao = (userId) => {
         JOIN collectionofficer CO ON ODT.officerId = CO.id
         WHERE CO.id = ?`;
 
-        const params = [userId];
+    let params = [userId];
 
-        console.log("Executing SQL:", sql);
-        console.log("With Parameters:", params);
+    if (searchQuery) {
+      sql += ` AND (CV.varietyNameEnglish LIKE ? OR CG.cropNameEnglish LIKE ? OR status LIKE ?)`;
+      params.push(`%${searchQuery}%`, `%${searchQuery}%`, `%${searchQuery}%`);
+    }
 
-        collectionofficer.query(sql, params, (err, results) => {
-            if (err) {
-                console.error("Error executing query:", err);
-                return reject(err);
-            }
-            console.log("Query Results:", results);
-            resolve(results);
-        });
+    console.log("Executing SQL:", sql);
+    console.log("With Parameters:", params);
+
+    collectionofficer.query(sql, params, (err, results) => {
+      if (err) {
+        console.error("Error executing query:", err);
+        return reject(err);
+      }
+      console.log("Query Results:", results);
+      resolve(results);
     });
+  });
 };
