@@ -1126,3 +1126,39 @@ exports.GetAllCompanyForOfficerComplain = async (req, res) => {
     res.status(500).json({ error: "An error occurred while complain categories" });
   }
 };
+
+
+
+exports.getAllCollectionCenterPageAW = async (req, res) => {
+  try {
+    const { page, limit, searchItem, companyId } =
+      await ValidateSchema.getAWCentersSchema.validateAsync(req.query);
+
+    const offset = (page - 1) * limit;
+
+    const { total, items } = await CollectionCenterDao.getAllCenterPageAW(
+      limit,
+      offset,
+      searchItem,
+      companyId
+    );
+
+    console.log(items);
+    
+
+    console.log(page);
+    console.log(limit);
+    console.log(searchItem);
+    res.json({
+      items,
+      total,
+    });
+  } catch (err) {
+    if (err.isJoi) {
+      // Validation error
+      return res.status(400).json({ error: err.details[0].message });
+    }
+    console.error("Error executing query:", err);
+    res.status(500).send("An error occurred while fetching data.");
+  }
+};

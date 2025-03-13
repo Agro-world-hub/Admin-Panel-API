@@ -193,5 +193,11 @@ router.get(
   CollectionCenterEp.GetAllCompanyForOfficerComplain
 );
 
+router.get(
+  "/get-all-centerpage-aw",
+  authMiddleware,
+  CollectionCenterEp.getAllCollectionCenterPageAW
+);
+
 
 module.exports = router;

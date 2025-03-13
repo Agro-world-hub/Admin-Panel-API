@@ -1491,3 +1491,89 @@ exports.GetAllCompanyForOfficerComplain= () => {
 };
 
 
+exports.getAllCenterPageAW = (limit, offset, searchItem, companyId) => {
+  return new Promise((resolve, reject) => {
+    let countSql = "SELECT COUNT(*) as total FROM collectioncenter C";
+    let sql = `
+      SELECT 
+          C.id,
+          C.regCode,
+          C.centerName,
+          C.code1,
+          C.contact01,
+          C.code2,
+          C.contact02,
+          C.buildingNumber,
+          C.street,
+          C.city,
+          C.district,
+          C.province,
+          C.country,
+          (
+              SELECT GROUP_CONCAT(
+                  CONCAT(COM.id, ':', COM.companyNameEnglish) SEPARATOR '; '
+              )
+              FROM company COM
+              JOIN companycenter CMC ON CMC.companyId = COM.id
+              WHERE CMC.centerId = C.id
+          ) AS companies
+      FROM collectioncenter C
+    `;
+
+    const searchParams = [];
+    const dataParams = [];
+    
+    // Add JOIN with companycenter when filtering by companyId
+    if (companyId) {
+      countSql += " JOIN companycenter CMC ON C.id = CMC.centerId WHERE CMC.companyId = ?";
+      sql += " JOIN companycenter CMC ON C.id = CMC.centerId WHERE CMC.companyId = ?";
+      searchParams.push(companyId);
+      
+      // If we also have a search term, use AND instead of WHERE
+      if (searchItem) {
+        const searchQuery = `%${searchItem}%`;
+        countSql += " AND (C.regCode LIKE ? OR C.centerName LIKE ?)";
+        sql += " AND (C.regCode LIKE ? OR C.centerName LIKE ?)";
+        searchParams.push(searchQuery, searchQuery);
+      }
+    } else if (searchItem) {
+      // Only searchItem, no companyId
+      const searchQuery = `%${searchItem}%`;
+      countSql += " WHERE C.regCode LIKE ? OR C.centerName LIKE ?";
+      sql += " WHERE C.regCode LIKE ? OR C.centerName LIKE ?";
+      searchParams.push(searchQuery, searchQuery);
+    }
+
+    sql += " GROUP BY C.id ORDER BY C.regCode ASC LIMIT ? OFFSET ?";
+    dataParams.push(...searchParams, limit, offset);
+
+    collectionofficer.query(countSql, searchParams, (countErr, countResults) => {
+      if (countErr) {
+        return reject(countErr);
+      }
+
+      const total = countResults[0].total;
+
+      collectionofficer.query(sql, dataParams, (dataErr, dataResults) => {
+        if (dataErr) {
+          return reject(dataErr);
+        }
+
+        const processedDataResults = dataResults.map((center) => ({
+          ...center,
+          companies: center.companies
+            ? center.companies.split("; ").map((company) => {
+                const [id, name] = company.split(":");
+                return { id: parseInt(id, 10), companyNameEnglish: name };
+              })
+            : []
+        }));
+
+        resolve({
+          total: total,
+          items: processedDataResults,
+        });
+      });
+    });
+  });
+};

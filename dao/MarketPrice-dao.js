@@ -80,7 +80,7 @@ exports.insertMarketPriceXLSXData = (xlindex, data) => {
       console.log("Market price data inserted successfully.");
 
       // Step 2: Fetch all collectionCenterId values
-      const fetchCentersSQL = `SELECT id FROM collectioncenter`;
+      const fetchCentersSQL = `SELECT id FROM companycenter`;
 
       collectionofficer.query(fetchCentersSQL, (err, collectionCenters) => {
         if (err) {
@@ -119,7 +119,7 @@ exports.insertMarketPriceXLSXData = (xlindex, data) => {
         // Step 3: Insert data into the marketpriceserve table
         const marketPriceServeSQL = `
           INSERT INTO marketpriceserve 
-          (marketPriceId, xlindex, price, updatedPrice, collectionCenterId) 
+          (marketPriceId, xlindex, price, updatedPrice, companyCenterId) 
           VALUES ?`;
 
           collectionofficer.query(marketPriceServeSQL, [marketPriceServeValues], (err, marketPriceServeResult) => {
@@ -141,6 +141,115 @@ exports.insertMarketPriceXLSXData = (xlindex, data) => {
   });
 };
 
+// exports.insertMarketPriceXLSXDataAAAAAA = (xlindex, data) => {
+//   return new Promise((resolve, reject) => {
+//     // Step 1: Insert data into the marketprice table
+//     const marketPriceSQL = `
+//       INSERT INTO marketprice 
+//       (varietyId, xlindex, grade, price) 
+//       VALUES ?`;
+
+//     const marketPriceValues = data.map((row) => [
+//       row["Variety Id"],
+//       xlindex,
+//       row["Grade"],
+//       row["Price"]
+//     ]);
+
+//     collectionofficer.query(marketPriceSQL, [marketPriceValues], (err, marketPriceResult) => {
+//       if (err) {
+//         return reject(err);
+//       }
+
+//       console.log("Market price data inserted successfully.");
+
+//       // Step 2: Fetch all collectionCenterId values and companyId values
+//       const fetchCentersSQL = `SELECT id FROM collectioncenter`;
+//       const fetchCompaniesSQL = `SELECT id FROM company`;
+
+//       // First get all collection centers
+//       collectionofficer.query(fetchCentersSQL, (err, collectionCenters) => {
+//         if (err) {
+//           return reject(err);
+//         }
+
+//         // Then get all companies
+//         collectionofficer.query(fetchCompaniesSQL, (err, companies) => {
+//           if (err) {
+//             return reject(err);
+//           }
+
+//           if (collectionCenters.length === 0) {
+//             return resolve({
+//               message: "No collection centers found. Only market price data inserted.",
+//               totalRows: data.length,
+//               insertedRows: marketPriceResult.affectedRows,
+//             });
+//           }
+
+//           const marketPriceIds = marketPriceResult.insertId; // Start ID of inserted rows
+//           const totalInsertedRows = marketPriceResult.affectedRows;
+
+//           // Generate rows for marketpriceserve
+//           const marketPriceServeValues = [];
+//           for (let i = 0; i < totalInsertedRows; i++) {
+//             const marketPriceId = marketPriceIds + i;
+//             const price = marketPriceValues[i][3]; // Fetch price from marketPriceValues
+//             const updatedPrice = marketPriceValues[i][3];
+
+//             // For each collection center
+//             collectionCenters.forEach((center) => {
+//               // For each company
+//               if (companies.length > 0) {
+//                 companies.forEach((company) => {
+//                   marketPriceServeValues.push([
+//                     marketPriceId,
+//                     xlindex,
+//                     price, // Use the price as newPrice
+//                     updatedPrice,
+//                     center.id,
+//                     company.id, // Add company ID to each record
+//                   ]);
+//                 });
+//               } else {
+//                 // If no companies found, still insert records with null companyId
+//                 marketPriceServeValues.push([
+//                   marketPriceId,
+//                   xlindex,
+//                   price,
+//                   updatedPrice,
+//                   center.id,
+//                   null, // No company ID available
+//                 ]);
+//               }
+//             });
+//           }
+
+//           // Step 3: Insert data into the marketpriceserve table (now with companyId)
+//           const marketPriceServeSQL = `
+//             INSERT INTO marketpriceserve 
+//             (marketPriceId, xlindex, price, updatedPrice, collectionCenterId, companyId) 
+//             VALUES ?`;
+
+//           collectionofficer.query(marketPriceServeSQL, [marketPriceServeValues], (err, marketPriceServeResult) => {
+//             if (err) {
+//               return reject(err);
+//             }
+
+//             console.log("Market price serve data inserted successfully.");
+
+//             resolve({
+//               message: "All data validated and inserted successfully",
+//               totalRows: data.length,
+//               insertedRows: marketPriceResult.affectedRows,
+//               serveInsertedRows: marketPriceServeResult.affectedRows,
+//             });
+//           });
+//         });
+//       });
+//     });
+//   });
+// };
 
 
   exports.getAllxlsxlist = (limit, offset) => {
