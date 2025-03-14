@@ -156,6 +156,8 @@ const getAllSalesAgents = (page, limit, searchText, status) => {
             dataSql += " WHERE " + whereConditions.join(" AND ");
         }
 
+        dataSql += " ORDER BY salesagent.createdAt DESC";
+
         // Add pagination at the end, so LIMIT and OFFSET are always numbers
         dataSql += " LIMIT ? OFFSET ?";
         dataParams.push(parseInt(limit), parseInt(offset)); // Ensure they are integers

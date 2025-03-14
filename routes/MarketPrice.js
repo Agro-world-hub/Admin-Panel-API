@@ -81,6 +81,14 @@ const getCropVarietyData = () => {
       });
     });
   };
+
+
+
+  router.get(
+    "/get-market-prices-agroworld",
+    authMiddleware,
+    MarketPriceEp.getAllMarketPriceAgro
+)
   
   // API to download the Excel file
   router.get('/download-crop-data', async (req, res) => {

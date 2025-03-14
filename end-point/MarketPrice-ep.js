@@ -242,3 +242,23 @@ exports.getAllCropName = async (req, res) => {
       return res.status(500).json({ error: "An error occurred while fetching collection officers" });
   }
 };
+
+
+
+exports.getAllMarketPriceAgro = async (req, res) => {
+  try {
+    const {crop, grade, search, centerId, companyId } = req.query;
+
+    // Calculate offset
+    // const offset = (page - 1) * limit;
+
+    // Fetch data from DAO
+    const { results, total } = await marketPriceDao.getAllMarketPriceAgroDAO(crop, grade, search, centerId, companyId);
+
+    console.log("Successfully fetched market prices for AgroWorld");
+    return res.status(200).json({ results, total });
+  } catch (error) {
+    console.error("Error fetching market prices:", error.message || error);
+    return res.status(500).json({ error: "An error occurred while fetching market prices" });
+  }
+};

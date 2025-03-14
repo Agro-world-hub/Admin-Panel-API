@@ -22,41 +22,6 @@ exports.createxlhistory = (xlName) => {
 
 
 
-
-
-// exports.insertMarketPriceXLSXData = (xlindex, data, createdBy) => {
-//   return new Promise((resolve, reject) => {
-
-    
-//       const sql = `
-//         INSERT INTO marketprice 
-//         (varietyId , xlindex, grade, price, createdBy) 
-//         VALUES ?`;
-  
-//       const values = data.map((row) => [
-//         row["Variety Id"],
-//         xlindex,
-//         row["Grade"],
-//         row["Price"],
-//         createdBy
-//       ]);
-  
-//       db.query(sql, [values], (err, result) => {
-//         if (err) {
-//           reject(err);
-//           console.log('ttttt');
-//         } else {
-//           console.log('xxx');
-//           resolve({
-//             message: "All data validated and inserted successfully",
-//             totalRows: data.length,
-//             insertedRows: result.affectedRows
-//           });
-//         }
-//       });
-//     });
-//   };
-
 exports.insertMarketPriceXLSXData = (xlindex, data) => {
   return new Promise((resolve, reject) => {
     // Step 1: Insert data into the marketprice table
@@ -141,115 +106,7 @@ exports.insertMarketPriceXLSXData = (xlindex, data) => {
   });
 };
 
-// exports.insertMarketPriceXLSXDataAAAAAA = (xlindex, data) => {
-//   return new Promise((resolve, reject) => {
-//     // Step 1: Insert data into the marketprice table
-//     const marketPriceSQL = `
-//       INSERT INTO marketprice 
-//       (varietyId, xlindex, grade, price) 
-//       VALUES ?`;
 
-//     const marketPriceValues = data.map((row) => [
-//       row["Variety Id"],
-//       xlindex,
-//       row["Grade"],
-//       row["Price"]
-//     ]);
-
-//     collectionofficer.query(marketPriceSQL, [marketPriceValues], (err, marketPriceResult) => {
-//       if (err) {
-//         return reject(err);
-//       }
-
-//       console.log("Market price data inserted successfully.");
-
-//       // Step 2: Fetch all collectionCenterId values and companyId values
-//       const fetchCentersSQL = `SELECT id FROM collectioncenter`;
-//       const fetchCompaniesSQL = `SELECT id FROM company`;
-
-//       // First get all collection centers
-//       collectionofficer.query(fetchCentersSQL, (err, collectionCenters) => {
-//         if (err) {
-//           return reject(err);
-//         }
-
-//         // Then get all companies
-//         collectionofficer.query(fetchCompaniesSQL, (err, companies) => {
-//           if (err) {
-//             return reject(err);
-//           }
-
-//           if (collectionCenters.length === 0) {
-//             return resolve({
-//               message: "No collection centers found. Only market price data inserted.",
-//               totalRows: data.length,
-//               insertedRows: marketPriceResult.affectedRows,
-//             });
-//           }
-
-//           const marketPriceIds = marketPriceResult.insertId; // Start ID of inserted rows
-//           const totalInsertedRows = marketPriceResult.affectedRows;
-
-//           // Generate rows for marketpriceserve
-//           const marketPriceServeValues = [];
-//           for (let i = 0; i < totalInsertedRows; i++) {
-//             const marketPriceId = marketPriceIds + i;
-//             const price = marketPriceValues[i][3]; // Fetch price from marketPriceValues
-//             const updatedPrice = marketPriceValues[i][3];
-
-//             // For each collection center
-//             collectionCenters.forEach((center) => {
-//               // For each company
-//               if (companies.length > 0) {
-//                 companies.forEach((company) => {
-//                   marketPriceServeValues.push([
-//                     marketPriceId,
-//                     xlindex,
-//                     price, // Use the price as newPrice
-//                     updatedPrice,
-//                     center.id,
-//                     company.id, // Add company ID to each record
-//                   ]);
-//                 });
-//               } else {
-//                 // If no companies found, still insert records with null companyId
-//                 marketPriceServeValues.push([
-//                   marketPriceId,
-//                   xlindex,
-//                   price,
-//                   updatedPrice,
-//                   center.id,
-//                   null, // No company ID available
-//                 ]);
-//               }
-//             });
-//           }
-
-//           // Step 3: Insert data into the marketpriceserve table (now with companyId)
-//           const marketPriceServeSQL = `
-//             INSERT INTO marketpriceserve 
-//             (marketPriceId, xlindex, price, updatedPrice, collectionCenterId, companyId) 
-//             VALUES ?`;
-
-//           collectionofficer.query(marketPriceServeSQL, [marketPriceServeValues], (err, marketPriceServeResult) => {
-//             if (err) {
-//               return reject(err);
-//             }
-
-//             console.log("Market price serve data inserted successfully.");
-
-//             resolve({
-//               message: "All data validated and inserted successfully",
-//               totalRows: data.length,
-//               insertedRows: marketPriceResult.affectedRows,
-//               serveInsertedRows: marketPriceServeResult.affectedRows,
-//             });
-//           });
-//         });
-//       });
-//     });
-//   });
-// };
 
 
   exports.getAllxlsxlist = (limit, offset) => {
@@ -315,56 +172,7 @@ exports.getXLSXFilePath = async (fileName) => {
 };
 
 
-// exports.getAllMarketPriceDAO = (limit, offset, crop, grade) => {
-//   return new Promise((resolve, reject) => {
-//     const params = [];
-//     const countParams = [];
-    
-//     let countSql = "SELECT COUNT(*) as total FROM marketprice m, cropCalender c WHERE m.cropId = c.id";
-//     let sql = `
-//       SELECT m.id, c.cropName, c.variety, m.grade, m.price, m.date, m.startTime, m.endTime
-//       FROM marketprice m, cropCalender c
-//       WHERE m.cropId = c.id
-//     `;
 
-//     if (crop) {
-//       sql += " AND c.cropName = ?";
-//       countSql += " AND c.cropName = ?";
-//       params.push(crop);
-//       countParams.push(crop);
-//     }
-
-//     if (grade) {
-//       sql += " AND m.grade = ?";
-//       countSql += " AND m.grade = ?";
-//       params.push(grade);
-//       countParams.push(grade);
-//     }
-
-//     sql += ` ORDER BY c.cropName, m.grade LIMIT ? OFFSET ?`;
-//     params.push(parseInt(limit));
-//     params.push(parseInt(offset));
-
-//     console.log(sql, params);
-
-//     db.query(countSql, countParams, (countErr, countResults) => {
-//       if (countErr) {
-//         reject(countErr);
-//       } else {
-//         db.query(sql, params, (dataErr, dataResults) => {
-//           if (dataErr) {
-//             reject(dataErr);
-//           } else {
-//             resolve({
-//               results: dataResults,
-//               total: countResults[0].total
-//             });
-//           }
-//         });
-//       }
-//     });
-//   });
-// };
 
 
 exports.getAllMarketPriceDAO = (crop, grade, search) => {
@@ -487,6 +295,120 @@ collectionofficer.query(countSql, (countErr, countResults) => {
       
       
       }
+    });
+  });
+};
+
+
+
+
+
+
+exports.getAllMarketPriceAgroDAO = (crop, grade, search, centerId, companyId) => {
+  return new Promise((resolve, reject) => {
+    const params = [];
+    const countParams = [];
+    console.log(centerId, companyId);
+    // First, get the companyCenterId based on centerId and companyId
+    let companyCenterSql = `
+      SELECT id 
+      FROM companycenter 
+      WHERE centerId = ? AND companyId = ?
+    `;
+
+    collectionofficer.query(companyCenterSql, [centerId, companyId], (ccErr, ccResults) => {
+      if (ccErr) {
+        console.error("CompanyCenter Query Error:", ccErr.message || ccErr);
+        return reject(ccErr);
+      }
+
+      if (!ccResults || ccResults.length === 0) {
+        return resolve({
+          results: [],
+          total: 0,
+          message: "No company center found for the provided centerId and companyId"
+        });
+      }
+
+      const companyCenterId = ccResults[0].id;
+      console.log('this is the selelcted companycenter ID',companyCenterId);
+
+      // Now build the main queries using the companyCenterId
+      let countSql = `
+        SELECT COUNT(*) as total
+        FROM marketpriceserve ms
+        JOIN marketprice m ON ms.marketPriceId = m.id
+        JOIN plant_care.cropvariety cv ON m.varietyId = cv.id
+        JOIN plant_care.cropgroup cg ON cv.cropGroupId = cg.id
+        WHERE ms.companyCenterId = ?
+      `;
+      
+      let sql = `
+        SELECT 
+          m.id,
+          cg.cropNameEnglish AS cropName,
+          cv.varietyNameEnglish AS varietyName,
+          m.grade,
+          ms.price,
+          ms.updatedPrice,
+          ms.updateAt,
+          m.createdAt
+        FROM marketpriceserve ms
+        JOIN marketprice m ON ms.marketPriceId = m.id
+        JOIN plant_care.cropvariety cv ON m.varietyId = cv.id
+        JOIN plant_care.cropgroup cg ON cv.cropGroupId = cg.id
+        WHERE ms.companyCenterId = ?
+      `;
+
+      // Add companyCenterId as the first parameter
+      params.push(companyCenterId);
+      countParams.push(companyCenterId);
+
+      // Add filters if crop or grade is provided
+      if (crop) {
+        sql += " AND cg.id = ?";
+        countSql += " AND cg.id = ?";
+        params.push(crop);
+        countParams.push(crop);
+      }
+
+      if (grade) {
+        sql += " AND m.grade = ?";
+        countSql += " AND m.grade = ?";
+        params.push(grade);
+        countParams.push(grade);
+      }
+
+      if (search) {
+        sql += " AND cg.cropNameEnglish LIKE ?";
+        countSql += " AND cg.cropNameEnglish LIKE ?";
+        const searchQuery = `%${search}%`;
+        params.push(searchQuery);
+        countParams.push(searchQuery);
+      }
+
+      sql += ` ORDER BY cg.cropNameEnglish, cv.varietyNameEnglish, m.grade`;
+
+      // Execute the count query
+      collectionofficer.query(countSql, countParams, (countErr, countResults) => {
+        if (countErr) {
+          console.error("Count Query Error:", countErr.message || countErr);
+          return reject(countErr);
+        }
+
+        // Execute the main query
+        collectionofficer.query(sql, params, (dataErr, dataResults) => {
+          if (dataErr) {
+            console.error("Data Query Error:", dataErr.message || dataErr);
+            return reject(dataErr);
+          }
+
+          resolve({
+            results: dataResults,
+            total: countResults[0].total,
+          });
+        });
+      });
     });
   });
 };
