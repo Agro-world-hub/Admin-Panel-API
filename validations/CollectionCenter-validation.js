@@ -30,3 +30,11 @@ exports.getRoleShema = Joi.object({
 exports.deleteCompanyHeadSchema = Joi.object({
     id: Joi.number().integer().positive().required()
 });
+
+
+exports.getAWCentersSchema = Joi.object({
+    page: Joi.number().integer().min(1).default(1),
+    limit: Joi.number().integer().min(1).max(100).default(10),
+    searchItem: Joi.string().allow(''),
+    companyId: Joi.number().integer().min(1).default(1),
+});
