@@ -131,4 +131,16 @@ router.put(
   CollectionOfficerEp.updateCenterHeadDetails
 );
 
+router.get(
+  "/collection-officer/get-all-center-names",
+  authMiddleware,
+  CollectionOfficerEp.getAllCenterNames
+);
+
+router.get(
+  "/collection-officer/get-all-collection-manager-names",
+  authMiddleware,
+  CollectionOfficerEp.getAllCollectionManagerNames
+);
+
 module.exports = router;

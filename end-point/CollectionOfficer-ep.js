@@ -926,3 +926,43 @@ exports.updateCenterHeadDetails = async (req, res) => {
       .json({ error: "Failed to update collection officer details" });
   }
 };
+
+exports.getAllCenterNames = async (req, res) => {
+  const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
+  console.log(fullUrl);
+  try {
+    const results = await collectionofficerDao.getAllCenterNamesDao();
+
+    console.log("Successfully retrieved reports");
+    res.status(200).json(results);
+  } catch (error) {
+    if (error.isJoi) {
+      return res.status(400).json({ error: error.details[0].message });
+    }
+
+    console.error("Error retrieving", error);
+    return res
+      .status(500)
+      .json({ error: "An error occurred while fetching" });
+  }
+};
+
+exports.getAllCollectionManagerNames = async (req, res) => {
+  const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
+  console.log(fullUrl);
+  try {
+    const results = await collectionofficerDao.getAllCenterManagerDao();
+
+    console.log("Successfully retrieved reports");
+    res.status(200).json(results);
+  } catch (error) {
+    if (error.isJoi) {
+      return res.status(400).json({ error: error.details[0].message });
+    }
+
+    console.error("Error retrieving district reports:", error);
+    return res
+      .status(500)
+      .json({ error: "An error occurred while fetching the reports" });
+  }
+};
