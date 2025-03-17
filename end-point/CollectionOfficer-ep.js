@@ -966,3 +966,30 @@ exports.getAllCollectionManagerNames = async (req, res) => {
       .json({ error: "An error occurred while fetching the reports" });
   }
 };
+
+exports.claimOfficer = async (req, res) => {
+  try {
+    const { id } = req.params; // Officer ID from URL params
+    const { centerId, irmId } = req.body; // Center ID and IRM ID from request body
+
+    // Validate required fields
+    if (!centerId) {
+      return res.status(400).json({ error: "centerId is required" });
+    }
+
+    // Call the DAO function to update the officer's details
+    const result = await collectionofficerDao.claimOfficerDetailsDao(
+      id,
+      centerId,
+      irmId
+    );
+
+    // Send success response
+    res.json({ message: "Collection officer details updated successfully" });
+  } catch (err) {
+    console.error("Error updating collection officer details:", err);
+    res
+      .status(500)
+      .json({ error: "Failed to update collection officer details" });
+  }
+};

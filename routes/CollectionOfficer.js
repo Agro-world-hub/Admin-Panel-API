@@ -11,7 +11,7 @@ const path = require("path");
 const router = express.Router();
 
 const uploadfile = multer({
-  
+
   fileFilter: function (req, file, callback) {
     var ext = path.extname(file.originalname);
     if (ext !== ".xlsx" && ext !== ".xls") {
@@ -116,6 +116,12 @@ router.put(
   authMiddleware,
   CollectionOfficerEp.disclaimOfficer
 );
+
+router.put(
+  "/claim-officer/:id",
+  authMiddleware,
+  CollectionOfficerEp.claimOfficer
+)
 
 router.post(
   "/collection-officer/create-center-head",

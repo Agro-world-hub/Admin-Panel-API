@@ -1517,3 +1517,19 @@ exports.getAllCenterManagerDao = () => {
     });
   });
 };
+
+exports.claimOfficerDetailsDao = (id, centerId, irmId) => {
+  return new Promise((resolve, reject) => {
+    const sql = `
+      UPDATE collectionofficer
+      SET centerId = ?, irmId = ?, claimStatus = 1
+      WHERE id = ?
+    `;
+    collectionofficer.query(sql, [centerId, irmId, id], (err, results) => {
+      if (err) {
+        return reject(err);
+      }
+      resolve(results);
+    });
+  });
+};
