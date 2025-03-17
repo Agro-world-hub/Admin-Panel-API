@@ -166,14 +166,15 @@ exports.getAllCollectionOfficers = async (req, res) => {
         req.query
       );
 
-    const { page, limit, nic, company } = validatedQuery;
+    const { page, limit, nic, company, role } = validatedQuery;
 
     // Call the DAO to get all collection officers
     const result = await collectionofficerDao.getAllCollectionOfficers(
       page,
       limit,
       nic,
-      company
+      company,
+      role
     );
 
     console.log("Successfully fetched collection officers");

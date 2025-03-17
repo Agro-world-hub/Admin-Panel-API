@@ -361,7 +361,7 @@ exports.getQrImage = (id) => {
 //   });
 // };
 
-exports.getAllCollectionOfficers = (page, limit, searchNIC, companyid) => {
+exports.getAllCollectionOfficers = (page, limit, searchNIC, companyid, role) => {
   return new Promise((resolve, reject) => {
     const offset = (page - 1) * limit;
 
@@ -403,6 +403,13 @@ exports.getAllCollectionOfficers = (page, limit, searchNIC, companyid) => {
       dataSql += " AND cm.id = ?";
       countParams.push(companyid);
       dataParams.push(companyid);
+    }
+
+    if (role) {
+      countSql += " AND coff.jobRole = ?";
+      dataSql += " AND coff.jobRole = ?";
+      countParams.push(role);
+      dataParams.push(role);
     }
 
     // Apply search filters for NIC or related fields
