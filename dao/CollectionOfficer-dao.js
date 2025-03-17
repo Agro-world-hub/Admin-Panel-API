@@ -1477,3 +1477,66 @@ exports.updateCenterHeadDetails = (
     });
   });
 };
+
+exports.getAllCenterNamesDao = (district) => {
+  return new Promise((resolve, reject) => {
+    const sql = `
+            SELECT id, centerName
+            FROM collectioncenter
+        `;
+    collectionofficer.query(sql, [district], (err, results) => {
+      if (err) {
+        return reject(err); // Reject promise if an error occurs
+      }
+      resolve(results); // Resolve the promise with the query results
+    });
+  });
+};
+
+exports.getAllCenterManagerDao = () => {
+  return new Promise((resolve, reject) => {
+    const sql = `
+            SELECT id, centerName
+            FROM collectioncenter
+        `;
+    collectionofficer.query(sql, (err, results) => {
+      if (err) {
+        return reject(err); // Reject promise if an error occurs
+      }
+      resolve(results); // Resolve the promise with the query results
+    });
+  });
+};
+
+exports.getAllCenterManagerDao = () => {
+  return new Promise((resolve, reject) => {
+    const sql = `
+      SELECT id, firstNameEnglish, lastNameEnglish
+      FROM collectionofficer
+      WHERE jobRole = 'Collection Center Manager';
+    `;
+    
+    collectionofficer.query(sql, (err, results) => {
+      if (err) {
+        return reject(err); // Reject promise if an error occurs
+      }
+      resolve(results); // Resolve the promise with the query results
+    });
+  });
+};
+
+exports.claimOfficerDetailsDao = (id, centerId, irmId) => {
+  return new Promise((resolve, reject) => {
+    const sql = `
+      UPDATE collectionofficer
+      SET centerId = ?, irmId = ?, claimStatus = 1
+      WHERE id = ?
+    `;
+    collectionofficer.query(sql, [centerId, irmId, id], (err, results) => {
+      if (err) {
+        return reject(err);
+      }
+      resolve(results);
+    });
+  });
+};
