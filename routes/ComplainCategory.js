@@ -71,9 +71,19 @@ router.patch(
     "/edit-complaint-category",
     authMiddleware,
     ComplainCategoryEP.EditComplaintCategory
-)
+);
 
+router.get(
+    "/get-all-sales-agent-complains",
+    authMiddleware,
+    ComplainCategoryEP.getAllSalesAgentComplains
+  );
 
+  router.get(
+    "/get-complain-by-id/:id",
+    authMiddleware,
+    ComplainCategoryEP.getComplainById
+  );
 
 
 

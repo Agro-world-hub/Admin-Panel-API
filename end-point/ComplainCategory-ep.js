@@ -6,6 +6,7 @@ const path = require("path");
 const xlsx = require("xlsx");
 const { log } = require("console");
 const ComplainCategoryDAO = require("../dao/ComplainCategory-dao");
+const DashDAO = require("../dao/Dash-dao");
 const ValidateSchema = require("../validations/Admin-validation");
 const { type } = require("os");
 const bcrypt = require("bcryptjs");
@@ -220,5 +221,63 @@ exports.EditComplaintCategory = async (req, res) => {
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: 'Internal server error' });
+  }
+};
+
+
+exports.getAllSalesAgentComplains = async (req, res) => {
+  try {
+    console.log(req.query);
+    const { page, limit, status, category, comCategory, searchText } = req.query;
+
+
+    const { results, total } = await DashDAO.GetAllSalesAgentComplainDAO(
+      page,
+      limit,
+      status,
+      category,
+      comCategory,
+      searchText
+    );
+
+    console.log("Successfully retrieved all collection center");
+    res.json({ results, total });
+  } catch (err) {
+    if (err.isJoi) {
+      // Validation error
+      console.error("Validation error:", err.details[0].message);
+      return res.status(400).json({ error: err.details[0].message });
+    }
+
+    console.error("Error fetching news:", err);
+    res.status(500).json({ error: "An error occurred while fetching news" });
+  }
+};
+
+
+exports.getComplainById = async (req, res) => {
+  try {
+    const id = req.params.id;
+
+    const result = await DashDAO.getComplainById(id);
+    console.log(result[0]);
+
+    if (result.length === 0) {
+      return res
+        .status(404)
+        .json({ message: "No Complain foundd", data: result[0] });
+    }
+
+    console.log("Successfully retrieved Farmer Complain");
+    res.json(result[0]);
+  } catch (err) {
+    if (err.isJoi) {
+      // Validation error
+      console.error("Validation error:", err.details[0].message);
+      return res.status(400).json({ error: err.details[0].message });
+    }
+
+    console.error("Error fetching news:", err);
+    res.status(500).json({ error: "An error occurred while fetching news" });
   }
 };
