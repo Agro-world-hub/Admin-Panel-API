@@ -281,3 +281,38 @@ exports.getComplainById = async (req, res) => {
     res.status(500).json({ error: "An error occurred while fetching news" });
   }
 };
+
+
+exports.sendComplainReply = async (req, res) => {
+  try {
+    const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
+    console.log(fullUrl);
+
+    const complaignId = req.params.id;
+
+    const reply = req.body.reply;
+    console.log("Collection Centr", complaignId, reply);
+
+    if (reply == null) {
+      return res.status(401).json({ error: "Reply can not be empty" });
+    }
+
+    const result = await DashDAO.sendComplainReply(
+      complaignId,
+      reply
+    );
+
+    console.log("Send Reply Success");
+    return res.status(201).json({ result: result, status: true });
+  } catch (err) {
+    if (err.isJoi) {
+      return res
+        .status(400)
+        .json({ error: err.details[0].message, status: false });
+    }
+    console.error("Error executing query:", err);
+    return res
+      .status(500)
+      .json({ error: "An error occurred while creating Reply tasks" });
+  }
+};

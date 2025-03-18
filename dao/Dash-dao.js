@@ -741,9 +741,52 @@ const getComplainById = (id) => {
 };
 
 
+const sendComplainReply = (complainId, reply) => {
+  return new Promise((resolve, reject) => {
+    // Input validation
+    if (!complainId) {
+      return reject(new Error("Complain ID is required"));
+    }
+
+    if (reply === undefined || reply === null || reply.trim() === "") {
+      return reject(new Error("Reply cannot be empty"));
+    }
+
+    const sql = `
+      UPDATE dashcomplain
+      SET reply = ?, status = ?
+      WHERE id = ?
+    `;
+
+    const status = "Assigned";
+    // const adminStatus = "Closed";
+    const values = [reply, status, complainId];
+
+    dash.query(sql, values, (err, results) => {
+      if (err) {
+        console.error("Database error details:", err);
+        return reject(err);
+      }
+
+      if (results.affectedRows === 0) {
+        console.warn(`No record found with id: ${complainId}`);
+        return reject(new Error(`No record found with id: ${complainId}`));
+      }
+
+      console.log("Update successful:", results);
+      resolve({
+        message: "Reply sent successfully",
+        affectedRows: results.affectedRows,
+      });
+    });
+  });
+};
+
+
 module.exports = {
   getAllCustomers, getAllSalesAgents, deleteSalesAgent, getForCreateId, checkNICExist, checkEmailExist,
   createSalesAgent, getSalesAgentDataById, updateSalesAgentDetails, SendGeneratedPasswordDao,
-  UpdateSalesAgentStatusAndPasswordDao, getSalesAgentEmailDao, GetAllSalesAgentComplainDAO, getComplainById
+  UpdateSalesAgentStatusAndPasswordDao, getSalesAgentEmailDao, GetAllSalesAgentComplainDAO, getComplainById,
+  sendComplainReply
 };
 

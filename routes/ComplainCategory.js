@@ -85,6 +85,12 @@ router.get(
     ComplainCategoryEP.getComplainById
   );
 
+  router.put(
+    "/reply-complain/:id/",
+    authMiddleware,
+    ComplainCategoryEP.sendComplainReply
+  );
+
 
 
 module.exports = router;
