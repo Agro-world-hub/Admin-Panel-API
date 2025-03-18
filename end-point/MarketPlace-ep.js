@@ -1,4 +1,5 @@
-const MarketPlaceDao = require('../dao/MarketPlace-dao')
+const MarketPlaceDao = require('../dao/MarketPlace-dao');
+const uploadFileToS3 = require('../middlewares/s3upload');
 const MarketPriceValidate = require('../validations/MarketPlace-validation');
 
 
@@ -29,12 +30,17 @@ exports.createMarketProduct = async (req, res) => {
     const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
     console.log("Request URL:", fullUrl);
     // const product = await MarketPriceValidate.AddProductValidation.validateAsync(req.body)
+    console.log(req.body);
 
-    const result = await MarketPlaceDao.createCropGroup(req.body)
+    const result = await MarketPlaceDao.createMarketProductDao(req.body)
     console.log(result);
+    if (result.affectedRows === 0) {
+      return res
+        .json({ message: "marcket product created faild", result: result, status: false })
+    }
 
     console.log("marcket product creation success");
-    return res
+    res
       .status(201)
       .json({ message: "marcket product created successfully", result: result, status: true });
   } catch (err) {
@@ -238,26 +244,59 @@ exports.createPackage = async (req, res) => {
   try {
     const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
     console.log("Request URL:", fullUrl);
-    console.log(req.body);
-    const package = req.body
+    // console.log(req.body);
+
+    const package = JSON.parse(req.body.package)
+    console.log(package);
+
+    let profileImageUrl = null; // Default to null if no image is provided
+
+    if (req.body.file) {
+      try {
+        const base64String = req.body.file.split(",")[1]; // Extract the Base64 content
+        const mimeType = req.body.file.match(/data:(.*?);base64,/)[1]; // Extract MIME type
+        const fileBuffer = Buffer.from(base64String, "base64"); // Decode Base64 to buffer
+
+        const fileExtension = mimeType.split("/")[1]; // Extract file extension from MIME type
+        const fileName = `${package.displayName}.${fileExtension}`;
+
+        // Upload image to S3
+        profileImageUrl = await uploadFileToS3(
+          fileBuffer,
+          fileName,
+          "marketplacepackages/image"
+        );
+      } catch (err) {
+        console.error("Error processing image file:", err);
+        return res
+          .status(400)
+          .json({ error: "Invalid file format or file upload error" });
+      }
+    }
+
+    console.log(profileImageUrl);
+
 
     // const coupen = await MarketPriceValidate.CreateCoupenValidation.validateAsync(req.body)
-    // console.log(coupen);
-    // const result = await MarketPlaceDao.createCoupenDAO(coupen)
 
-    const packageResult = await MarketPlaceDao.creatPackageDAO(package)
+    const packageResult = await MarketPlaceDao.creatPackageDAO(package, profileImageUrl)
+    if (packageResult > 0) {
+      return res
+        .status(201)
+        .json({ message: "Package created Faild!", status: true });
+
+    }
     console.log(packageResult);
     for (let i = 0; i < package.Items.length; i++) {
       console.log(i);
       await MarketPlaceDao.creatPackageDetailsDAO(package.Items[i], packageResult);
     }
 
-
-
     console.log("coupen creation success");
+    // result: packageResult,
     return res
       .status(201)
-      .json({ message: "coupen created successfully", result: packageResult, status: true });
+      .json({ message: "Package created successfully", status: true });
   } catch (err) {
     if (err.isJoi) {
       // Validation error
@@ -299,13 +338,14 @@ exports.editMarketProduct = async (req, res) => {
     console.log("Request URL:", fullUrl);
     // const product = await MarketPriceValidate.AddProductValidation.validateAsync(req.body)
     const { id } = await MarketPriceValidate.IdparamsSchema.validateAsync(req.params);
+    console.log(req.body);
+
 
     const result = await MarketPlaceDao.updateMarketProductDao(req.body, id)
     console.log(result);
     if (result.affectedRows === 0) {
       return res
-        .json({ message: "marcket product update unsuccessfully", result: result, status: fals });
-
+        .json({ message: "marcket product update unsuccessfully", result: result, status: false });
     }
 
     console.log("marcket product creation success");
