@@ -209,11 +209,11 @@ const getForCreateId = (role) => {
         }
   
         if (results.length > 0) {
-          const numericPart = parseInt(results[0].empId.substring(3), 10);
+          const numericPart = parseInt(results[0].empId.substring(4), 10);
   
           const incrementedValue = numericPart + 1;
   
-          results[0].empId = incrementedValue.toString().padStart(4, "0");
+          results[0].empId = incrementedValue.toString().padStart(5, "0");
           console.log(results[0].empId);
         }
   
