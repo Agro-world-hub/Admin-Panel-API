@@ -6,6 +6,7 @@ const path = require("path");
 const xlsx = require("xlsx");
 const { log } = require("console");
 const ComplainCategoryDAO = require("../dao/ComplainCategory-dao");
+const DashDAO = require("../dao/Dash-dao");
 const ValidateSchema = require("../validations/Admin-validation");
 const { type } = require("os");
 const bcrypt = require("bcryptjs");
@@ -220,5 +221,98 @@ exports.EditComplaintCategory = async (req, res) => {
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: 'Internal server error' });
+  }
+};
+
+
+exports.getAllSalesAgentComplains = async (req, res) => {
+  try {
+    console.log(req.query);
+    const { page, limit, status, category, comCategory, searchText } = req.query;
+
+
+    const { results, total } = await DashDAO.GetAllSalesAgentComplainDAO(
+      page,
+      limit,
+      status,
+      category,
+      comCategory,
+      searchText
+    );
+
+    console.log("Successfully retrieved all collection center");
+    res.json({ results, total });
+  } catch (err) {
+    if (err.isJoi) {
+      // Validation error
+      console.error("Validation error:", err.details[0].message);
+      return res.status(400).json({ error: err.details[0].message });
+    }
+
+    console.error("Error fetching news:", err);
+    res.status(500).json({ error: "An error occurred while fetching news" });
+  }
+};
+
+
+exports.getComplainById = async (req, res) => {
+  try {
+    const id = req.params.id;
+
+    const result = await DashDAO.getComplainById(id);
+    console.log(result[0]);
+
+    if (result.length === 0) {
+      return res
+        .status(404)
+        .json({ message: "No Complain foundd", data: result[0] });
+    }
+
+    console.log("Successfully retrieved Farmer Complain");
+    res.json(result[0]);
+  } catch (err) {
+    if (err.isJoi) {
+      // Validation error
+      console.error("Validation error:", err.details[0].message);
+      return res.status(400).json({ error: err.details[0].message });
+    }
+
+    console.error("Error fetching news:", err);
+    res.status(500).json({ error: "An error occurred while fetching news" });
+  }
+};
+
+
+exports.sendComplainReply = async (req, res) => {
+  try {
+    const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
+    console.log(fullUrl);
+
+    const complaignId = req.params.id;
+
+    const reply = req.body.reply;
+    console.log("Collection Centr", complaignId, reply);
+
+    if (reply == null) {
+      return res.status(401).json({ error: "Reply can not be empty" });
+    }
+
+    const result = await DashDAO.sendComplainReply(
+      complaignId,
+      reply
+    );
+
+    console.log("Send Reply Success");
+    return res.status(201).json({ result: result, status: true });
+  } catch (err) {
+    if (err.isJoi) {
+      return res
+        .status(400)
+        .json({ error: err.details[0].message, status: false });
+    }
+    console.error("Error executing query:", err);
+    return res
+      .status(500)
+      .json({ error: "An error occurred while creating Reply tasks" });
   }
 };

@@ -1,9 +1,9 @@
 const {
-    admin,
-    plantcare,
-    collectionofficer,
-    marketPlace,
-    dash,
+  admin,
+  plantcare,
+  collectionofficer,
+  marketPlace,
+  dash,
 } = require("../startup/database");
 
 const QRCode = require("qrcode");
@@ -89,26 +89,26 @@ const getAllCustomersQuery = () => `
 
 // Function to execute the query and fetch customer data
 const getAllCustomers = () => {
-    return new Promise((resolve, reject) => {
-        dash.query(getAllCustomersQuery(), (err, results) => {
-            if (err) {
-                return reject(err);
-            }
-            resolve(results);
-        });
+  return new Promise((resolve, reject) => {
+    dash.query(getAllCustomersQuery(), (err, results) => {
+      if (err) {
+        return reject(err);
+      }
+      resolve(results);
     });
+  });
 };
 
 const getAllSalesAgents = (page, limit, searchText, status) => {
-    return new Promise((resolve, reject) => {
-        const offset = (page - 1) * limit;
+  return new Promise((resolve, reject) => {
+    const offset = (page - 1) * limit;
 
-        let countSql = `
+    let countSql = `
             SELECT COUNT(*) as total
             FROM salesagent
         `;
 
-        let dataSql = `
+    let dataSql = `
             SELECT
                 salesagent.id,
                 salesagent.empId,
@@ -121,13 +121,13 @@ const getAllSalesAgents = (page, limit, searchText, status) => {
             FROM salesagent
         `;
 
-        const countParams = [];
-        const dataParams = [];
+    const countParams = [];
+    const dataParams = [];
 
-        let whereConditions = []; // Store WHERE conditions
+    let whereConditions = []; // Store WHERE conditions
 
-        if (searchText) {
-            whereConditions.push(`
+    if (searchText) {
+      whereConditions.push(`
                 (
                     salesagent.nic LIKE ?
                     OR salesagent.firstName LIKE ?
@@ -139,16 +139,16 @@ const getAllSalesAgents = (page, limit, searchText, status) => {
                 )
             `);
 
-            const searchValue = `%${searchText}%`;
-            countParams.push(searchValue, searchValue, searchValue, searchValue, searchValue, searchValue, searchValue);
-            dataParams.push(searchValue, searchValue, searchValue, searchValue, searchValue, searchValue, searchValue);
-        }
+      const searchValue = `%${searchText}%`;
+      countParams.push(searchValue, searchValue, searchValue, searchValue, searchValue, searchValue, searchValue);
+      dataParams.push(searchValue, searchValue, searchValue, searchValue, searchValue, searchValue, searchValue);
+    }
 
-        if (status) {
-            whereConditions.push(`salesagent.status = ?`);
-            countParams.push(status);
-            dataParams.push(status);
-        }
+    if (status) {
+      whereConditions.push(`salesagent.status = ?`);
+      countParams.push(status);
+      dataParams.push(status);
+    }
 
         // Append WHERE conditions if any exist
         if (whereConditions.length > 0) {
@@ -158,130 +158,130 @@ const getAllSalesAgents = (page, limit, searchText, status) => {
 
         dataSql += " ORDER BY salesagent.createdAt DESC";
 
-        // Add pagination at the end, so LIMIT and OFFSET are always numbers
-        dataSql += " LIMIT ? OFFSET ?";
-        dataParams.push(parseInt(limit), parseInt(offset)); // Ensure they are integers
+    // Add pagination at the end, so LIMIT and OFFSET are always numbers
+    dataSql += " LIMIT ? OFFSET ?";
+    dataParams.push(parseInt(limit), parseInt(offset)); // Ensure they are integers
 
-        // Execute count query
-        dash.query(countSql, countParams, (countErr, countResults) => {
-            if (countErr) {
-                console.error("Error in count query:", countErr);
-                return reject(countErr);
-            }
+    // Execute count query
+    dash.query(countSql, countParams, (countErr, countResults) => {
+      if (countErr) {
+        console.error("Error in count query:", countErr);
+        return reject(countErr);
+      }
 
-            const total = countResults[0].total;
+      const total = countResults[0].total;
 
-            // Execute data query
-            dash.query(dataSql, dataParams, (dataErr, dataResults) => {
-                if (dataErr) {
-                    console.error("Error in data query:", dataErr);
-                    return reject(dataErr);
-                }
+      // Execute data query
+      dash.query(dataSql, dataParams, (dataErr, dataResults) => {
+        if (dataErr) {
+          console.error("Error in data query:", dataErr);
+          return reject(dataErr);
+        }
 
-                resolve({ items: dataResults, total });
-            });
-        });
+        resolve({ items: dataResults, total });
+      });
     });
+  });
 };
 
 
 const deleteSalesAgent = async (id) => {
-    return new Promise((resolve, reject) => {
-      const sql = "DELETE FROM salesagent WHERE id = ?";
-      dash.query(sql, [id], (err, results) => {
-        if (err) {
-          reject(err);
-        } else {
-          resolve(results.affectedRows);
-        }
-      });
+  return new Promise((resolve, reject) => {
+    const sql = "DELETE FROM salesagent WHERE id = ?";
+    dash.query(sql, [id], (err, results) => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(results.affectedRows);
+      }
     });
-  };
+  });
+};
 
 
 const getForCreateId = (role) => {
-    return new Promise((resolve, reject) => {
-      const sql =
-        "SELECT empId FROM salesagent WHERE empId LIKE ? ORDER BY empId DESC LIMIT 1";
-      dash.query(sql, [`${role}%`], (err, results) => {
-        if (err) {
-          return reject(err);
-        }
-  
-        if (results.length > 0) {
-          const numericPart = parseInt(results[0].empId.substring(3), 10);
-  
-          const incrementedValue = numericPart + 1;
-  
-          results[0].empId = incrementedValue.toString().padStart(4, "0");
-          console.log(results[0].empId);
-        }
-  
-        resolve(results);
-      });
+  return new Promise((resolve, reject) => {
+    const sql =
+      "SELECT empId FROM salesagent WHERE empId LIKE ? ORDER BY empId DESC LIMIT 1";
+    dash.query(sql, [`${role}%`], (err, results) => {
+      if (err) {
+        return reject(err);
+      }
+
+      if (results.length > 0) {
+        const numericPart = parseInt(results[0].empId.substring(3), 10);
+
+        const incrementedValue = numericPart + 1;
+
+        results[0].empId = incrementedValue.toString().padStart(4, "0");
+        console.log(results[0].empId);
+      }
+
+      resolve(results);
     });
-  };
+  });
+};
 
 const checkNICExist = (nic) => {
-    return new Promise((resolve, reject) => {
-      const sql = `
+  return new Promise((resolve, reject) => {
+    const sql = `
               SELECT COUNT(*) AS count 
               FROM salesagent 
               WHERE nic = ?
           `;
-  
-      dash.query(sql, [nic], (err, results) => {
-        if (err) {
-          return reject(err);
-        }
-        resolve(results[0].count > 0); // Return true if either NIC or email exists
-      });
+
+    dash.query(sql, [nic], (err, results) => {
+      if (err) {
+        return reject(err);
+      }
+      resolve(results[0].count > 0); // Return true if either NIC or email exists
     });
-  };
-  
+  });
+};
+
 const checkEmailExist = (email) => {
-    return new Promise((resolve, reject) => {
-      const sql = `
+  return new Promise((resolve, reject) => {
+    const sql = `
               SELECT COUNT(*) AS count 
               FROM salesagent 
               WHERE email = ?
           `;
-  
-      dash.query(sql, [email], (err, results) => {
-        if (err) {
-          return reject(err);
-        }
-        resolve(results[0].count > 0); // Return true if either NIC or email exists
-      });
+
+    dash.query(sql, [email], (err, results) => {
+      if (err) {
+        return reject(err);
+      }
+      resolve(results[0].count > 0); // Return true if either NIC or email exists
     });
-  };
+  });
+};
 
 const createSalesAgent = (officerData, profileImageUrl) => {
-    return new Promise(async (resolve, reject) => {
-      try {
-        // Prepare data for QR code generation
-        // const qrData = `
-        //       {
-        //           "empId": "${officerData.empId}",
-        //       }
-        //       `;
-  
-        // const qrCodeBase64 = await QRCode.toDataURL(qrData);
-        // const qrCodeBuffer = Buffer.from(
-        //   qrCodeBase64.replace(/^data:image\/png;base64,/, ""),
-        //   "base64"
-        // );
-        // const qrcodeURL = await uploadFileToS3(
-        //   qrCodeBuffer,
-        //   `${officerData.empId}.png`,
-        //   "collectionofficer/QRcode"
-        // );
-        // console.log(qrcodeURL);
-  
-        // If no image URL, set it to null
-        const imageUrl = profileImageUrl || null; // Use null if profileImageUrl is not provided
-  
-        const sql = `
+  return new Promise(async (resolve, reject) => {
+    try {
+      // Prepare data for QR code generation
+      // const qrData = `
+      //       {
+      //           "empId": "${officerData.empId}",
+      //       }
+      //       `;
+
+      // const qrCodeBase64 = await QRCode.toDataURL(qrData);
+      // const qrCodeBuffer = Buffer.from(
+      //   qrCodeBase64.replace(/^data:image\/png;base64,/, ""),
+      //   "base64"
+      // );
+      // const qrcodeURL = await uploadFileToS3(
+      //   qrCodeBuffer,
+      //   `${officerData.empId}.png`,
+      //   "collectionofficer/QRcode"
+      // );
+      // console.log(qrcodeURL);
+
+      // If no image URL, set it to null
+      const imageUrl = profileImageUrl || null; // Use null if profileImageUrl is not provided
+
+      const sql = `
                   INSERT INTO salesagent (
                       firstName, lastName, empId, empType, phoneCode1, phoneNumber1, phoneCode2, phoneNumber2,
                       nic, email, houseNumber, streetName, city, district, province, country,
@@ -290,326 +290,505 @@ const createSalesAgent = (officerData, profileImageUrl) => {
                            ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,
                            ?, ?, ?, ?, ?, ?, ?, ?, ?,?, 'Not Approved')
               `;
-  
-        // Database query with QR image data added
-        dash.query(
-          sql,
-          [
-            
-            officerData.firstName,
-            officerData.lastName,
-            officerData.empId,
-            officerData.empType,
-            officerData.phoneCode1,
-            officerData.phoneNumber1,
-            officerData.phoneCode2,
-            officerData.phoneNumber2,
-            officerData.nic,
-            officerData.email,
-            officerData.houseNumber,
-            officerData.streetName,
-            officerData.city,
-            officerData.district,
-            officerData.province,
-            officerData.country,
-            officerData.accHolderName,
-            officerData.accNumber,
-            officerData.bankName,
-            officerData.branchName,
-            // imageUrl, 
-          ],
-          (err, results) => {
-            if (err) {
-              console.log(err);
-              return reject(err); // Reject promise if an error occurs
-            }
-            resolve(results); // Resolve the promise with the query results
+
+      // Database query with QR image data added
+      dash.query(
+        sql,
+        [
+
+          officerData.firstName,
+          officerData.lastName,
+          officerData.empId,
+          officerData.empType,
+          officerData.phoneCode1,
+          officerData.phoneNumber1,
+          officerData.phoneCode2,
+          officerData.phoneNumber2,
+          officerData.nic,
+          officerData.email,
+          officerData.houseNumber,
+          officerData.streetName,
+          officerData.city,
+          officerData.district,
+          officerData.province,
+          officerData.country,
+          officerData.accHolderName,
+          officerData.accNumber,
+          officerData.bankName,
+          officerData.branchName,
+          // imageUrl, 
+        ],
+        (err, results) => {
+          if (err) {
+            console.log(err);
+            return reject(err); // Reject promise if an error occurs
           }
-        );
-      } catch (error) {
-        reject(error); // Reject if any error occurs during QR code generation
-      }
-    });
-  };
+          resolve(results); // Resolve the promise with the query results
+        }
+      );
+    } catch (error) {
+      reject(error); // Reject if any error occurs during QR code generation
+    }
+  });
+};
 
 const getSalesAgentDataById = (id) => {
-    return new Promise((resolve, reject) => {
-      const sql = `
+  return new Promise((resolve, reject) => {
+    const sql = `
               SELECT 
                   *
               FROM 
                   salesagent
               WHERE 
                   id = ?`;
-  
-      dash.query(sql, [id], (err, results) => {
-        if (err) {
-          return reject(err);
-        }
-        resolve(results);
-      });
+
+    dash.query(sql, [id], (err, results) => {
+      if (err) {
+        return reject(err);
+      }
+      resolve(results);
     });
-  };
+  });
+};
 
 const updateSalesAgentDetails = (
-    id,
-    firstName,
-    lastName,
-    empId,
-    empType,
-    phoneCode1,
-    phoneNumber1,
-    phoneCode2,
-    phoneNumber2,
-    nic,
-    email,
-    houseNumber,
-    streetName,
-    city,
-    district,
-    province,
-    country,
-    accHolderName,
-    accNumber,
-    bankName,
-    branchName,
-    profileImageUrl
-  ) => {
-    return new Promise((resolve, reject) => {
-      let sql = `
+  id,
+  firstName,
+  lastName,
+  empId,
+  empType,
+  phoneCode1,
+  phoneNumber1,
+  phoneCode2,
+  phoneNumber2,
+  nic,
+  email,
+  houseNumber,
+  streetName,
+  city,
+  district,
+  province,
+  country,
+  accHolderName,
+  accNumber,
+  bankName,
+  branchName,
+  profileImageUrl
+) => {
+  return new Promise((resolve, reject) => {
+    let sql = `
                UPDATE salesagent
                   SET firstName = ?, lastName = ?, empId = ?, empType = ?, phoneCode1 = ?, phoneNumber1 = ?, phoneCode2 = ?, phoneNumber2 = ?,
                       nic = ?, email = ?, houseNumber = ?, streetName = ?, city = ?, district = ?, province = ?, country = ?,
                       accHolderName = ?, accNumber = ?, bankName = ?, branchName = ?, status = 'Not Approved'
             `;
-      let values = [
-        firstName,
-        lastName,
-        empId,
-        empType,
-        phoneCode1,
-        phoneNumber1,
-        phoneCode2,
-        phoneNumber2,
-        nic,
-        email,
-        houseNumber,
-        streetName,
-        city,
-        district,
-        province,
-        country,
-        accHolderName,
-        accNumber,
-        bankName,
-        branchName,
-        // profileImageUrl,
-      ];
-  
-      sql += ` WHERE id = ?`;
-      values.push(id);
-  
-      dash.query(sql, values, (err, results) => {
-        if (err) {
-          return reject(err);
-        }
-        resolve(results);
-      });
+    let values = [
+      firstName,
+      lastName,
+      empId,
+      empType,
+      phoneCode1,
+      phoneNumber1,
+      phoneCode2,
+      phoneNumber2,
+      nic,
+      email,
+      houseNumber,
+      streetName,
+      city,
+      district,
+      province,
+      country,
+      accHolderName,
+      accNumber,
+      bankName,
+      branchName,
+      // profileImageUrl,
+    ];
+
+    sql += ` WHERE id = ?`;
+    values.push(id);
+
+    dash.query(sql, values, (err, results) => {
+      if (err) {
+        return reject(err);
+      }
+      resolve(results);
     });
-  };
+  });
+};
 
 const getSalesAgentEmailDao = (id) => {
-    return new Promise((resolve, reject) => {
-      const sql = `
+  return new Promise((resolve, reject) => {
+    const sql = `
               SELECT email, firstName, empId AS empId
               FROM salesagent
               WHERE id = ?
           `;
-      dash.query(sql, [id], (err, results) => {
-        if (err) {
-          return reject(err); // Reject promise if an error occurs
-        }
-        if (results.length > 0) {
-          resolve({
-            email: results[0].email, // Resolve with email
-            firstName: results[0].firstName,
-            empId: results[0].empId, // Resolve with employeeType (empId)
-          });
-        } else {
-          resolve(null); // Resolve with null if no record is found
-        }
-      });
+    dash.query(sql, [id], (err, results) => {
+      if (err) {
+        return reject(err); // Reject promise if an error occurs
+      }
+      if (results.length > 0) {
+        resolve({
+          email: results[0].email, // Resolve with email
+          firstName: results[0].firstName,
+          empId: results[0].empId, // Resolve with employeeType (empId)
+        });
+      } else {
+        resolve(null); // Resolve with null if no record is found
+      }
     });
-  };
+  });
+};
 
 const UpdateSalesAgentStatusAndPasswordDao = (params) => {
-    return new Promise((resolve, reject) => {
-      const sql = `
+  return new Promise((resolve, reject) => {
+    const sql = `
               UPDATE salesagent
               SET status = ?, password = ?, passwordUpdate = 0
               WHERE id = ?
           `;
-      dash.query(
-        sql,
-        [params.status, params.password, parseInt(params.id)],
-        (err, results) => {
-          if (err) {
-            return reject(err); // Reject promise if an error occurs
-          }
-          resolve(results); // Resolve with the query results
+    dash.query(
+      sql,
+      [params.status, params.password, parseInt(params.id)],
+      (err, results) => {
+        if (err) {
+          return reject(err); // Reject promise if an error occurs
         }
-      );
-    });
-  };
+        resolve(results); // Resolve with the query results
+      }
+    );
+  });
+};
 
 const SendGeneratedPasswordDao = async (
-    email,
-    password,
-    empId,
-    firstName
-  ) => {
-    try {
-      const doc = new PDFDocument();
-  
-      // Create a buffer to hold the PDF in memory
-      const pdfBuffer = [];
-      doc.on("data", pdfBuffer.push.bind(pdfBuffer));
-      doc.on("end", () => {});
-  
-      const watermarkPath = "./assets/bg.png";
-      doc.opacity(0.2).image(watermarkPath, 100, 300, { width: 400 }).opacity(1);
-  
-      doc
-        .fontSize(20)
-        .fillColor("#071a51")
-        .text("Welcome to AgroWorld (Pvt) Ltd - Registration Confirmation", {
-          align: "center",
-        });
-  
-      doc.moveDown();
-  
-      const lineY = doc.y;
-  
-      doc.moveTo(50, lineY).lineTo(550, lineY).stroke();
-  
-      doc.moveDown();
-  
-      doc.fontSize(12).text(`Dear ${firstName},`);
-  
-      doc.moveDown();
-  
-      doc
-        .fontSize(12)
-        .text(
-          "Thank you for registering with us! We are excited to have you on board."
-        );
-  
-      doc.moveDown();
-  
-      doc
-        .fontSize(12)
-        .text(
-          "You have successfully created an account with AgroWorld (Pvt) Ltd. Our platform will help you with all your agricultural needs, providing guidance, weather reports, asset management tools, and much more. We are committed to helping farmers like you grow and succeed.",
-          {
-            align: "justify",
-          }
-        );
-  
-      doc.moveDown();
-  
-      doc.fontSize(12).text(`Your User Name/ID: ${empId}`);
-      doc.fontSize(12).text(`Your Password: ${password}`);
-  
-      doc.moveDown();
-  
-      doc
-        .fontSize(12)
-        .text(
-          "If you have any questions or need assistance, feel free to reach out to our support team at info@agroworld.lk",
-          {
-            align: "justify",
-          }
-        );
-  
-      doc.moveDown();
-  
-      doc.fontSize(12).text("We are here to support you every step of the way!", {
-        align: "justify",
-      });
-  
-      doc.moveDown();
-      doc.fontSize(12).text(`Best Regards,`);
-      doc.fontSize(12).text(`The AgroWorld Team`);
-      doc.fontSize(12).text(`AgroWorld (Pvt) Ltd. | All rights reserved.`);
-      doc.moveDown();
-      doc.fontSize(12).text(`Address: No:14,`);
-      doc.fontSize(12).text(`            Sir Baron Jayathilake Mawatha,`);
-      doc.fontSize(12).text(`            Colombo 01.`);
-      doc.moveDown();
-      doc.fontSize(12).text(`Email: info@agroworld.lk`);
-  
-      doc.end();
-  
-      // Wait until the PDF is fully created and available in the buffer
-      await new Promise((resolve) => doc.on("end", resolve));
-  
-      const pdfData = Buffer.concat(pdfBuffer); // Concatenate the buffer data
-  
-      const transporter = nodemailer.createTransport({
-        host: "smtp.gmail.com",
-        port: 465, // or 587 for TLS
-        secure: true,
-        auth: {
-          user: process.env.EMAIL_USER,
-          pass: process.env.EMAIL_PASS,
-        },
-        tls: {
-          family: 4,
-        },
+  email,
+  password,
+  empId,
+  firstName
+) => {
+  try {
+    const doc = new PDFDocument();
+
+    // Create a buffer to hold the PDF in memory
+    const pdfBuffer = [];
+    doc.on("data", pdfBuffer.push.bind(pdfBuffer));
+    doc.on("end", () => { });
+
+    const watermarkPath = "./assets/bg.png";
+    doc.opacity(0.2).image(watermarkPath, 100, 300, { width: 400 }).opacity(1);
+
+    doc
+      .fontSize(20)
+      .fillColor("#071a51")
+      .text("Welcome to AgroWorld (Pvt) Ltd - Registration Confirmation", {
+        align: "center",
       });
 
-      // const transporter = nodemailer.createTransport({
-      //   host: "smtp.gmail.com",
-      //   port: 465, // or 587
-      //   secure: true,
-      //   auth: {
-      //     user: process.env.EMAIL_USER,
-      //     pass: process.env.EMAIL_PASS,
-      //   },
-      //   tls: {
-      //     rejectUnauthorized: false, // Allow self-signed certificates
-      //   },
-      // });
-  
-      const mailOptions = {
-        from: process.env.EMAIL_USER,
-        to: email,
-        subject: "Welcome to AgroWorld (Pvt) Ltd - Registration Confirmation",
-        text: `Dear ${firstName},\n\nYour registration details are attached in the PDF.`,
-        attachments: [
-          {
-            filename: `password_${empId}.pdf`, // PDF file name
-            content: pdfData, // Attach the PDF buffer directly
-          },
-        ],
-      };
-  
-      const info = await transporter.sendMail(mailOptions);
-      console.log("Email sent:", info.response);
-  
-      return { success: true, message: "Email sent successfully!" };
-    } catch (error) {
-      console.error("Error sending email:", error);
-  
-      return { success: false, message: "Failed to send email.", error };
+    doc.moveDown();
+
+    const lineY = doc.y;
+
+    doc.moveTo(50, lineY).lineTo(550, lineY).stroke();
+
+    doc.moveDown();
+
+    doc.fontSize(12).text(`Dear ${firstName},`);
+
+    doc.moveDown();
+
+    doc
+      .fontSize(12)
+      .text(
+        "Thank you for registering with us! We are excited to have you on board."
+      );
+
+    doc.moveDown();
+
+    doc
+      .fontSize(12)
+      .text(
+        "You have successfully created an account with AgroWorld (Pvt) Ltd. Our platform will help you with all your agricultural needs, providing guidance, weather reports, asset management tools, and much more. We are committed to helping farmers like you grow and succeed.",
+        {
+          align: "justify",
+        }
+      );
+
+    doc.moveDown();
+
+    doc.fontSize(12).text(`Your User Name/ID: ${empId}`);
+    doc.fontSize(12).text(`Your Password: ${password}`);
+
+    doc.moveDown();
+
+    doc
+      .fontSize(12)
+      .text(
+        "If you have any questions or need assistance, feel free to reach out to our support team at info@agroworld.lk",
+        {
+          align: "justify",
+        }
+      );
+
+    doc.moveDown();
+
+    doc.fontSize(12).text("We are here to support you every step of the way!", {
+      align: "justify",
+    });
+
+    doc.moveDown();
+    doc.fontSize(12).text(`Best Regards,`);
+    doc.fontSize(12).text(`The AgroWorld Team`);
+    doc.fontSize(12).text(`AgroWorld (Pvt) Ltd. | All rights reserved.`);
+    doc.moveDown();
+    doc.fontSize(12).text(`Address: No:14,`);
+    doc.fontSize(12).text(`            Sir Baron Jayathilake Mawatha,`);
+    doc.fontSize(12).text(`            Colombo 01.`);
+    doc.moveDown();
+    doc.fontSize(12).text(`Email: info@agroworld.lk`);
+
+    doc.end();
+
+    // Wait until the PDF is fully created and available in the buffer
+    await new Promise((resolve) => doc.on("end", resolve));
+
+    const pdfData = Buffer.concat(pdfBuffer); // Concatenate the buffer data
+
+    const transporter = nodemailer.createTransport({
+      host: "smtp.gmail.com",
+      port: 465, // or 587 for TLS
+      secure: true,
+      auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS,
+      },
+      tls: {
+        family: 4,
+      },
+    });
+
+    // const transporter = nodemailer.createTransport({
+    //   host: "smtp.gmail.com",
+    //   port: 465, // or 587
+    //   secure: true,
+    //   auth: {
+    //     user: process.env.EMAIL_USER,
+    //     pass: process.env.EMAIL_PASS,
+    //   },
+    //   tls: {
+    //     rejectUnauthorized: false, // Allow self-signed certificates
+    //   },
+    // });
+
+    const mailOptions = {
+      from: process.env.EMAIL_USER,
+      to: email,
+      subject: "Welcome to AgroWorld (Pvt) Ltd - Registration Confirmation",
+      text: `Dear ${firstName},\n\nYour registration details are attached in the PDF.`,
+      attachments: [
+        {
+          filename: `password_${empId}.pdf`, // PDF file name
+          content: pdfData, // Attach the PDF buffer directly
+        },
+      ],
+    };
+
+    const info = await transporter.sendMail(mailOptions);
+    console.log("Email sent:", info.response);
+
+    return { success: true, message: "Email sent successfully!" };
+  } catch (error) {
+    console.error("Error sending email:", error);
+
+    return { success: false, message: "Failed to send email.", error };
+  }
+};
+
+// const GetAllSalesAgentComplainDAO = async (id, refNo, complainCategory, complain, reply, status) => {
+//   return new Promise((resolve, reject) => {
+//     const sql = `
+//       INSERT INTO dashcomplain (saId, refNo, complainCategory, complain, reply, status) 
+//       VALUES (?, ?, ?, ?, ?, ?)
+//     `;
+
+//     dash.query(sql, ['SA0002', 'psdas22dsadsddsds', 2, 'asdasdsdsd', 'dsdssds', 'Opened'], (err, results) => {
+//       if (err) {
+//         reject(err);
+//       } else {
+//         resolve(results.affectedRows);
+//         crossOriginIsolated.log(entered);
+//       }
+//     });
+//   });
+// };
+
+const GetAllSalesAgentComplainDAO = (page, limit, status, category, comCategory, searchText) => {
+  return new Promise((resolve, reject) => {
+    const Sqlparams = [];
+    const Counterparams = [];
+    const offset = (page - 1) * limit;
+
+    // SQL to count total records - Added missing JOINs
+    let countSql = `
+        SELECT COUNT(*) AS total
+        FROM dash.dashcomplain dc
+        LEFT JOIN dash.salesagent sa ON dc.saId = sa.id
+        LEFT JOIN agro_world_admin.complaincategory cc ON dc.complainCategory = cc.id 
+        LEFT JOIN agro_world_admin.adminroles ar ON cc.roleId = ar.id
+        WHERE 1 = 1
+      `;
+
+    // SQL to fetch paginated data
+    let sql = `
+        SELECT 
+          dc.id, 
+          dc.refNo,
+          sa.empID AS AgentId,
+          sa.firstName AS firstName,
+          sa.lastName AS lastName,
+          cc.categoryEnglish AS complainCategory,
+          ar.role,
+          dc.createdAt,
+          dc.status AS status,
+          dc.reply
+        FROM dash.dashcomplain dc
+        LEFT JOIN dash.salesagent sa ON dc.saId = sa.id
+        LEFT JOIN agro_world_admin.complaincategory cc ON dc.complainCategory = cc.id 
+        LEFT JOIN agro_world_admin.adminroles ar ON cc.roleId = ar.id
+        WHERE 1 = 1
+      `;
+
+    // Add filter for status
+    if (status) {
+      countSql += " AND dc.status = ? ";
+      sql += " AND dc.status = ? ";
+      Sqlparams.push(status);
+      Counterparams.push(status);
     }
-  };
+
+    // Fixed category filter to use the correct alias
+    if (category) {
+      countSql += " AND ar.role = ? ";
+      sql += " AND ar.role = ? ";
+      Sqlparams.push(category);
+      Counterparams.push(category);
+    }
+
+    if (comCategory) {
+      countSql += " AND dc.complainCategory = ? ";
+      sql += " AND dc.complainCategory = ? ";
+      Sqlparams.push(comCategory);
+      Counterparams.push(comCategory);
+    }
+
+    // Add search functionality
+    if (searchText) {
+      countSql += `
+          AND (dc.refNo LIKE ? OR sa.firstName LIKE ? OR sa.lastName LIKE ? OR sa.nic LIKE ?)
+        `;
+      sql += `
+          AND (dc.refNo LIKE ? OR sa.firstName LIKE ? OR sa.lastName LIKE ? OR sa.nic LIKE ?)
+        `;
+      const searchQuery = `%${searchText}%`;
+      Sqlparams.push(searchQuery, searchQuery, searchQuery, searchQuery);
+      Counterparams.push(searchQuery, searchQuery, searchQuery, searchQuery);
+    }
+
+    // Add pagination
+    sql += " ORDER BY dc.createdAt DESC LIMIT ? OFFSET ?";
+    Sqlparams.push(parseInt(limit), parseInt(offset));
+
+    // Execute count query to get total records
+    dash.query(
+      countSql,
+      Counterparams,
+      (countErr, countResults) => {
+        if (countErr) {
+          return reject(countErr);
+        }
+
+        const total = countResults[0]?.total || 0;
+
+        // Execute main query to get paginated results
+        dash.query(sql, Sqlparams, (dataErr, results) => {
+          if (dataErr) {
+            return reject(dataErr);
+          }
+
+          resolve({ results, total });
+        });
+      }
+    );
+  });
+};
 
 
+const getComplainById = (id) => {
+  return new Promise((resolve, reject) => {
+    const sql = ` 
+    SELECT dc.id, dc.refNo, dc.createdAt, dc.language, dc.complain,dc.complainCategory,dc.reply, sa.firstName AS firstName, sa.lastName AS lastName, sa.phoneNumber1 AS AgentPhone, cc.categoryEnglish AS complainCategory
+    FROM dashcomplain dc
+    LEFT JOIN salesagent sa ON dc.saId = sa.id
+    LEFT JOIN agro_world_admin.complaincategory cc ON dc.complainCategory = cc.id
+    WHERE dc.id = ? 
+    `;
+    dash.query(sql, [id], (err, results) => {
+      if (err) {
+        return reject(err);
+      }
+      resolve(results);
+    });
+  });
+};
 
 
+const sendComplainReply = (complainId, reply) => {
+  return new Promise((resolve, reject) => {
+    // Input validation
+    if (!complainId) {
+      return reject(new Error("Complain ID is required"));
+    }
 
-module.exports = { getAllCustomers, getAllSalesAgents, deleteSalesAgent, getForCreateId, checkNICExist, checkEmailExist, 
-    createSalesAgent, getSalesAgentDataById, updateSalesAgentDetails, SendGeneratedPasswordDao,
-    UpdateSalesAgentStatusAndPasswordDao, getSalesAgentEmailDao };
+    if (reply === undefined || reply === null || reply.trim() === "") {
+      return reject(new Error("Reply cannot be empty"));
+    }
+
+    const sql = `
+      UPDATE dashcomplain
+      SET reply = ?, status = ?
+      WHERE id = ?
+    `;
+
+    const status = "Assigned";
+    // const adminStatus = "Closed";
+    const values = [reply, status, complainId];
+
+    dash.query(sql, values, (err, results) => {
+      if (err) {
+        console.error("Database error details:", err);
+        return reject(err);
+      }
+
+      if (results.affectedRows === 0) {
+        console.warn(`No record found with id: ${complainId}`);
+        return reject(new Error(`No record found with id: ${complainId}`));
+      }
+
+      console.log("Update successful:", results);
+      resolve({
+        message: "Reply sent successfully",
+        affectedRows: results.affectedRows,
+      });
+    });
+  });
+};
+
+
+module.exports = {
+  getAllCustomers, getAllSalesAgents, deleteSalesAgent, getForCreateId, checkNICExist, checkEmailExist,
+  createSalesAgent, getSalesAgentDataById, updateSalesAgentDetails, SendGeneratedPasswordDao,
+  UpdateSalesAgentStatusAndPasswordDao, getSalesAgentEmailDao, GetAllSalesAgentComplainDAO, getComplainById,
+  sendComplainReply
+};
 

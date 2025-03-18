@@ -206,5 +206,6 @@ module.exports = {
     createSalesAgentStarTable,
     createCustomerTable,
     createHouseTable,
-    createApartmentTable
+    createApartmentTable,
+   
 };
