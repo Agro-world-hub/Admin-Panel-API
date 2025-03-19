@@ -2766,6 +2766,28 @@ exports.mushEnroll = (userId) => {
   });
 };
 
+exports.getFarmerRegistrationCountsByDistrict = (district) => {
+  return new Promise((resolve, reject) => {
+    const sql = `
+      SELECT 
+          COUNT(CASE WHEN farmerQr IS NOT NULL THEN 1 END) AS registered_count,
+          COUNT(CASE WHEN farmerQr IS NULL THEN 1 END) AS unregistered_count
+      FROM 
+          users
+      WHERE 
+          district = ?;
+    `;
+
+    plantcare.query(sql, [district], (err, results) => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(results[0]);
+      }
+    });
+  });
+};
+
 exports.updateAdminRoleById = (id, role, email) => {
   const sql = `UPDATE adminroles SET role = ?, email = ? WHERE id = ?`;
   return new Promise((resolve, reject) => {
