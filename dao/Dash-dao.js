@@ -16,88 +16,88 @@ const { resolve } = require("path");
 const Joi = require("joi");
 
 
-const getHouseDetails = () => `
-    CASE 
-        WHEN c.buildingType = 'House' THEN h.houseNo 
-        ELSE NULL 
-    END AS houseHouseNo,
-    CASE 
-        WHEN c.buildingType = 'House' THEN h.streetName 
-        ELSE NULL 
-    END AS houseStreetName,
-    CASE 
-        WHEN c.buildingType = 'House' THEN h.city 
-        ELSE NULL 
-    END AS houseCity
-`;
+// const getHouseDetails = () => `
+//     CASE 
+//         WHEN c.buildingType = 'House' THEN h.houseNo 
+//         ELSE NULL 
+//     END AS houseHouseNo,
+//     CASE 
+//         WHEN c.buildingType = 'House' THEN h.streetName 
+//         ELSE NULL 
+//     END AS houseStreetName,
+//     CASE 
+//         WHEN c.buildingType = 'House' THEN h.city 
+//         ELSE NULL 
+//     END AS houseCity
+// `;
 
-// Function to get apartment details if the customer lives in an apartment
-const getApartmentDetails = () => `
-    CASE 
-        WHEN c.buildingType = 'Apartment' THEN a.buildingNo 
-        ELSE NULL 
-    END AS apartmentBuildingNo,
-    CASE 
-        WHEN c.buildingType = 'Apartment' THEN a.buildingName 
-        ELSE NULL 
-    END AS apartmentBuildingName,
-    CASE 
-        WHEN c.buildingType = 'Apartment' THEN a.unitNo 
-        ELSE NULL 
-    END AS apartmentUnitNo,
-    CASE 
-        WHEN c.buildingType = 'Apartment' THEN a.floorNo 
-        ELSE NULL 
-    END AS apartmentFloorNo,
-    CASE 
-        WHEN c.buildingType = 'Apartment' THEN a.houseNo 
-        ELSE NULL 
-    END AS apartmentHouseNo,
-    CASE 
-        WHEN c.buildingType = 'Apartment' THEN a.streetName 
-        ELSE NULL 
-    END AS apartmentStreetName,
-    CASE 
-        WHEN c.buildingType = 'Apartment' THEN a.city 
-        ELSE NULL 
-    END AS apartmentCity
-`;
+// // Function to get apartment details if the customer lives in an apartment
+// const getApartmentDetails = () => `
+//     CASE 
+//         WHEN c.buildingType = 'Apartment' THEN a.buildingNo 
+//         ELSE NULL 
+//     END AS apartmentBuildingNo,
+//     CASE 
+//         WHEN c.buildingType = 'Apartment' THEN a.buildingName 
+//         ELSE NULL 
+//     END AS apartmentBuildingName,
+//     CASE 
+//         WHEN c.buildingType = 'Apartment' THEN a.unitNo 
+//         ELSE NULL 
+//     END AS apartmentUnitNo,
+//     CASE 
+//         WHEN c.buildingType = 'Apartment' THEN a.floorNo 
+//         ELSE NULL 
+//     END AS apartmentFloorNo,
+//     CASE 
+//         WHEN c.buildingType = 'Apartment' THEN a.houseNo 
+//         ELSE NULL 
+//     END AS apartmentHouseNo,
+//     CASE 
+//         WHEN c.buildingType = 'Apartment' THEN a.streetName 
+//         ELSE NULL 
+//     END AS apartmentStreetName,
+//     CASE 
+//         WHEN c.buildingType = 'Apartment' THEN a.city 
+//         ELSE NULL 
+//     END AS apartmentCity
+// `;
 
-// Function to construct the SQL query
-const getAllCustomersQuery = () => `
-    SELECT 
-        c.id, 
-        c.cusId, 
-        c.title, 
-        c.firstName, 
-        c.lastName, 
-        c.phoneNumber, 
-        c.email, 
-        c.buildingType, 
-        s.empId AS salesAgentEmpId,  
-        s.firstName AS salesAgentFirstName,  
-        s.lastName AS salesAgentLastName,  
-        c.created_at,
-        ${getHouseDetails()},
-        ${getApartmentDetails()}
-    FROM customer c
-    LEFT JOIN salesagent s ON c.salesAgent = s.id  
-    LEFT JOIN house h ON c.id = h.customerId AND c.buildingType = 'House'  
-    LEFT JOIN apartment a ON c.id = a.customerId AND c.buildingType = 'Apartment'  
-    ORDER BY c.created_at DESC
-`;
+// // Function to construct the SQL query
+// const getAllCustomersQuery = () => `
+//     SELECT 
+//         c.id, 
+//         c.cusId, 
+//         c.title, 
+//         c.firstName, 
+//         c.lastName, 
+//         c.phoneNumber, 
+//         c.email, 
+//         c.buildingType, 
+//         s.empId AS salesAgentEmpId,  
+//         s.firstName AS salesAgentFirstName,  
+//         s.lastName AS salesAgentLastName,  
+//         c.created_at,
+//         ${getHouseDetails()},
+//         ${getApartmentDetails()}
+//     FROM customer c
+//     LEFT JOIN salesagent s ON c.salesAgent = s.id  
+//     LEFT JOIN house h ON c.id = h.customerId AND c.buildingType = 'House'  
+//     LEFT JOIN apartment a ON c.id = a.customerId AND c.buildingType = 'Apartment'  
+//     ORDER BY c.created_at DESC
+// `;
 
-// Function to execute the query and fetch customer data
-const getAllCustomers = () => {
-    return new Promise((resolve, reject) => {
-        dash.query(getAllCustomersQuery(), (err, results) => {
-            if (err) {
-                return reject(err);
-            }
-            resolve(results);
-        });
-    });
-};
+// // Function to execute the query and fetch customer data
+// const getAllCustomers = () => {
+//     return new Promise((resolve, reject) => {
+//         dash.query(getAllCustomersQuery(), (err, results) => {
+//             if (err) {
+//                 return reject(err);
+//             }
+//             resolve(results);
+//         });
+//     });
+// };
 
 const getAllSalesAgents = (page, limit, searchText, status) => {
     return new Promise((resolve, reject) => {
@@ -607,9 +607,103 @@ const SendGeneratedPasswordDao = async (
 
 
 
+  const getAllSalesCustomers = (page, limit, searchText) => {
+    return new Promise((resolve, reject) => {
+        const offset = (page - 1) * limit;
+
+        let countSql = `
+              SELECT 
+                COUNT(*) AS total
+              FROM 
+                  customer CUS
+              INNER JOIN 
+                  salesagent SA ON CUS.salesAgent = SA.id
+        `;
+
+        let dataSql = `
+            SELECT 
+              CUS.id,
+              CUS.cusId,
+              CUS.phoneNumber, 
+              CUS.firstName, 
+              CUS.lastName, 
+              CUS.buildingType,
+              CUS.email,
+              SA.empId,
+              SA.firstName AS salesAgentFirstName,
+              SA.lastName AS salesAgentLastName,
+              (SELECT COUNT(*) FROM orders WHERE customerId = CUS.id) AS totOrders,
+              -- House details
+              H.houseNo AS houseHouseNo,
+              H.streetName AS houseStreetName,
+              H.city AS houseCity,
+              -- Apartment details
+              A.buildingNo AS apartmentBuildingNo,
+              A.buildingName AS apartmentBuildingName,
+              A.unitNo AS apartmentUnitNo,
+              A.houseNo AS apartmentHouseNo,
+              A.streetName AS apartmentStreetName,
+              A.city AS apartmentCity,
+              A.floorNo AS apartmentFloorNo
+            FROM 
+                customer CUS
+            INNER JOIN 
+                salesagent SA ON CUS.salesAgent = SA.id
+            LEFT JOIN 
+                house H ON CUS.id = H.customerId AND CUS.buildingType = 'House'
+            LEFT JOIN 
+                apartment A ON CUS.id = A.customerId AND CUS.buildingType = 'Apartment'
+        `;
+
+        const countParams = [];
+        const dataParams = [];
+
+        
+
+        if (searchText) {
+            const searchCondition = `
+                WHERE (
+                    CUS.firstName LIKE ?
+                    OR CUS.lastName LIKE ?
+                    OR CUS.phoneNumber LIKE ?
+                )
+            `;
+            countSql += searchCondition;
+            dataSql += searchCondition;
+            const searchValue = `%${searchText}%`;
+            countParams.push(searchValue, searchValue, searchValue);
+            dataParams.push(searchValue, searchValue, searchValue);
+        }
 
 
-module.exports = { getAllCustomers, getAllSalesAgents, deleteSalesAgent, getForCreateId, checkNICExist, checkEmailExist, 
+        dataSql += " LIMIT ? OFFSET ?";
+        dataParams.push(limit, offset);
+
+
+        // Execute count query
+        dash.query(countSql, countParams, (countErr, countResults) => {
+            if (countErr) {
+                console.error('Error in count query:', countErr);
+                return reject(countErr);
+            }
+
+            const total = countResults[0].total;
+
+            // Execute data query
+            dash.query(dataSql, dataParams, (dataErr, dataResults) => {
+                if (dataErr) {
+                    console.error('Error in data query:', dataErr);
+                    return reject(dataErr);
+                }
+
+                resolve({ items: dataResults, total });
+            });
+        });
+    });
+};
+
+
+module.exports = { getAllSalesCustomers, getAllSalesAgents, deleteSalesAgent, getForCreateId, checkNICExist, checkEmailExist, 
     createSalesAgent, getSalesAgentDataById, updateSalesAgentDetails, SendGeneratedPasswordDao,
     UpdateSalesAgentStatusAndPasswordDao, getSalesAgentEmailDao };
 
