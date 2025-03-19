@@ -14,8 +14,6 @@ const { v4: uuidv4 } = require("uuid");
 const uploadFileToS3 = require("../middlewares/s3upload");
 const deleteFromS3 = require("../middlewares/s3delete");
 
-
-
 exports.loginAdmin = async (req, res) => {
   const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
   console.log(fullUrl);
@@ -65,18 +63,20 @@ exports.loginAdmin = async (req, res) => {
       position: user.position,
       userName: user.userName,
       permissions,
-      expiresIn: 18000,
+      expiresIn: 120,
     };
 
     res.json(data);
   } catch (err) {
     console.error("Error during login:", err);
-    
+
     if (err.isJoi) {
       // Validation error
-      return res.status(400).json({ error: "Invalid input data", details: err.details });
+      return res
+        .status(400)
+        .json({ error: "Invalid input data", details: err.details });
     }
-    
+
     // For any other unexpected errors, keep the 500 status
     res.status(500).json({ error: "An internal server error occurred." });
   }
@@ -974,10 +974,16 @@ exports.editAdminUserWithoutId = async (req, res) => {
 
     const { id, mail, userName, role, position } = req.body;
 
-      console.log(id, mail, userName, role, position );
+    console.log(id, mail, userName, role, position);
 
     // Call DAO to update the user
-    const results = await adminDao.updateAdminUser(id, mail, userName, role, position);
+    const results = await adminDao.updateAdminUser(
+      id,
+      mail,
+      userName,
+      role,
+      position
+    );
 
     if (results.affectedRows === 0) {
       return res
@@ -1034,7 +1040,6 @@ exports.getAdminById = async (req, res) => {
   }
 };
 
-
 exports.editAdminUserPassword = async (req, res) => {
   try {
     // Validate the request body
@@ -1052,13 +1057,13 @@ exports.editAdminUserPassword = async (req, res) => {
 
     // Check if the provided current password matches the existing hashed password
     const isMatch = await bcrypt.compare(currentPassword, existingPassword);
-    
+
     if (!isMatch) {
       return res.status(400).json({ error: "Current password is incorrect" });
     }
 
     // Hash the new password before storing it in the database
-    const hashedNewPassword = await bcrypt.hash(newPassword, 10);  // 10 is the salt rounds
+    const hashedNewPassword = await bcrypt.hash(newPassword, 10); // 10 is the salt rounds
 
     // Update the password using the DAO with the hashed new password
     await adminDao.updateAdminPasswordById(id, hashedNewPassword);
@@ -1077,7 +1082,6 @@ exports.editAdminUserPassword = async (req, res) => {
       .json({ error: "An error occurred while updating the password" });
   }
 };
-
 
 exports.deletePlantCareUser = async (req, res) => {
   const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
@@ -2687,6 +2691,41 @@ exports.getAllfeedackListForBarChart = async (req, res) => {
   }
 };
 
+// exports.plantcareDashboard = async (req, res) => {
+//   try {
+//     const activeUsers = await adminDao.activeUsers();
+//     const newUsers = await adminDao.newUsers();
+//     const allUsers = await adminDao.allUsers();
+//     const qrUsers = await adminDao.qrUsers();
+//     const vegCultivation = await adminDao.vegEnroll();
+//     const grainCultivation = await adminDao.grainEnroll();
+//     const fruitCultivation = await adminDao.fruitEnroll();
+//     const mushCultivation = await adminDao.mushEnroll();
+
+//     const data = {
+//       active_users: activeUsers.active_users_count,
+//       new_users: newUsers.new_users_count,
+//       vegCultivation: vegCultivation.veg_cultivation_count,
+//       grainCultivation: grainCultivation.grain_cultivation_count,
+//       fruitCultivation: fruitCultivation.fruit_cultivation_count,
+//       mushCultivation: mushCultivation.mush_cultivation_count,
+//       allusers: allUsers.all_farmer_count,
+//       qrUsers: qrUsers.farmer_qr_count,
+//     };
+
+//     console.log("Successfully fetched feedback list");
+//     res.json({
+//       data,
+//     });
+//   } catch (err) {
+//     if (err.isJoi) {
+//       return res.status(400).json({ error: err.details[0].message });
+//     }
+//     console.error("Error executing query:", err);
+//     res.status(500).send("An error occurred while fetching data.");
+//   }
+// };
+
 exports.plantcareDashboard = async (req, res) => {
   try {
     const activeUsers = await adminDao.activeUsers();
@@ -2698,6 +2737,11 @@ exports.plantcareDashboard = async (req, res) => {
     const fruitCultivation = await adminDao.fruitEnroll();
     const mushCultivation = await adminDao.mushEnroll();
 
+    // Add the new DAO function call for farmer registration counts by district
+    const district = req.query.district || "DefaultDistrict"; // Get district from query params or use a default
+    const farmerRegistrationCounts =
+      await adminDao.getFarmerRegistrationCountsByDistrict(district);
+
     const data = {
       active_users: activeUsers.active_users_count,
       new_users: newUsers.new_users_count,
@@ -2707,9 +2751,13 @@ exports.plantcareDashboard = async (req, res) => {
       mushCultivation: mushCultivation.mush_cultivation_count,
       allusers: allUsers.all_farmer_count,
       qrUsers: qrUsers.farmer_qr_count,
+      farmerRegistrationCounts: {
+        registered_count: farmerRegistrationCounts.registered_count,
+        unregistered_count: farmerRegistrationCounts.unregistered_count,
+      },
     };
 
-    console.log("Successfully fetched feedback list");
+    console.log("Successfully fetched dashboard data");
     res.json({
       data,
     });
