@@ -63,7 +63,7 @@ exports.loginAdmin = async (req, res) => {
       position: user.position,
       userName: user.userName,
       permissions,
-      expiresIn: 120,
+      expiresIn: 18000,
     };
 
     res.json(data);
