@@ -2595,7 +2595,7 @@ exports.createFeedback = async (req, res) => {
     );
 
     return res.status(201).json({
-      message: "feedback create successfully",
+      message: "Feedback option created successfully",
       id: feedBack,
       status: true,
     });
