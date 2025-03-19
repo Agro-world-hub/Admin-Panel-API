@@ -23,7 +23,7 @@ exports.getCollectionOfficerDistrictReports = (district) => {
              SUM(fpc.gradeBprice) AS priceB, 
              SUM(fpc.gradeCprice) AS priceC
             FROM registeredfarmerpayments rp, collectionofficer c, plant_care.cropvariety cv , plant_care.cropgroup cg, farmerpaymentscrops fpc
-            WHERE rp.id = fpc.registerFarmerId AND rp.collectionOfficerId = c.id AND fpc.cropId = cv.id AND cv.cropGroupId = cg.id AND c.district = ?
+            WHERE rp.id = fpc.registerFarmerId AND rp.collectionOfficerId = c.id AND fpc.cropId = cv.id AND cv.cropGroupId = cg.id AND c.district = ? AND c.companyId = 1
             GROUP BY cg.cropNameEnglish, c.district
         `;
     collectionofficer.query(sql, [district], (err, results) => {
@@ -640,7 +640,7 @@ exports.getCollectionOfficerProvinceReports = (province) => {
              SUM(fpc.gradeBprice) AS priceB, 
              SUM(fpc.gradeCprice) AS priceC
             FROM registeredfarmerpayments rp, collectionofficer c, plant_care.cropvariety cv , plant_care.cropgroup cg, farmerpaymentscrops fpc
-            WHERE rp.id = fpc.registerFarmerId AND rp.collectionOfficerId = c.id AND fpc.cropId = cv.id AND cv.cropGroupId = cg.id AND c.province = ?
+            WHERE rp.id = fpc.registerFarmerId AND rp.collectionOfficerId = c.id AND fpc.cropId = cv.id AND cv.cropGroupId = cg.id AND c.province = ? AND c.companyId = 1
             GROUP BY cg.cropNameEnglish, c.province
         `;
     collectionofficer.query(sql, [province], (err, results) => {
