@@ -26,7 +26,7 @@ const uploadfile = multer({
 
 router.get(
     "/get-all-customers",
-    // authMiddleware,
+    authMiddleware,
     DashEp.getAllCustomers
 )
 
