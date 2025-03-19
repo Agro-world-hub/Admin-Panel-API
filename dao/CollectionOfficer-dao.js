@@ -490,7 +490,7 @@ exports.getAllCollectionOfficersStatus = (
             FROM collectionofficer Coff
             JOIN company Ccom ON Coff.companyId = Ccom.id
             JOIN collectioncenter CC ON Coff.centerId = CC.id
-            WHERE Coff.status = 'Approved'
+            WHERE Coff.status = 'Approved' AND Coff.companyId = 1
         `;
 
     let dataSql = `
@@ -511,7 +511,7 @@ exports.getAllCollectionOfficersStatus = (
             FROM collectionofficer Coff
             JOIN company Ccom ON Coff.companyId = Ccom.id
             JOIN collectioncenter CC ON Coff.centerId = CC.id
-            WHERE Coff.status = 'Approved'
+            WHERE Coff.status = 'Approved' AND Coff.companyId = 1
         `;
 
     const countParams = [];
