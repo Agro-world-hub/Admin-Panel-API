@@ -2639,6 +2639,24 @@ exports.allUsers = (userId) => {
       }
     });
   });
+}
+
+exports.allUsersTillPreviousMonth = (userId) => {
+  return new Promise((resolve, reject) => {
+    const sql = `
+     SELECT COUNT(*) AS all_previous_month_farmer_count
+      FROM users
+      WHERE plant_care.users.created_at <= DATE_SUB(CURDATE(), INTERVAL 1 MONTH)`;
+
+    plantcare.query(sql, [userId], (err, results) => {
+      if (err) {
+        reject(err);
+      } else {
+        // Return the user object
+        resolve(results[0]);
+      }
+    });
+  });
 };
 
 exports.qrUsers = (userId) => {
@@ -2647,6 +2665,26 @@ exports.qrUsers = (userId) => {
      SELECT COUNT(*) AS farmer_qr_count
       FROM users
       WHERE farmerQr IS NOT NULL AND farmerQr <> ''
+      `;
+
+    plantcare.query(sql, [userId], (err, results) => {
+      if (err) {
+        reject(err);
+      } else {
+        // Return the user object
+        resolve(results[0]);
+      }
+    });
+  });
+};
+
+exports.qrUsersTillPreviousMonth = (userId) => {
+  return new Promise((resolve, reject) => {
+    const sql = `
+     SELECT COUNT(*) AS farmer_qr_count_previous_month
+      FROM users
+      WHERE created_at <= DATE_SUB(CURDATE(), INTERVAL 1 MONTH)
+      AND farmerQr IS NOT NULL AND farmerQr <> ''
       `;
 
     plantcare.query(sql, [userId], (err, results) => {
@@ -2700,6 +2738,28 @@ exports.vegEnroll = (userId) => {
   });
 };
 
+exports.vegEnrollTillPreviousMonth = (userId) => {
+  return new Promise((resolve, reject) => {
+    const sql = `
+    SELECT COUNT(DISTINCT occ.id) AS veg_cultivation_count_till_previous_month
+    FROM ongoingcultivationscrops occ
+    JOIN cropcalender cc ON occ.cropCalendar = cc.id
+    JOIN cropvariety cv ON cc.cropVarietyId = cv.id
+    JOIN cropgroup cg ON cv.cropGroupId = cg.id
+    WHERE cg.category = 'Vegetables' AND occ.createdAt <= DATE_SUB(CURDATE(), INTERVAL 1 MONTH)
+    `;
+
+    plantcare.query(sql, [userId], (err, results) => {
+      if (err) {
+        reject(err);
+      } else {
+        // Return the user object
+        resolve(results[0]);
+      }
+    });
+  });
+};
+
 exports.grainEnroll = (userId) => {
   return new Promise((resolve, reject) => {
     const sql = `
@@ -2722,6 +2782,28 @@ exports.grainEnroll = (userId) => {
   });
 };
 
+exports.grainEnrollTillPreviousMonth = (userId) => {
+  return new Promise((resolve, reject) => {
+    const sql = `
+    SELECT COUNT(DISTINCT occ.id) AS grain_cultivation_count_till_previous_month
+    FROM ongoingcultivationscrops occ
+    JOIN cropcalender cc ON occ.cropCalendar = cc.id
+    JOIN cropvariety cv ON cc.cropVarietyId = cv.id
+    JOIN cropgroup cg ON cv.cropGroupId = cg.id
+    WHERE cg.category = 'Grain' AND occ.createdAt <= DATE_SUB(CURDATE(), INTERVAL 1 MONTH) ;
+    `;
+
+    plantcare.query(sql, [userId], (err, results) => {
+      if (err) {
+        reject(err);
+      } else {
+        // Return the user object
+        resolve(results[0]);
+      }
+    });
+  });
+};
+
 exports.fruitEnroll = (userId) => {
   return new Promise((resolve, reject) => {
     const sql = `
@@ -2731,6 +2813,28 @@ exports.fruitEnroll = (userId) => {
     JOIN cropvariety cv ON cc.cropVarietyId = cv.id
     JOIN cropgroup cg ON cv.cropGroupId = cg.id
     WHERE cg.category = 'Fruit' ;
+    `;
+
+    plantcare.query(sql, [userId], (err, results) => {
+      if (err) {
+        reject(err);
+      } else {
+        // Return the user object
+        resolve(results[0]);
+      }
+    });
+  });
+};
+
+exports.fruitEnrollTillPreviousMonth = (userId) => {
+  return new Promise((resolve, reject) => {
+    const sql = `
+    SELECT COUNT(DISTINCT occ.id) AS fruit_cultivation_count_till_previous_month
+    FROM ongoingcultivationscrops occ
+    JOIN cropcalender cc ON occ.cropCalendar = cc.id
+    JOIN cropvariety cv ON cc.cropVarietyId = cv.id
+    JOIN cropgroup cg ON cv.cropGroupId = cg.id
+    WHERE cg.category = 'Fruit' AND occ.createdAt <= DATE_SUB(CURDATE(), INTERVAL 1 MONTH) ;
     `;
 
     plantcare.query(sql, [userId], (err, results) => {
@@ -2782,6 +2886,28 @@ exports.getFarmerRegistrationCountsByDistrict = (district) => {
       if (err) {
         reject(err);
       } else {
+        resolve(results[0]);
+      }
+    });
+  });
+};
+
+exports.mushEnrollTillPreviousMonth = (userId) => {
+  return new Promise((resolve, reject) => {
+    const sql = `
+    SELECT COUNT(DISTINCT occ.id) AS mush_cultivation_count_till_previous_month
+    FROM ongoingcultivationscrops occ
+    JOIN cropcalender cc ON occ.cropCalendar = cc.id
+    JOIN cropvariety cv ON cc.cropVarietyId = cv.id
+    JOIN cropgroup cg ON cv.cropGroupId = cg.id
+    WHERE cg.category = 'Mushrooms' AND occ.createdAt <= DATE_SUB(CURDATE(), INTERVAL 1 MONTH);
+    `;
+
+    plantcare.query(sql, [userId], (err, results) => {
+      if (err) {
+        reject(err);
+      } else {
+        // Return the user object
         resolve(results[0]);
       }
     });

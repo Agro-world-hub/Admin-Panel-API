@@ -2731,11 +2731,40 @@ exports.plantcareDashboard = async (req, res) => {
     const activeUsers = await adminDao.activeUsers();
     const newUsers = await adminDao.newUsers();
     const allUsers = await adminDao.allUsers();
+    const allUsersTillPreviousMonth = await adminDao.allUsersTillPreviousMonth();
+    const allQrUsersTillPreviousMonth = await adminDao.qrUsersTillPreviousMonth();
     const qrUsers = await adminDao.qrUsers();
     const vegCultivation = await adminDao.vegEnroll();
     const grainCultivation = await adminDao.grainEnroll();
     const fruitCultivation = await adminDao.fruitEnroll();
     const mushCultivation = await adminDao.mushEnroll();
+    const vegEnrollTillPreviousMonth = await adminDao.vegEnrollTillPreviousMonth();
+    const fruitEnrollTillPreviousMonth = await adminDao.fruitEnrollTillPreviousMonth();
+    const grainEnrollTillPreviousMonth = await adminDao.grainEnrollTillPreviousMonth();
+    const mushEnrollTillPreviousMonth = await adminDao.mushEnrollTillPreviousMonth();
+
+
+    const qrUserPreviousMonth = (((qrUsers.farmer_qr_count - allQrUsersTillPreviousMonth.farmer_qr_count_previous_month) / allQrUsersTillPreviousMonth.farmer_qr_count_previous_month) * 100).toFixed(2);
+
+    const vegEnrollTillPreviousMonthCount = vegEnrollTillPreviousMonth.veg_cultivation_count_till_previous_month
+    const fruitEnrollTillPreviousMonthCount = fruitEnrollTillPreviousMonth.fruit_cultivation_count_till_previous_month
+    const grainEnrollTillPreviousMonthCount = grainEnrollTillPreviousMonth.grain_cultivation_count_till_previous_month
+    const mushEnrollTillPreviousMonthCount = mushEnrollTillPreviousMonth.mush_cultivation_count_till_previous_month
+
+
+    const totalCultivationTillPreviousMonth = vegEnrollTillPreviousMonthCount + fruitEnrollTillPreviousMonthCount + grainEnrollTillPreviousMonthCount + mushEnrollTillPreviousMonthCount
+    const totalCultivationTillThisMonth = vegCultivation.veg_cultivation_count + fruitCultivation.fruit_cultivation_count + grainCultivation.grain_cultivation_count + mushCultivation.mush_cultivation_count
+    
+    const cultivationIncreasePercentage = (((totalCultivationTillThisMonth - totalCultivationTillPreviousMonth) /
+      totalCultivationTillPreviousMonth) * 100
+    ).toFixed(2);
+
+
+    const userIncreasePercentage = (
+      ((allUsers.all_farmer_count - allUsersTillPreviousMonth.all_previous_month_farmer_count) /
+        allUsersTillPreviousMonth.all_previous_month_farmer_count) * 100
+    ).toFixed(2);
+
 
     // Add the new DAO function call for farmer registration counts by district
     const district = req.query.district || "DefaultDistrict"; // Get district from query params or use a default
@@ -2749,15 +2778,21 @@ exports.plantcareDashboard = async (req, res) => {
       grainCultivation: grainCultivation.grain_cultivation_count,
       fruitCultivation: fruitCultivation.fruit_cultivation_count,
       mushCultivation: mushCultivation.mush_cultivation_count,
+
       allusers: allUsers.all_farmer_count,
+      allusersTillPreviousMonth: allUsersTillPreviousMonth.all_previous_month_farmer_count,
+      user_increase_percentage: userIncreasePercentage,
+
       qrUsers: qrUsers.farmer_qr_count,
-      farmerRegistrationCounts: {
-        registered_count: farmerRegistrationCounts.registered_count,
-        unregistered_count: farmerRegistrationCounts.unregistered_count,
-      },
+      qr_user_increase_percentage: qrUserPreviousMonth,
+      
+      total_cultivation_till_previous_month: totalCultivationTillPreviousMonth,
+      total_cultivation_till_This_month: totalCultivationTillThisMonth,
+      cultivation_increase_percentage: cultivationIncreasePercentage
     };
 
-    console.log("Successfully fetched dashboard data");
+    console.log(data);
+    console.log("Successfully fetched feedback list");
     res.json({
       data,
     });
