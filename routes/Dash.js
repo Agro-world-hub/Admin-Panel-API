@@ -73,4 +73,10 @@ router.get(
   authMiddleware,
   DashEp.UpdateStatusAndSendPassword
 );
+
+router.get(
+  "/get-all-orders",
+  authMiddleware,
+  DashEp.getAllOrders
+)
 module.exports = router;

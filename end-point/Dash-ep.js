@@ -410,3 +410,49 @@ exports.UpdateStatusAndSendPassword = async (req, res) => {
     res.status(500).json({ message: "An error occurred.", error });
   }
 };
+
+exports.getAllOrders = async (req, res) => {
+  const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
+  console.log(fullUrl);
+
+
+  try {
+    console.log('bla bla bla')
+    // Validate query parameters
+    // const validatedQuery =
+    //   await collectionofficerValidate.getAllCollectionOfficersSchema.validateAsync(
+    //     req.query
+    //   );
+
+    const { page, limit, orderStatus, paymentMethod, paymentStatus, deliveryType, searchText } = req.query;
+
+    // const { page, limit, nic, company } = validatedQuery;
+
+    // Call the DAO to get all collection officers
+    const result = await DashDao.getAllOrders(
+      page,
+      limit,
+      orderStatus,
+      paymentMethod,
+      paymentStatus,
+      deliveryType,
+      searchText
+
+    );
+
+    console.log({ page, limit });
+    console.log(result);
+
+    return res.status(200).json(result);
+  } catch (error) {
+    // if (error.isJoi) {
+    //   // Handle validation error
+    //   return res.status(400).json({ error: error.details[0].message });
+    // }
+
+    console.error("Error fetching collection officers:", error);
+    return res
+      .status(500)
+      .json({ error: "An error occurred while fetching collection officers" });
+  }
+};
