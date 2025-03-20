@@ -26,7 +26,7 @@ exports.getAllSalesAgents = async (req, res) => {
       // const { items, total } = await PriceListDAO.getAllPriceListDao(centerId, page, limit, grade, searchText);
 
       const totalTarget = await SalesAgentDAO.getTotalTargetDao(date);
-      const { items, total } = await SalesAgentDAO.getAllSalesAgentsDao(page, limit, searchText, status, date);
+      const { items, total } = await SalesAgentDAO.getAllSalesAgentsDao(page, limit, searchText, status, date, totalTarget.targetValue);
   
       // console.log({ totalTarget, total });
   

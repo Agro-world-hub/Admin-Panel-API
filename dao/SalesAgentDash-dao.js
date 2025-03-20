@@ -3,13 +3,13 @@ const { Upload } = require("@aws-sdk/lib-storage");
 const Joi = require("joi");
 
 
-exports.getAllSalesAgentsDao = (page, limit, searchText, status, date) => {
+exports.getAllSalesAgentsDao = (page, limit, searchText, status, date, targetValue) => {
     return new Promise((resolve, reject) => {
         const offset = (page - 1) * limit;
         let countSql = `
         SELECT COUNT(*) AS total FROM salesagent
-
         `;
+
         let dataSql = `
         SELECT 
             SA.id,
@@ -24,13 +24,14 @@ exports.getAllSalesAgentsDao = (page, limit, searchText, status, date) => {
         const countParams = [];
         const dataParams = [date];
 
-        let whereClauses = [];
 
         // Handling Search Query
         if (searchText) {
-            whereClauses.push(`(salesagent.firstName LIKE ? 
-                OR salesagent.lastName LIKE ? 
-                OR salesagent.empId LIKE ?)`);
+            if (searchText) {
+                dataSql += `
+                    WHERE ( SA.lastName LIKE ? OR SA.firstName LIKE ? OR SA.empId LIKE ? )
+                `
+            }
 
             const searchPattern = `%${searchText}%`;
             countParams.push(searchPattern, searchPattern, searchPattern);
@@ -38,34 +39,23 @@ exports.getAllSalesAgentsDao = (page, limit, searchText, status, date) => {
         }
 
         // Handling Status Filter
-        // if (status) {
-        //     whereClauses.push(`
-        //     (CASE 
-        //         WHEN salesagentstars.completed > SA.target THEN 'Exceeded'
-        //         WHEN salesagentstars.completed = SA.target THEN 'Completed'
-        //         ELSE 'Pending'
-        //     END = ?)`);
+        if (status) {
+            if (status === 'Pending') {
+                dataSql += ` HAVING targetComplete < ? `
+                dataParams.push(targetValue)
+            } else if (status === 'Completed') {
+                dataSql += ` HAVING targetComplete = ? `
+                dataParams.push(targetValue)
+            } else if (status === 'Exceeded') {
+                dataSql += ` HAVING targetComplete > ? `
+                dataParams.push(targetValue)
+            } else {
+                console.log("not valid status");
+            }
+        }
 
-        //     countParams.push(status);
-        //     dataParams.push(status);
-        // }
-
-        // Handling Date Filter
-        // if (date) {
-        //     whereClauses.push(`DATE(salesagent.createdAt) = DATE(?)`);
-
-        //     countParams.push(date);
-        //     dataParams.push(date);
-        // }
-
-        // // Adding WHERE clauses to queries
-        // if (whereClauses.length > 0) {
-        //     countSql += ` WHERE ${whereClauses.join(' AND ')}`;
-        //     dataSql += ` WHERE ${whereClauses.join(' AND ')}`;
-        // }
-
-        dataSql += " LIMIT ? OFFSET ?";
-        dataParams.push(parseInt(limit, 10), parseInt(offset, 10));
+        dataSql += " LIMIT ? OFFSET ? ";
+        dataParams.push(parseInt(limit), parseInt(offset));
 
         // Execute Count Query
         dash.query(countSql, countParams, (countErr, countResults) => {
@@ -156,7 +146,7 @@ exports.removeTargetDao = (target, userId) => {
         DELETE FROM target 
         WHERE DATE(createdAt) = CURDATE()
     `;
-    
+
 
         dash.query(sql, (err, results) => {
             if (err) {
