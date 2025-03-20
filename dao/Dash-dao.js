@@ -702,8 +702,125 @@ const SendGeneratedPasswordDao = async (
     });
 };
 
+const getAllOrders = (page, limit, orderStatus, paymentMethod, paymentStatus, deliveryType, searchText) => {
+  return new Promise((resolve, reject) => {
+      const offset = (page - 1) * limit;
+
+      let countSql = `
+          SELECT COUNT(*) as total
+          FROM dash.orders o
+          JOIN dash.customer c ON o.customerId = c.id
+          JOIN dash.salesagent sa ON o.salesAgentId = sa.id
+      `;
+
+      let dataSql = `
+          SELECT
+              o.id,
+              o.InvNo AS invNo,
+              o.orderStatus,
+              o.scheduleDate,
+              o.paymentMethod,
+              o.paymentStatus,
+              o.fullDiscount,
+              o.fullTotal,
+              o.timeSlot,
+              o.deliveryType,
+              o.createdAt,
+              c.cusId,
+              c.firstName,
+              c.lastName,
+              sa.empId
+          FROM dash.orders o
+          JOIN dash.customer c ON o.customerId = c.id
+          JOIN dash.salesagent sa ON o.salesAgentId = sa.id 
+      `;
+
+      const countParams = [];
+      const dataParams = [];
+
+      let whereConditions = []; 
+
+      if (searchText) {
+          whereConditions.push(`
+              (
+                  c.cusId LIKE ?
+                  OR c.firstName LIKE ?
+                  OR c.lastName LIKE ?
+                  OR o.invNo Like ?
+                  OR sa.empId LIKE ?
+                  OR o.deliveryType LIKE ?
+                  OR o.paymentStatus LIKE ?
+                  OR o.orderStatus LIKE ?
+                  OR o.paymentMethod LIKE ?
+                  
+              )
+          `);
+
+          const searchValue = `%${searchText}%`;
+          countParams.push(searchValue, searchValue, searchValue, searchValue, searchValue, searchValue, searchValue, searchValue, searchValue);
+          dataParams.push(searchValue, searchValue, searchValue, searchValue, searchValue, searchValue, searchValue, searchValue, searchValue);
+      }
+
+      if (orderStatus) {
+          whereConditions.push(`o.orderStatus = ?`);
+          countParams.push(orderStatus);
+          dataParams.push(orderStatus);
+      }
+
+      if (paymentMethod) {
+        whereConditions.push(`o.paymentMethod = ?`);
+        countParams.push(paymentMethod);
+        dataParams.push(paymentMethod);
+      }
+
+      if (paymentStatus) {
+        whereConditions.push(`o.paymentStatus = ?`);
+        countParams.push(+paymentStatus); // Convert string to number
+        dataParams.push(+paymentStatus);
+      }
+
+      if (deliveryType) {
+        whereConditions.push(`o.deliveryType = ?`);
+        countParams.push(deliveryType);
+        dataParams.push(deliveryType);
+      }
+
+      // Append WHERE conditions if any exist
+      if (whereConditions.length > 0) {
+          countSql += " WHERE " + whereConditions.join(" AND ");
+          dataSql += " WHERE " + whereConditions.join(" AND ");
+      }
+
+      dataSql += " ORDER BY o.createdAt DESC";
+
+      // Add pagination at the end, so LIMIT and OFFSET are always numbers
+      dataSql += " LIMIT ? OFFSET ?";
+      dataParams.push(parseInt(limit), parseInt(offset)); // Ensure they are integers
+
+      // Execute count query
+      dash.query(countSql, countParams, (countErr, countResults) => {
+          if (countErr) {
+              console.error("Error in count query:", countErr);
+              return reject(countErr);
+          }
+
+          const total = countResults[0].total;
+
+          // Execute data query
+          dash.query(dataSql, dataParams, (dataErr, dataResults) => {
+              if (dataErr) {
+                  console.error("Error in data query:", dataErr);
+                  return reject(dataErr);
+              }
+
+              resolve({ items: dataResults, total });
+          });
+      });
+  });
+};
+
 
 module.exports = { getAllSalesCustomers, getAllSalesAgents, deleteSalesAgent, getForCreateId, checkNICExist, checkEmailExist, 
     createSalesAgent, getSalesAgentDataById, updateSalesAgentDetails, SendGeneratedPasswordDao,
-    UpdateSalesAgentStatusAndPasswordDao, getSalesAgentEmailDao };
+    UpdateSalesAgentStatusAndPasswordDao, getSalesAgentEmailDao, getAllOrders };
 
