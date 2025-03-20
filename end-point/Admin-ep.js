@@ -2726,51 +2726,144 @@ exports.getAllfeedackListForBarChart = async (req, res) => {
 //   }
 // };
 
+// exports.plantcareDashboard = async (req, res) => {
+//   try {
+//     const activeUsers = await adminDao.activeUsers();
+//     const newUsers = await adminDao.newUsers();
+//     const allUsers = await adminDao.allUsers();
+//     const allUsersTillPreviousMonth = await adminDao.allUsersTillPreviousMonth();
+//     const allQrUsersTillPreviousMonth = await adminDao.qrUsersTillPreviousMonth();
+//     const qrUsers = await adminDao.qrUsers();
+//     const vegCultivation = await adminDao.vegEnroll();
+//     const grainCultivation = await adminDao.grainEnroll();
+//     const fruitCultivation = await adminDao.fruitEnroll();
+//     const mushCultivation = await adminDao.mushEnroll();
+//     const vegEnrollTillPreviousMonth = await adminDao.vegEnrollTillPreviousMonth();
+//     const fruitEnrollTillPreviousMonth = await adminDao.fruitEnrollTillPreviousMonth();
+//     const grainEnrollTillPreviousMonth = await adminDao.grainEnrollTillPreviousMonth();
+//     const mushEnrollTillPreviousMonth = await adminDao.mushEnrollTillPreviousMonth();
+
+//     const qrUserPreviousMonth = (((qrUsers.farmer_qr_count - allQrUsersTillPreviousMonth.farmer_qr_count_previous_month) / allQrUsersTillPreviousMonth.farmer_qr_count_previous_month) * 100).toFixed(2);
+
+//     const vegEnrollTillPreviousMonthCount = vegEnrollTillPreviousMonth.veg_cultivation_count_till_previous_month
+//     const fruitEnrollTillPreviousMonthCount = fruitEnrollTillPreviousMonth.fruit_cultivation_count_till_previous_month
+//     const grainEnrollTillPreviousMonthCount = grainEnrollTillPreviousMonth.grain_cultivation_count_till_previous_month
+//     const mushEnrollTillPreviousMonthCount = mushEnrollTillPreviousMonth.mush_cultivation_count_till_previous_month
+
+//     const totalCultivationTillPreviousMonth = vegEnrollTillPreviousMonthCount + fruitEnrollTillPreviousMonthCount + grainEnrollTillPreviousMonthCount + mushEnrollTillPreviousMonthCount
+//     const totalCultivationTillThisMonth = vegCultivation.veg_cultivation_count + fruitCultivation.fruit_cultivation_count + grainCultivation.grain_cultivation_count + mushCultivation.mush_cultivation_count
+
+//     const cultivationIncreasePercentage = (((totalCultivationTillThisMonth - totalCultivationTillPreviousMonth) /
+//       totalCultivationTillPreviousMonth) * 100
+//     ).toFixed(2);
+
+//     const userIncreasePercentage = (
+//       ((allUsers.all_farmer_count - allUsersTillPreviousMonth.all_previous_month_farmer_count) /
+//         allUsersTillPreviousMonth.all_previous_month_farmer_count) * 100
+//     ).toFixed(2);
+
+//     // Add the new DAO function call for farmer registration counts by district
+//     const district = req.query.district || "DefaultDistrict"; // Get district from query params or use a default
+//     const farmerRegistrationCounts =
+//       await adminDao.getFarmerRegistrationCountsByDistrict(district);
+
+//     const data = {
+//       active_users: activeUsers.active_users_count,
+//       new_users: newUsers.new_users_count,
+//       vegCultivation: vegCultivation.veg_cultivation_count,
+//       grainCultivation: grainCultivation.grain_cultivation_count,
+//       fruitCultivation: fruitCultivation.fruit_cultivation_count,
+//       mushCultivation: mushCultivation.mush_cultivation_count,
+
+//       allusers: allUsers.all_farmer_count,
+//       allusersTillPreviousMonth: allUsersTillPreviousMonth.all_previous_month_farmer_count,
+//       user_increase_percentage: userIncreasePercentage,
+
+//       qrUsers: qrUsers.farmer_qr_count,
+//       qr_user_increase_percentage: qrUserPreviousMonth,
+
+//       total_cultivation_till_previous_month: totalCultivationTillPreviousMonth,
+//       total_cultivation_till_This_month: totalCultivationTillThisMonth,
+//       cultivation_increase_percentage: cultivationIncreasePercentage
+//     };
+
+//     console.log(data);
+//     console.log("Successfully fetched feedback list");
+//     res.json({
+//       data,
+//     });
+//   } catch (err) {
+//     if (err.isJoi) {
+//       return res.status(400).json({ error: err.details[0].message });
+//     }
+//     console.error("Error executing query:", err);
+//     res.status(500).send("An error occurred while fetching data.");
+//   }
+// };
+
 exports.plantcareDashboard = async (req, res) => {
   try {
+    // Fetch all necessary data from the database
     const activeUsers = await adminDao.activeUsers();
     const newUsers = await adminDao.newUsers();
     const allUsers = await adminDao.allUsers();
-    const allUsersTillPreviousMonth = await adminDao.allUsersTillPreviousMonth();
-    const allQrUsersTillPreviousMonth = await adminDao.qrUsersTillPreviousMonth();
+    const allUsersTillPreviousMonth =
+      await adminDao.allUsersTillPreviousMonth();
+    const allQrUsersTillPreviousMonth =
+      await adminDao.qrUsersTillPreviousMonth();
     const qrUsers = await adminDao.qrUsers();
     const vegCultivation = await adminDao.vegEnroll();
     const grainCultivation = await adminDao.grainEnroll();
     const fruitCultivation = await adminDao.fruitEnroll();
     const mushCultivation = await adminDao.mushEnroll();
-    const vegEnrollTillPreviousMonth = await adminDao.vegEnrollTillPreviousMonth();
-    const fruitEnrollTillPreviousMonth = await adminDao.fruitEnrollTillPreviousMonth();
-    const grainEnrollTillPreviousMonth = await adminDao.grainEnrollTillPreviousMonth();
-    const mushEnrollTillPreviousMonth = await adminDao.mushEnrollTillPreviousMonth();
+    const vegEnrollTillPreviousMonth =
+      await adminDao.vegEnrollTillPreviousMonth();
+    const fruitEnrollTillPreviousMonth =
+      await adminDao.fruitEnrollTillPreviousMonth();
+    const grainEnrollTillPreviousMonth =
+      await adminDao.grainEnrollTillPreviousMonth();
+    const mushEnrollTillPreviousMonth =
+      await adminDao.mushEnrollTillPreviousMonth();
 
-
-    const qrUserPreviousMonth = (((qrUsers.farmer_qr_count - allQrUsersTillPreviousMonth.farmer_qr_count_previous_month) / allQrUsersTillPreviousMonth.farmer_qr_count_previous_month) * 100).toFixed(2);
-
-    const vegEnrollTillPreviousMonthCount = vegEnrollTillPreviousMonth.veg_cultivation_count_till_previous_month
-    const fruitEnrollTillPreviousMonthCount = fruitEnrollTillPreviousMonth.fruit_cultivation_count_till_previous_month
-    const grainEnrollTillPreviousMonthCount = grainEnrollTillPreviousMonth.grain_cultivation_count_till_previous_month
-    const mushEnrollTillPreviousMonthCount = mushEnrollTillPreviousMonth.mush_cultivation_count_till_previous_month
-
-
-    const totalCultivationTillPreviousMonth = vegEnrollTillPreviousMonthCount + fruitEnrollTillPreviousMonthCount + grainEnrollTillPreviousMonthCount + mushEnrollTillPreviousMonthCount
-    const totalCultivationTillThisMonth = vegCultivation.veg_cultivation_count + fruitCultivation.fruit_cultivation_count + grainCultivation.grain_cultivation_count + mushCultivation.mush_cultivation_count
-    
-    const cultivationIncreasePercentage = (((totalCultivationTillThisMonth - totalCultivationTillPreviousMonth) /
-      totalCultivationTillPreviousMonth) * 100
+    // Calculate percentage increases
+    const qrUserPreviousMonth = (
+      ((qrUsers.farmer_qr_count -
+        allQrUsersTillPreviousMonth.farmer_qr_count_previous_month) /
+        allQrUsersTillPreviousMonth.farmer_qr_count_previous_month) *
+      100
     ).toFixed(2);
 
+    const totalCultivationTillPreviousMonth =
+      vegEnrollTillPreviousMonth.veg_cultivation_count_till_previous_month +
+      fruitEnrollTillPreviousMonth.fruit_cultivation_count_till_previous_month +
+      grainEnrollTillPreviousMonth.grain_cultivation_count_till_previous_month +
+      mushEnrollTillPreviousMonth.mush_cultivation_count_till_previous_month;
+
+    const totalCultivationTillThisMonth =
+      vegCultivation.veg_cultivation_count +
+      fruitCultivation.fruit_cultivation_count +
+      grainCultivation.grain_cultivation_count +
+      mushCultivation.mush_cultivation_count;
+
+    const cultivationIncreasePercentage = (
+      ((totalCultivationTillThisMonth - totalCultivationTillPreviousMonth) /
+        totalCultivationTillPreviousMonth) *
+      100
+    ).toFixed(2);
 
     const userIncreasePercentage = (
-      ((allUsers.all_farmer_count - allUsersTillPreviousMonth.all_previous_month_farmer_count) /
-        allUsersTillPreviousMonth.all_previous_month_farmer_count) * 100
+      ((allUsers.all_farmer_count -
+        allUsersTillPreviousMonth.all_previous_month_farmer_count) /
+        allUsersTillPreviousMonth.all_previous_month_farmer_count) *
+      100
     ).toFixed(2);
 
-
-    // Add the new DAO function call for farmer registration counts by district
+    // Fetch farmer registration counts by district
     const district = req.query.district || "DefaultDistrict"; // Get district from query params or use a default
     const farmerRegistrationCounts =
       await adminDao.getFarmerRegistrationCountsByDistrict(district);
 
+    // Prepare the response data
     const data = {
       active_users: activeUsers.active_users_count,
       new_users: newUsers.new_users_count,
@@ -2778,24 +2871,23 @@ exports.plantcareDashboard = async (req, res) => {
       grainCultivation: grainCultivation.grain_cultivation_count,
       fruitCultivation: fruitCultivation.fruit_cultivation_count,
       mushCultivation: mushCultivation.mush_cultivation_count,
-
       allusers: allUsers.all_farmer_count,
-      allusersTillPreviousMonth: allUsersTillPreviousMonth.all_previous_month_farmer_count,
+      allusersTillPreviousMonth:
+        allUsersTillPreviousMonth.all_previous_month_farmer_count,
       user_increase_percentage: userIncreasePercentage,
-
       qrUsers: qrUsers.farmer_qr_count,
       qr_user_increase_percentage: qrUserPreviousMonth,
-      
       total_cultivation_till_previous_month: totalCultivationTillPreviousMonth,
-      total_cultivation_till_This_month: totalCultivationTillThisMonth,
-      cultivation_increase_percentage: cultivationIncreasePercentage
+      total_cultivation_till_this_month: totalCultivationTillThisMonth,
+      cultivation_increase_percentage: cultivationIncreasePercentage,
+      farmerRegistrationCounts: {
+        registered_count: farmerRegistrationCounts.registered_count,
+        unregistered_count: farmerRegistrationCounts.unregistered_count,
+      },
     };
 
-    console.log(data);
-    console.log("Successfully fetched feedback list");
-    res.json({
-      data,
-    });
+    console.log("Successfully fetched dashboard data");
+    res.json({ data });
   } catch (err) {
     if (err.isJoi) {
       return res.status(400).json({ error: err.details[0].message });
