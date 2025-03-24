@@ -166,14 +166,15 @@ exports.getAllCollectionOfficers = async (req, res) => {
         req.query
       );
 
-    const { page, limit, nic, company } = validatedQuery;
+    const { page, limit, nic, company, role } = validatedQuery;
 
     // Call the DAO to get all collection officers
     const result = await collectionofficerDao.getAllCollectionOfficers(
       page,
       limit,
       nic,
-      company
+      company,
+      role
     );
 
     console.log("Successfully fetched collection officers");
@@ -918,6 +919,73 @@ exports.updateCenterHeadDetails = async (req, res) => {
       branchName,
       profileImageUrl
     );
+    res.json({ message: "Collection officer details updated successfully" });
+  } catch (err) {
+    console.error("Error updating collection officer details:", err);
+    res
+      .status(500)
+      .json({ error: "Failed to update collection officer details" });
+  }
+};
+
+exports.getAllCenterNames = async (req, res) => {
+  const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
+  console.log(fullUrl);
+  try {
+    const results = await collectionofficerDao.getAllCenterNamesDao();
+
+    console.log("Successfully retrieved reports");
+    res.status(200).json(results);
+  } catch (error) {
+    if (error.isJoi) {
+      return res.status(400).json({ error: error.details[0].message });
+    }
+
+    console.error("Error retrieving", error);
+    return res
+      .status(500)
+      .json({ error: "An error occurred while fetching" });
+  }
+};
+
+exports.getAllCollectionManagerNames = async (req, res) => {
+  const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
+  console.log(fullUrl);
+  try {
+    const results = await collectionofficerDao.getAllCenterManagerDao();
+
+    console.log("Successfully retrieved reports");
+    res.status(200).json(results);
+  } catch (error) {
+    if (error.isJoi) {
+      return res.status(400).json({ error: error.details[0].message });
+    }
+
+    console.error("Error retrieving district reports:", error);
+    return res
+      .status(500)
+      .json({ error: "An error occurred while fetching the reports" });
+  }
+};
+
+exports.claimOfficer = async (req, res) => {
+  try {
+    const { id } = req.params; // Officer ID from URL params
+    const { centerId, irmId } = req.body; // Center ID and IRM ID from request body
+
+    // Validate required fields
+    if (!centerId) {
+      return res.status(400).json({ error: "centerId is required" });
+    }
+
+    // Call the DAO function to update the officer's details
+    const result = await collectionofficerDao.claimOfficerDetailsDao(
+      id,
+      centerId,
+      irmId
+    );
+
+    // Send success response
     res.json({ message: "Collection officer details updated successfully" });
   } catch (err) {
     console.error("Error updating collection officer details:", err);

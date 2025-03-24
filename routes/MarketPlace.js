@@ -1,6 +1,7 @@
 const express = require("express");
 const authMiddleware = require("../middlewares/authMiddleware");
 const marketPlaceEp = require("../end-point/MarketPlace-ep");
+const upload = require("../middlewares/uploadMiddleware");
 
 const router = express.Router();
 
@@ -58,6 +59,7 @@ router.get(
 router.post(
     '/add-product',
     authMiddleware,
+    upload.single("file"),
     marketPlaceEp.createPackage
 )
 

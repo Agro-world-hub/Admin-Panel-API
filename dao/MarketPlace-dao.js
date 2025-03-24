@@ -49,10 +49,10 @@ exports.getAllCropNameDAO = () => {
   });
 };
 
-exports.createCropGroup = async (product) => {
+exports.createMarketProductDao = async (product) => {
   return new Promise((resolve, reject) => {
     const sql =
-      "INSERT INTO marketplaceitems (cropId, displayName, normalPrice, discountedPrice, promo, unitType, startValue, changeby, tags, category) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+      "INSERT INTO marketplaceitems (cropId, displayName, normalPrice, discountedPrice, promo, unitType, startValue, changeby, tags, category, discount, displayType) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
     const values = [
       product.variety,
       product.cropName,
@@ -63,14 +63,16 @@ exports.createCropGroup = async (product) => {
       product.startValue,
       product.changeby,
       product.tags,
-      product.category
+      product.category,
+      product.discount,
+      product.displaytype
     ];
 
     marketPlace.query(sql, values, (err, results) => {
       if (err) {
         reject(err);
       } else {
-        resolve(results.insertId);
+        resolve(results);
       }
     });
   });
@@ -303,14 +305,18 @@ exports.getAllProductCropCatogoryDAO = () => {
 };
 
 
-exports.creatPackageDAO = async (data) => {
+exports.creatPackageDAO = async (data, profileImageUrl) => {
   return new Promise((resolve, reject) => {
     const sql =
-      "INSERT INTO marketplacepackages (name, status, total) VALUES (?, ?, ?)";
+      "INSERT INTO marketplacepackages (name, status, total, image, description, portion, period) VALUES (?, ?, ?, ?, ?, ?, ?)";
     const values = [
       data.name,
       data.status,
-      data.total
+      data.total,
+      profileImageUrl,
+      data.description,
+      data.portion,
+      data.period
     ];
 
     marketPlace.query(sql, values, (err, results) => {
@@ -363,6 +369,7 @@ exports.getProductById = async (id) => {
             MPI.unitType,
             MPI.startValue,
             MPI.changeby,
+            MPI.displayType AS displaytype,
             MPI.tags
           FROM marketplaceitems MPI, plant_care.cropvariety CV, plant_care.cropgroup CG
           WHERE MPI.cropId = CV.id AND CV.cropGroupId = CG.id AND MPI.id = ?
@@ -401,7 +408,9 @@ exports.updateMarketProductDao = async (product, id) => {
         startValue = ?, 
         changeby = ?, 
         tags = ?, 
-        category = ?
+        category = ?,
+        discount = ?,
+        displaytype = ?
         WHERE id = ?
       `;
     const values = [
@@ -415,6 +424,8 @@ exports.updateMarketProductDao = async (product, id) => {
       product.changeby,
       product.tags,
       product.category,
+      product.discount,
+      product.displaytype,
       id
     ];
 

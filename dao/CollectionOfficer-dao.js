@@ -23,7 +23,7 @@ exports.getCollectionOfficerDistrictReports = (district) => {
              SUM(fpc.gradeBprice) AS priceB, 
              SUM(fpc.gradeCprice) AS priceC
             FROM registeredfarmerpayments rp, collectionofficer c, plant_care.cropvariety cv , plant_care.cropgroup cg, farmerpaymentscrops fpc
-            WHERE rp.id = fpc.registerFarmerId AND rp.collectionOfficerId = c.id AND fpc.cropId = cv.id AND cv.cropGroupId = cg.id AND c.district = ?
+            WHERE rp.id = fpc.registerFarmerId AND rp.collectionOfficerId = c.id AND fpc.cropId = cv.id AND cv.cropGroupId = cg.id AND c.district = ? AND c.companyId = 1
             GROUP BY cg.cropNameEnglish, c.district
         `;
     collectionofficer.query(sql, [district], (err, results) => {
@@ -361,7 +361,7 @@ exports.getQrImage = (id) => {
 //   });
 // };
 
-exports.getAllCollectionOfficers = (page, limit, searchNIC, companyid) => {
+exports.getAllCollectionOfficers = (page, limit, searchNIC, companyid, role) => {
   return new Promise((resolve, reject) => {
     const offset = (page - 1) * limit;
 
@@ -370,7 +370,7 @@ exports.getAllCollectionOfficers = (page, limit, searchNIC, companyid) => {
             FROM collectionofficer coff
             JOIN company cm ON coff.companyId = cm.id
             LEFT JOIN collectioncenter cc ON coff.centerId = cc.id
-            WHERE 1 = 1
+            WHERE coff.jobRole != 'Collection Center Head'
         `;
 
     let dataSql = `
@@ -391,7 +391,7 @@ exports.getAllCollectionOfficers = (page, limit, searchNIC, companyid) => {
             FROM collectionofficer coff
             JOIN company cm ON coff.companyId = cm.id
             LEFT JOIN collectioncenter cc ON coff.centerId = cc.id
-            WHERE 1 = 1
+            WHERE coff.jobRole != 'Collection Center Head'
         `;
 
     const countParams = [];
@@ -403,6 +403,13 @@ exports.getAllCollectionOfficers = (page, limit, searchNIC, companyid) => {
       dataSql += " AND cm.id = ?";
       countParams.push(companyid);
       dataParams.push(companyid);
+    }
+
+    if (role) {
+      countSql += " AND coff.jobRole = ?";
+      dataSql += " AND coff.jobRole = ?";
+      countParams.push(role);
+      dataParams.push(role);
     }
 
     // Apply search filters for NIC or related fields
@@ -483,7 +490,7 @@ exports.getAllCollectionOfficersStatus = (
             FROM collectionofficer Coff
             JOIN company Ccom ON Coff.companyId = Ccom.id
             JOIN collectioncenter CC ON Coff.centerId = CC.id
-            WHERE Coff.status = 'Approved'
+            WHERE Coff.status = 'Approved' AND Coff.companyId = 1
         `;
 
     let dataSql = `
@@ -504,7 +511,7 @@ exports.getAllCollectionOfficersStatus = (
             FROM collectionofficer Coff
             JOIN company Ccom ON Coff.companyId = Ccom.id
             JOIN collectioncenter CC ON Coff.centerId = CC.id
-            WHERE Coff.status = 'Approved'
+            WHERE Coff.status = 'Approved' AND Coff.companyId = 1
         `;
 
     const countParams = [];
@@ -633,7 +640,7 @@ exports.getCollectionOfficerProvinceReports = (province) => {
              SUM(fpc.gradeBprice) AS priceB, 
              SUM(fpc.gradeCprice) AS priceC
             FROM registeredfarmerpayments rp, collectionofficer c, plant_care.cropvariety cv , plant_care.cropgroup cg, farmerpaymentscrops fpc
-            WHERE rp.id = fpc.registerFarmerId AND rp.collectionOfficerId = c.id AND fpc.cropId = cv.id AND cv.cropGroupId = cg.id AND c.province = ?
+            WHERE rp.id = fpc.registerFarmerId AND rp.collectionOfficerId = c.id AND fpc.cropId = cv.id AND cv.cropGroupId = cg.id AND c.province = ? AND c.companyId = 1
             GROUP BY cg.cropNameEnglish, c.province
         `;
     collectionofficer.query(sql, [province], (err, results) => {
@@ -1463,6 +1470,69 @@ exports.updateCenterHeadDetails = (
     values.push(id);
 
     collectionofficer.query(sql, values, (err, results) => {
+      if (err) {
+        return reject(err);
+      }
+      resolve(results);
+    });
+  });
+};
+
+exports.getAllCenterNamesDao = (district) => {
+  return new Promise((resolve, reject) => {
+    const sql = `
+            SELECT id, centerName
+            FROM collectioncenter
+        `;
+    collectionofficer.query(sql, [district], (err, results) => {
+      if (err) {
+        return reject(err); // Reject promise if an error occurs
+      }
+      resolve(results); // Resolve the promise with the query results
+    });
+  });
+};
+
+exports.getAllCenterManagerDao = () => {
+  return new Promise((resolve, reject) => {
+    const sql = `
+            SELECT id, centerName
+            FROM collectioncenter
+        `;
+    collectionofficer.query(sql, (err, results) => {
+      if (err) {
+        return reject(err); // Reject promise if an error occurs
+      }
+      resolve(results); // Resolve the promise with the query results
+    });
+  });
+};
+
+exports.getAllCenterManagerDao = () => {
+  return new Promise((resolve, reject) => {
+    const sql = `
+      SELECT id, firstNameEnglish, lastNameEnglish
+      FROM collectionofficer
+      WHERE jobRole = 'Collection Center Manager';
+    `;
+    
+    collectionofficer.query(sql, (err, results) => {
+      if (err) {
+        return reject(err); // Reject promise if an error occurs
+      }
+      resolve(results); // Resolve the promise with the query results
+    });
+  });
+};
+
+exports.claimOfficerDetailsDao = (id, centerId, irmId) => {
+  return new Promise((resolve, reject) => {
+    const sql = `
+      UPDATE collectionofficer
+      SET centerId = ?, irmId = ?, claimStatus = 1
+      WHERE id = ?
+    `;
+    collectionofficer.query(sql, [centerId, irmId, id], (err, results) => {
       if (err) {
         return reject(err);
       }

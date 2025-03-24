@@ -14,8 +14,6 @@ const { v4: uuidv4 } = require("uuid");
 const uploadFileToS3 = require("../middlewares/s3upload");
 const deleteFromS3 = require("../middlewares/s3delete");
 
-
-
 exports.loginAdmin = async (req, res) => {
   const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
   console.log(fullUrl);
@@ -71,12 +69,14 @@ exports.loginAdmin = async (req, res) => {
     res.json(data);
   } catch (err) {
     console.error("Error during login:", err);
-    
+
     if (err.isJoi) {
       // Validation error
-      return res.status(400).json({ error: "Invalid input data", details: err.details });
+      return res
+        .status(400)
+        .json({ error: "Invalid input data", details: err.details });
     }
-    
+
     // For any other unexpected errors, keep the 500 status
     res.status(500).json({ error: "An internal server error occurred." });
   }
@@ -974,10 +974,16 @@ exports.editAdminUserWithoutId = async (req, res) => {
 
     const { id, mail, userName, role, position } = req.body;
 
-      console.log(id, mail, userName, role, position );
+    console.log(id, mail, userName, role, position);
 
     // Call DAO to update the user
-    const results = await adminDao.updateAdminUser(id, mail, userName, role, position);
+    const results = await adminDao.updateAdminUser(
+      id,
+      mail,
+      userName,
+      role,
+      position
+    );
 
     if (results.affectedRows === 0) {
       return res
@@ -1034,7 +1040,6 @@ exports.getAdminById = async (req, res) => {
   }
 };
 
-
 exports.editAdminUserPassword = async (req, res) => {
   try {
     // Validate the request body
@@ -1052,13 +1057,13 @@ exports.editAdminUserPassword = async (req, res) => {
 
     // Check if the provided current password matches the existing hashed password
     const isMatch = await bcrypt.compare(currentPassword, existingPassword);
-    
+
     if (!isMatch) {
       return res.status(400).json({ error: "Current password is incorrect" });
     }
 
     // Hash the new password before storing it in the database
-    const hashedNewPassword = await bcrypt.hash(newPassword, 10);  // 10 is the salt rounds
+    const hashedNewPassword = await bcrypt.hash(newPassword, 10); // 10 is the salt rounds
 
     // Update the password using the DAO with the hashed new password
     await adminDao.updateAdminPasswordById(id, hashedNewPassword);
@@ -1077,7 +1082,6 @@ exports.editAdminUserPassword = async (req, res) => {
       .json({ error: "An error occurred while updating the password" });
   }
 };
-
 
 exports.deletePlantCareUser = async (req, res) => {
   const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
@@ -2595,7 +2599,7 @@ exports.createFeedback = async (req, res) => {
     );
 
     return res.status(201).json({
-      message: "feedback create successfully",
+      message: "Feedback option created successfully",
       id: feedBack,
       status: true,
     });
@@ -2689,15 +2693,67 @@ exports.getAllfeedackListForBarChart = async (req, res) => {
 
 exports.plantcareDashboard = async (req, res) => {
   try {
+    // Fetch all necessary data from the database
     const activeUsers = await adminDao.activeUsers();
     const newUsers = await adminDao.newUsers();
     const allUsers = await adminDao.allUsers();
+    const allUsersTillPreviousMonth =
+      await adminDao.allUsersTillPreviousMonth();
+    const allQrUsersTillPreviousMonth =
+      await adminDao.qrUsersTillPreviousMonth();
     const qrUsers = await adminDao.qrUsers();
     const vegCultivation = await adminDao.vegEnroll();
     const grainCultivation = await adminDao.grainEnroll();
     const fruitCultivation = await adminDao.fruitEnroll();
     const mushCultivation = await adminDao.mushEnroll();
+    const vegEnrollTillPreviousMonth =
+      await adminDao.vegEnrollTillPreviousMonth();
+    const fruitEnrollTillPreviousMonth =
+      await adminDao.fruitEnrollTillPreviousMonth();
+    const grainEnrollTillPreviousMonth =
+      await adminDao.grainEnrollTillPreviousMonth();
+    const mushEnrollTillPreviousMonth =
+      await adminDao.mushEnrollTillPreviousMonth();
 
+    // Calculate percentage increases
+    const qrUserPreviousMonth = (
+      ((qrUsers.farmer_qr_count -
+        allQrUsersTillPreviousMonth.farmer_qr_count_previous_month) /
+        allQrUsersTillPreviousMonth.farmer_qr_count_previous_month) *
+      100
+    ).toFixed(2);
+
+    const totalCultivationTillPreviousMonth =
+      vegEnrollTillPreviousMonth.veg_cultivation_count_till_previous_month +
+      fruitEnrollTillPreviousMonth.fruit_cultivation_count_till_previous_month +
+      grainEnrollTillPreviousMonth.grain_cultivation_count_till_previous_month +
+      mushEnrollTillPreviousMonth.mush_cultivation_count_till_previous_month;
+
+    const totalCultivationTillThisMonth =
+      vegCultivation.veg_cultivation_count +
+      fruitCultivation.fruit_cultivation_count +
+      grainCultivation.grain_cultivation_count +
+      mushCultivation.mush_cultivation_count;
+
+    const cultivationIncreasePercentage = (
+      ((totalCultivationTillThisMonth - totalCultivationTillPreviousMonth) /
+        totalCultivationTillPreviousMonth) *
+      100
+    ).toFixed(2);
+
+    const userIncreasePercentage = (
+      ((allUsers.all_farmer_count -
+        allUsersTillPreviousMonth.all_previous_month_farmer_count) /
+        allUsersTillPreviousMonth.all_previous_month_farmer_count) *
+      100
+    ).toFixed(2);
+
+    // Fetch farmer registration counts by district
+    const district = req.query.district || "DefaultDistrict"; // Get district from query params or use a default
+    const farmerRegistrationCounts =
+      await adminDao.getFarmerRegistrationCountsByDistrict(district);
+
+    // Prepare the response data
     const data = {
       active_users: activeUsers.active_users_count,
       new_users: newUsers.new_users_count,
@@ -2706,13 +2762,22 @@ exports.plantcareDashboard = async (req, res) => {
       fruitCultivation: fruitCultivation.fruit_cultivation_count,
       mushCultivation: mushCultivation.mush_cultivation_count,
       allusers: allUsers.all_farmer_count,
+      allusersTillPreviousMonth:
+        allUsersTillPreviousMonth.all_previous_month_farmer_count,
+      user_increase_percentage: userIncreasePercentage,
       qrUsers: qrUsers.farmer_qr_count,
+      qr_user_increase_percentage: qrUserPreviousMonth,
+      total_cultivation_till_previous_month: totalCultivationTillPreviousMonth,
+      total_cultivation_till_this_month: totalCultivationTillThisMonth,
+      cultivation_increase_percentage: cultivationIncreasePercentage,
+      farmerRegistrationCounts: {
+        registered_count: farmerRegistrationCounts.registered_count,
+        unregistered_count: farmerRegistrationCounts.unregistered_count,
+      },
     };
 
-    console.log("Successfully fetched feedback list");
-    res.json({
-      data,
-    });
+    console.log("Successfully fetched dashboard data");
+    res.json({ data });
   } catch (err) {
     if (err.isJoi) {
       return res.status(400).json({ error: err.details[0].message });

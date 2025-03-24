@@ -26,7 +26,7 @@ const uploadfile = multer({
 
 router.get(
     "/get-all-customers",
-    // authMiddleware,
+    authMiddleware,
     DashEp.getAllCustomers
 )
 
@@ -74,5 +74,9 @@ router.get(
   DashEp.UpdateStatusAndSendPassword
 );
 
-
+router.get(
+  "/get-all-orders",
+  authMiddleware,
+  DashEp.getAllOrders
+)
 module.exports = router;
