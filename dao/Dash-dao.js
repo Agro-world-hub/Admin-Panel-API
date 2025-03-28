@@ -877,7 +877,7 @@ const GetAllSalesAgentComplainDAO = (
         dc.id, 
         dc.refNo,
         u.NICnumber AS NIC,
-        u.firstName AS farmerName,
+        u.firstName AS firstName,
         u.lastName AS lastName,
         cc.categoryEnglish AS complainCategory,
         ar.role,
@@ -885,7 +885,8 @@ const GetAllSalesAgentComplainDAO = (
         dc.adminStatus AS status,
         dc.reply,
         dc.complain,
-        dc.language
+        dc.language,
+        dc.saId AS agentId
       FROM dashcomplain dc
       LEFT JOIN plant_care.users u ON dc.saId = u.id
       LEFT JOIN agro_world_admin.complaincategory cc ON dc.complainCategory = cc.id
@@ -935,26 +936,22 @@ const GetAllSalesAgentComplainDAO = (
     Sqlparams.push(parseInt(limit), parseInt(offset));
 
     // Execute count query to get total records
-    collectionofficer.query(
-      countSql,
-      Counterparams,
-      (countErr, countResults) => {
-        if (countErr) {
-          return reject(countErr);
+    dash.query(countSql, Counterparams, (countErr, countResults) => {
+      if (countErr) {
+        return reject(countErr);
+      }
+
+      const total = countResults[0]?.total || 0;
+
+      // Execute main query to get paginated results
+      dash.query(sql, Sqlparams, (dataErr, results) => {
+        if (dataErr) {
+          return reject(dataErr);
         }
 
-        const total = countResults[0]?.total || 0;
-
-        // Execute main query to get paginated results
-        collectionofficer.query(sql, Sqlparams, (dataErr, results) => {
-          if (dataErr) {
-            return reject(dataErr);
-          }
-
-          resolve({ results, total });
-        });
-      }
-    );
+        resolve({ results, total });
+      });
+    });
   });
 };
 
