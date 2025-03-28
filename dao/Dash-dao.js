@@ -848,7 +848,7 @@ const getAllOrders = (
   });
 };
 
-exports.GetAllSalesAgentComplainDAO = (
+const GetAllSalesAgentComplainDAO = (
   page,
   limit,
   status,
@@ -959,6 +959,7 @@ exports.GetAllSalesAgentComplainDAO = (
 };
 
 module.exports = {
+  GetAllSalesAgentComplainDAO,
   getAllSalesCustomers,
   getAllSalesAgents,
   deleteSalesAgent,
