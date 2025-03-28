@@ -15,75 +15,74 @@ const { resolve } = require("path");
 
 const Joi = require("joi");
 
-
 // const getHouseDetails = () => `
-//     CASE 
-//         WHEN c.buildingType = 'House' THEN h.houseNo 
-//         ELSE NULL 
+//     CASE
+//         WHEN c.buildingType = 'House' THEN h.houseNo
+//         ELSE NULL
 //     END AS houseHouseNo,
-//     CASE 
-//         WHEN c.buildingType = 'House' THEN h.streetName 
-//         ELSE NULL 
+//     CASE
+//         WHEN c.buildingType = 'House' THEN h.streetName
+//         ELSE NULL
 //     END AS houseStreetName,
-//     CASE 
-//         WHEN c.buildingType = 'House' THEN h.city 
-//         ELSE NULL 
+//     CASE
+//         WHEN c.buildingType = 'House' THEN h.city
+//         ELSE NULL
 //     END AS houseCity
 // `;
 
 // // Function to get apartment details if the customer lives in an apartment
 // const getApartmentDetails = () => `
-//     CASE 
-//         WHEN c.buildingType = 'Apartment' THEN a.buildingNo 
-//         ELSE NULL 
+//     CASE
+//         WHEN c.buildingType = 'Apartment' THEN a.buildingNo
+//         ELSE NULL
 //     END AS apartmentBuildingNo,
-//     CASE 
-//         WHEN c.buildingType = 'Apartment' THEN a.buildingName 
-//         ELSE NULL 
+//     CASE
+//         WHEN c.buildingType = 'Apartment' THEN a.buildingName
+//         ELSE NULL
 //     END AS apartmentBuildingName,
-//     CASE 
-//         WHEN c.buildingType = 'Apartment' THEN a.unitNo 
-//         ELSE NULL 
+//     CASE
+//         WHEN c.buildingType = 'Apartment' THEN a.unitNo
+//         ELSE NULL
 //     END AS apartmentUnitNo,
-//     CASE 
-//         WHEN c.buildingType = 'Apartment' THEN a.floorNo 
-//         ELSE NULL 
+//     CASE
+//         WHEN c.buildingType = 'Apartment' THEN a.floorNo
+//         ELSE NULL
 //     END AS apartmentFloorNo,
-//     CASE 
-//         WHEN c.buildingType = 'Apartment' THEN a.houseNo 
-//         ELSE NULL 
+//     CASE
+//         WHEN c.buildingType = 'Apartment' THEN a.houseNo
+//         ELSE NULL
 //     END AS apartmentHouseNo,
-//     CASE 
-//         WHEN c.buildingType = 'Apartment' THEN a.streetName 
-//         ELSE NULL 
+//     CASE
+//         WHEN c.buildingType = 'Apartment' THEN a.streetName
+//         ELSE NULL
 //     END AS apartmentStreetName,
-//     CASE 
-//         WHEN c.buildingType = 'Apartment' THEN a.city 
-//         ELSE NULL 
+//     CASE
+//         WHEN c.buildingType = 'Apartment' THEN a.city
+//         ELSE NULL
 //     END AS apartmentCity
 // `;
 
 // // Function to construct the SQL query
 // const getAllCustomersQuery = () => `
-//     SELECT 
-//         c.id, 
-//         c.cusId, 
-//         c.title, 
-//         c.firstName, 
-//         c.lastName, 
-//         c.phoneNumber, 
-//         c.email, 
-//         c.buildingType, 
-//         s.empId AS salesAgentEmpId,  
-//         s.firstName AS salesAgentFirstName,  
-//         s.lastName AS salesAgentLastName,  
+//     SELECT
+//         c.id,
+//         c.cusId,
+//         c.title,
+//         c.firstName,
+//         c.lastName,
+//         c.phoneNumber,
+//         c.email,
+//         c.buildingType,
+//         s.empId AS salesAgentEmpId,
+//         s.firstName AS salesAgentFirstName,
+//         s.lastName AS salesAgentLastName,
 //         c.created_at,
 //         ${getHouseDetails()},
 //         ${getApartmentDetails()}
 //     FROM customer c
-//     LEFT JOIN salesagent s ON c.salesAgent = s.id  
-//     LEFT JOIN house h ON c.id = h.customerId AND c.buildingType = 'House'  
-//     LEFT JOIN apartment a ON c.id = a.customerId AND c.buildingType = 'Apartment'  
+//     LEFT JOIN salesagent s ON c.salesAgent = s.id
+//     LEFT JOIN house h ON c.id = h.customerId AND c.buildingType = 'House'
+//     LEFT JOIN apartment a ON c.id = a.customerId AND c.buildingType = 'Apartment'
 //     ORDER BY c.created_at DESC
 // `;
 
@@ -140,8 +139,24 @@ const getAllSalesAgents = (page, limit, searchText, status) => {
             `);
 
       const searchValue = `%${searchText}%`;
-      countParams.push(searchValue, searchValue, searchValue, searchValue, searchValue, searchValue, searchValue);
-      dataParams.push(searchValue, searchValue, searchValue, searchValue, searchValue, searchValue, searchValue);
+      countParams.push(
+        searchValue,
+        searchValue,
+        searchValue,
+        searchValue,
+        searchValue,
+        searchValue,
+        searchValue
+      );
+      dataParams.push(
+        searchValue,
+        searchValue,
+        searchValue,
+        searchValue,
+        searchValue,
+        searchValue,
+        searchValue
+      );
     }
 
     if (status) {
@@ -150,13 +165,13 @@ const getAllSalesAgents = (page, limit, searchText, status) => {
       dataParams.push(status);
     }
 
-        // Append WHERE conditions if any exist
-        if (whereConditions.length > 0) {
-            countSql += " WHERE " + whereConditions.join(" AND ");
-            dataSql += " WHERE " + whereConditions.join(" AND ");
-        }
+    // Append WHERE conditions if any exist
+    if (whereConditions.length > 0) {
+      countSql += " WHERE " + whereConditions.join(" AND ");
+      dataSql += " WHERE " + whereConditions.join(" AND ");
+    }
 
-        dataSql += " ORDER BY salesagent.createdAt DESC";
+    dataSql += " ORDER BY salesagent.createdAt DESC";
 
     // Add pagination at the end, so LIMIT and OFFSET are always numbers
     dataSql += " LIMIT ? OFFSET ?";
@@ -184,7 +199,6 @@ const getAllSalesAgents = (page, limit, searchText, status) => {
   });
 };
 
-
 const deleteSalesAgent = async (id) => {
   return new Promise((resolve, reject) => {
     const sql = "DELETE FROM salesagent WHERE id = ?";
@@ -198,29 +212,28 @@ const deleteSalesAgent = async (id) => {
   });
 };
 
-
 const getForCreateId = (role) => {
-    return new Promise((resolve, reject) => {
-      const sql =
-        "SELECT empId FROM salesagent WHERE empId LIKE ? ORDER BY empId DESC LIMIT 1";
-      dash.query(sql, [`${role}%`], (err, results) => {
-        if (err) {
-          return reject(err);
-        }
-  
-        if (results.length > 0) {
-          const numericPart = parseInt(results[0].empId.substring(4), 10);
-  
-          const incrementedValue = numericPart + 1;
-  
-          results[0].empId = incrementedValue.toString().padStart(5, "0");
-          console.log(results[0].empId);
-        }
-  
-        resolve(results);
-      });
+  return new Promise((resolve, reject) => {
+    const sql =
+      "SELECT empId FROM salesagent WHERE empId LIKE ? ORDER BY empId DESC LIMIT 1";
+    dash.query(sql, [`${role}%`], (err, results) => {
+      if (err) {
+        return reject(err);
+      }
+
+      if (results.length > 0) {
+        const numericPart = parseInt(results[0].empId.substring(4), 10);
+
+        const incrementedValue = numericPart + 1;
+
+        results[0].empId = incrementedValue.toString().padStart(5, "0");
+        console.log(results[0].empId);
+      }
+
+      resolve(results);
     });
-  };
+  });
+};
 
 const checkNICExist = (nic) => {
   return new Promise((resolve, reject) => {
@@ -295,7 +308,6 @@ const createSalesAgent = (officerData, profileImageUrl) => {
       dash.query(
         sql,
         [
-
           officerData.firstName,
           officerData.lastName,
           officerData.empId,
@@ -316,7 +328,7 @@ const createSalesAgent = (officerData, profileImageUrl) => {
           officerData.accNumber,
           officerData.bankName,
           officerData.branchName,
-          // imageUrl, 
+          // imageUrl,
         ],
         (err, results) => {
           if (err) {
@@ -462,19 +474,14 @@ const UpdateSalesAgentStatusAndPasswordDao = (params) => {
   });
 };
 
-const SendGeneratedPasswordDao = async (
-  email,
-  password,
-  empId,
-  firstName
-) => {
+const SendGeneratedPasswordDao = async (email, password, empId, firstName) => {
   try {
     const doc = new PDFDocument();
 
     // Create a buffer to hold the PDF in memory
     const pdfBuffer = [];
     doc.on("data", pdfBuffer.push.bind(pdfBuffer));
-    doc.on("end", () => { });
+    doc.on("end", () => {});
 
     const watermarkPath = "./assets/bg.png";
     doc.opacity(0.2).image(watermarkPath, 100, 300, { width: 400 }).opacity(1);
@@ -605,13 +612,11 @@ const SendGeneratedPasswordDao = async (
   }
 };
 
+const getAllSalesCustomers = (page, limit, searchText) => {
+  return new Promise((resolve, reject) => {
+    const offset = (page - 1) * limit;
 
-
-  const getAllSalesCustomers = (page, limit, searchText) => {
-    return new Promise((resolve, reject) => {
-        const offset = (page - 1) * limit;
-
-        let countSql = `
+    let countSql = `
               SELECT 
                 COUNT(*) AS total
               FROM 
@@ -620,7 +625,7 @@ const SendGeneratedPasswordDao = async (
                   salesagent SA ON CUS.salesAgent = SA.id
         `;
 
-        let dataSql = `
+    let dataSql = `
             SELECT 
               CUS.id,
               CUS.cusId,
@@ -655,65 +660,69 @@ const SendGeneratedPasswordDao = async (
                 apartment A ON CUS.id = A.customerId AND CUS.buildingType = 'Apartment'
         `;
 
-        const countParams = [];
-        const dataParams = [];
+    const countParams = [];
+    const dataParams = [];
 
-        
-
-        if (searchText) {
-            const searchCondition = `
+    if (searchText) {
+      const searchCondition = `
                 WHERE (
                     CUS.firstName LIKE ?
                     OR CUS.lastName LIKE ?
                     OR CUS.phoneNumber LIKE ?
                 )
             `;
-            countSql += searchCondition;
-            dataSql += searchCondition;
-            const searchValue = `%${searchText}%`;
-            countParams.push(searchValue, searchValue, searchValue);
-            dataParams.push(searchValue, searchValue, searchValue);
+      countSql += searchCondition;
+      dataSql += searchCondition;
+      const searchValue = `%${searchText}%`;
+      countParams.push(searchValue, searchValue, searchValue);
+      dataParams.push(searchValue, searchValue, searchValue);
+    }
+
+    dataSql += " LIMIT ? OFFSET ?";
+    dataParams.push(limit, offset);
+
+    // Execute count query
+    dash.query(countSql, countParams, (countErr, countResults) => {
+      if (countErr) {
+        console.error("Error in count query:", countErr);
+        return reject(countErr);
+      }
+
+      const total = countResults[0].total;
+
+      // Execute data query
+      dash.query(dataSql, dataParams, (dataErr, dataResults) => {
+        if (dataErr) {
+          console.error("Error in data query:", dataErr);
+          return reject(dataErr);
         }
 
-
-        dataSql += " LIMIT ? OFFSET ?";
-        dataParams.push(limit, offset);
-
-
-        // Execute count query
-        dash.query(countSql, countParams, (countErr, countResults) => {
-            if (countErr) {
-                console.error('Error in count query:', countErr);
-                return reject(countErr);
-            }
-
-            const total = countResults[0].total;
-
-            // Execute data query
-            dash.query(dataSql, dataParams, (dataErr, dataResults) => {
-                if (dataErr) {
-                    console.error('Error in data query:', dataErr);
-                    return reject(dataErr);
-                }
-
-                resolve({ items: dataResults, total });
-            });
-        });
+        resolve({ items: dataResults, total });
+      });
     });
+  });
 };
 
-const getAllOrders = (page, limit, orderStatus, paymentMethod, paymentStatus, deliveryType, searchText) => {
+const getAllOrders = (
+  page,
+  limit,
+  orderStatus,
+  paymentMethod,
+  paymentStatus,
+  deliveryType,
+  searchText
+) => {
   return new Promise((resolve, reject) => {
-      const offset = (page - 1) * limit;
+    const offset = (page - 1) * limit;
 
-      let countSql = `
+    let countSql = `
           SELECT COUNT(*) as total
           FROM dash.orders o
           JOIN dash.customer c ON o.customerId = c.id
           JOIN dash.salesagent sa ON o.salesAgentId = sa.id
       `;
 
-      let dataSql = `
+    let dataSql = `
           SELECT
               o.id,
               o.InvNo AS invNo,
@@ -735,13 +744,13 @@ const getAllOrders = (page, limit, orderStatus, paymentMethod, paymentStatus, de
           JOIN dash.salesagent sa ON o.salesAgentId = sa.id 
       `;
 
-      const countParams = [];
-      const dataParams = [];
+    const countParams = [];
+    const dataParams = [];
 
-      let whereConditions = []; 
+    let whereConditions = [];
 
-      if (searchText) {
-          whereConditions.push(`
+    if (searchText) {
+      whereConditions.push(`
               (
                   c.cusId LIKE ?
                   OR c.firstName LIKE ?
@@ -756,71 +765,211 @@ const getAllOrders = (page, limit, orderStatus, paymentMethod, paymentStatus, de
               )
           `);
 
-          const searchValue = `%${searchText}%`;
-          countParams.push(searchValue, searchValue, searchValue, searchValue, searchValue, searchValue, searchValue, searchValue, searchValue);
-          dataParams.push(searchValue, searchValue, searchValue, searchValue, searchValue, searchValue, searchValue, searchValue, searchValue);
+      const searchValue = `%${searchText}%`;
+      countParams.push(
+        searchValue,
+        searchValue,
+        searchValue,
+        searchValue,
+        searchValue,
+        searchValue,
+        searchValue,
+        searchValue,
+        searchValue
+      );
+      dataParams.push(
+        searchValue,
+        searchValue,
+        searchValue,
+        searchValue,
+        searchValue,
+        searchValue,
+        searchValue,
+        searchValue,
+        searchValue
+      );
+    }
+
+    if (orderStatus) {
+      whereConditions.push(`o.orderStatus = ?`);
+      countParams.push(orderStatus);
+      dataParams.push(orderStatus);
+    }
+
+    if (paymentMethod) {
+      whereConditions.push(`o.paymentMethod = ?`);
+      countParams.push(paymentMethod);
+      dataParams.push(paymentMethod);
+    }
+
+    if (paymentStatus) {
+      whereConditions.push(`o.paymentStatus = ?`);
+      countParams.push(+paymentStatus); // Convert string to number
+      dataParams.push(+paymentStatus);
+    }
+
+    if (deliveryType) {
+      whereConditions.push(`o.deliveryType = ?`);
+      countParams.push(deliveryType);
+      dataParams.push(deliveryType);
+    }
+
+    // Append WHERE conditions if any exist
+    if (whereConditions.length > 0) {
+      countSql += " WHERE " + whereConditions.join(" AND ");
+      dataSql += " WHERE " + whereConditions.join(" AND ");
+    }
+
+    dataSql += " ORDER BY o.createdAt DESC";
+
+    // Add pagination at the end, so LIMIT and OFFSET are always numbers
+    dataSql += " LIMIT ? OFFSET ?";
+    dataParams.push(parseInt(limit), parseInt(offset)); // Ensure they are integers
+
+    // Execute count query
+    dash.query(countSql, countParams, (countErr, countResults) => {
+      if (countErr) {
+        console.error("Error in count query:", countErr);
+        return reject(countErr);
       }
 
-      if (orderStatus) {
-          whereConditions.push(`o.orderStatus = ?`);
-          countParams.push(orderStatus);
-          dataParams.push(orderStatus);
-      }
+      const total = countResults[0].total;
 
-      if (paymentMethod) {
-        whereConditions.push(`o.paymentMethod = ?`);
-        countParams.push(paymentMethod);
-        dataParams.push(paymentMethod);
-      }
+      // Execute data query
+      dash.query(dataSql, dataParams, (dataErr, dataResults) => {
+        if (dataErr) {
+          console.error("Error in data query:", dataErr);
+          return reject(dataErr);
+        }
 
-      if (paymentStatus) {
-        whereConditions.push(`o.paymentStatus = ?`);
-        countParams.push(+paymentStatus); // Convert string to number
-        dataParams.push(+paymentStatus);
-      }
-
-      if (deliveryType) {
-        whereConditions.push(`o.deliveryType = ?`);
-        countParams.push(deliveryType);
-        dataParams.push(deliveryType);
-      }
-
-      // Append WHERE conditions if any exist
-      if (whereConditions.length > 0) {
-          countSql += " WHERE " + whereConditions.join(" AND ");
-          dataSql += " WHERE " + whereConditions.join(" AND ");
-      }
-
-      dataSql += " ORDER BY o.createdAt DESC";
-
-      // Add pagination at the end, so LIMIT and OFFSET are always numbers
-      dataSql += " LIMIT ? OFFSET ?";
-      dataParams.push(parseInt(limit), parseInt(offset)); // Ensure they are integers
-
-      // Execute count query
-      dash.query(countSql, countParams, (countErr, countResults) => {
-          if (countErr) {
-              console.error("Error in count query:", countErr);
-              return reject(countErr);
-          }
-
-          const total = countResults[0].total;
-
-          // Execute data query
-          dash.query(dataSql, dataParams, (dataErr, dataResults) => {
-              if (dataErr) {
-                  console.error("Error in data query:", dataErr);
-                  return reject(dataErr);
-              }
-
-              resolve({ items: dataResults, total });
-          });
+        resolve({ items: dataResults, total });
       });
+    });
   });
 };
 
+exports.GetAllSalesAgentComplainDAO = (
+  page,
+  limit,
+  status,
+  category,
+  comCategory,
+  searchText
+) => {
+  return new Promise((resolve, reject) => {
+    const Sqlparams = [];
+    const Counterparams = [];
+    const offset = (page - 1) * limit;
 
-module.exports = { getAllSalesCustomers, getAllSalesAgents, deleteSalesAgent, getForCreateId, checkNICExist, checkEmailExist, 
-    createSalesAgent, getSalesAgentDataById, updateSalesAgentDetails, SendGeneratedPasswordDao,
-    UpdateSalesAgentStatusAndPasswordDao, getSalesAgentEmailDao, getAllOrders };
+    // SQL to count total records
+    let countSql = `
+      SELECT COUNT(*) AS total
+      FROM dashcomplain dc
+      LEFT JOIN plant_care.users u ON dc.saId = u.id
+      LEFT JOIN agro_world_admin.complaincategory cc ON dc.complainCategory = cc.id
+      LEFT JOIN agro_world_admin.adminroles ar ON cc.roleId = ar.id
+      WHERE 1 = 1
+    `;
 
+    // SQL to fetch paginated data
+    let sql = `
+      SELECT 
+        dc.id, 
+        dc.refNo,
+        u.NICnumber AS NIC,
+        u.firstName AS farmerName,
+        u.lastName AS lastName,
+        cc.categoryEnglish AS complainCategory,
+        ar.role,
+        dc.createdAt,
+        dc.adminStatus AS status,
+        dc.reply,
+        dc.complain,
+        dc.language
+      FROM dashcomplain dc
+      LEFT JOIN plant_care.users u ON dc.saId = u.id
+      LEFT JOIN agro_world_admin.complaincategory cc ON dc.complainCategory = cc.id
+      LEFT JOIN agro_world_admin.adminroles ar ON cc.roleId = ar.id
+      WHERE 1 = 1
+    `;
+
+    // Add filter for status
+    if (status) {
+      countSql += " AND dc.adminStatus = ? ";
+      sql += " AND dc.adminStatus = ? ";
+      Sqlparams.push(status);
+      Counterparams.push(status);
+    }
+
+    // Add filter for category (role)
+    if (category) {
+      countSql += " AND ar.role = ? ";
+      sql += " AND ar.role = ? ";
+      Sqlparams.push(category);
+      Counterparams.push(category);
+    }
+
+    // Add filter for complain category
+    if (comCategory) {
+      countSql += " AND dc.complainCategory = ? ";
+      sql += " AND dc.complainCategory = ? ";
+      Sqlparams.push(comCategory);
+      Counterparams.push(comCategory);
+    }
+
+    // Add search functionality
+    if (searchText) {
+      countSql += `
+        AND (dc.refNo LIKE ? OR u.firstName LIKE ? OR u.lastName LIKE ? OR u.NICnumber LIKE ?)
+      `;
+      sql += `
+        AND (dc.refNo LIKE ? OR u.firstName LIKE ? OR u.lastName LIKE ? OR u.NICnumber LIKE ?)
+      `;
+      const searchQuery = `%${searchText}%`;
+      Sqlparams.push(searchQuery, searchQuery, searchQuery, searchQuery);
+      Counterparams.push(searchQuery, searchQuery, searchQuery, searchQuery);
+    }
+
+    // Add pagination
+    sql += " ORDER BY dc.createdAt DESC LIMIT ? OFFSET ?";
+    Sqlparams.push(parseInt(limit), parseInt(offset));
+
+    // Execute count query to get total records
+    collectionofficer.query(
+      countSql,
+      Counterparams,
+      (countErr, countResults) => {
+        if (countErr) {
+          return reject(countErr);
+        }
+
+        const total = countResults[0]?.total || 0;
+
+        // Execute main query to get paginated results
+        collectionofficer.query(sql, Sqlparams, (dataErr, results) => {
+          if (dataErr) {
+            return reject(dataErr);
+          }
+
+          resolve({ results, total });
+        });
+      }
+    );
+  });
+};
+
+module.exports = {
+  getAllSalesCustomers,
+  getAllSalesAgents,
+  deleteSalesAgent,
+  getForCreateId,
+  checkNICExist,
+  checkEmailExist,
+  createSalesAgent,
+  getSalesAgentDataById,
+  updateSalesAgentDetails,
+  SendGeneratedPasswordDao,
+  UpdateSalesAgentStatusAndPasswordDao,
+  getSalesAgentEmailDao,
+  getAllOrders,
+};
