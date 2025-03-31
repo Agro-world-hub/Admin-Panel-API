@@ -29,9 +29,11 @@ exports.getComplainCategoryData = (systemAppId) => {
     const sql = `
         SELECT 
         cc.id,
-        cc.categoryEnglish
-        
+        cc.categoryEnglish,
+        ar.role
+       
         FROM complaincategory cc
+         LEFT JOIN adminroles ar ON cc.roleId = ar.id
         WHERE cc.appId = ?
         `;
 
