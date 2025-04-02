@@ -879,6 +879,55 @@ exports.deletePlantCareUserById = (id) => {
   });
 };
 
+// exports.updatePlantCareUserById = (userData, id) => {
+//   return new Promise((resolve, reject) => {
+//     const {
+//       firstName,
+//       lastName,
+//       phoneNumber,
+//       NICnumber,
+//       district,
+//       membership,
+//       profileImage,
+//     } = userData;
+
+//     let sql = `
+//       UPDATE users
+//       SET
+//           firstName = ?,
+//           lastName = ?,
+//           phoneNumber = ?,
+//           NICnumber = ?,
+//           district = ?,
+//           membership = ?
+//     `;
+//     let values = [
+//       firstName,
+//       lastName,
+//       phoneNumber,
+//       NICnumber,
+//       district,
+//       membership,
+//     ];
+
+//     if (profileImage) {
+//       sql += `, profileImage = ?`;
+//       values.push(profileImage);
+//     }
+
+//     sql += ` WHERE id = ?`;
+//     values.push(id);
+
+//     plantcare.query(sql, values, (err, results) => {
+//       if (err) {
+//         reject(err);
+//       } else {
+//         resolve(results);
+//       }
+//     });
+//   });
+// };
+
 exports.updatePlantCareUserById = (userData, id) => {
   return new Promise((resolve, reject) => {
     const {
@@ -888,42 +937,186 @@ exports.updatePlantCareUserById = (userData, id) => {
       NICnumber,
       district,
       membership,
-      profileImage,
+      profileImageUrl,
+      accNumber,
+      accHolderName,
+      bankName,
+      branchName,
     } = userData;
 
-    let sql = `
-      UPDATE users 
-      SET 
-          firstName = ?, 
-          lastName = ?, 
-          phoneNumber = ?, 
-          NICnumber = ?, 
-          district = ?, 
-          membership = ?
-    `;
-    let values = [
-      firstName,
-      lastName,
-      phoneNumber,
-      NICnumber,
-      district,
-      membership,
-    ];
+    // Get a connection from the pool
+    plantcare.getConnection((connErr, connection) => {
+      if (connErr) return reject(connErr);
 
-    if (profileImage) {
-      sql += `, profileImage = ?`;
-      values.push(profileImage);
-    }
+      connection.beginTransaction((beginErr) => {
+        if (beginErr) {
+          connection.release();
+          return reject(beginErr);
+        }
 
-    sql += ` WHERE id = ?`;
-    values.push(id);
+        // Check if phone number or NIC is already used by another user
+        connection.query(
+          `SELECT id FROM users WHERE (phoneNumber = ? OR NICnumber = ?) AND id != ?`,
+          [phoneNumber, NICnumber, id],
+          (checkErr, checkResults) => {
+            if (checkErr) {
+              return connection.rollback(() => {
+                connection.release();
+                reject(checkErr);
+              });
+            }
 
-    plantcare.query(sql, values, (err, results) => {
-      if (err) {
-        reject(err);
-      } else {
-        resolve(results);
-      }
+            if (checkResults.length > 0) {
+              return connection.rollback(() => {
+                connection.release();
+                reject(
+                  new Error(
+                    "Phone number or NIC number already exists for another user"
+                  )
+                );
+              });
+            }
+
+            // Update user
+            let sql = `
+              UPDATE users 
+              SET 
+                  firstName = ?, 
+                  lastName = ?, 
+                  phoneNumber = ?, 
+                  NICnumber = ?, 
+                  district = ?, 
+                  membership = ?
+            `;
+            let values = [
+              firstName,
+              lastName,
+              phoneNumber,
+              NICnumber,
+              district,
+              membership,
+            ];
+
+            if (profileImageUrl) {
+              sql += `, profileImage = ?`;
+              values.push(profileImageUrl);
+            }
+
+            sql += ` WHERE id = ?`;
+            values.push(id);
+
+            connection.query(
+              sql,
+              values,
+              (updateUserErr, updateUserResults) => {
+                if (updateUserErr) {
+                  return connection.rollback(() => {
+                    connection.release();
+                    reject(updateUserErr);
+                  });
+                }
+
+                // Update or insert bank details if provided
+                if (accNumber && accHolderName && bankName) {
+                  // First check if bank details exist
+                  connection.query(
+                    `SELECT id FROM userbankdetails WHERE userId = ?`,
+                    [id],
+                    (bankCheckErr, bankCheckResults) => {
+                      if (bankCheckErr) {
+                        return connection.rollback(() => {
+                          connection.release();
+                          reject(bankCheckErr);
+                        });
+                      }
+
+                      if (bankCheckResults.length > 0) {
+                        // Update existing bank details
+                        connection.query(
+                          `UPDATE userbankdetails 
+                         SET accNumber = ?, accHolderName = ?, bankName = ?, branchName = ?
+                         WHERE userId = ?`,
+                          [
+                            accNumber,
+                            accHolderName,
+                            bankName,
+                            branchName || null,
+                            id,
+                          ],
+                          (updateBankErr) => {
+                            if (updateBankErr) {
+                              return connection.rollback(() => {
+                                connection.release();
+                                reject(updateBankErr);
+                              });
+                            }
+
+                            connection.commit((commitErr) => {
+                              connection.release();
+                              if (commitErr) {
+                                return reject(commitErr);
+                              }
+                              resolve({
+                                userId: id,
+                                message:
+                                  "User and bank details updated successfully",
+                              });
+                            });
+                          }
+                        );
+                      } else {
+                        // Insert new bank details
+                        connection.query(
+                          `INSERT INTO userbankdetails (userId, accNumber, accHolderName, bankName, branchName)
+                         VALUES (?, ?, ?, ?, ?)`,
+                          [
+                            id,
+                            accNumber,
+                            accHolderName,
+                            bankName,
+                            branchName || null,
+                          ],
+                          (insertBankErr) => {
+                            if (insertBankErr) {
+                              return connection.rollback(() => {
+                                connection.release();
+                                reject(insertBankErr);
+                              });
+                            }
+
+                            connection.commit((commitErr) => {
+                              connection.release();
+                              if (commitErr) {
+                                return reject(commitErr);
+                              }
+                              resolve({
+                                userId: id,
+                                message:
+                                  "User updated and bank details created successfully",
+                              });
+                            });
+                          }
+                        );
+                      }
+                    }
+                  );
+                } else {
+                  connection.commit((commitErr) => {
+                    connection.release();
+                    if (commitErr) {
+                      return reject(commitErr);
+                    }
+                    resolve({
+                      userId: id,
+                      message: "User updated successfully (no bank details)",
+                    });
+                  });
+                }
+              }
+            );
+          }
+        );
+      });
     });
   });
 };
@@ -1105,22 +1298,60 @@ exports.createPlantCareUser = (userData) => {
   });
 };
 
+// exports.getUserById = (userId) => {
+//   return new Promise((resolve, reject) => {
+//     const sql = "SELECT * FROM users WHERE id = ?";
+//     plantcare.query(sql, [userId], (err, results) => {
+//       if (err) {
+//         return reject(err);
+//       }
+//       resolve(results[0]); // Return the first result
+//     });
+//   });
+// };
+
 exports.getUserById = (userId) => {
   return new Promise((resolve, reject) => {
-    const sql = "SELECT * FROM users WHERE id = ?";
+    const sql = `
+      SELECT 
+        u.*,
+        ub.id AS bankDetailId,
+        ub.accNumber,
+        ub.accHolderName,
+        ub.bankName,
+        ub.branchName,
+        ub.createdAt AS bankDetailCreatedAt
+      FROM users u
+      LEFT JOIN userbankdetails ub ON u.id = ub.userId
+      WHERE u.id = ?
+    `;
+
     plantcare.query(sql, [userId], (err, results) => {
       if (err) {
         return reject(err);
       }
 
-      // if (results[0].profileImage) {
-      //   const base64Image = Buffer.from(results[0].profileImage).toString(
-      //     "base64"
-      //   );
-      //   const mimeType = "image/png"; // Adjust MIME type if necessary, depending on the image type
-      //   results[0].profileImage = `data:${mimeType};base64,${base64Image}`;
-      // }
-      resolve(results[0]); // Return the first result
+      if (results.length === 0) {
+        return resolve(null); // Return null if no user found
+      }
+
+      // Combine user data with bank details
+      const userData = {
+        ...results[0],
+        // Include bank details if they exist
+        ...(results[0].bankDetailId && {
+          accNumber: results[0].accNumber,
+          accHolderName: results[0].accHolderName,
+          bankName: results[0].bankName,
+          branchName: results[0].branchName,
+          bankDetailCreatedAt: results[0].bankDetailCreatedAt,
+        }),
+      };
+
+      // Remove the joined table prefix if you want cleaner object
+      delete userData.bankDetailId;
+
+      resolve(userData);
     });
   });
 };

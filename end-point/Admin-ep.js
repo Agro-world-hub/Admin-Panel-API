@@ -1139,77 +1139,12 @@ exports.deletePlantCareUser = async (req, res) => {
   }
 };
 
-exports.updatePlantCareUser = async (req, res) => {
-  const { id } = req.params;
+// exports.updatePlantCareUser = async (req, res) => {
+//   const { id } = req.params;
 
-  try {
-    const validatedBody =
-      await ValidateSchema.updatePlantCareUserSchema.validateAsync(req.body);
-    const {
-      firstName,
-      lastName,
-      phoneNumber,
-      NICnumber,
-      district,
-      membership,
-    } = validatedBody;
-
-    let profileImage;
-    const user = await adminDao.getUserById(id);
-    if (!user) {
-      return res.status(404).json({ message: "PlantCare User not found" });
-    }
-
-    if (req.file) {
-      const imageUrl = user.profileImage;
-      await deleteFromS3(imageUrl);
-
-      const fileBuffer = req.file.buffer;
-      const fileName = req.file.originalname;
-      profileImage = await uploadFileToS3(
-        fileBuffer,
-        fileName,
-        "users/profile-images"
-      );
-    }
-
-    const userData = {
-      firstName,
-      lastName,
-      phoneNumber,
-      NICnumber,
-      district,
-      membership,
-      profileImage,
-    };
-
-    const result = await adminDao.updatePlantCareUserById(userData, id);
-
-    if (result.affectedRows === 0) {
-      return res.status(404).json({ message: "PlantCare User not found" });
-    }
-
-    console.log("PlantCare User updated successfully");
-    return res
-      .status(200)
-      .json({ message: "PlantCare User updated successfully" });
-  } catch (error) {
-    if (error.isJoi) {
-      return res.status(400).json({ error: error.details[0].message });
-    }
-
-    console.error("Error updating PlantCare User:", error);
-    return res
-      .status(500)
-      .json({ error: "An error occurred while updating PlantCare User" });
-  }
-};
-
-// exports.createPlantCareUser = async (req, res) => {
 //   try {
-//     // Validate input data
-//     const validatedBody = req.body;
-
+//     const validatedBody =
+//       await ValidateSchema.updatePlantCareUserSchema.validateAsync(req.body);
 //     const {
 //       firstName,
 //       lastName,
@@ -1219,13 +1154,19 @@ exports.updatePlantCareUser = async (req, res) => {
 //       membership,
 //     } = validatedBody;
 
-//     let profileImageUrl;
-//     // Ensure a file is uploaded
+//     let profileImage;
+//     const user = await adminDao.getUserById(id);
+//     if (!user) {
+//       return res.status(404).json({ message: "PlantCare User not found" });
+//     }
+
 //     if (req.file) {
+//       const imageUrl = user.profileImage;
+//       await deleteFromS3(imageUrl);
+
 //       const fileBuffer = req.file.buffer;
 //       const fileName = req.file.originalname;
-
-//       profileImageUrl = await uploadFileToS3(
+//       profileImage = await uploadFileToS3(
 //         fileBuffer,
 //         fileName,
 //         "users/profile-images"
@@ -1239,34 +1180,118 @@ exports.updatePlantCareUser = async (req, res) => {
 //       NICnumber,
 //       district,
 //       membership,
-//       profileImageUrl,
+//       profileImage,
 //     };
 
-//     console.log(userData);
-//     const userId = await adminDao.createPlantCareUser(userData);
+//     const result = await adminDao.updatePlantCareUserById(userData, id);
 
-//     console.log("PlantCare user created successfully");
-//     return res.status(201).json({
-//       message: "PlantCare user created successfully",
-//       id: userId,
-//     });
-//   } catch (error) {
-//     if (error.message === "Phone number or NIC number already exists") {
-//       // Handle validation error for duplicate phoneNumber or NICnumber
-//       return res.status(400).json({ error: error.message });
+//     if (result.affectedRows === 0) {
+//       return res.status(404).json({ message: "PlantCare User not found" });
 //     }
 
+//     console.log("PlantCare User updated successfully");
+//     return res
+//       .status(200)
+//       .json({ message: "PlantCare User updated successfully" });
+//   } catch (error) {
 //     if (error.isJoi) {
-//       // Handle Joi validation error
 //       return res.status(400).json({ error: error.details[0].message });
 //     }
 
-//     console.error("Error creating PlantCare user:", error);
+//     console.error("Error updating PlantCare User:", error);
 //     return res
 //       .status(500)
-//       .json({ error: "An error occurred while creating PlantCare user" });
+//       .json({ error: "An error occurred while updating PlantCare User" });
 //   }
 // };
+
+exports.updatePlantCareUser = async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    // Validate request body
+    const validatedBody =
+      await ValidateSchema.updatePlantCareUserSchema.validateAsync(req.body);
+    const {
+      firstName,
+      lastName,
+      phoneNumber,
+      NICnumber,
+      district,
+      membership,
+      accNumber,
+      accHolderName,
+      bankName,
+      branchName,
+    } = validatedBody;
+
+    // Check if user exists
+    const user = await adminDao.getUserById(id);
+    if (!user) {
+      return res.status(404).json({ message: "PlantCare User not found" });
+    }
+
+    // Handle profile image upload if provided
+    let profileImageUrl = user.profileImage;
+    if (req.file) {
+      // Delete old image if exists
+      if (profileImageUrl) {
+        await deleteFromS3(profileImageUrl);
+      }
+
+      // Upload new image
+      const fileBuffer = req.file.buffer;
+      const fileName = req.file.originalname;
+      profileImageUrl = await uploadFileToS3(
+        fileBuffer,
+        fileName,
+        "users/profile-images"
+      );
+    }
+
+    // Prepare user data for update
+    const userData = {
+      firstName,
+      lastName,
+      phoneNumber,
+      NICnumber,
+      district,
+      membership,
+      profileImageUrl,
+      accNumber,
+      accHolderName,
+      bankName,
+      branchName,
+    };
+
+    // Update user and bank details in transaction
+    const result = await adminDao.updatePlantCareUserById(userData, id);
+
+    // Return success response
+    console.log("PlantCare User updated successfully");
+    return res.status(200).json({
+      message: result.message,
+      userId: id,
+      profileImage: profileImageUrl,
+    });
+  } catch (error) {
+    // Handle validation errors
+    if (error.isJoi) {
+      return res.status(400).json({ error: error.details[0].message });
+    }
+
+    // Handle duplicate phone/NIC errors
+    if (error.message && error.message.includes("already exists")) {
+      return res.status(409).json({ error: error.message });
+    }
+
+    console.error("Error updating PlantCare User:", error);
+    return res.status(500).json({
+      error: "An error occurred while updating PlantCare User",
+      details: error.message,
+    });
+  }
+};
 
 exports.createPlantCareUser = async (req, res) => {
   try {
@@ -1343,6 +1368,35 @@ exports.createPlantCareUser = async (req, res) => {
   }
 };
 
+// exports.getUserById = async (req, res) => {
+//   try {
+//     // Validate the request params
+//     const validatedParams =
+//       await ValidateSchema.getUserByIdSchema.validateAsync(req.params);
+//     const { id } = validatedParams;
+
+//     // Fetch the user from the DAO
+//     const user = await adminDao.getUserById(id);
+
+//     if (!user) {
+//       return res.status(404).json({ error: "User not found" });
+//     }
+
+//     console.log("User retrieved successfullyyyy");
+//     return res.status(200).json(user);
+//   } catch (error) {
+//     if (error.isJoi) {
+//       // Validation error
+//       return res.status(400).json({ error: error.details[0].message });
+//     }
+
+//     console.error("Error retrieving user:", error);
+//     return res
+//       .status(500)
+//       .json({ error: "An error occurred while fetching user" });
+//   }
+// };
+
 exports.getUserById = async (req, res) => {
   try {
     // Validate the request params
@@ -1350,15 +1404,18 @@ exports.getUserById = async (req, res) => {
       await ValidateSchema.getUserByIdSchema.validateAsync(req.params);
     const { id } = validatedParams;
 
-    // Fetch the user from the DAO
+    // Fetch the user from the DAO (now includes bank details)
     const user = await adminDao.getUserById(id);
 
     if (!user) {
       return res.status(404).json({ error: "User not found" });
     }
 
-    console.log("User retrieved successfullyyyy");
-    return res.status(200).json(user);
+    // Clean up the response object (remove join-specific fields)
+    const { bankDetailId, bankDetailCreatedAt, ...cleanUser } = user;
+
+    console.log("User retrieved successfully with bank details");
+    return res.status(200).json(cleanUser);
   } catch (error) {
     if (error.isJoi) {
       // Validation error
@@ -1366,9 +1423,10 @@ exports.getUserById = async (req, res) => {
     }
 
     console.error("Error retrieving user:", error);
-    return res
-      .status(500)
-      .json({ error: "An error occurred while fetching user" });
+    return res.status(500).json({
+      error: "An error occurred while fetching user",
+      details: error.message,
+    });
   }
 };
 
