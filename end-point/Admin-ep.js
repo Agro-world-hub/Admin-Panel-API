@@ -1209,24 +1209,40 @@ exports.updatePlantCareUser = async (req, res) => {
 //   try {
 //     // Validate input data
 //     const validatedBody = req.body;
-//     const { firstName, lastName, phoneNumber, NICnumber } = validatedBody;
 
+//     const {
+//       firstName,
+//       lastName,
+//       phoneNumber,
+//       NICnumber,
+//       district,
+//       membership,
+//     } = validatedBody;
+
+//     let profileImageUrl;
 //     // Ensure a file is uploaded
-//     if (!req.file) {
-//       return res.status(400).json({ error: "No file uploaded" });
-//     }
+//     if (req.file) {
+//       const fileBuffer = req.file.buffer;
+//       const fileName = req.file.originalname;
 
-//     const fileBuffer = req.file.buffer;
+//       profileImageUrl = await uploadFileToS3(
+//         fileBuffer,
+//         fileName,
+//         "users/profile-images"
+//       );
+//     }
 
 //     const userData = {
 //       firstName,
 //       lastName,
 //       phoneNumber,
 //       NICnumber,
-//       fileBuffer,
+//       district,
+//       membership,
+//       profileImageUrl,
 //     };
 
-//     // Call DAO to create the user
+//     console.log(userData);
 //     const userId = await adminDao.createPlantCareUser(userData);
 
 //     console.log("PlantCare user created successfully");
@@ -1235,8 +1251,13 @@ exports.updatePlantCareUser = async (req, res) => {
 //       id: userId,
 //     });
 //   } catch (error) {
+//     if (error.message === "Phone number or NIC number already exists") {
+//       // Handle validation error for duplicate phoneNumber or NICnumber
+//       return res.status(400).json({ error: error.message });
+//     }
+
 //     if (error.isJoi) {
-//       // Validation error
+//       // Handle Joi validation error
 //       return res.status(400).json({ error: error.details[0].message });
 //     }
 
@@ -1259,6 +1280,11 @@ exports.createPlantCareUser = async (req, res) => {
       NICnumber,
       district,
       membership,
+      // Add bank details fields
+      accNumber,
+      accHolderName,
+      bankName,
+      branchName,
     } = validatedBody;
 
     let profileImageUrl;
@@ -1282,15 +1308,22 @@ exports.createPlantCareUser = async (req, res) => {
       district,
       membership,
       profileImageUrl,
+      // Include bank details in userData
+      accNumber,
+      accHolderName,
+      bankName,
+      branchName,
     };
 
     console.log(userData);
-    const userId = await adminDao.createPlantCareUser(userData);
+    const result = await adminDao.createPlantCareUser(userData);
 
     console.log("PlantCare user created successfully");
     return res.status(201).json({
-      message: "PlantCare user created successfully",
-      id: userId,
+      message: result.message, // Use the message from DAO
+      id: result.userId, // Use the userId from DAO
+      // Optionally include bank details creation status
+      bankDetailsCreated: !!accNumber && !!accHolderName && !!bankName,
     });
   } catch (error) {
     if (error.message === "Phone number or NIC number already exists") {

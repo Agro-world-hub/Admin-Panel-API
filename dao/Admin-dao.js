@@ -930,21 +930,56 @@ exports.updatePlantCareUserById = (userData, id) => {
 
 // exports.createPlantCareUser = (userData) => {
 //   return new Promise((resolve, reject) => {
-//     const { firstName, lastName, phoneNumber, NICnumber, fileBuffer } =
-//       userData;
+//     const {
+//       firstName,
+//       lastName,
+//       phoneNumber,
+//       NICnumber,
+//       district,
+//       membership,
+//       profileImageUrl,
+//     } = userData;
 
-//     const sql = `
-//             INSERT INTO users (firstName, lastName, phoneNumber, NICnumber, profileImage)
-//             VALUES (?, ?, ?, ?, ?)
+//     // SQL query to check if phoneNumber or NICnumber already exists
+//     const checkSql = `
+//             SELECT id FROM users WHERE phoneNumber = ? OR NICnumber = ?
 //         `;
-//     const values = [firstName, lastName, phoneNumber, NICnumber, fileBuffer];
+//     const checkValues = [phoneNumber, NICnumber];
 
-//     db.query(sql, values, (err, results) => {
-//       if (err) {
-//         reject(err);
-//       } else {
-//         resolve(results.insertId); // Return the newly created user ID
+//     plantcare.query(checkSql, checkValues, (checkErr, checkResults) => {
+//       if (checkErr) {
+//         return reject(checkErr); // Return the database error
 //       }
+
+//       if (checkResults.length > 0) {
+//         // If a match is found, reject with an error message
+//         return reject(new Error("Phone number or NIC number already exists"));
+//       }
+
+//       // Proceed with the INSERT operation
+//       const insertSql = `
+//             INSERT INTO users (firstName, lastName, phoneNumber, NICnumber, district, membership, profileImage)
+//             VALUES (?, ?, ?, ?, ?, ?, ?)
+//         `;
+//       const insertValues = [
+//         firstName,
+//         lastName,
+//         phoneNumber,
+//         NICnumber,
+//         district,
+//         membership,
+//         profileImageUrl,
+//       ];
+
+//       plantcare.query(insertSql, insertValues, (insertErr, insertResults) => {
+//         if (insertErr) {
+//           console.log(insertErr);
+
+//           reject(insertErr); // Return the database error
+//         } else {
+//           resolve(insertResults.insertId); // Return the newly created user ID
+//         }
+//       });
 //     });
 //   });
 // };
@@ -959,47 +994,112 @@ exports.createPlantCareUser = (userData) => {
       district,
       membership,
       profileImageUrl,
+      accNumber,
+      accHolderName,
+      bankName,
+      branchName,
     } = userData;
 
-    // SQL query to check if phoneNumber or NICnumber already exists
-    const checkSql = `
-            SELECT id FROM users WHERE phoneNumber = ? OR NICnumber = ?
-        `;
-    const checkValues = [phoneNumber, NICnumber];
+    // Get a connection from the pool
+    plantcare.getConnection((connErr, connection) => {
+      if (connErr) return reject(connErr);
 
-    plantcare.query(checkSql, checkValues, (checkErr, checkResults) => {
-      if (checkErr) {
-        return reject(checkErr); // Return the database error
-      }
-
-      if (checkResults.length > 0) {
-        // If a match is found, reject with an error message
-        return reject(new Error("Phone number or NIC number already exists"));
-      }
-
-      // Proceed with the INSERT operation
-      const insertSql = `
-            INSERT INTO users (firstName, lastName, phoneNumber, NICnumber, district, membership, profileImage) 
-            VALUES (?, ?, ?, ?, ?, ?, ?)
-        `;
-      const insertValues = [
-        firstName,
-        lastName,
-        phoneNumber,
-        NICnumber,
-        district,
-        membership,
-        profileImageUrl,
-      ];
-
-      plantcare.query(insertSql, insertValues, (insertErr, insertResults) => {
-        if (insertErr) {
-          console.log(insertErr);
-
-          reject(insertErr); // Return the database error
-        } else {
-          resolve(insertResults.insertId); // Return the newly created user ID
+      connection.beginTransaction((beginErr) => {
+        if (beginErr) {
+          connection.release();
+          return reject(beginErr);
         }
+
+        // Check if user exists
+        connection.query(
+          `SELECT id FROM users WHERE phoneNumber = ? OR NICnumber = ?`,
+          [phoneNumber, NICnumber],
+          (checkErr, checkResults) => {
+            if (checkErr) {
+              return connection.rollback(() => {
+                connection.release();
+                reject(checkErr);
+              });
+            }
+
+            if (checkResults.length > 0) {
+              return connection.rollback(() => {
+                connection.release();
+                reject(new Error("Phone number or NIC number already exists"));
+              });
+            }
+
+            // Insert user
+            connection.query(
+              `INSERT INTO users (firstName, lastName, phoneNumber, NICnumber, district, membership, profileImage)
+               VALUES (?, ?, ?, ?, ?, ?, ?)`,
+              [
+                firstName,
+                lastName,
+                phoneNumber,
+                NICnumber,
+                district,
+                membership,
+                profileImageUrl,
+              ],
+              (insertUserErr, insertUserResults) => {
+                if (insertUserErr) {
+                  return connection.rollback(() => {
+                    connection.release();
+                    reject(insertUserErr);
+                  });
+                }
+
+                const userId = insertUserResults.insertId;
+
+                // Insert bank details if provided
+                if (accNumber && accHolderName && bankName) {
+                  connection.query(
+                    `INSERT INTO userbankdetails (userId, accNumber, accHolderName, bankName, branchName)
+                     VALUES (?, ?, ?, ?, ?)`,
+                    [
+                      userId,
+                      accNumber,
+                      accHolderName,
+                      bankName,
+                      branchName || null,
+                    ],
+                    (insertBankErr) => {
+                      if (insertBankErr) {
+                        return connection.rollback(() => {
+                          connection.release();
+                          reject(insertBankErr);
+                        });
+                      }
+
+                      connection.commit((commitErr) => {
+                        connection.release();
+                        if (commitErr) {
+                          return reject(commitErr);
+                        }
+                        resolve({
+                          userId,
+                          message: "User and bank details created successfully",
+                        });
+                      });
+                    }
+                  );
+                } else {
+                  connection.commit((commitErr) => {
+                    connection.release();
+                    if (commitErr) {
+                      return reject(commitErr);
+                    }
+                    resolve({
+                      userId,
+                      message: "User created successfully (no bank details)",
+                    });
+                  });
+                }
+              }
+            );
+          }
+        );
       });
     });
   });
@@ -2639,7 +2739,7 @@ exports.allUsers = (userId) => {
       }
     });
   });
-}
+};
 
 exports.allUsersTillPreviousMonth = (userId) => {
   return new Promise((resolve, reject) => {
