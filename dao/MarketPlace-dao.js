@@ -423,47 +423,6 @@ exports.creatPackageDetailsDAO = async (data, packageId) => {
     });
   });
 };
-
-// exports.getProductById = async (id) => {
-//   return new Promise((resolve, reject) => {
-//     const sql = `
-//           SELECT
-//             CG.id AS cropGroupId,
-//             CV.image,
-//             MPI.cropId,
-//             MPI.displayName AS cropName,
-//             MPI.category,
-//             MPI.normalPrice,
-//             MPI.discountedPrice,
-//             MPI.promo,
-//             MPI.unitType,
-//             MPI.startValue,
-//             MPI.changeby,
-//             MPI.displayType AS displaytype,
-//             MPI.tags
-//           FROM marketplaceitems MPI, plant_care.cropvariety CV, plant_care.cropgroup CG
-//           WHERE MPI.cropId = CV.id AND CV.cropGroupId = CG.id AND MPI.id = ?
-//     `;
-//     marketPlace.query(sql, [id], (err, results) => {
-//       if (err) {
-//         reject(err);
-//       } else {
-//         if (results.length > 0) {
-//           let product = results[0];
-
-//           product.tags = product.tags
-//             ? product.tags.split(",").map((tag) => tag.trim())
-//             : [];
-
-//           resolve(product);
-//         } else {
-//           resolve([]);
-//         }
-//       }
-//     });
-//   });
-// };
-
 exports.getProductById = async (id) => {
   return new Promise((resolve, reject) => {
     const sql = `
@@ -471,6 +430,7 @@ exports.getProductById = async (id) => {
             CG.id AS cropGroupId,
             CV.image,
             CV.id AS varietyId,
+            CV.varietyNameEnglish,
             MPI.displayName AS cropName,
             MPI.category,
             MPI.normalPrice,
@@ -505,11 +465,54 @@ exports.getProductById = async (id) => {
   });
 };
 
+// exports.updateMarketProductDao = async (product, id) => {
+//   return new Promise((resolve, reject) => {
+//     const sql = `UPDATE marketplaceitems
+//        SET
+//         cropId = ?,
+//         displayName = ?,
+//         normalPrice = ?,
+//         discountedPrice = ?,
+//         promo = ?,
+//         unitType = ?,
+//         startValue = ?,
+//         changeby = ?,
+//         tags = ?,
+//         category = ?,
+//         discount = ?,
+//         displaytype = ?
+//         WHERE id = ?
+//       `;
+//     const values = [
+//       product.variety,
+//       product.cropName,
+//       product.normalPrice,
+//       product.discountedPrice,
+//       product.promo,
+//       product.unitType,
+//       product.startValue,
+//       product.changeby,
+//       product.tags,
+//       product.category,
+//       product.discount,
+//       product.displaytype,
+//       id,
+//     ];
+
+//     marketPlace.query(sql, values, (err, results) => {
+//       if (err) {
+//         reject(err);
+//       } else {
+//         resolve(results);
+//       }
+//     });
+//   });
+// };
+
 exports.updateMarketProductDao = async (product, id) => {
   return new Promise((resolve, reject) => {
     const sql = `UPDATE marketplaceitems
        SET  
-        cropId = ?, 
         displayName = ?, 
         normalPrice = ?, 
         discountedPrice = ?, 
@@ -519,12 +522,10 @@ exports.updateMarketProductDao = async (product, id) => {
         changeby = ?, 
         tags = ?, 
         category = ?,
-        discount = ?,
-        displaytype = ?
+        discount = ?
         WHERE id = ?
       `;
     const values = [
-      product.variety,
       product.cropName,
       product.normalPrice,
       product.discountedPrice,
@@ -535,7 +536,6 @@ exports.updateMarketProductDao = async (product, id) => {
       product.tags,
       product.category,
       product.discount,
-      product.displaytype,
       id,
     ];
 
