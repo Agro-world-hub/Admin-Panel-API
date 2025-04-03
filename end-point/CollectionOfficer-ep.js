@@ -994,3 +994,39 @@ exports.claimOfficer = async (req, res) => {
       .json({ error: "Failed to update collection officer details" });
   }
 };
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+exports.getPurchaseReport = async (req, res) => {
+  const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
+  console.log(fullUrl);
+  try {
+
+    console.log('Hit 2');
+    const { page, limit} = req.body;
+
+
+    // Call the DAO to fetch the required data
+    const reportData = await collectionofficerDao.getPurchaseReport(
+      page,
+      limit,
+    );
+
+    // Return the data
+    res.json(reportData);
+  } catch (err) {
+    console.error("Error fetching daily report:", err);
+    res.status(500).send("An error occurred while fetching the report.");
+  }
+};

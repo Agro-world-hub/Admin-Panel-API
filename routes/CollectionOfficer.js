@@ -149,4 +149,14 @@ router.get(
   CollectionOfficerEp.getAllCollectionManagerNames
 );
 
+
+
+
+
+router.get(
+  "/get-purchase-report",
+  // authMiddleware,
+  CollectionOfficerEp.getPurchaseReport
+);
+
 module.exports = router;

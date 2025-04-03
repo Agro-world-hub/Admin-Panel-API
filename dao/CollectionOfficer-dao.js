@@ -1540,3 +1540,95 @@ exports.claimOfficerDetailsDao = (id, centerId, irmId) => {
     });
   });
 };
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+exports.getPurchaseReport = (page, limit) => {
+  return new Promise((resolve, reject) => {
+    const offset = (page - 1) * limit;
+
+    let countSql = `
+      SELECT 
+        COUNT(*) AS total
+      FROM 
+        registeredfarmerpayments rfp
+      LEFT JOIN 
+        farmerpaymentscrops fpc ON rfp.id = fpc.registerFarmerId
+      JOIN 
+        collectionofficer co ON rfp.collectionOfficerId = co.id
+      JOIN 
+        plant_care.users us ON rfp.userId = us.id
+      JOIN 
+        collectioncenter cc ON co.centerId = cc.id
+      JOIN 
+        company c ON co.companyId = c.id
+      WHERE 
+        c.id = 1
+    `;
+
+    let dataSql = `
+      SELECT 
+        invNo AS grnNumber,
+        cc.regCode AS regCode,
+        cc.centerName AS centerName,
+        SUM(IFNULL(fpc.gradeAprice * fpc.gradeAquan, 0) + IFNULL(fpc.gradeBprice * fpc.gradeBquan, 0) + IFNULL(fpc.gradeCprice * fpc.gradeCquan, 0)) AS amount,
+        us.firstName AS firstName,
+        us.lastName AS lastName,
+        us.NICnumber AS nic
+      FROM 
+        registeredfarmerpayments rfp
+      LEFT JOIN 
+        farmerpaymentscrops fpc ON rfp.id = fpc.registerFarmerId
+      JOIN 
+        collectionofficer co ON rfp.collectionOfficerId = co.id
+      JOIN 
+        plant_care.users us ON rfp.userId = us.id
+      JOIN 
+        collectioncenter cc ON co.centerId = cc.id
+      JOIN 
+        company c ON co.companyId = c.id
+      WHERE 
+        c.id = 1
+      GROUP BY rfp.id
+      LIMIT ${10} OFFSET ${0}  -- ✅ Fixed SQL Syntax
+    `;
+
+    console.log('Executing Count Query...');
+    collectionofficer.query(countSql, (countErr, countResults) => {
+      if (countErr) {
+        console.error("Error in count query:", countErr);
+        return reject(countErr);
+      }
+
+      const total = countResults[0]?.total || 0;
+
+      console.log('Executing Data Query...');
+      collectionofficer.query(dataSql, (dataErr, dataResults) => {
+        if (dataErr) {
+          console.error("Error in data query:", dataErr);
+          return reject(dataErr);
+        }
+
+        resolve({ items: dataResults, total });
+      });
+    });
+  });
+};
