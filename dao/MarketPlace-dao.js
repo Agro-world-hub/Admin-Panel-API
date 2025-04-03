@@ -134,8 +134,8 @@ exports.getMarketplaceItems = () => {
            m.unitType, m.changeby, m.normalPrice, m.category,
            cg.cropNameEnglish, cv.varietyNameEnglish
     FROM marketplaceitems m
-    LEFT JOIN plant_care.cropvariety cv ON m.displayName = cv.varietyNameEnglish
-    LEFT JOIN plant_care.cropgroup cg ON cv.cropGroupId = cg.id
+    JOIN plant_care.cropvariety cv ON m.varietyId = cv.id
+    JOIN plant_care.cropgroup cg ON cv.cropGroupId = cg.id
     `;
     marketPlace.query(dataSql, (error, results) => {
       if (error) {
