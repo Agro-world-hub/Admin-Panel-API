@@ -159,4 +159,10 @@ router.get(
   CollectionOfficerEp.getPurchaseReport
 );
 
+router.get(
+  "/get-centers-for-purchase-report",
+  // authMiddleware,
+  CollectionOfficerEp.getAllCentersForPurchaseReport
+);
+
 module.exports = router;

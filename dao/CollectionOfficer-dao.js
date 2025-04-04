@@ -1561,13 +1561,17 @@ exports.claimOfficerDetailsDao = (id, centerId, irmId) => {
 
 
 
-exports.getPurchaseReport = (page, limit) => {
+exports.getPurchaseReport = (page, limit, centerId, monthNumber, createdDate, search) => {
   return new Promise((resolve, reject) => {
     const offset = (page - 1) * limit;
 
+    const params = [];
+    const countParams = [];
+    const totalParams = [];
+
     let countSql = `
       SELECT 
-        COUNT(*) AS total
+        COUNT(DISTINCT rfp.id) AS total
       FROM 
         registeredfarmerpayments rfp
       LEFT JOIN 
@@ -1584,15 +1588,99 @@ exports.getPurchaseReport = (page, limit) => {
         c.id = 1
     `;
 
+    
+    let whereClause = "WHERE c.id = 1";
+
+    if (centerId) {
+      whereClause += " AND co.centerId = ?";
+      params.push(centerId);
+      countParams.push(centerId);
+      totalParams.push(centerId);
+    }
+
+    if (monthNumber) {
+      whereClause += " AND MONTH(rfp.createdAt) = ?";
+      params.push(monthNumber);
+      countParams.push(monthNumber);
+      totalParams.push(monthNumber);
+    }
+
+    if (createdDate) {
+      whereClause += " AND DATE(rfp.createdAt) = ?";
+      params.push(createdDate);
+      countParams.push(createdDate);
+      totalParams.push(createdDate);
+    }
+
+    if (search) {
+      whereClause += `
+        AND (
+          cc.regCode LIKE ? OR 
+          cc.centerName LIKE ? OR 
+          us.NICnumber LIKE ? OR 
+          invNo LIKE ?
+        )
+      `;
+      const searchPattern = `%${search}%`;
+      params.push(searchPattern, searchPattern, searchPattern, searchPattern);
+      countParams.push(searchPattern, searchPattern, searchPattern, searchPattern);
+      totalParams.push(searchPattern, searchPattern, searchPattern, searchPattern);
+    }
+
+   
+    countSql = `
+      SELECT 
+        COUNT(DISTINCT rfp.id) AS total
+      FROM 
+        registeredfarmerpayments rfp
+      LEFT JOIN 
+        farmerpaymentscrops fpc ON rfp.id = fpc.registerFarmerId
+      JOIN 
+        collectionofficer co ON rfp.collectionOfficerId = co.id
+      JOIN 
+        plant_care.users us ON rfp.userId = us.id
+      JOIN 
+        collectioncenter cc ON co.centerId = cc.id
+      JOIN 
+        company c ON co.companyId = c.id
+      ${whereClause}
+    `;
+    
+    
+    let grandTotalSql = `
+      SELECT 
+        ROUND(SUM(subquery.amount), 2) AS grandTotal
+      FROM (
+        SELECT 
+          SUM(IFNULL(fpc.gradeAprice * fpc.gradeAquan, 0) + IFNULL(fpc.gradeBprice * fpc.gradeBquan, 0) + IFNULL(fpc.gradeCprice * fpc.gradeCquan, 0)) AS amount
+        FROM 
+          registeredfarmerpayments rfp
+        LEFT JOIN 
+          farmerpaymentscrops fpc ON rfp.id = fpc.registerFarmerId
+        JOIN 
+          collectionofficer co ON rfp.collectionOfficerId = co.id
+        JOIN 
+          plant_care.users us ON rfp.userId = us.id
+        JOIN 
+          collectioncenter cc ON co.centerId = cc.id
+        JOIN 
+          company c ON co.companyId = c.id
+        ${whereClause}
+        GROUP BY rfp.id
+      ) AS subquery
+    `;
+
+   
     let dataSql = `
       SELECT 
         invNo AS grnNumber,
         cc.regCode AS regCode,
         cc.centerName AS centerName,
-        SUM(IFNULL(fpc.gradeAprice * fpc.gradeAquan, 0) + IFNULL(fpc.gradeBprice * fpc.gradeBquan, 0) + IFNULL(fpc.gradeCprice * fpc.gradeCquan, 0)) AS amount,
+        ROUND(SUM(IFNULL(fpc.gradeAprice * fpc.gradeAquan, 0) + IFNULL(fpc.gradeBprice * fpc.gradeBquan, 0) + IFNULL(fpc.gradeCprice * fpc.gradeCquan, 0)), 2) AS amount,
         us.firstName AS firstName,
         us.lastName AS lastName,
-        us.NICnumber AS nic
+        us.NICnumber AS nic,
+        rfp.createdAt AS createdAt
       FROM 
         registeredfarmerpayments rfp
       LEFT JOIN 
@@ -1605,30 +1693,70 @@ exports.getPurchaseReport = (page, limit) => {
         collectioncenter cc ON co.centerId = cc.id
       JOIN 
         company c ON co.companyId = c.id
-      WHERE 
-        c.id = 1
+      ${whereClause}
       GROUP BY rfp.id
-      LIMIT ${10} OFFSET ${0}  -- ✅ Fixed SQL Syntax
+      LIMIT ${limit} OFFSET ${offset}
     `;
 
     console.log('Executing Count Query...');
-    collectionofficer.query(countSql, (countErr, countResults) => {
+    collectionofficer.query(countSql, countParams, (countErr, countResults) => {
       if (countErr) {
         console.error("Error in count query:", countErr);
         return reject(countErr);
       }
 
-      const total = countResults[0]?.total || 0;
+      const total = countResults[0].total;
 
-      console.log('Executing Data Query...');
-      collectionofficer.query(dataSql, (dataErr, dataResults) => {
-        if (dataErr) {
-          console.error("Error in data query:", dataErr);
-          return reject(dataErr);
+      console.log('Executing Grand Total Query...');
+      collectionofficer.query(grandTotalSql, totalParams, (grandTotalErr, grandTotalResults) => {
+        if (grandTotalErr) {
+          console.error("Error in grand total query:", grandTotalErr);
+          return reject(grandTotalErr);
         }
 
-        resolve({ items: dataResults, total });
+        const grandTotal = grandTotalResults[0].grandTotal || 0;
+
+        console.log('Executing Data Query...');
+        collectionofficer.query(dataSql, params, (dataErr, dataResults) => {
+          if (dataErr) {
+            console.error("Error in data query:", dataErr);
+            return reject(dataErr);
+          }
+
+          resolve({ items: dataResults, total, grandTotal });
+        });
       });
+    });
+  });
+};
+
+
+
+
+
+
+
+
+
+
+
+
+
+exports.getAllCentersForPurchaseReport = () => {
+  return new Promise((resolve, reject) => {
+    const sql = `
+        SELECT clc.id, clc.centerName As centerName
+        FROM companycenter cc
+        JOIN collectioncenter clc ON cc.centerId = clc.id
+        WHERE cc.companyId = 1
+        GROUP BY cc.centerId
+        `;
+
+        collectionofficer.query(sql, (err, results) => {
+      if (err) {
+        return reject(err);
+      }
+      resolve(results);
     });
   });
 };

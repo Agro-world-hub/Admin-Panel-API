@@ -1013,20 +1013,43 @@ exports.getPurchaseReport = async (req, res) => {
   console.log(fullUrl);
   try {
 
-    console.log('Hit 2');
-    const { page, limit} = req.body;
+    const validatedQuery = await collectionofficerValidate.getPurchaseReport.validateAsync(req.query);
 
 
-    // Call the DAO to fetch the required data
+    const { page, limit, centerId, monthNumber, createdDate, search} = validatedQuery;
+
     const reportData = await collectionofficerDao.getPurchaseReport(
       page,
       limit,
+      centerId,
+      monthNumber,
+      createdDate, 
+      search
     );
-
-    // Return the data
     res.json(reportData);
   } catch (err) {
     console.error("Error fetching daily report:", err);
     res.status(500).send("An error occurred while fetching the report.");
+  }
+};
+
+
+
+
+
+exports.getAllCentersForPurchaseReport = async (req, res) => {
+  const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
+  console.log(fullUrl);
+
+  try {
+      const result = await collectionofficerDao.getAllCentersForPurchaseReport();
+
+      return res.status(200).json(result);
+  } catch (error) {
+      if (error.isJoi) {
+          return res.status(400).json({ error: error.details[0].message });
+      }
+      console.error("Error fetching collection centers:", error);
+      return res.status(500).json({ error: "An error occurred while fetching collection centers" });
   }
 };
