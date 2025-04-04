@@ -210,6 +210,24 @@ router.get('/download-purchase-report', async (req, res) => {
   
       // Create a worksheet and workbook
       const worksheet = XLSX.utils.json_to_sheet(formattedData);
+
+      worksheet['!cols'] = [
+        { wch: 25 }, // GRN
+        { wch: 15}, // Amount
+        { wch: 20 }, // Center Reg Code
+        { wch: 25 }, // Center Name
+        { wch: 18 }, // Farmer NIC
+        { wch: 25 }, // Farmer Name
+        { wch: 15 }, // Farmer Contact
+        { wch: 25 }, // Account Holder Name
+        { wch: 20 }, // Account Number
+        { wch: 20 }, // Bank Name
+        { wch: 20 }, // Branch Name
+        { wch: 15 }, // Officer EMP ID
+        { wch: 15 }  // Collected Time
+      ];
+
+
       const workbook = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(workbook, worksheet, 'Market Price Template');
   
