@@ -5,6 +5,9 @@ const bodyParser = require("body-parser");
 const authMiddleware = require("../middlewares/authMiddleware");
 const multer = require("multer");
 const upload = require("../middlewares/uploadMiddleware");
+const collectionofficerDao = require("../dao/CollectionOfficer-dao");
+const XLSX = require('xlsx');
+const fs = require('fs');
 
 const path = require("path");
 
@@ -155,14 +158,74 @@ router.get(
 
 router.get(
   "/get-purchase-report",
-  // authMiddleware,
+  authMiddleware,
   CollectionOfficerEp.getPurchaseReport
 );
 
 router.get(
   "/get-centers-for-purchase-report",
-  // authMiddleware,
+  authMiddleware,
   CollectionOfficerEp.getAllCentersForPurchaseReport
 );
+
+
+
+
+
+
+
+
+router.get('/download-purchase-report', async (req, res) => {
+    try {
+
+      const {centerId, monthNumber, createdDate, search} = req.query;
+      // Fetch data from the database
+      const data = await collectionofficerDao.downloadPurchaseReport( 
+        centerId,
+        monthNumber,
+        createdDate, 
+        search);
+  
+      // Format data for Excel
+      const formattedData = data.flatMap(item => [
+        {
+          'GRN': item.grnNumber,
+          'Amount': item.amount,
+          'Center Reg Code': item.regCode,
+          'Center Name': item.centerName,
+          'Farmer NIC': item.nic,
+          'Farmer Name': item.firstName + ' ' + item.lastName,
+          'Farmer contact': item.phoneNumber,
+          'Account holder name': item.accHolderName,
+          'Account Number': item.accNumber,
+          'Bank Name': item.bankName,
+          'Branch Name': item.branchName,
+          'Officer EMP ID': item.empId,
+          'Collected time': item.createdAt
+
+        },
+        
+      ]);
+      
+  
+      // Create a worksheet and workbook
+      const worksheet = XLSX.utils.json_to_sheet(formattedData);
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, 'Market Price Template');
+  
+      // Write the workbook to a buffer
+      const excelBuffer = XLSX.write(workbook, { type: 'buffer', bookType: 'xlsx' });
+  
+      // Set headers for file download
+      res.setHeader('Content-Disposition', 'attachment; filename="Market Price Template.xlsx"');
+      res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+      
+      // Send the file to the client
+      res.send(excelBuffer);
+    } catch (err) {
+      console.error('Error generating Excel file:', err);
+      res.status(500).send('An error occurred while generating the file.');
+    }
+  });
 
 module.exports = router;

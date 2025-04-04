@@ -1053,3 +1053,27 @@ exports.getAllCentersForPurchaseReport = async (req, res) => {
       return res.status(500).json({ error: "An error occurred while fetching collection centers" });
   }
 };
+
+
+exports.downloadPurchaseReport = async (req, res) => {
+  const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
+  console.log(fullUrl);
+  try {
+
+   
+
+
+    const {centerId, monthNumber, createdDate, search} = req.query;
+
+    const reportData = await collectionofficerDao.downloadPurchaseReport(
+      centerId,
+      monthNumber,
+      createdDate, 
+      search
+    );
+    res.json(reportData);
+  } catch (err) {
+    console.error("Error fetching daily report:", err);
+    res.status(500).send("An error occurred while fetching the report.");
+  }
+};
