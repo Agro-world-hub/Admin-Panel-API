@@ -380,15 +380,14 @@ exports.getAllProductCropCatogoryDAO = () => {
 exports.creatPackageDAO = async (data, profileImageUrl) => {
   return new Promise((resolve, reject) => {
     const sql =
-      "INSERT INTO marketplacepackages (name, status, total, image, description, portion, period) VALUES (?, ?, ?, ?, ?, ?, ?)";
+      "INSERT INTO marketplacepackages (displayName, status, total, image, description, discount) VALUES (?, ?, ?, ?, ?, ?)";
     const values = [
-      data.name,
+      data.displayName,
       data.status,
       data.total,
       profileImageUrl,
       data.description,
-      data.portion,
-      data.period,
+      data.discount,
     ];
 
     marketPlace.query(sql, values, (err, results) => {
