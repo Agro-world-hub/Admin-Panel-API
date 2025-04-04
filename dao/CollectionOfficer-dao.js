@@ -1673,6 +1673,7 @@ exports.getPurchaseReport = (page, limit, centerId, monthNumber, createdDate, se
    
     let dataSql = `
       SELECT 
+        rfp.id AS id,
         invNo AS grnNumber,
         cc.regCode AS regCode,
         cc.centerName AS centerName,
@@ -1680,6 +1681,8 @@ exports.getPurchaseReport = (page, limit, centerId, monthNumber, createdDate, se
         us.firstName AS firstName,
         us.lastName AS lastName,
         us.NICnumber AS nic,
+        us.id AS userId,
+        co.QRcode AS collQr,
         rfp.createdAt AS createdAt
       FROM 
         registeredfarmerpayments rfp
