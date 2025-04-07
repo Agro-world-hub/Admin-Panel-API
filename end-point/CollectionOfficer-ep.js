@@ -1077,3 +1077,32 @@ exports.downloadPurchaseReport = async (req, res) => {
     res.status(500).send("An error occurred while fetching the report.");
   }
 };
+
+
+
+
+
+exports.getCollectionReport = async (req, res) => {
+  const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
+  console.log(fullUrl);
+  try {
+
+    const validatedQuery = await collectionofficerValidate.getPurchaseReport.validateAsync(req.query);
+
+
+    const { page, limit, centerId, monthNumber, createdDate, search} = validatedQuery;
+
+    const reportData = await collectionofficerDao.getCollectionReport(
+      page,
+      limit,
+      centerId,
+      monthNumber,
+      createdDate, 
+      search
+    );
+    res.json(reportData);
+  } catch (err) {
+    console.error("Error fetching daily report:", err);
+    res.status(500).send("An error occurred while fetching the report.");
+  }
+};
