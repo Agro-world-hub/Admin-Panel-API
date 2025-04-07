@@ -576,3 +576,101 @@ exports.deleteMarketplacePckages = async (id) => {
     });
   });
 };
+
+exports.updateMarketplacePackageDAO = (packageId, updateData) => {
+  return new Promise((resolve, reject) => {
+    // Extract fields from updateData that we want to allow updating
+    const {
+      displayName,
+      image,
+      description,
+      status,
+      total,
+      discount,
+      subtotal,
+    } = updateData;
+
+    const sql = `
+      UPDATE marketplacepackages
+      SET 
+        displayName = ?,
+        image = ?,
+        description = ?,
+        status = ?,
+        total = ?,
+        discount = ?,
+        subtotal = ?,
+        updated_at = CURRENT_TIMESTAMP
+      WHERE id = ?
+    `;
+
+    const values = [
+      displayName,
+      image,
+      description,
+      status,
+      total,
+      discount,
+      subtotal,
+      packageId,
+    ];
+
+    marketPlace.query(sql, values, (err, results) => {
+      if (err) {
+        return reject(err);
+      }
+      if (results.affectedRows === 0) {
+        return reject(new Error("No package found with the given ID"));
+      }
+      resolve({
+        id: packageId,
+        ...updateData,
+        message: "Package updated successfully",
+      });
+    });
+  });
+};
+
+exports.getMarketplacePackageByIdDAO = (packageId) => {
+  return new Promise((resolve, reject) => {
+    const sql = `
+      SELECT 
+        id, 
+        displayName, 
+        image, 
+        description, 
+        status, 
+        total, 
+        discount, 
+        subtotal, 
+        created_at
+      FROM marketplacepackages
+      WHERE id = ?
+    `;
+
+    marketPlace.query(sql, [packageId], (err, results) => {
+      if (err) {
+        return reject(err);
+      }
+
+      if (results.length === 0) {
+        return reject(new Error("Package not found"));
+      }
+
+      const pkg = results[0];
+      const formattedResult = {
+        id: pkg.id,
+        displayName: pkg.displayName,
+        image: pkg.image,
+        description: pkg.description,
+        status: pkg.status,
+        total: pkg.total,
+        discount: pkg.discount,
+        subtotal: pkg.subtotal,
+        createdAt: pkg.created_at,
+      };
+
+      resolve(formattedResult);
+    });
+  });
+};

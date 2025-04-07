@@ -515,3 +515,77 @@ exports.deleteMarketplacePackages = async (req, res) => {
       .json({ error: "An error occurred while deleting the marketplace item" });
   }
 };
+
+exports.updateMarketplacePackage = async (req, res) => {
+  try {
+    const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
+    console.log("Request URL:", fullUrl);
+
+    // Validate the ID parameter
+    const { id } = await MarketPriceValidate.IdparamsSchema.validateAsync(
+      req.params
+    );
+
+    // Validate the request body (you might want to create a specific validation schema for packages)
+    const packageData =
+      await MarketPriceValidate.UpdatePackageSchema.validateAsync(req.body);
+
+    console.log("Update data:", packageData);
+
+    const result = await MarketPlaceDao.updateMarketplacePackageDAO(
+      id,
+      packageData
+    );
+
+    if (result.message === "Package updated successfully") {
+      console.log("Marketplace package update success");
+      return res.status(200).json({
+        message: "Marketplace package updated successfully",
+        result: result,
+        status: true,
+      });
+    } else {
+      return res.status(404).json({
+        message: "Marketplace package update unsuccessful - package not found",
+        result: result,
+        status: false,
+      });
+    }
+  } catch (err) {
+    if (err.isJoi) {
+      // Validation error
+      return res.status(400).json({
+        error: err.details[0].message,
+        status: false,
+      });
+    }
+
+    console.error("Error updating marketplace package:", err);
+    return res.status(500).json({
+      error: "An error occurred while updating marketplace package",
+      status: false,
+      details: err.message,
+    });
+  }
+};
+
+exports.getMarketplacePackageById = async (req, res) => {
+  try {
+    const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
+    console.log("Request URL:", fullUrl);
+
+    const { id } = await MarketPriceValidate.IdparamsSchema.validateAsync(
+      req.params
+    );
+
+    const result = await MarketPlaceDao.getMarketplacePackageByIdDAO(id);
+
+    res.json(result);
+    console.log("Successfully fetched marketplace package");
+  } catch (error) {
+    console.error("Error fetching marketplace package:", error);
+    return res.status(500).json({
+      error: "An error occurred while fetching marketplace package",
+    });
+  }
+};
