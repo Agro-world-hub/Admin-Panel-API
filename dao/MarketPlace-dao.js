@@ -273,58 +273,6 @@ exports.deleteAllCoupen = async () => {
   });
 };
 
-// exports.getAllProductCropCatogoryDAO = () => {
-//   return new Promise((resolve, reject) => {
-//     const sql = `
-//           SELECT cg.id AS cropId, mpi.normalPrice, mpi.discountedPrice, mpi.id AS varietyId, cg.cropNameEnglish, mpi.displayName
-//           FROM marketplaceitems mpi, plant_care.cropvariety cv, plant_care.cropgroup cg
-//           WHERE mpi.cropId = cv.id AND cv.cropGroupId = cg.id
-//       `;
-
-//     marketPlace.query(sql, (err, results) => {
-//       if (err) {
-//         return reject(err);
-//       }
-
-//       const groupedData = {};
-
-//       results.forEach((item) => {
-//         const {
-//           cropNameEnglish,
-//           displayName,
-//           varietyId,
-//           cropId,
-//           normalPrice,
-//           discountedPrice,
-//         } = item;
-
-//         if (!groupedData[cropNameEnglish]) {
-//           groupedData[cropNameEnglish] = {
-//             cropId: cropId,
-//             variety: [],
-//           };
-//         }
-
-//         groupedData[cropNameEnglish].variety.push({
-//           id: varietyId,
-//           displayName: displayName,
-//           normalPrice: parseFloat(normalPrice),
-//           discountedPrice: parseFloat(discountedPrice),
-//         });
-//       });
-
-//       // Format the final result
-//       const formattedResult = Object.keys(groupedData).map((cropName) => ({
-//         cropId: groupedData[cropName].cropId,
-//         cropNameEnglish: cropName,
-//         variety: groupedData[cropName].variety,
-//       }));
-
-//       resolve(formattedResult);
-//     });
-//   });
-// };
-
 exports.getAllProductCropCatogoryDAO = () => {
   return new Promise((resolve, reject) => {
     const sql = `
