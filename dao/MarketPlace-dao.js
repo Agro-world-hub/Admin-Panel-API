@@ -495,3 +495,71 @@ exports.updateMarketProductDao = async (product, id) => {
     });
   });
 };
+
+exports.getAllMarketplacePackagesDAO = () => {
+  return new Promise((resolve, reject) => {
+    const sql = `
+      SELECT 
+        id, 
+        displayName, 
+        image, 
+        description, 
+        status, 
+        total, 
+        discount, 
+        subtotal, 
+        created_at
+      FROM marketplacepackages
+      ORDER BY created_at DESC
+    `;
+
+    marketPlace.query(sql, (err, results) => {
+      if (err) {
+        return reject(err);
+      }
+
+      // Group packages by status
+      const groupedData = {};
+
+      results.forEach((pkg) => {
+        const {
+          status,
+          id,
+          displayName,
+          image,
+          description,
+          total,
+          discount,
+          subtotal,
+          created_at,
+        } = pkg;
+
+        // Initialize the status group if it doesn't exist
+        if (!groupedData[status]) {
+          groupedData[status] = {
+            status: status,
+            packages: [],
+          };
+        }
+
+        // Add the package to its status group
+        groupedData[status].packages.push({
+          id: id,
+          displayName: displayName,
+          image: image,
+          description: description,
+          total: total,
+          status: status,
+          discount: discount,
+          subtotal: subtotal,
+          createdAt: created_at,
+        });
+      });
+
+      // Convert the grouped data object into an array
+      const formattedResult = Object.values(groupedData);
+
+      resolve(formattedResult);
+    });
+  });
+};
