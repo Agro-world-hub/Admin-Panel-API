@@ -273,58 +273,6 @@ exports.deleteAllCoupen = async () => {
   });
 };
 
-// exports.getAllProductCropCatogoryDAO = () => {
-//   return new Promise((resolve, reject) => {
-//     const sql = `
-//           SELECT cg.id AS cropId, mpi.normalPrice, mpi.discountedPrice, mpi.id AS varietyId, cg.cropNameEnglish, mpi.displayName
-//           FROM marketplaceitems mpi, plant_care.cropvariety cv, plant_care.cropgroup cg
-//           WHERE mpi.cropId = cv.id AND cv.cropGroupId = cg.id
-//       `;
-
-//     marketPlace.query(sql, (err, results) => {
-//       if (err) {
-//         return reject(err);
-//       }
-
-//       const groupedData = {};
-
-//       results.forEach((item) => {
-//         const {
-//           cropNameEnglish,
-//           displayName,
-//           varietyId,
-//           cropId,
-//           normalPrice,
-//           discountedPrice,
-//         } = item;
-
-//         if (!groupedData[cropNameEnglish]) {
-//           groupedData[cropNameEnglish] = {
-//             cropId: cropId,
-//             variety: [],
-//           };
-//         }
-
-//         groupedData[cropNameEnglish].variety.push({
-//           id: varietyId,
-//           displayName: displayName,
-//           normalPrice: parseFloat(normalPrice),
-//           discountedPrice: parseFloat(discountedPrice),
-//         });
-//       });
-
-//       // Format the final result
-//       const formattedResult = Object.keys(groupedData).map((cropName) => ({
-//         cropId: groupedData[cropName].cropId,
-//         cropNameEnglish: cropName,
-//         variety: groupedData[cropName].variety,
-//       }));
-
-//       resolve(formattedResult);
-//     });
-//   });
-// };
-
 exports.getAllProductCropCatogoryDAO = () => {
   return new Promise((resolve, reject) => {
     const sql = `
@@ -544,6 +492,185 @@ exports.updateMarketProductDao = async (product, id) => {
       } else {
         resolve(results);
       }
+    });
+  });
+};
+
+exports.getAllMarketplacePackagesDAO = () => {
+  return new Promise((resolve, reject) => {
+    const sql = `
+      SELECT 
+        id, 
+        displayName, 
+        image, 
+        description, 
+        status, 
+        total, 
+        discount, 
+        subtotal, 
+        created_at
+      FROM marketplacepackages
+      ORDER BY created_at DESC
+    `;
+
+    marketPlace.query(sql, (err, results) => {
+      if (err) {
+        return reject(err);
+      }
+
+      // Group packages by status
+      const groupedData = {};
+
+      results.forEach((pkg) => {
+        const {
+          status,
+          id,
+          displayName,
+          image,
+          description,
+          total,
+          discount,
+          subtotal,
+          created_at,
+        } = pkg;
+
+        // Initialize the status group if it doesn't exist
+        if (!groupedData[status]) {
+          groupedData[status] = {
+            status: status,
+            packages: [],
+          };
+        }
+
+        // Add the package to its status group
+        groupedData[status].packages.push({
+          id: id,
+          displayName: displayName,
+          image: image,
+          description: description,
+          total: total,
+          status: status,
+          discount: discount,
+          subtotal: subtotal,
+          createdAt: created_at,
+        });
+      });
+
+      // Convert the grouped data object into an array
+      const formattedResult = Object.values(groupedData);
+
+      resolve(formattedResult);
+    });
+  });
+};
+
+exports.deleteMarketplacePckages = async (id) => {
+  return new Promise((resolve, reject) => {
+    const sql = "DELETE FROM marketplacepackages WHERE id = ?";
+    marketPlace.query(sql, [id], (err, results) => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(results.affectedRows);
+      }
+    });
+  });
+};
+
+exports.updateMarketplacePackageDAO = (packageId, updateData) => {
+  return new Promise((resolve, reject) => {
+    // Extract fields from updateData that we want to allow updating
+    const {
+      displayName,
+      image,
+      description,
+      status,
+      total,
+      discount,
+      subtotal,
+    } = updateData;
+
+    const sql = `
+      UPDATE marketplacepackages
+      SET 
+        displayName = ?,
+        image = ?,
+        description = ?,
+        status = ?,
+        total = ?,
+        discount = ?,
+        subtotal = ?,
+        updated_at = CURRENT_TIMESTAMP
+      WHERE id = ?
+    `;
+
+    const values = [
+      displayName,
+      image,
+      description,
+      status,
+      total,
+      discount,
+      subtotal,
+      packageId,
+    ];
+
+    marketPlace.query(sql, values, (err, results) => {
+      if (err) {
+        return reject(err);
+      }
+      if (results.affectedRows === 0) {
+        return reject(new Error("No package found with the given ID"));
+      }
+      resolve({
+        id: packageId,
+        ...updateData,
+        message: "Package updated successfully",
+      });
+    });
+  });
+};
+
+exports.getMarketplacePackageByIdDAO = (packageId) => {
+  return new Promise((resolve, reject) => {
+    const sql = `
+      SELECT 
+        id, 
+        displayName, 
+        image, 
+        description, 
+        status, 
+        total, 
+        discount, 
+        subtotal, 
+        created_at
+      FROM marketplacepackages
+      WHERE id = ?
+    `;
+
+    marketPlace.query(sql, [packageId], (err, results) => {
+      if (err) {
+        return reject(err);
+      }
+
+      if (results.length === 0) {
+        return reject(new Error("Package not found"));
+      }
+
+      const pkg = results[0];
+      const formattedResult = {
+        id: pkg.id,
+        displayName: pkg.displayName,
+        image: pkg.image,
+        description: pkg.description,
+        status: pkg.status,
+        total: pkg.total,
+        discount: pkg.discount,
+        subtotal: pkg.subtotal,
+        createdAt: pkg.created_at,
+      };
+
+      resolve(formattedResult);
     });
   });
 };
