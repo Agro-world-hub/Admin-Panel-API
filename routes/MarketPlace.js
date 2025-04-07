@@ -72,4 +72,10 @@ router.get(
   marketPlaceEp.getAllMarketplacePackages
 );
 
+router.delete(
+  "/delete-packages/:id",
+  // authMiddleware,
+  marketPlaceEp.deleteMarketplacePackages
+);
+
 module.exports = router;
