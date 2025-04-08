@@ -1016,14 +1016,14 @@ exports.getPurchaseReport = async (req, res) => {
     const validatedQuery = await collectionofficerValidate.getPurchaseReport.validateAsync(req.query);
 
 
-    const { page, limit, centerId, monthNumber, createdDate, search} = validatedQuery;
+    const { page, limit, centerId, startDate, endDate, search} = validatedQuery;
 
     const reportData = await collectionofficerDao.getPurchaseReport(
       page,
       limit,
       centerId,
-      monthNumber,
-      createdDate, 
+      startDate,
+      endDate, 
       search
     );
     res.json(reportData);
@@ -1090,14 +1090,14 @@ exports.getCollectionReport = async (req, res) => {
     const validatedQuery = await collectionofficerValidate.getPurchaseReport.validateAsync(req.query);
 
 
-    const { page, limit, centerId, monthNumber, createdDate, search} = validatedQuery;
+    const { page, limit, centerId, startDate, endDate, search} = validatedQuery;
 
     const reportData = await collectionofficerDao.getCollectionReport(
       page,
       limit,
       centerId,
-      monthNumber,
-      createdDate, 
+      startDate,
+      endDate, 
       search
     );
     res.json(reportData);

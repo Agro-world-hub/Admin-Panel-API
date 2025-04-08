@@ -178,12 +178,12 @@ router.get(
 router.get('/download-purchase-report', async (req, res) => {
     try {
 
-      const {centerId, monthNumber, createdDate, search} = req.query;
+      const {centerId, startDate, endDate, search} = req.query;
       // Fetch data from the database
       const data = await collectionofficerDao.downloadPurchaseReport( 
         centerId,
-        monthNumber,
-        createdDate, 
+        startDate,
+        endDate, 
         search);
   
       // Format data for Excel
