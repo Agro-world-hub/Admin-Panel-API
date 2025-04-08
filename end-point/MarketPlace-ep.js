@@ -589,3 +589,52 @@ exports.getMarketplacePackageById = async (req, res) => {
     });
   }
 };
+
+exports.getMarketplacePackageWithDetailsById = async (req, res) => {
+  try {
+    const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
+    console.log("Request URL:", fullUrl);
+
+    const { id } = await MarketPriceValidate.IdparamsSchema.validateAsync(
+      req.params
+    );
+
+    const packageData =
+      await MarketPlaceDao.getMarketplacePackageByIdWithDetailsDAO(id);
+
+    // Format the response if needed (the DAO already formats it)
+    const response = {
+      success: true,
+      message: "Marketplace package retrieved successfully",
+      data: packageData,
+    };
+
+    res.status(200).json(response);
+    console.log("Successfully fetched marketplace package with details");
+  } catch (error) {
+    console.error("Error fetching marketplace package:", error.message);
+
+    // Handle "Package not found" error specifically
+    if (error.message === "Package not found") {
+      return res.status(404).json({
+        success: false,
+        error: error.message,
+      });
+    }
+
+    // Handle validation errors
+    if (error.isJoi) {
+      return res.status(400).json({
+        success: false,
+        error: error.details[0].message,
+      });
+    }
+
+    // Generic error handler
+    res.status(500).json({
+      success: false,
+      error:
+        "An internal server error occurred while fetching marketplace package",
+    });
+  }
+};

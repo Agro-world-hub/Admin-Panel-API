@@ -90,4 +90,10 @@ router.get(
   marketPlaceEp.getMarketplacePackageById
 );
 
+router.get(
+  "/get-packagedetails-by-id/:id",
+  authMiddleware,
+  marketPlaceEp.getMarketplacePackageWithDetailsById
+);
+
 module.exports = router;

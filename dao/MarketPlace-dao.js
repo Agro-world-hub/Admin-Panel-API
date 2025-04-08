@@ -674,3 +674,141 @@ exports.getMarketplacePackageByIdDAO = (packageId) => {
     });
   });
 };
+
+// exports.getMarketplacePackageByIdWithDetailsDAO = (packageId) => {
+//   return new Promise((resolve, reject) => {
+//     const sql = `
+//       SELECT
+//         mp.id,
+//         mp.displayName AS packageDisplayName,
+//         mp.image,
+//         mp.description,
+//         mp.status,
+//         mp.total,
+//         mp.discount,
+//         mp.subtotal,
+//         mp.created_at,
+//         pd.packageId,
+//         pd.mpItemId,
+//         pd.quantity,
+//         pd.quantityType,
+//         pd.price,
+//         pd.createdAt AS detailCreatedAt,
+//         mi.displayName AS itemDisplayName  -- Assuming the items table has displayName
+//       FROM marketplacepackages mp
+//       LEFT JOIN packagedetails pd ON mp.id = pd.packageId
+//       LEFT JOIN marketplaceitems mi ON pd.mpItemId = mi.id  -- Join with items table
+//       WHERE mp.id = ?
+//     `;
+
+//     marketPlace.query(sql, [packageId], (err, results) => {
+//       if (err) {
+//         return reject(err);
+//       }
+
+//       if (results.length === 0) {
+//         return reject(new Error("Package not found"));
+//       }
+
+//       // The first row contains all the package info
+//       const pkg = {
+//         id: results[0].id,
+//         displayName: results[0].packageDisplayName,
+//         image: results[0].image,
+//         description: results[0].description,
+//         status: results[0].status,
+//         total: results[0].total,
+//         discount: results[0].discount,
+//         subtotal: results[0].subtotal,
+//         createdAt: results[0].created_at,
+//         packageDetails: [],
+//       };
+
+//       // Add all package details
+//       results.forEach((row) => {
+//         if (row.mpItemId) {
+//           pkg.packageDetails.push({
+//             packageId: row.packageId,
+//             mpItemId: row.mpItemId,
+//             itemDisplayName: row.itemDisplayName, // Add the item display name
+//             quantity: row.quantity,
+//             quantityType: row.quantityType,
+//             price: row.price,
+//             createdAt: row.detailCreatedAt,
+//           });
+//         }
+//       });
+
+//       resolve(pkg);
+//     });
+//   });
+// };
+
+exports.getMarketplacePackageByIdWithDetailsDAO = (packageId) => {
+  return new Promise((resolve, reject) => {
+    const sql = `
+      SELECT 
+        mp.id, 
+        mp.displayName AS packageDisplayName, 
+        mp.image, 
+        mp.description, 
+        mp.status, 
+        mp.total, 
+        mp.discount, 
+        mp.subtotal, 
+        mp.created_at,
+        pd.packageId,
+        pd.mpItemId,
+        pd.quantity,
+        pd.quantityType,
+        pd.price,
+        pd.createdAt AS detailCreatedAt,
+        mi.displayName AS itemDisplayName,
+        mi.normalPrice AS itemNormalPrice   -- SQL-style comment (or remove entirely)
+      FROM marketplacepackages mp
+      LEFT JOIN packagedetails pd ON mp.id = pd.packageId
+      LEFT JOIN marketplaceitems mi ON pd.mpItemId = mi.id
+      WHERE mp.id = ?
+    `;
+
+    marketPlace.query(sql, [packageId], (err, results) => {
+      if (err) {
+        return reject(err);
+      }
+
+      if (results.length === 0) {
+        return reject(new Error("Package not found"));
+      }
+
+      const pkg = {
+        id: results[0].id,
+        displayName: results[0].packageDisplayName,
+        image: results[0].image,
+        description: results[0].description,
+        status: results[0].status,
+        total: results[0].total,
+        discount: results[0].discount,
+        subtotal: results[0].subtotal,
+        createdAt: results[0].created_at,
+        packageDetails: [],
+      };
+
+      results.forEach((row) => {
+        if (row.mpItemId) {
+          pkg.packageDetails.push({
+            packageId: row.packageId,
+            mpItemId: row.mpItemId,
+            itemDisplayName: row.itemDisplayName,
+            normalPrice: row.itemNormalPrice,
+            quantity: row.quantity,
+            quantityType: row.quantityType,
+            price: row.price,
+            createdAt: row.detailCreatedAt,
+          });
+        }
+      });
+
+      resolve(pkg);
+    });
+  });
+};
