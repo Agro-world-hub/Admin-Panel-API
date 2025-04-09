@@ -13,105 +13,99 @@ const {
 
 
 
-exports.getCollectionReport = (page, limit, centerId, startDate, endDate, search) => {
+  exports.getRecievedOrdersQuantity = (page, limit, filterType, date) => {
     return new Promise((resolve, reject) => {
       const offset = (page - 1) * limit;
-  
-      let whereClause = `WHERE c.id = 1`;
       const params = [];
       const countParams = [];
   
-      if (centerId) {
-        whereClause += ` AND co.centerId = ?`;
-        params.push(centerId);
-        countParams.push(centerId);
+      // Default to OrderDate if filterType not set
+      const validFilters = {
+        OrderDate: "DATE(o.createdAt)",
+        scheduleDate: "DATE(o.scheduleDate)",
+        toCollectionCenter: "DATE_SUB(o.scheduleDate, INTERVAL 2 DAY)",
+        toDispatchCenter: "DATE_SUB(o.scheduleDate, INTERVAL 1 DAY)"
+      };
+  
+      const dateFilterColumn = validFilters[filterType] || validFilters["OrderDate"];
+  
+      let whereClause = `
+        WHERE o.deleteStatus IS NOT TRUE
+        AND o.orderStatus != 'Cancelled'
+        AND cv.varietyNameEnglish IS NOT NULL
+      `;
+  
+      if (date) {
+        whereClause += ` AND ${dateFilterColumn} = ?`;
+        params.push(date);
+        countParams.push(date);
       }
   
-      if (startDate && endDate) {
-        whereClause += " AND DATE(rfp.createdAt) BETWEEN ? AND ?";
-        params.push(startDate, endDate);
-        countParams.push(startDate, endDate);
-      } else if (startDate) {
-        whereClause += " AND DATE(rfp.createdAt) >= ?";
-        params.push(startDate);
-        countParams.push(startDate);
-      } else if (endDate) {
-        whereClause += " AND DATE(rfp.createdAt) <= ?";
-        params.push(endDate);
-        countParams.push(endDate);
-      }
-  
-      if (search) {
-        whereClause += `
-          AND (
-            cc.regCode LIKE ? OR 
-            cc.centerName LIKE ? OR 
-            cg.cropNameEnglish LIKE ? OR
-            cv.varietyNameEnglish LIKE ?
-          )
-        `;
-        const searchPattern = `%${search}%`;
-        params.push(searchPattern, searchPattern, searchPattern, searchPattern);
-        countParams.push(searchPattern, searchPattern, searchPattern, searchPattern);
-      }
+      const baseSelect = `
+        FROM orders o
+        LEFT JOIN (
+            SELECT osi.orderId, mi.varietyId, SUM(osi.quantity) AS TotalQuantity
+            FROM orderselecteditems osi
+            JOIN market_place.marketplaceitems mi ON osi.mpItemId = mi.id
+            GROUP BY osi.orderId, mi.varietyId
+            UNION ALL
+            SELECT opi.orderId, mi.varietyId,
+                SUM(COALESCE(pd.quantity, 0) + COALESCE(mpi.modifiedQuantity, 0) - COALESCE(mmi.modifiedQuantity, 0)) AS TotalQuantity
+            FROM orderpackageitems opi
+            JOIN market_place.packagedetails pd ON opi.packageId = pd.packageId
+            JOIN market_place.marketplaceitems mi ON pd.mpItemId = mi.id
+            LEFT JOIN modifiedplusitems mpi ON mpi.orderPackageItemsId = opi.id AND mpi.packageDetailsId = pd.id
+            LEFT JOIN modifiedminitems mmi ON mmi.orderPackageItemsId = opi.id AND mmi.packageDetailsId = pd.id
+            GROUP BY opi.orderId, mi.varietyId
+            UNION ALL
+            SELECT opi.orderId, mi.varietyId, SUM(mpi.modifiedQuantity) AS TotalQuantity
+            FROM orderpackageitems opi
+            JOIN modifiedplusitems mpi ON mpi.orderPackageItemsId = opi.id AND mpi.packageDetailsId IS NULL
+            JOIN market_place.marketplaceitems mi ON mpi.packageDetailsId IS NULL AND mpi.id IS NOT NULL AND mi.id = mpi.id
+            GROUP BY opi.orderId, mi.varietyId
+        ) AS item_qty ON o.id = item_qty.orderId
+        LEFT JOIN plant_care.cropvariety cv ON cv.id = item_qty.varietyId
+        JOIN plant_care.cropgroup cg ON cv.cropGroupId = cg.id
+      `;
   
       const countSql = `
-        SELECT 
-          COUNT(DISTINCT fpc.id) AS total
-        FROM 
-          farmerpaymentscrops fpc
-        JOIN registeredfarmerpayments rfp ON fpc.registerFarmerId = rfp.id
-        JOIN collectionofficer co ON rfp.collectionOfficerId = co.id
-        JOIN plant_care.users us ON rfp.userId = us.id
-        JOIN collectioncenter cc ON co.centerId = cc.id
-        JOIN company c ON co.companyId = c.id
-        JOIN plant_care.cropvariety cv ON fpc.cropId = cv.id
-        JOIN plant_care.cropgroup cg ON cv.cropGroupId = cg.id
+        SELECT COUNT(*) AS total
+        ${baseSelect}
         ${whereClause}
+        GROUP BY cv.varietyNameEnglish, ${dateFilterColumn}
       `;
   
       const dataSql = `
         SELECT 
-          fpc.id AS id,
-          cc.regCode AS regCode,
-          cc.centerName AS centerName,
-          cg.cropNameEnglish AS cropGroupName,
-          cv.varietyNameEnglish AS varietyName,
-          fpc.gradeAquan AS gradeAquan,
-          fpc.gradeBquan AS gradeBquan,
-          fpc.gradeCquan AS gradeCquan,
-          SUM(IFNULL(fpc.gradeAquan, 0) + IFNULL(fpc.gradeBquan, 0) + IFNULL(fpc.gradeCquan, 0)) AS amount,
-          fpc.createdAt AS createdAt
-        FROM 
-          farmerpaymentscrops fpc
-        JOIN registeredfarmerpayments rfp ON fpc.registerFarmerId = rfp.id
-        JOIN collectionofficer co ON rfp.collectionOfficerId = co.id
-        JOIN plant_care.users us ON rfp.userId = us.id
-        JOIN collectioncenter cc ON co.centerId = cc.id
-        JOIN company c ON co.companyId = c.id
-        JOIN plant_care.cropvariety cv ON fpc.cropId = cv.id
-        JOIN plant_care.cropgroup cg ON cv.cropGroupId = cg.id
+          cv.varietyNameEnglish,
+          cg.cropNameEnglish,
+          SUM(COALESCE(item_qty.TotalQuantity, 0)) AS TotalQuantity,
+          DATE(o.createdAt) AS OrderDate,
+          DATE(o.scheduleDate) AS scheduleDate,
+          DATE_SUB(o.scheduleDate, INTERVAL 2 DAY) AS toCollectionCenter,
+          DATE_SUB(o.scheduleDate, INTERVAL 1 DAY) AS toDispatchCenter
+        ${baseSelect}
         ${whereClause}
-        GROUP BY fpc.id
+        GROUP BY cv.varietyNameEnglish, ${dateFilterColumn}
+        ORDER BY cv.varietyNameEnglish, ${dateFilterColumn}
         LIMIT ? OFFSET ?
       `;
   
-      // Add limit and offset to the end of params
       params.push(parseInt(limit), parseInt(offset));
   
       console.log('Executing Count Query...');
-      collectionofficer.query(countSql, countParams, (countErr, countResults) => {
+      dash.query(countSql, countParams, (countErr, countResults) => {
         if (countErr) {
-          console.error("Error in count query:", countErr);
+          console.error("Count query error:", countErr);
           return reject(countErr);
         }
   
-        const total = countResults[0]?.total || 0;
+        const total = countResults.length;
   
         console.log('Executing Data Query...');
-        collectionofficer.query(dataSql, params, (dataErr, dataResults) => {
+        dash.query(dataSql, params, (dataErr, dataResults) => {
           if (dataErr) {
-            console.error("Error in data query:", dataErr);
+            console.error("Data query error:", dataErr);
             return reject(dataErr);
           }
   
@@ -123,6 +117,7 @@ exports.getCollectionReport = (page, limit, centerId, startDate, endDate, search
       });
     });
   };
+  
 
 
 
