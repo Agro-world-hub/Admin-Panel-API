@@ -352,7 +352,7 @@ exports.creatPackageDAO = async (data, profileImageUrl) => {
 exports.creatPackageDetailsDAO = async (data, packageId) => {
   return new Promise((resolve, reject) => {
     const sql =
-      "INSERT INTO packagedetails (packageId, mpItemId, quantity, quantityType, discountedPrice) VALUES (?, ?, ?, ?, ?)";
+      "INSERT INTO packagedetails (packageId, mpItemId, quantity, quantityType, price) VALUES (?, ?, ?, ?, ?)";
     const values = [
       packageId,
       parseInt(data.mpItemId),
