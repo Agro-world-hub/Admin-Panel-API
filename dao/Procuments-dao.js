@@ -13,7 +13,7 @@ const {
 
 
 
-  exports.getRecievedOrdersQuantity = (page, limit, filterType, date) => {
+  exports.getRecievedOrdersQuantity = (page, limit, filterType, date, search) => {
     return new Promise((resolve, reject) => {
       const offset = (page - 1) * limit;
       const params = [];
@@ -39,6 +39,13 @@ const {
         whereClause += ` AND ${dateFilterColumn} = ?`;
         params.push(date);
         countParams.push(date);
+      }
+  
+      if (search) {
+        whereClause += ` AND (cv.varietyNameEnglish LIKE ? OR cg.cropNameEnglish LIKE ?)`;
+        const searchTerm = `%${search}%`;
+        params.push(searchTerm, searchTerm);
+        countParams.push(searchTerm, searchTerm);
       }
   
       const baseSelect = `
@@ -87,7 +94,7 @@ const {
         ${baseSelect}
         ${whereClause}
         GROUP BY cv.varietyNameEnglish, ${dateFilterColumn}
-        ORDER BY cv.varietyNameEnglish, ${dateFilterColumn}
+        ORDER BY OrderDate DESC
         LIMIT ? OFFSET ?
       `;
   
@@ -117,6 +124,7 @@ const {
       });
     });
   };
+  
   
 
 

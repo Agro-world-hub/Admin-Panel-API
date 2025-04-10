@@ -27,13 +27,14 @@ exports.getRecievedOrdersQuantity = async (req, res) => {
     // const validatedQuery = await collectionofficerValidate.getPurchaseReport.validateAsync(req.query);
 
 
-    const {page, limit, filterType, date} = req.query;
+    const {page, limit, filterType, date, search} = req.query;
 
     const reportData = await procumentDao.getRecievedOrdersQuantity(
       page,
       limit,
       filterType,
       date,
+      search
     );
     res.json(reportData);
   } catch (err) {
