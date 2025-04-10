@@ -412,50 +412,6 @@ exports.getProductById = async (id) => {
   });
 };
 
-// exports.updateMarketProductDao = async (product, id) => {
-//   return new Promise((resolve, reject) => {
-//     const sql = `UPDATE marketplaceitems
-//        SET
-//         cropId = ?,
-//         displayName = ?,
-//         normalPrice = ?,
-//         discountedPrice = ?,
-//         promo = ?,
-//         unitType = ?,
-//         startValue = ?,
-//         changeby = ?,
-//         tags = ?,
-//         category = ?,
-//         discount = ?,
-//         displaytype = ?
-//         WHERE id = ?
-//       `;
-//     const values = [
-//       product.variety,
-//       product.cropName,
-//       product.normalPrice,
-//       product.discountedPrice,
-//       product.promo,
-//       product.unitType,
-//       product.startValue,
-//       product.changeby,
-//       product.tags,
-//       product.category,
-//       product.discount,
-//       product.displaytype,
-//       id,
-//     ];
-
-//     marketPlace.query(sql, values, (err, results) => {
-//       if (err) {
-//         reject(err);
-//       } else {
-//         resolve(results);
-//       }
-//     });
-//   });
-// };
-
 exports.updateMarketProductDao = async (product, id) => {
   return new Promise((resolve, reject) => {
     const sql = `UPDATE marketplaceitems
@@ -630,22 +586,79 @@ exports.updateMarketplacePackageDAO = (packageId, updateData) => {
     });
   });
 };
+//   return new Promise((resolve, reject) => {
+//     const sql = `
+//       SELECT
+//         id,
+//         displayName,
+//         image,
+//         description,
+//         status,
+//         total,
+//         discount,
+//         subtotal,
+//         created_at
+//       FROM marketplacepackages
+//       WHERE id = ?
+//     `;
+
+//     marketPlace.query(sql, [packageId], (err, results) => {
+//       if (err) {
+//         return reject(err);
+//       }
+
+//       if (results.length === 0) {
+//         return reject(new Error("Package not found"));
+//       }
+
+//       const pkg = results[0];
+//       const formattedResult = {
+//         id: pkg.id,
+//         displayName: pkg.displayName,
+//         image: pkg.image,
+//         description: pkg.description,
+//         status: pkg.status,
+//         total: pkg.total,
+//         discount: pkg.discount,
+//         subtotal: pkg.subtotal,
+//         createdAt: pkg.created_at,
+//       };
+
+//       resolve(formattedResult);
+//     });
+//   });
+// };
 
 exports.getMarketplacePackageByIdDAO = (packageId) => {
   return new Promise((resolve, reject) => {
     const sql = `
       SELECT 
-        id, 
-        displayName, 
-        image, 
-        description, 
-        status, 
-        total, 
-        discount, 
-        subtotal, 
-        created_at
-      FROM marketplacepackages
-      WHERE id = ?
+        mp.id, 
+        mp.displayName, 
+        mp.image, 
+        mp.description, 
+        mp.status, 
+        mp.total, 
+        mp.discount, 
+        mp.subtotal, 
+        mp.created_at,
+        pd.id AS detailId,
+        pd.packageId,
+        pd.mpItemId,
+        pd.quantityType,
+        pd.price AS detailPrice,
+        mi.varietyId,
+        mi.displayName AS itemDisplayName,
+        mi.category,
+        mi.normalPrice,
+        mi.discountedPrice,
+        mi.discount AS itemDiscount,
+        mi.promo,
+        mi.unitType
+      FROM marketplacepackages mp
+      LEFT JOIN packagedetails pd ON mp.id = pd.packageId
+      LEFT JOIN marketplaceitems mi ON pd.mpItemId = mi.id
+      WHERE mp.id = ?
     `;
 
     marketPlace.query(sql, [packageId], (err, results) => {
@@ -657,20 +670,45 @@ exports.getMarketplacePackageByIdDAO = (packageId) => {
         return reject(new Error("Package not found"));
       }
 
-      const pkg = results[0];
-      const formattedResult = {
-        id: pkg.id,
-        displayName: pkg.displayName,
-        image: pkg.image,
-        description: pkg.description,
-        status: pkg.status,
-        total: pkg.total,
-        discount: pkg.discount,
-        subtotal: pkg.subtotal,
-        createdAt: pkg.created_at,
+      // The first row contains the package info
+      const pkg = {
+        id: results[0].id,
+        displayName: results[0].displayName,
+        image: results[0].image,
+        description: results[0].description,
+        status: results[0].status,
+        total: results[0].total,
+        discount: results[0].discount,
+        subtotal: results[0].subtotal,
+        createdAt: results[0].created_at,
+        packageDetails: [],
       };
 
-      resolve(formattedResult);
+      // Add all package details (there might be multiple)
+      results.forEach((row) => {
+        if (row.detailId) {
+          // Check if there are any package details
+          pkg.packageDetails.push({
+            id: row.detailId,
+            packageId: row.packageId,
+            mpItemId: row.mpItemId,
+            quantityType: row.quantityType,
+            price: row.detailPrice,
+            itemDetails: {
+              varietyId: row.varietyId,
+              displayName: row.itemDisplayName,
+              category: row.category,
+              normalPrice: row.normalPrice,
+              discountedPrice: row.discountedPrice,
+              discount: row.itemDiscount,
+              promo: row.promo,
+              unitType: row.unitType,
+            },
+          });
+        }
+      });
+
+      resolve(pkg);
     });
   });
 };

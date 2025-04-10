@@ -569,6 +569,27 @@ exports.updateMarketplacePackage = async (req, res) => {
   }
 };
 
+// exports.getMarketplacePackageById = async (req, res) => {
+//   try {
+//     const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
+//     console.log("Request URL:", fullUrl);
+
+//     const { id } = await MarketPriceValidate.IdparamsSchema.validateAsync(
+//       req.params
+//     );
+
+//     const result = await MarketPlaceDao.getMarketplacePackageByIdDAO(id);
+
+//     res.json(result);
+//     console.log("Successfully fetched marketplace package");
+//   } catch (error) {
+//     console.error("Error fetching marketplace package:", error);
+//     return res.status(500).json({
+//       error: "An error occurred while fetching marketplace package",
+//     });
+//   }
+// };
+
 exports.getMarketplacePackageById = async (req, res) => {
   try {
     const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
@@ -580,11 +601,64 @@ exports.getMarketplacePackageById = async (req, res) => {
 
     const result = await MarketPlaceDao.getMarketplacePackageByIdDAO(id);
 
-    res.json(result);
+    // If you want to modify the image URL to be absolute (if it's stored as relative)
+    if (result.image && !result.image.startsWith("http")) {
+      result.image = `${req.protocol}://${req.get("host")}/${result.image}`;
+    }
+
+    // Format the response structure
+    const response = {
+      success: true,
+      data: {
+        package: {
+          id: result.id,
+          displayName: result.displayName,
+          image: result.image,
+          description: result.description,
+          status: result.status,
+          pricing: {
+            total: result.total,
+            discount: result.discount,
+            subtotal: result.subtotal,
+          },
+          createdAt: result.createdAt,
+          items: result.packageDetails.map((detail) => ({
+            id: detail.id,
+            quantityType: detail.quantityType,
+            price: detail.price,
+            item: {
+              id: detail.mpItemId,
+              varietyId: detail.itemDetails.varietyId,
+              varietyNameEnglish: detail.itemDetails.varietyNameEnglish, // Added this line
+              displayName: detail.itemDetails.displayName,
+              category: detail.itemDetails.category,
+              pricing: {
+                normalPrice: detail.itemDetails.normalPrice,
+                discountedPrice: detail.itemDetails.discountedPrice,
+                discount: detail.itemDetails.discount,
+                promo: detail.itemDetails.promo,
+              },
+              unitType: detail.itemDetails.unitType,
+            },
+          })),
+        },
+      },
+    };
+
+    res.json(response);
     console.log("Successfully fetched marketplace package");
   } catch (error) {
     console.error("Error fetching marketplace package:", error);
+
+    if (error.message === "Package not found") {
+      return res.status(404).json({
+        success: false,
+        error: error.message,
+      });
+    }
+
     return res.status(500).json({
+      success: false,
       error: "An error occurred while fetching marketplace package",
     });
   }
