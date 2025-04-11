@@ -12,6 +12,7 @@ const ComplainCategory = require('./routes/ComplainCategory');
 const Stakeholder = require('./routes/stakeholder');
 const SalesAgentDash = require('./routes/SalesAgentDash');
 const TargetRoutes  =require('./routes/Target');
+const ProcumentRoutes  =require('./routes/Procuments');
 
 
 const heathRoutes = require('./routes/heathRoutes')
@@ -96,6 +97,7 @@ app.use(BASE_PATH + '/api/stakeholder', Stakeholder);
 app.use(BASE_PATH + '/api/sales-agent-dash', SalesAgentDash);
 app.use(BASE_PATH + '/api/dash', DashRoutes);
 app.use(BASE_PATH + '/api/target', TargetRoutes)
+app.use(BASE_PATH + '/api/procument', ProcumentRoutes)
 
 
 

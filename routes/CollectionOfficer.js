@@ -178,12 +178,12 @@ router.get(
 router.get('/download-purchase-report', async (req, res) => {
     try {
 
-      const {centerId, monthNumber, createdDate, search} = req.query;
+      const {centerId, startDate, endDate, search} = req.query;
       // Fetch data from the database
       const data = await collectionofficerDao.downloadPurchaseReport( 
         centerId,
-        monthNumber,
-        createdDate, 
+        startDate,
+        endDate, 
         search);
   
       // Format data for Excel
@@ -254,5 +254,70 @@ router.get('/download-purchase-report', async (req, res) => {
     // authMiddleware,
     CollectionOfficerEp.getCollectionReport
   );
+
+
+
+
+
+
+  router.get('/download-collection-report', async (req, res) => {
+    try {
+
+      const {centerId, startDate, endDate, search} = req.query;
+      // Fetch data from the database
+      const data = await collectionofficerDao.downloadCollectionReport( 
+        centerId,
+        startDate,
+        endDate, 
+        search);
+  
+      // Format data for Excel
+      const formattedData = data.flatMap(item => [
+        {
+          'Reg Code': item.regCode,
+          'Center Name': item.centerName,
+          'Crop Name': item.cropGroupName,
+          'Variety Name': item.varietyName,
+          'Grade A (Kg)': item.gradeAquan,
+          'Grade B (Kg)': item.gradeBquan,
+          'Grade C (Kg)': item.gradeCquan,
+          'Total (Kg)': item.amount
+        },
+        
+      ]);
+      
+  
+      // Create a worksheet and workbook
+      const worksheet = XLSX.utils.json_to_sheet(formattedData);
+
+      worksheet['!cols'] = [
+        { wch: 25 }, // regCode
+        { wch: 15}, // centerName
+        { wch: 20 }, // cropGroupName
+        { wch: 25 }, // varietyName
+        { wch: 18 }, // gradeAquan
+        { wch: 25 }, // gradeBquan
+        { wch: 15 }, // gradeCquan
+        { wch: 25 }, // amount
+      ];
+
+
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, 'Market Price Template');
+  
+      // Write the workbook to a buffer
+      const excelBuffer = XLSX.write(workbook, { type: 'buffer', bookType: 'xlsx' });
+  
+      // Set headers for file download
+      res.setHeader('Content-Disposition', 'attachment; filename="Market Price Template.xlsx"');
+      res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+      
+      // Send the file to the client
+      res.send(excelBuffer);
+    } catch (err) {
+      console.error('Error generating Excel file:', err);
+      res.status(500).send('An error occurred while generating the file.');
+    }
+  });
 
 module.exports = router;

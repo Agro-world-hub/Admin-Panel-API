@@ -1561,7 +1561,7 @@ exports.claimOfficerDetailsDao = (id, centerId, irmId) => {
 
 
 
-exports.getPurchaseReport = (page, limit, centerId, monthNumber, createdDate, search) => {
+exports.getPurchaseReport = (page, limit, centerId, startDate, endDate, search) => {
   return new Promise((resolve, reject) => {
     const offset = (page - 1) * limit;
 
@@ -1588,7 +1588,6 @@ exports.getPurchaseReport = (page, limit, centerId, monthNumber, createdDate, se
         c.id = 1
     `;
 
-    
     let whereClause = "WHERE c.id = 1";
 
     if (centerId) {
@@ -1598,18 +1597,21 @@ exports.getPurchaseReport = (page, limit, centerId, monthNumber, createdDate, se
       totalParams.push(centerId);
     }
 
-    if (monthNumber) {
-      whereClause += " AND MONTH(rfp.createdAt) = ?";
-      params.push(monthNumber);
-      countParams.push(monthNumber);
-      totalParams.push(monthNumber);
-    }
-
-    if (createdDate) {
-      whereClause += " AND DATE(rfp.createdAt) = ?";
-      params.push(createdDate);
-      countParams.push(createdDate);
-      totalParams.push(createdDate);
+    if (startDate && endDate) {
+      whereClause += " AND DATE(rfp.createdAt) BETWEEN ? AND ?";
+      params.push(startDate, endDate);
+      countParams.push(startDate, endDate);
+      totalParams.push(startDate, endDate);
+    } else if (startDate) {
+      whereClause += " AND DATE(rfp.createdAt) >= ?";
+      params.push(startDate);
+      countParams.push(startDate);
+      totalParams.push(startDate);
+    } else if (endDate) {
+      whereClause += " AND DATE(rfp.createdAt) <= ?";
+      params.push(endDate);
+      countParams.push(endDate);
+      totalParams.push(endDate);
     }
 
     if (search) {
@@ -1627,7 +1629,6 @@ exports.getPurchaseReport = (page, limit, centerId, monthNumber, createdDate, se
       totalParams.push(searchPattern, searchPattern, searchPattern, searchPattern);
     }
 
-   
     countSql = `
       SELECT 
         COUNT(DISTINCT rfp.id) AS total
@@ -1645,7 +1646,6 @@ exports.getPurchaseReport = (page, limit, centerId, monthNumber, createdDate, se
         company c ON co.companyId = c.id
       ${whereClause}
     `;
-    
     
     let grandTotalSql = `
       SELECT 
@@ -1670,7 +1670,6 @@ exports.getPurchaseReport = (page, limit, centerId, monthNumber, createdDate, se
       ) AS subquery
     `;
 
-   
     let dataSql = `
       SELECT 
         rfp.id AS id,
@@ -1737,7 +1736,7 @@ exports.getPurchaseReport = (page, limit, centerId, monthNumber, createdDate, se
 
 
 
-exports.downloadPurchaseReport = (centerId, monthNumber, createdDate, search) => {
+exports.downloadPurchaseReport = (centerId, startDate, endDate, search) => {
   return new Promise((resolve, reject) => {
   
 
@@ -1755,18 +1754,21 @@ exports.downloadPurchaseReport = (centerId, monthNumber, createdDate, search) =>
       totalParams.push(centerId);
     }
 
-    if (monthNumber) {
-      whereClause += " AND MONTH(rfp.createdAt) = ?";
-      params.push(monthNumber);
-      countParams.push(monthNumber);
-      totalParams.push(monthNumber);
-    }
-
-    if (createdDate) {
-      whereClause += " AND DATE(rfp.createdAt) = ?";
-      params.push(createdDate);
-      countParams.push(createdDate);
-      totalParams.push(createdDate);
+    if (startDate && endDate) {
+      whereClause += " AND DATE(rfp.createdAt) BETWEEN ? AND ?";
+      params.push(startDate, endDate);
+      countParams.push(startDate, endDate);
+      totalParams.push(startDate, endDate);
+    } else if (startDate) {
+      whereClause += " AND DATE(rfp.createdAt) >= ?";
+      params.push(startDate);
+      countParams.push(startDate);
+      totalParams.push(startDate);
+    } else if (endDate) {
+      whereClause += " AND DATE(rfp.createdAt) <= ?";
+      params.push(endDate);
+      countParams.push(endDate);
+      totalParams.push(endDate);
     }
 
     if (search) {
@@ -1845,7 +1847,9 @@ exports.downloadPurchaseReport = (centerId, monthNumber, createdDate, search) =>
 exports.getAllCentersForPurchaseReport = () => {
   return new Promise((resolve, reject) => {
     const sql = `
-        SELECT clc.id, clc.centerName As centerName
+        SELECT clc.id, 
+        clc.centerName As centerName,
+        clc.regCode As regCode
         FROM companycenter cc
         JOIN collectioncenter clc ON cc.centerId = clc.id
         WHERE cc.companyId = 1
@@ -1868,7 +1872,7 @@ exports.getAllCentersForPurchaseReport = () => {
 
 
 
-exports.getCollectionReport = (page, limit, centerId, monthNumber, createdDate, search) => {
+exports.getCollectionReport = (page, limit, centerId, startDate, endDate, search) => {
   return new Promise((resolve, reject) => {
     const offset = (page - 1) * limit;
 
@@ -1882,16 +1886,18 @@ exports.getCollectionReport = (page, limit, centerId, monthNumber, createdDate, 
       countParams.push(centerId);
     }
 
-    if (monthNumber) {
-      whereClause += ` AND MONTH(fpc.createdAt) = ?`;
-      params.push(monthNumber);
-      countParams.push(monthNumber);
-    }
-
-    if (createdDate) {
-      whereClause += ` AND DATE(fpc.createdAt) = ?`;
-      params.push(createdDate);
-      countParams.push(createdDate);
+    if (startDate && endDate) {
+      whereClause += " AND DATE(rfp.createdAt) BETWEEN ? AND ?";
+      params.push(startDate, endDate);
+      countParams.push(startDate, endDate);
+    } else if (startDate) {
+      whereClause += " AND DATE(rfp.createdAt) >= ?";
+      params.push(startDate);
+      countParams.push(startDate);
+    } else if (endDate) {
+      whereClause += " AND DATE(rfp.createdAt) <= ?";
+      params.push(endDate);
+      countParams.push(endDate);
     }
 
     if (search) {
@@ -1899,12 +1905,13 @@ exports.getCollectionReport = (page, limit, centerId, monthNumber, createdDate, 
         AND (
           cc.regCode LIKE ? OR 
           cc.centerName LIKE ? OR 
-          fpc.invNo LIKE ?
+          cg.cropNameEnglish LIKE ? OR
+          cv.varietyNameEnglish LIKE ?
         )
       `;
       const searchPattern = `%${search}%`;
-      params.push(searchPattern, searchPattern, searchPattern);
-      countParams.push(searchPattern, searchPattern, searchPattern);
+      params.push(searchPattern, searchPattern, searchPattern, searchPattern);
+      countParams.push(searchPattern, searchPattern, searchPattern, searchPattern);
     }
 
     const countSql = `
@@ -1932,6 +1939,7 @@ exports.getCollectionReport = (page, limit, centerId, monthNumber, createdDate, 
         fpc.gradeAquan AS gradeAquan,
         fpc.gradeBquan AS gradeBquan,
         fpc.gradeCquan AS gradeCquan,
+        SUM(IFNULL(fpc.gradeAquan, 0) + IFNULL(fpc.gradeBquan, 0) + IFNULL(fpc.gradeCquan, 0)) AS amount,
         fpc.createdAt AS createdAt
       FROM 
         farmerpaymentscrops fpc
@@ -1975,3 +1983,95 @@ exports.getCollectionReport = (page, limit, centerId, monthNumber, createdDate, 
   });
 };
 
+
+
+
+
+
+
+exports.downloadCollectionReport = (centerId, startDate, endDate, search) => {
+  return new Promise((resolve, reject) => {
+  
+
+    const params = [];
+    const countParams = [];
+    const totalParams = [];
+
+    
+    let whereClause = "WHERE c.id = 1";
+
+    if (centerId) {
+      whereClause += " AND co.centerId = ?";
+      params.push(centerId);
+      countParams.push(centerId);
+      totalParams.push(centerId);
+    }
+
+    if (startDate && endDate) {
+      whereClause += " AND DATE(rfp.createdAt) BETWEEN ? AND ?";
+      params.push(startDate, endDate);
+      countParams.push(startDate, endDate);
+      totalParams.push(startDate, endDate);
+    } else if (startDate) {
+      whereClause += " AND DATE(rfp.createdAt) >= ?";
+      params.push(startDate);
+      countParams.push(startDate);
+      totalParams.push(startDate);
+    } else if (endDate) {
+      whereClause += " AND DATE(rfp.createdAt) <= ?";
+      params.push(endDate);
+      countParams.push(endDate);
+      totalParams.push(endDate);
+    }
+
+    if (search) {
+      whereClause += `
+        AND (
+          cc.regCode LIKE ? OR 
+          cc.centerName LIKE ? OR 
+          cg.cropNameEnglish LIKE ? OR
+          cv.varietyNameEnglish LIKE ?
+        )
+      `;
+      const searchPattern = `%${search}%`;
+      params.push(searchPattern, searchPattern, searchPattern, searchPattern);
+      countParams.push(searchPattern, searchPattern, searchPattern, searchPattern);
+      totalParams.push(searchPattern, searchPattern, searchPattern, searchPattern);
+    }
+
+   
+    let dataSql = `
+      SELECT 
+        fpc.id AS id,
+        cc.regCode AS regCode,
+        cc.centerName AS centerName,
+        cg.cropNameEnglish AS cropGroupName,
+        cv.varietyNameEnglish AS varietyName,
+        fpc.gradeAquan AS gradeAquan,
+        fpc.gradeBquan AS gradeBquan,
+        fpc.gradeCquan AS gradeCquan,
+        SUM(IFNULL(fpc.gradeAquan, 0) + IFNULL(fpc.gradeBquan, 0) + IFNULL(fpc.gradeCquan, 0)) AS amount,
+        fpc.createdAt AS createdAt
+      FROM 
+        farmerpaymentscrops fpc
+      JOIN registeredfarmerpayments rfp ON fpc.registerFarmerId = rfp.id
+      JOIN collectionofficer co ON rfp.collectionOfficerId = co.id
+      JOIN plant_care.users us ON rfp.userId = us.id
+      JOIN collectioncenter cc ON co.centerId = cc.id
+      JOIN company c ON co.companyId = c.id
+      JOIN plant_care.cropvariety cv ON fpc.cropId = cv.id
+      JOIN plant_care.cropgroup cg ON cv.cropGroupId = cg.id
+      ${whereClause}
+      GROUP BY fpc.id
+    `;
+
+    console.log('Executing Count Query...');
+
+    collectionofficer.query(dataSql, params, (err, results) => {
+      if (err) {
+        return reject(err);
+      }
+      resolve(results);
+    });
+  });
+};
