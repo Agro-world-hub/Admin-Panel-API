@@ -17,7 +17,7 @@ const router = express.Router();
 
  router.get(
     "/get-received-orders",
-    // authMiddleware,
+    authMiddleware,
     ProcumentsEP.getRecievedOrdersQuantity
   );
 
