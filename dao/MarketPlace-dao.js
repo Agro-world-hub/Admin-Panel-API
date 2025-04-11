@@ -586,49 +586,6 @@ exports.updateMarketplacePackageDAO = (packageId, updateData) => {
     });
   });
 };
-//   return new Promise((resolve, reject) => {
-//     const sql = `
-//       SELECT
-//         id,
-//         displayName,
-//         image,
-//         description,
-//         status,
-//         total,
-//         discount,
-//         subtotal,
-//         created_at
-//       FROM marketplacepackages
-//       WHERE id = ?
-//     `;
-
-//     marketPlace.query(sql, [packageId], (err, results) => {
-//       if (err) {
-//         return reject(err);
-//       }
-
-//       if (results.length === 0) {
-//         return reject(new Error("Package not found"));
-//       }
-
-//       const pkg = results[0];
-//       const formattedResult = {
-//         id: pkg.id,
-//         displayName: pkg.displayName,
-//         image: pkg.image,
-//         description: pkg.description,
-//         status: pkg.status,
-//         total: pkg.total,
-//         discount: pkg.discount,
-//         subtotal: pkg.subtotal,
-//         createdAt: pkg.created_at,
-//       };
-
-//       resolve(formattedResult);
-//     });
-//   });
-// };
-
 exports.getMarketplacePackageByIdDAO = (packageId) => {
   return new Promise((resolve, reject) => {
     const sql = `
@@ -646,6 +603,7 @@ exports.getMarketplacePackageByIdDAO = (packageId) => {
         pd.packageId,
         pd.mpItemId,
         pd.quantityType,
+        pd.quantity,
         pd.price AS detailPrice,
         mi.varietyId,
         mi.displayName AS itemDisplayName,
@@ -693,6 +651,7 @@ exports.getMarketplacePackageByIdDAO = (packageId) => {
             packageId: row.packageId,
             mpItemId: row.mpItemId,
             quantityType: row.quantityType,
+            quantity: row.quantity, // Add this line to include quantity
             price: row.detailPrice,
             itemDetails: {
               varietyId: row.varietyId,
