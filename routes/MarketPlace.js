@@ -48,7 +48,7 @@ router.get(
 );
 
 router.post(
-  "/add-product",
+  "/add-package",
   authMiddleware,
   upload.single("file"),
   marketPlaceEp.createPackage
