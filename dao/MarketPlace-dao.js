@@ -740,3 +740,64 @@ exports.getMarketplacePackageByIdWithDetailsDAO = (packageId) => {
     });
   });
 };
+
+exports.updatePackageDAO = async (data, profileImageUrl, packageId) => {
+  return new Promise((resolve, reject) => {
+    const sql =
+      "UPDATE marketplacepackages SET displayName = ?, status = ?, total = ?, image = ?, description = ?, discount = ? WHERE id = ?";
+    const values = [
+      data.displayName,
+      data.status,
+      data.total,
+      profileImageUrl,
+      data.description,
+      data.discount,
+      packageId,
+    ];
+
+    marketPlace.query(sql, values, (err, results) => {
+      if (err) {
+        console.log(err);
+        reject(err);
+      } else {
+        resolve(results.affectedRows); // Returns number of rows affected
+      }
+    });
+  });
+};
+
+exports.updatePackageDetailsDAO = async (data, detailId) => {
+  return new Promise((resolve, reject) => {
+    const sql =
+      "UPDATE packagedetails SET mpItemId = ?, quantity = ?, quantityType = ?, price = ? WHERE id = ?";
+    const values = [
+      parseInt(data.mpItemId),
+      data.quantity,
+      data.qtytype,
+      parseInt(data.discountedPrice),
+      detailId,
+    ];
+
+    marketPlace.query(sql, values, (err, results) => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(results.affectedRows); // Returns number of rows affected
+      }
+    });
+  });
+};
+
+exports.deletePackageDetails = async (packageId) => {
+  return new Promise((resolve, reject) => {
+    const sql = "DELETE FROM packagedetails WHERE packageId = ?";
+
+    marketPlace.query(sql, [packageId], (err, results) => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(results.affectedRows);
+      }
+    });
+  });
+};

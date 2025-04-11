@@ -694,3 +694,96 @@ exports.getMarketplacePackageWithDetailsById = async (req, res) => {
     });
   }
 };
+
+exports.updatePackage = async (req, res) => {
+  try {
+    const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
+    console.log("Request URL:", fullUrl);
+
+    // Check if package is already parsed or needs parsing
+    let package;
+    if (typeof req.body.package === "string") {
+      package = JSON.parse(req.body.package);
+    } else {
+      package = req.body.package; // Already an object
+    }
+
+    console.log("Received package data:", package);
+
+    let profileImageUrl = package.existingImage || null;
+
+    if (req.body.file) {
+      try {
+        const base64String = req.body.file.split(",")[1];
+        const mimeType = req.body.file.match(/data:(.*?);base64,/)[1];
+        const fileBuffer = Buffer.from(base64String, "base64");
+        const fileExtension = mimeType.split("/")[1];
+        const fileName = `${package.displayName}.${fileExtension}`;
+
+        profileImageUrl = await uploadFileToS3(
+          fileBuffer,
+          fileName,
+          "marketplacepackages/image"
+        );
+      } catch (err) {
+        console.error("Error processing image file:", err);
+        return res.status(400).json({
+          error: "Invalid file format or file upload error",
+          status: false,
+        });
+      }
+    }
+
+    // Update main package
+    const updatedRows = await MarketPlaceDao.updatePackageDAO(
+      package,
+      profileImageUrl,
+      package.packageId || req.params.id
+    );
+
+    if (updatedRows === 0) {
+      return res.status(404).json({
+        message: "Package not found or no changes made",
+        status: false,
+      });
+    }
+
+    // Handle package details updates
+    try {
+      // First delete all existing details
+      if (typeof MarketPlaceDao.deletePackageDetails === "function") {
+        await MarketPlaceDao.deletePackageDetails(
+          package.packageId || req.params.id
+        );
+      } else {
+        throw new Error("deletePackageDetails DAO function not available");
+      }
+
+      // Then recreate all items from the request
+      for (const item of package.Items) {
+        await MarketPlaceDao.creatPackageDetailsDAO(
+          item,
+          package.packageId || req.params.id
+        );
+      }
+    } catch (err) {
+      console.error("Error updating package details:", err);
+      return res.status(500).json({
+        error: "Error updating package details: " + err.message,
+        status: false,
+      });
+    }
+
+    return res.status(200).json({
+      message: "Package updated successfully",
+      status: true,
+      packageId: package.packageId || req.params.id,
+    });
+  } catch (err) {
+    console.error("Error updating package:", err);
+    return res.status(500).json({
+      error: "An error occurred while updating marketplace package",
+      status: false,
+    });
+  }
+};
