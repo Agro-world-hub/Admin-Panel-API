@@ -32,6 +32,21 @@ router.get(
   );
 
 
+  router.get(
+    "/get-custom-pack-items/:id", 
+    authMiddleware, 
+    DispatchEP.getCustomOrderDetailsById
+);
+
+
+
+
+router.post(
+    '/update-custom-pack-items', 
+    authMiddleware,
+    DispatchEP.updateCustomPackItems);
+
+
 
 
 
