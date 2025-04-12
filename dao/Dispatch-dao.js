@@ -9,114 +9,196 @@ const {
 
 
 
-//   exports.getPreMadePackages = (page, limit, centerId, startDate, endDate, search) => {
-//     return new Promise((resolve, reject) => {
-//       const offset = (page - 1) * limit;
+  exports.getPreMadePackages = (page, limit, packageStatus, date, search) => {
+    return new Promise((resolve, reject) => {
+      const offset = (page - 1) * limit;
   
-//       let whereClause = `WHERE c.id = 1`;
-//       const params = [];
-//       const countParams = [];
+      let whereClause = ` WHERE 1=1`;
+      const params = [];
+      const countParams = [];
   
-//       if (centerId) {
-//         whereClause += ` AND co.centerId = ?`;
-//         params.push(centerId);
-//         countParams.push(centerId);
-//       }
+      if (packageStatus) {
+        whereClause += ` AND o.packageStatus = ?`;
+        params.push(packageStatus);
+        countParams.push(packageStatus);
+      }
   
-//       if (startDate && endDate) {
-//         whereClause += " AND DATE(rfp.createdAt) BETWEEN ? AND ?";
-//         params.push(startDate, endDate);
-//         countParams.push(startDate, endDate);
-//       } else if (startDate) {
-//         whereClause += " AND DATE(rfp.createdAt) >= ?";
-//         params.push(startDate);
-//         countParams.push(startDate);
-//       } else if (endDate) {
-//         whereClause += " AND DATE(rfp.createdAt) <= ?";
-//         params.push(endDate);
-//         countParams.push(endDate);
-//       }
+      if (date) {
+        whereClause += " AND DATE(o.scheduleDate) = ?";
+        params.push(date);
+        countParams.push(date);
+      }
   
-//       if (search) {
-//         whereClause += `
-//           AND (
-//             cc.regCode LIKE ? OR 
-//             cc.centerName LIKE ? OR 
-//             cg.cropNameEnglish LIKE ? OR
-//             cv.varietyNameEnglish LIKE ?
-//           )
-//         `;
-//         const searchPattern = `%${search}%`;
-//         params.push(searchPattern, searchPattern, searchPattern, searchPattern);
-//         countParams.push(searchPattern, searchPattern, searchPattern, searchPattern);
-//       }
+      if (search) {
+        whereClause += ` AND (o.invNo LIKE ?)`;
+        const searchPattern = `%${search}%`;
+        params.push(searchPattern);
+        countParams.push(searchPattern);
+      }
   
-//       const countSql = `
-//         SELECT 
-//           COUNT(DISTINCT fpc.id) AS total
-//         FROM 
-//           farmerpaymentscrops fpc
-//         JOIN registeredfarmerpayments rfp ON fpc.registerFarmerId = rfp.id
-//         JOIN collectionofficer co ON rfp.collectionOfficerId = co.id
-//         JOIN plant_care.users us ON rfp.userId = us.id
-//         JOIN collectioncenter cc ON co.centerId = cc.id
-//         JOIN company c ON co.companyId = c.id
-//         JOIN plant_care.cropvariety cv ON fpc.cropId = cv.id
-//         JOIN plant_care.cropgroup cg ON cv.cropGroupId = cg.id
-//         ${whereClause}
-//       `;
+      const countSql = `
+        SELECT 
+          COUNT(DISTINCT o.id) AS total
+        FROM 
+          orders o
+        INNER JOIN orderpackageitems opi ON o.id = opi.orderId
+        LEFT JOIN modifiedplusitems mpi ON opi.id = mpi.orderPackageItemsId
+        LEFT JOIN modifiedminitems mmi ON opi.id = mmi.orderPackageItemsId
+        INNER JOIN market_place.marketplacepackages mpp ON opi.packageId = mpp.id
+        LEFT JOIN additionalitem ai ON opi.id = ai.orderPackageItemsId
+        ${whereClause}
+      `;
   
-//       const dataSql = `
-//         SELECT 
-//           or.id AS id,
-//           or.invNo AS invoiceNum,
-//           mpp.displayName AS packageName,
-//           SUM(IFNULL(opi.packageSubTotal, 0) + IFNULL(mpi.additionalPrice, 0) + IFNULL(mmi.additionalPrice, 0)) AS packagePrice,
-//         FROM 
-//           orders or
-//         LEFT JOIN orderpackageitems opi ON or.id = opi.orderId
-//         LEFT JOIN modifiedplusitems mpi ON opi.id = mpi.orderPackageItemsId
-//         LEFT JOIN modifiedminitems mmi ON opi.id = mmi.orderPackageItemsId
-//         JOIN market_place.marketplacepackages mpp ON opi.packageId = mpp.id
+      const dataSql = `
+        SELECT 
+          o.id AS id,
+          o.invNo AS invoiceNum,
+          o.packageStatus AS packageStatus,
+          mpp.displayName AS packageName,
+          IFNULL(opi.packageSubTotal, 0) +
+          IFNULL(SUM(mpi.additionalPrice), 0) -
+          IFNULL(SUM(mmi.additionalPrice), 0) AS packagePrice,
+          IFNULL(SUM(ai.subtotal), 0) AS additionalPrice,
+          o.scheduleDate AS scheduleDate,
+          o.fullSubTotal AS fullSubTotal,
+          (
+            IFNULL(opi.packageSubTotal, 0) +
+            IFNULL(SUM(mpi.additionalPrice), 0) -
+            IFNULL(SUM(mmi.additionalPrice), 0) +
+            IFNULL(SUM(ai.subtotal), 0)
+          ) AS totalPrice
+        FROM 
+          orders o
+        INNER JOIN orderpackageitems opi ON o.id = opi.orderId
+        LEFT JOIN modifiedplusitems mpi ON opi.id = mpi.orderPackageItemsId
+        LEFT JOIN modifiedminitems mmi ON opi.id = mmi.orderPackageItemsId
+        INNER JOIN market_place.marketplacepackages mpp ON opi.packageId = mpp.id
+        LEFT JOIN additionalitem ai ON opi.id = ai.orderPackageItemsId
+        ${whereClause}
+        GROUP BY o.id, o.invNo, o.packageStatus, mpp.displayName, opi.packageSubTotal, o.scheduleDate, o.fullSubTotal
+        ORDER BY o.createdAt DESC
+        LIMIT ? OFFSET ?
+      `;
+  
+      // Add pagination parameters
+      params.push(parseInt(limit), parseInt(offset));
+  
+      console.log('Executing Count Query...');
+      dash.query(countSql, countParams, (countErr, countResults) => {
+        if (countErr) {
+          console.error("Error in count query:", countErr);
+          return reject(countErr);
+        }
+  
+        const total = countResults[0]?.total || 0;
+  
+        console.log('Executing Data Query...');
+        dash.query(dataSql, params, (dataErr, dataResults) => {
+          if (dataErr) {
+            console.error("Error in data query:", dataErr);
+            return reject(dataErr);
+          }
+  
+          resolve({
+            items: dataResults,
+            total,
+          });
+        });
+      });
+    });
+  };
+  
 
 
 
 
-//         JOIN collectionofficer co ON rfp.collectionOfficerId = co.id
-//         JOIN plant_care.users us ON rfp.userId = us.id
-//         JOIN collectioncenter cc ON co.centerId = cc.id
-//         JOIN company c ON co.companyId = c.id
-//         JOIN plant_care.cropvariety cv ON fpc.cropId = cv.id
-//         JOIN plant_care.cropgroup cg ON cv.cropGroupId = cg.id
-//         ${whereClause}
-//         GROUP BY fpc.id
-//         LIMIT ? OFFSET ?
-//       `;
+
+
+
+
+
+
+
+
+
+
+
+
+  exports.getSelectedPackages = (page, limit, packageStatus, date, search) => {
+    return new Promise((resolve, reject) => {
+      const offset = (page - 1) * limit;
   
-//       // Add limit and offset to the end of params
-//       params.push(parseInt(limit), parseInt(offset));
+      let whereClause = ` WHERE 1=1`;
+      const params = [];
+      const countParams = [];
   
-//       console.log('Executing Count Query...');
-//       collectionofficer.query(countSql, countParams, (countErr, countResults) => {
-//         if (countErr) {
-//           console.error("Error in count query:", countErr);
-//           return reject(countErr);
-//         }
+      if (packageStatus) {
+        whereClause += ` AND o.packageStatus = ?`;
+        params.push(packageStatus);
+        countParams.push(packageStatus);
+      }
   
-//         const total = countResults[0]?.total || 0;
+      if (date) {
+        whereClause += " AND DATE(o.scheduleDate) = ?";
+        params.push(date);
+        countParams.push(date);
+      }
   
-//         console.log('Executing Data Query...');
-//         collectionofficer.query(dataSql, params, (dataErr, dataResults) => {
-//           if (dataErr) {
-//             console.error("Error in data query:", dataErr);
-//             return reject(dataErr);
-//           }
+      if (search) {
+        whereClause += ` AND (o.invNo LIKE ?)`;
+        const searchPattern = `%${search}%`;
+        params.push(searchPattern);
+        countParams.push(searchPattern);
+      }
   
-//           resolve({
-//             items: dataResults,
-//             total
-//           });
-//         });
-//       });
-//     });
-//   };
+      const countSql = `
+        SELECT 
+          COUNT(DISTINCT o.id) AS total
+        FROM 
+          orders o
+        INNER JOIN orderselecteditems osi ON o.id = osi.orderId
+        ${whereClause}
+      `;
+  
+      const dataSql = `
+        SELECT 
+        o.id AS id,
+        o.invNo AS invoiceNum,
+        IFNULL(SUM(osi.subtotal), 0) AS totalPrice,
+        o.scheduleDate AS scheduleDate,
+        o.fullSubTotal AS fullSubTotal
+        FROM 
+        orders o
+        INNER JOIN orderselecteditems osi ON o.id = osi.orderId
+        ${whereClause}
+        GROUP BY o.id, o.invNo
+        LIMIT ? OFFSET ?
+      `;
+  
+      // Add limit and offset to the end of params
+      params.push(parseInt(limit), parseInt(offset));
+  
+      console.log('Executing Count Query...');
+      collectionofficer.query(countSql, countParams, (countErr, countResults) => {
+        if (countErr) {
+          console.error("Error in count query:", countErr);
+          return reject(countErr);
+        }
+  
+        const total = countResults[0]?.total || 0;
+  
+        console.log('Executing Data Query...');
+        collectionofficer.query(dataSql, params, (dataErr, dataResults) => {
+          if (dataErr) {
+            console.error("Error in data query:", dataErr);
+            return reject(dataErr);
+          }
+  
+          resolve({
+            items: dataResults,
+            total
+          });
+        });
+      });
+    });
+  };

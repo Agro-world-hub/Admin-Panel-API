@@ -251,7 +251,7 @@ router.get('/download-purchase-report', async (req, res) => {
 
   router.get(
     "/get-collection-report",
-    // authMiddleware,
+    authMiddleware,
     CollectionOfficerEp.getCollectionReport
   );
 

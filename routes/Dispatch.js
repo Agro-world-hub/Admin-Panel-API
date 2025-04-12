@@ -1,5 +1,5 @@
 const express = require("express");
-const ProcumentsEP = require("../end-point/Procuments-ep");
+const DispatchEP = require("../end-point/Dispatch-ep");
 const bodyParser = require("body-parser");
 const authMiddleware = require("../middlewares/authMiddleware");
 const multer = require("multer");
@@ -18,6 +18,18 @@ const router = express.Router();
 
 
 
+router.get(
+    "/get-premade-packages",
+    authMiddleware,
+    DispatchEP.getPreMadePackages
+  );
+
+
+  router.get(
+    "/get-premade-packages",
+    authMiddleware,
+    DispatchEP.getPreMadePackages
+  );
 
 
 
