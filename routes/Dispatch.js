@@ -26,9 +26,9 @@ router.get(
 
 
   router.get(
-    "/get-premade-packages",
+    "/get-selected-packages",
     authMiddleware,
-    DispatchEP.getPreMadePackages
+    DispatchEP.getSelectedPackages
   );
 
 

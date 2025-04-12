@@ -164,6 +164,7 @@ const {
         SELECT 
         o.id AS id,
         o.invNo AS invoiceNum,
+        o.packageStatus AS packageStatus,
         IFNULL(SUM(osi.subtotal), 0) AS totalPrice,
         o.scheduleDate AS scheduleDate,
         o.fullSubTotal AS fullSubTotal
@@ -179,7 +180,7 @@ const {
       params.push(parseInt(limit), parseInt(offset));
   
       console.log('Executing Count Query...');
-      collectionofficer.query(countSql, countParams, (countErr, countResults) => {
+      dash.query(countSql, countParams, (countErr, countResults) => {
         if (countErr) {
           console.error("Error in count query:", countErr);
           return reject(countErr);
@@ -188,7 +189,7 @@ const {
         const total = countResults[0]?.total || 0;
   
         console.log('Executing Data Query...');
-        collectionofficer.query(dataSql, params, (dataErr, dataResults) => {
+        dash.query(dataSql, params, (dataErr, dataResults) => {
           if (dataErr) {
             console.error("Error in data query:", dataErr);
             return reject(dataErr);
