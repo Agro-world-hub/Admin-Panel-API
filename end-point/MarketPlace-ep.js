@@ -316,28 +316,24 @@ exports.getAllProductCropCatogory = async (req, res) => {
       .json({ error: "An error occurred while fetching collection officers" });
   }
 };
-
 exports.createPackage = async (req, res) => {
   try {
     const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
     console.log("Request URL:", fullUrl);
-    // console.log(req.body);
 
     const package = JSON.parse(req.body.package);
     console.log(package);
 
-    let profileImageUrl = null; // Default to null if no image is provided
+    let profileImageUrl = null;
 
     if (req.body.file) {
       try {
-        const base64String = req.body.file.split(",")[1]; // Extract the Base64 content
-        const mimeType = req.body.file.match(/data:(.*?);base64,/)[1]; // Extract MIME type
-        const fileBuffer = Buffer.from(base64String, "base64"); // Decode Base64 to buffer
-
-        const fileExtension = mimeType.split("/")[1]; // Extract file extension from MIME type
+        const base64String = req.body.file.split(",")[1];
+        const mimeType = req.body.file.match(/data:(.*?);base64,/)[1];
+        const fileBuffer = Buffer.from(base64String, "base64");
+        const fileExtension = mimeType.split("/")[1];
         const fileName = `${package.displayName}.${fileExtension}`;
 
-        // Upload image to S3
         profileImageUrl = await uploadFileToS3(
           fileBuffer,
           fileName,
@@ -345,50 +341,56 @@ exports.createPackage = async (req, res) => {
         );
       } catch (err) {
         console.error("Error processing image file:", err);
-        return res
-          .status(400)
-          .json({ error: "Invalid file format or file upload error" });
+        return res.status(400).json({
+          error: "Invalid file format or file upload error",
+          status: false,
+        });
       }
     }
 
-    console.log(profileImageUrl);
-
-    // const coupen = await MarketPriceValidate.CreateCoupenValidation.validateAsync(req.body)
-
-    const packageResult = await MarketPlaceDao.creatPackageDAO(
+    // Create main package
+    const packageId = await MarketPlaceDao.creatPackageDAO(
       package,
       profileImageUrl
     );
-    if (packageResult > 0) {
-      return res
-        .status(201)
-        .json({ message: "Package created Faild!", status: true });
-    }
-    console.log(packageResult);
-    for (let i = 0; i < package.Items.length; i++) {
-      console.log(i);
-      await MarketPlaceDao.creatPackageDetailsDAO(
-        package.Items[i],
-        packageResult
-      );
+
+    if (!packageId || packageId <= 0) {
+      return res.status(500).json({
+        message: "Package creation failed",
+        status: false,
+      });
     }
 
-    console.log("coupen creation success");
-    // result: packageResult,
-    return res
-      .status(201)
-      .json({ message: "Package created successfully", status: true });
+    // Create package details
+    try {
+      for (const item of package.Items) {
+        await MarketPlaceDao.creatPackageDetailsDAO(item, packageId);
+      }
+    } catch (err) {
+      console.error("Error creating package details:", err);
+      // You might want to delete the main package here if details creation fails
+      return res.status(500).json({
+        error: "Error creating package details",
+        status: false,
+      });
+    }
+
+    return res.status(201).json({
+      message: "Package created successfully",
+      status: true,
+      packageId: packageId,
+    });
   } catch (err) {
     if (err.isJoi) {
-      // Validation error
-      return res
-        .status(400)
-        .json({ error: err.details[0].message, status: false });
+      return res.status(400).json({
+        error: err.details[0].message,
+        status: false,
+      });
     }
 
-    console.error("Error executing query:", err);
+    console.error("Error creating package:", err);
     return res.status(500).json({
-      error: "An error occurred while creating marcket product",
+      error: "An error occurred while creating marketplace package",
       status: false,
     });
   }
@@ -580,11 +582,65 @@ exports.getMarketplacePackageById = async (req, res) => {
 
     const result = await MarketPlaceDao.getMarketplacePackageByIdDAO(id);
 
-    res.json(result);
+    // If you want to modify the image URL to be absolute (if it's stored as relative)
+    if (result.image && !result.image.startsWith("http")) {
+      result.image = `${req.protocol}://${req.get("host")}/${result.image}`;
+    }
+
+    // Format the response structure
+    const response = {
+      success: true,
+      data: {
+        package: {
+          id: result.id,
+          displayName: result.displayName,
+          image: result.image,
+          description: result.description,
+          status: result.status,
+          pricing: {
+            total: result.total,
+            discount: result.discount,
+            subtotal: result.subtotal,
+          },
+          createdAt: result.createdAt,
+          items: result.packageDetails.map((detail) => ({
+            id: detail.id,
+            packageId: detail.packageId,
+            mpItemId: detail.mpItemId,
+            quantityType: detail.quantityType,
+            quantity: detail.quantity,
+            price: detail.price,
+            item: {
+              varietyId: detail.itemDetails.varietyId,
+              displayName: detail.itemDetails.displayName,
+              category: detail.itemDetails.category,
+              pricing: {
+                normalPrice: detail.itemDetails.normalPrice,
+                discountedPrice: detail.itemDetails.discountedPrice,
+                discount: detail.itemDetails.discount,
+                promo: detail.itemDetails.promo,
+              },
+              unitType: detail.itemDetails.unitType,
+            },
+          })),
+        },
+      },
+    };
+
+    res.json(response);
     console.log("Successfully fetched marketplace package");
   } catch (error) {
     console.error("Error fetching marketplace package:", error);
+
+    if (error.message === "Package not found") {
+      return res.status(404).json({
+        success: false,
+        error: error.message,
+      });
+    }
+
     return res.status(500).json({
+      success: false,
       error: "An error occurred while fetching marketplace package",
     });
   }
@@ -635,6 +691,99 @@ exports.getMarketplacePackageWithDetailsById = async (req, res) => {
       success: false,
       error:
         "An internal server error occurred while fetching marketplace package",
+    });
+  }
+};
+
+exports.updatePackage = async (req, res) => {
+  try {
+    const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
+    console.log("Request URL:", fullUrl);
+
+    // Check if package is already parsed or needs parsing
+    let package;
+    if (typeof req.body.package === "string") {
+      package = JSON.parse(req.body.package);
+    } else {
+      package = req.body.package; // Already an object
+    }
+
+    console.log("Received package data:", package);
+
+    let profileImageUrl = package.existingImage || null;
+
+    if (req.body.file) {
+      try {
+        const base64String = req.body.file.split(",")[1];
+        const mimeType = req.body.file.match(/data:(.*?);base64,/)[1];
+        const fileBuffer = Buffer.from(base64String, "base64");
+        const fileExtension = mimeType.split("/")[1];
+        const fileName = `${package.displayName}.${fileExtension}`;
+
+        profileImageUrl = await uploadFileToS3(
+          fileBuffer,
+          fileName,
+          "marketplacepackages/image"
+        );
+      } catch (err) {
+        console.error("Error processing image file:", err);
+        return res.status(400).json({
+          error: "Invalid file format or file upload error",
+          status: false,
+        });
+      }
+    }
+
+    // Update main package
+    const updatedRows = await MarketPlaceDao.updatePackageDAO(
+      package,
+      profileImageUrl,
+      package.packageId || req.params.id
+    );
+
+    if (updatedRows === 0) {
+      return res.status(404).json({
+        message: "Package not found or no changes made",
+        status: false,
+      });
+    }
+
+    // Handle package details updates
+    try {
+      // First delete all existing details
+      if (typeof MarketPlaceDao.deletePackageDetails === "function") {
+        await MarketPlaceDao.deletePackageDetails(
+          package.packageId || req.params.id
+        );
+      } else {
+        throw new Error("deletePackageDetails DAO function not available");
+      }
+
+      // Then recreate all items from the request
+      for (const item of package.Items) {
+        await MarketPlaceDao.creatPackageDetailsDAO(
+          item,
+          package.packageId || req.params.id
+        );
+      }
+    } catch (err) {
+      console.error("Error updating package details:", err);
+      return res.status(500).json({
+        error: "Error updating package details: " + err.message,
+        status: false,
+      });
+    }
+
+    return res.status(200).json({
+      message: "Package updated successfully",
+      status: true,
+      packageId: package.packageId || req.params.id,
+    });
+  } catch (err) {
+    console.error("Error updating package:", err);
+    return res.status(500).json({
+      error: "An error occurred while updating marketplace package",
+      status: false,
     });
   }
 };

@@ -48,7 +48,7 @@ router.get(
 );
 
 router.post(
-  "/add-product",
+  "/add-package",
   authMiddleware,
   upload.single("file"),
   marketPlaceEp.createPackage
@@ -95,5 +95,7 @@ router.get(
   authMiddleware,
   marketPlaceEp.getMarketplacePackageWithDetailsById
 );
+
+router.patch("/edit-product/:id", authMiddleware, marketPlaceEp.updatePackage);
 
 module.exports = router;
