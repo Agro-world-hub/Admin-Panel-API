@@ -54,6 +54,7 @@ const {
           o.id AS id,
           o.invNo AS invoiceNum,
           o.packageStatus AS packageStatus,
+          opi.id AS orderPackageItemsId,
           mpp.displayName AS packageName,
           IFNULL(opi.packageSubTotal, 0) +
           IFNULL(SUM(mpi.additionalPrice), 0) -
@@ -357,4 +358,40 @@ const {
         .catch(reject);
     });
   };
-  
+
+
+
+
+
+
+
+
+  exports.getPackageOrderDetailsById = (id) => {
+    return new Promise((resolve, reject) => {
+
+      const sql = `SELECT 
+                    ai.id AS id,
+                    cv.varietyNameEnglish AS item,
+                    ai.quantity AS quantity,
+                    ROUND(mpi.discountedPrice / mpi.startValue, 2) AS UnitPrice,
+                    ai.subtotal AS subtotal,
+                    ai.isPacked AS isPacked
+                   FROM additionalitem ai
+                   JOIN market_place.marketplaceitems mpi ON ai.mpItemId = mpi.id
+                   JOIN plant_care.cropvariety cv ON mpi.varietyId = cv.id
+                   WHERE orderPackageItemsId = ?
+                   `;
+
+        dash.query(sql, [id], (err, results) => {
+        if (err) {
+          reject(err);
+        } else {
+          resolve(results);
+        }
+      });
+    });
+  };
+
+
+
+
