@@ -78,7 +78,7 @@ exports.createMarketProduct = async (req, res) => {
     const product = {
       cropName: req.body.displayName || req.body.cropName,
       normalPrice: req.body.normalPrice,
-      discountedPrice: req.body.discountedPrice,
+      discountedPrice: req.body.salePrice,
       promo: req.body.promo,
       unitType: req.body.unitType,
       startValue: req.body.startValue,

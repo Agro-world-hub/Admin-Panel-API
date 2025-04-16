@@ -130,7 +130,7 @@ exports.createMarketProductDao = async (product) => {
 exports.getMarketplaceItems = () => {
   return new Promise((resolve, reject) => {
     const dataSql = `
-    SELECT m.id, m.displayName, m.discountedPrice, m.startValue, m.promo,
+    SELECT m.id, m.displayName, m.discountedPrice, m.discount, m.startValue, m.promo,
            m.unitType, m.changeby, m.normalPrice, m.category,
            cg.cropNameEnglish, cv.varietyNameEnglish
     FROM marketplaceitems m
