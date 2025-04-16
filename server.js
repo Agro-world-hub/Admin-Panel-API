@@ -1,3 +1,29 @@
+require('dotenv').config();
+
+
+console.log('Environment Variables:');
+console.log('----------------------');
+console.log('PORT:', process.env.PORT);
+console.log('DB_HOST:', process.env.DB_HOST);
+console.log('DB_USER:', process.env.DB_USER);
+console.log('DB_PASSWORD:', process.env.DB_PASSWORD);
+console.log('DB_NAME_AD:', process.env.DB_NAME_AD);
+console.log('DB_NAME_PC:', process.env.DB_NAME_PC); 
+console.log('DB_NAME_CO:', process.env.DB_NAME_CO);
+console.log('DB_NAME_MP:', process.env.DB_NAME_MP);
+console.log('DB_NAME_DS:', process.env.DB_NAME_DS);
+console.log('AUTHOR:', process.env.AUTHOR);
+console.log('MARKETPRICE:', process.env.MARKETPRICE);
+console.log('JWT_SECRET:', process.env.JWT_SECRET);
+console.log('EMAIL_USER:', process.env.EMAIL_USER);
+console.log('EMAIL_PASS:', process.env.EMAIL_PASS);
+console.log('AWS_ACCESS_KEY_ID:', process.env.AWS_ACCESS_KEY_ID);
+console.log('AWS_SECRET_ACCESS_KEY:', process.env.AWS_SECRET_ACCESS_KEY);
+console.log('AWS_REGION:', process.env.AWS_REGION);
+console.log('AWS_S3_BUCKET_NAME:', process.env.AWS_S3_BUCKET_NAME);
+console.log('----------------------');
+
+
 const express = require('express');
 const {  admin, plantcare, collectionofficer, marketPlace, dash } = require('./startup/database');
 const routes = require('./routes/Admin');
@@ -109,3 +135,6 @@ app.get(BASE_PATH + '/test', (req, res) => {
 app.listen(port, () => {
   console.log(`Server running on http://localhost:${port}`);
 });
+
+
+module.exports = app;
