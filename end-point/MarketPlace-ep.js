@@ -87,6 +87,7 @@ exports.createMarketProduct = async (req, res) => {
       category: req.body.category,
       discount: req.body.discount,
       varietyId: req.body.varietyId,
+      displaytype: req.body.displaytype,
     };
 
     const result = await MarketPlaceDao.createMarketProductDao(product);

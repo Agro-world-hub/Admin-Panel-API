@@ -85,7 +85,7 @@ exports.getAllCropNameDAO = () => {
 exports.createMarketProductDao = async (product) => {
   return new Promise((resolve, reject) => {
     const sql =
-      "INSERT INTO marketplaceitems (displayName, normalPrice, discountedPrice, promo, unitType, startValue, changeby, tags, category, discount, varietyId) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+      "INSERT INTO marketplaceitems (displayName, normalPrice, discountedPrice, promo, unitType, startValue, changeby, tags, category, discount, varietyId, displayType) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
     const values = [
       product.cropName,
       product.normalPrice,
@@ -98,6 +98,7 @@ exports.createMarketProductDao = async (product) => {
       product.category,
       product.discount,
       product.varietyId,
+      product.displaytype,
     ];
 
     marketPlace.query(sql, values, (err, results) => {
