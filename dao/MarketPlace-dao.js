@@ -277,7 +277,7 @@ exports.deleteAllCoupen = async () => {
 exports.getAllProductCropCatogoryDAO = () => {
   return new Promise((resolve, reject) => {
     const sql = `
-          SELECT cg.id AS cropId, mpi.normalPrice, mpi.discountedPrice, mpi.id AS varietyId, cg.cropNameEnglish, mpi.displayName
+          SELECT cg.id AS cropId, mpi.normalPrice, mpi.discountedPrice,mpi.discount, mpi.id AS varietyId, cg.cropNameEnglish, mpi.displayName
           FROM marketplaceitems mpi, plant_care.cropvariety cv, plant_care.cropgroup cg
           WHERE mpi.varietyId = cv.id AND cv.cropGroupId = cg.id
       `;
@@ -297,6 +297,7 @@ exports.getAllProductCropCatogoryDAO = () => {
           cropId,
           normalPrice,
           discountedPrice,
+          discount
         } = item;
 
         if (!groupedData[cropNameEnglish]) {
@@ -311,6 +312,7 @@ exports.getAllProductCropCatogoryDAO = () => {
           displayName: displayName,
           normalPrice: parseFloat(normalPrice),
           discountedPrice: parseFloat(discountedPrice),
+          discount: parseFloat(discount),
         });
       });
 
@@ -358,8 +360,8 @@ exports.creatPackageDetailsDAO = async (data, packageId) => {
       packageId,
       parseInt(data.mpItemId),
       data.quantity,
-      data.qtytype,
-      parseInt(data.discountedPrice),
+      'Kg',
+      (parseInt(data.normalPrice)*data.quantity)-(parseInt(data.normalPrice)* data.quantity)*data.discountPercentage/100,
     ];
 
     marketPlace.query(sql, values, (err, results) => {
@@ -371,6 +373,8 @@ exports.creatPackageDetailsDAO = async (data, packageId) => {
     });
   });
 };
+
+
 exports.getProductById = async (id) => {
   return new Promise((resolve, reject) => {
     const sql = `
