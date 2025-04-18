@@ -16,3 +16,9 @@ const Joi = require('joi');
       return value;
     }, 'Custom date validation')
 });
+
+
+
+exports.idValidate = Joi.object({
+  id: Joi.number().integer().required(), // Ensures the `id` is a number and required
+});

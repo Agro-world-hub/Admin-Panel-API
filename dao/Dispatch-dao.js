@@ -54,6 +54,7 @@ const {
           o.id AS id,
           o.invNo AS invoiceNum,
           o.packageStatus AS packageStatus,
+          opi.id AS orderPackageItemsId,
           mpp.displayName AS packageName,
           IFNULL(opi.packageSubTotal, 0) +
           IFNULL(SUM(mpi.additionalPrice), 0) -
@@ -203,3 +204,194 @@ const {
       });
     });
   };
+
+
+
+
+  exports.getCustomOrderDetailsById = (id) => {
+    return new Promise((resolve, reject) => {
+
+      const sql = `SELECT 
+                    osi.id AS id,
+                    cv.varietyNameEnglish AS item,
+                    osi.quantity AS quantity,
+                    ROUND(mpi.discountedPrice / mpi.startValue, 2) AS UnitPrice,
+                    osi.subtotal AS subtotal,
+                    osi.isPacked AS isPacked
+                   FROM orderselecteditems osi
+                   JOIN market_place.marketplaceitems mpi ON osi.mpItemId = mpi.id
+                   JOIN plant_care.cropvariety cv ON mpi.varietyId = cv.id
+                   WHERE orderId = ?
+                   `;
+
+        dash.query(sql, [id], (err, results) => {
+        if (err) {
+          reject(err);
+        } else {
+          resolve(results);
+        }
+      });
+    });
+  };
+
+
+
+
+
+
+
+  exports.updateCustomPackItems = (items) => {
+    return new Promise((resolve, reject) => {
+      if (items.length === 0) {
+        return resolve();
+      }
+  
+      // First, update all the items' isPacked status
+      const updates = items.map(item => {
+        return new Promise((res, rej) => {
+          const sql = `
+            UPDATE orderselecteditems 
+            SET isPacked = ? 
+            WHERE id = ?
+          `;
+          dash.query(sql, [item.isPacked, item.id], (err, result) => {
+            if (err) {
+              return rej(err);
+            }
+            res({ result, itemId: item.id });
+          });
+        });
+      });
+  
+      Promise.all(updates)
+        .then(() => {
+          // Get all item IDs
+          const itemIds = items.map(item => item.id);
+          
+          // Fetch the orderIds for these items
+          const getOrderIdsSql = `
+            SELECT id, orderId 
+            FROM orderselecteditems 
+            WHERE id IN (${itemIds.join(',')})
+          `;
+          
+          return new Promise((res, rej) => {
+            dash.query(getOrderIdsSql, [], (err, results) => {
+              if (err) {
+                return rej(err);
+              }
+              res(results);
+            });
+          });
+        })
+        .then(itemsWithOrderIds => {
+          // Extract the unique orderIds
+          const orderIds = [...new Set(itemsWithOrderIds.map(item => item.orderId))];
+          console.log('Order IDs to process:', orderIds);
+          
+          // For each affected order, check the packing status
+          const orderUpdates = orderIds.map(orderId => {
+            return new Promise((res, rej) => {
+              // Query to count all items and packed items for this order
+              const countSql = `
+                SELECT 
+                  COUNT(*) as totalItems,
+                  SUM(IF(isPacked = 1, 1, 0)) as packedItems
+                FROM orderselecteditems
+                WHERE orderId = ?
+              `;
+              
+              dash.query(countSql, [orderId], (err, counts) => {
+                if (err) {
+                  return rej(err);
+                }
+                
+                const totalItems = parseInt(counts[0].totalItems, 10);
+                const packedItems = parseInt(counts[0].packedItems, 10);
+                
+                console.log(`Order ${orderId}: Total items = ${totalItems}, Packed items = ${packedItems}`);
+                
+                // Determine new packageStatus based on counts
+                let packageStatus = 'Pending';
+                
+                if (totalItems > 0) {
+                  if (packedItems > 0) {
+                    // At least one item is packed
+                    if (packedItems === totalItems) {
+                      // All items are packed
+                      packageStatus = 'Completed';
+                      console.log(`Order ${orderId}: Setting status to Completed`);
+                    } else {
+                      // Some but not all items are packed
+                      packageStatus = 'Opened';
+                      console.log(`Order ${orderId}: Setting status to Opened`);
+                    }
+                  } else {
+                    console.log(`Order ${orderId}: Setting status to Pending (no packed items)`);
+                  }
+                } else {
+                  console.log(`Order ${orderId}: No items found for this order`);
+                }
+                
+                // Update the order's packageStatus
+                const updateOrderSql = `
+                  UPDATE orders
+                  SET packageStatus = ?
+                  WHERE id = ?
+                `;
+                
+                dash.query(updateOrderSql, [packageStatus, orderId], (err, result) => {
+                  if (err) {
+                    console.error(`Failed to update order ${orderId}:`, err);
+                    return rej(err);
+                  }
+                  console.log(`Successfully updated order ${orderId} to ${packageStatus}`);
+                  res(result);
+                });
+              });
+            });
+          });
+          
+          return Promise.all(orderUpdates);
+        })
+        .then(resolve)
+        .catch(reject);
+    });
+  };
+
+
+
+
+
+
+
+
+  exports.getPackageOrderDetailsById = (id) => {
+    return new Promise((resolve, reject) => {
+
+      const sql = `SELECT 
+                    ai.id AS id,
+                    cv.varietyNameEnglish AS item,
+                    ai.quantity AS quantity,
+                    ROUND(mpi.discountedPrice / mpi.startValue, 2) AS UnitPrice,
+                    ai.subtotal AS subtotal,
+                    ai.isPacked AS isPacked
+                   FROM additionalitem ai
+                   JOIN market_place.marketplaceitems mpi ON ai.mpItemId = mpi.id
+                   JOIN plant_care.cropvariety cv ON mpi.varietyId = cv.id
+                   WHERE orderPackageItemsId = ?
+                   `;
+
+        dash.query(sql, [id], (err, results) => {
+        if (err) {
+          reject(err);
+        } else {
+          resolve(results);
+        }
+      });
+    });
+  };
+
+
+
+
