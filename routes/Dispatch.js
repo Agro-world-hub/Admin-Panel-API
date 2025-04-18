@@ -31,6 +31,17 @@ router.get(
     DispatchEP.getSelectedPackages
   );
 
+  router.get(
+    "/get-package-items",
+    authMiddleware,
+    DispatchEP.getPackageItems
+  );
+
+  router.post(
+    "/update-is-packed",
+    authMiddleware,
+    DispatchEP.updateIsPacked
+  );
 
 
 

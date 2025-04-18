@@ -16,3 +16,13 @@ const Joi = require('joi');
       return value;
     }, 'Custom date validation')
 });
+
+exports.getPackageItems = Joi.object({
+  id: Joi.number().integer().required(),
+  
+});
+
+exports.validateIsPackedUpdate = Joi.object({
+  ids: Joi.array().items(Joi.number().integer().required()).required()
+    .description('Array of numeric IDs to mark as packed'),
+});

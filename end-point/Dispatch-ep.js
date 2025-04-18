@@ -66,5 +66,61 @@ exports.getSelectedPackages = async (req, res) => {
       res.status(500).send("An error occurred while fetching the report.");
     }
   };
+
+
+  exports.getPackageItems = async (req, res) => {
+    const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
+    console.log(fullUrl);
+    try {
+  
+      const validatedQuery = await DispatchVali.getPackageItems.validateAsync(req.query);
+  
+  
+      const { id } = validatedQuery;
+      console.log(id);
+  
+      const packageData = await DispatchDao.getPackageItems(
+       id
+      );
+      console.log(packageData)
+      res.json(packageData);
+    } catch (err) {
+      console.error("Error fetching daily report:", err);
+      res.status(500).send("An error occurred while fetching the report.");
+    }
+  };
+
+
+  exports.updateIsPacked = async (req, res) => {
+    try {
+      const { packedItems } = req.body;
+  
+      if (!Array.isArray(packedItems) || packedItems.length === 0) {
+        return res.status(400).json({
+          success: false,
+          message: 'Invalid or empty packedItems array'
+        });
+      }
+  
+      console.log('Updating isPacked status for items:', packedItems);
+  
+      const updateResult = await DispatchDao.updateIsPackedStatus(packedItems);
+  
+      res.json({
+        success: true,
+        message: `${updateResult.affectedRows} items updated`,
+        updatedItems: packedItems
+      });
+  
+    } catch (err) {
+      console.error("Error updating packed status:", err);
+  
+      res.status(500).json({
+        success: false,
+        message: 'An error occurred while updating packed status'
+      });
+    }
+  };
+  
   
 
