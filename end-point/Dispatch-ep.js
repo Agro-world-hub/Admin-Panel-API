@@ -213,3 +213,26 @@ exports.getSelectedPackages = async (req, res) => {
         .json({ error: "An error occurred while fetching the news content" });
     }
   };
+
+
+
+
+
+// controller/dispatch.j
+
+exports.updatePackAdditionItems = async (req, res) => {
+  try {
+    const { invoiceId, updatedItems } = req.body;
+
+    // if (!invoiceId || !Array.isArray(updatedItems)) {
+    //   return res.status(400).json({ message: 'Invalid request formattttt.' });
+    // }
+
+    await DispatchDao.updatePackItemsAdditional(updatedItems);
+
+    return res.status(200).json({ message: 'Updated successfully.' });
+  } catch (error) {
+    console.error('Error updating custom pack items:', error);
+    return res.status(500).json({ message: 'Internal server error.' });
+  }
+};

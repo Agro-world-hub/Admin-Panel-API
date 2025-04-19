@@ -63,6 +63,12 @@ router.get(
 );
 
 
+router.post(
+  '/update-pack-additiona-items', 
+  authMiddleware,
+  DispatchEP.updatePackAdditionItems);
+
+
 
 
 

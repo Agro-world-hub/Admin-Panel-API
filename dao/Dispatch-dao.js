@@ -475,3 +475,38 @@ exports.updateIsPackedStatus = (packedItems) => {
 
 
 
+
+
+
+
+exports.updatePackItemsAdditional = (items) => {
+  return new Promise((resolve, reject) => {
+    if (!items || items.length === 0) {
+      return resolve(); // Nothing to update
+    }
+
+    const updates = items.map(item => {
+      return new Promise((res, rej) => {
+        const sql = `
+          UPDATE additionalitem 
+          SET isPacked = ? 
+          WHERE id = ?
+        `;
+
+        dash.query(sql, [item.isPacked, item.id], (err, result) => {
+          if (err) {
+            console.error(`Error updating item ID ${item.id}:`, err);
+            return rej(err);
+          }
+          res({ itemId: item.id, result });
+        });
+      });
+    });
+
+    Promise.all(updates)
+      .then(resolve)
+      .catch(reject);
+  });
+};
+
+  
