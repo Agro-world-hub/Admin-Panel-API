@@ -361,7 +361,7 @@ exports.creatPackageDetailsDAO = async (data, packageId) => {
       parseInt(data.mpItemId),
       data.quantity,
       'Kg',
-      (parseInt(data.normalPrice)*data.quantity)-(parseInt(data.normalPrice)* data.quantity)*data.discountPercentage/100,
+      data.discountedPrice,
     ];
 
     marketPlace.query(sql, values, (err, results) => {
@@ -749,14 +749,13 @@ exports.getMarketplacePackageByIdWithDetailsDAO = (packageId) => {
 exports.updatePackageDAO = async (data, profileImageUrl, packageId) => {
   return new Promise((resolve, reject) => {
     const sql =
-      "UPDATE marketplacepackages SET displayName = ?, status = ?, total = ?, image = ?, description = ?, discount = ? WHERE id = ?";
+      "UPDATE marketplacepackages SET displayName = ?, status = ?, total = ?, image = ?, description = ? WHERE id = ?";
     const values = [
       data.displayName,
       data.status,
       data.total,
       profileImageUrl,
       data.description,
-      data.discount,
       packageId,
     ];
 
