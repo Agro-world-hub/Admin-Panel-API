@@ -301,7 +301,7 @@ exports.addOrRemoveCenterCrops = async (req, res) => {
   console.log(fullUrl);
 
   try {
-    const companyId = req.user.companyId;
+    const companyId = 1;
 
     // const { id } = await TargetValidate.IdValidationSchema.validateAsync(req.params);
     const validateData =
