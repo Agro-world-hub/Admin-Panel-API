@@ -468,7 +468,29 @@ exports.updateIsPackedStatus = (packedItems) => {
 
 
 
-
+  exports.getOrderPackageId = (id) => {
+    return new Promise((resolve, reject) => {
+      console.log('Querying order for item ID:', id);
+      
+      const sql = `SELECT 
+                    o.id AS orderId
+                   FROM additionalitem ai
+                   JOIN orderpackageitems opi ON ai.orderPackageItemsId = opi.id
+                   JOIN orders o ON opi.orderId = o.id
+                   WHERE ai.id = ?
+                   `;
+  
+      dash.query(sql, [id], (err, results) => {
+        if (err) {
+          console.error('Error in getOrderPackageId:', err);
+          reject(err);
+        } else {
+          console.log('getOrderPackageId results:', results);
+          resolve(results);
+        }
+      });
+    });
+  };
 
 
 
@@ -501,5 +523,77 @@ exports.updatePackItemsAdditional = (items) => {
       .catch(reject);
   });
 };
+
+exports.getAdditionalItemsStatus = (orderId) => {
+  return new Promise((resolve, reject) => {
+    const sql = `
+      SELECT 
+        COUNT(*) as totalItems,
+        SUM(CASE WHEN ai.isPacked = true THEN 1 ELSE 0 END) as packedItems
+      FROM additionalitem ai
+      JOIN orderpackageitems opi ON ai.orderPackageItemsId = opi.id
+      WHERE opi.orderId = ?
+    `;
+    
+    dash.query(sql, [orderId], (err, results) => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(results[0] || { totalItems: 0, packedItems: 0 });
+      }
+    });
+  });
+};
+
+// New function to get packItemStatus
+exports.getPackItemStatus = (orderId) => {
+  return new Promise((resolve, reject) => {
+    const sql = `SELECT packItemStatus FROM orders WHERE id = ?`;
+    
+    dash.query(sql, [orderId], (err, results) => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(results[0]?.packItemStatus || 'Pending');
+      }
+    });
+  });
+};
+
+// New function to update order statuses
+exports.updateOrderStatuses = (orderId, addItemStatus, packItemStatus) => {
+  return new Promise((resolve, reject) => {
+    // Calculate packageStatus based on the rules provided
+    let packageStatus;
+    
+    // Rule logic for packageStatus
+    if (addItemStatus === 'Completed' && packItemStatus === 'Completed') {
+      packageStatus = 'Completed';
+    } else if ((addItemStatus === 'Opened' || addItemStatus === 'Completed') && 
+               (packItemStatus === 'Opened')) {
+      packageStatus = 'Opened';
+    } else if (addItemStatus === 'Opened' && packItemStatus === 'Completed') {
+      packageStatus = 'Opened';
+    } else {
+      packageStatus = 'Pending';
+    }
+    
+    const sql = `
+      UPDATE orders 
+      SET addItemStatus = ?, packageStatus = ?
+      WHERE id = ?
+    `;
+    
+    dash.query(sql, [addItemStatus, packageStatus, orderId], (err, result) => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(result);
+      }
+    });
+  });
+};
+
+
 
   
