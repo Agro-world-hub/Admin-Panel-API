@@ -79,7 +79,7 @@ const {
         SELECT COUNT(*) AS total
         ${baseSelect}
         ${whereClause}
-        GROUP BY cv.varietyNameEnglish, ${dateFilterColumn}
+        GROUP BY cv.varietyNameEnglish, ${dateFilterColumn}, DATE(o.scheduleDate)
       `;
   
       const dataSql = `
@@ -93,8 +93,8 @@ const {
           DATE_SUB(o.scheduleDate, INTERVAL 1 DAY) AS toDispatchCenter
         ${baseSelect}
         ${whereClause}
-        GROUP BY cv.varietyNameEnglish, ${dateFilterColumn}
-        ORDER BY OrderDate DESC
+        GROUP BY cv.varietyNameEnglish, ${dateFilterColumn}, DATE(o.scheduleDate)
+        ORDER BY OrderDate DESC, cg.cropNameEnglish, cv.varietyNameEnglish
         LIMIT ? OFFSET ?
       `;
   
