@@ -56,18 +56,11 @@ exports.getPreMadePackages = (page, limit, packageStatus, date, search) => {
           o.packageStatus AS packageStatus,
           opi.id AS orderPackageItemsId,
           mpp.displayName AS packageName,
-          IFNULL(opi.packageSubTotal, 0) +
-          IFNULL(SUM(mpi.additionalPrice), 0) -
-          IFNULL(SUM(mmi.additionalPrice), 0) AS packagePrice,
+          opi.packageSubTotal-IFNULL(SUM(ai.subtotal), 0) AS packagePrice,
           IFNULL(SUM(ai.subtotal), 0) AS additionalPrice,
           o.scheduleDate AS scheduleDate,
           o.fullSubTotal AS fullSubTotal,
-          (
-            IFNULL(opi.packageSubTotal, 0) +
-            IFNULL(SUM(mpi.additionalPrice), 0) -
-            IFNULL(SUM(mmi.additionalPrice), 0) +
-            IFNULL(SUM(ai.subtotal), 0)
-          ) AS totalPrice
+          opi.packageSubTotal AS totalPrice
         FROM 
           orders o
         INNER JOIN orderpackageitems opi ON o.id = opi.orderId
