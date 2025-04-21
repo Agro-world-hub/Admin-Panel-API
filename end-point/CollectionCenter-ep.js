@@ -27,15 +27,15 @@ exports.getAllCollectionCenter = async (req, res) => {
   }
 };
 
-
-
 exports.getAllCollectionCenterByCompany = async (req, res) => {
   try {
     const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
     console.log("Request URL:", fullUrl);
 
     const companyId = req.params.companyId;
-    const result = await CollectionCenterDao.GetCentersByCompanyIdDAO(companyId);
+    const result = await CollectionCenterDao.GetCentersByCompanyIdDAO(
+      companyId
+    );
 
     if (result.length === 0) {
       return res
@@ -133,7 +133,8 @@ exports.addNewCollectionCenter = async (req, res) => {
 exports.getAllComplains = async (req, res) => {
   try {
     console.log(req.query);
-    const { page, limit, status, category, comCategory, searchText } = req.query;
+    const { page, limit, status, category, comCategory, searchText } =
+      req.query;
 
     const { results, total } = await CollectionCenterDao.GetAllComplainDAO(
       page,
@@ -158,22 +159,29 @@ exports.getAllComplains = async (req, res) => {
   }
 };
 
-
-
 exports.getAllCenterComplains = async (req, res) => {
   try {
     console.log(req.query);
-    const { page, limit, status, category, comCategory,filterCompany, searchText } = req.query;
-
-    const { results, total } = await CollectionCenterDao.GetAllCenterComplainDAO(
+    const {
       page,
       limit,
       status,
       category,
       comCategory,
       filterCompany,
-      searchText
-    );
+      searchText,
+    } = req.query;
+
+    const { results, total } =
+      await CollectionCenterDao.GetAllCenterComplainDAO(
+        page,
+        limit,
+        status,
+        category,
+        comCategory,
+        filterCompany,
+        searchText
+      );
 
     console.log("Successfully retrieved all collection center");
     res.json({ results, total });
@@ -188,7 +196,6 @@ exports.getAllCenterComplains = async (req, res) => {
     res.status(500).json({ error: "An error occurred while fetching news" });
   }
 };
-
 
 //get complain by id
 exports.getComplainById = async (req, res) => {
@@ -218,8 +225,6 @@ exports.getComplainById = async (req, res) => {
   }
 };
 
-
-
 exports.getCenterComplainById = async (req, res) => {
   try {
     const id = req.params.id;
@@ -243,13 +248,11 @@ exports.getCenterComplainById = async (req, res) => {
     }
 
     console.error("Error fetching news:", err);
-    res.status(500).json({ error: "An error occurred while fetching center complains" });
+    res
+      .status(500)
+      .json({ error: "An error occurred while fetching center complains" });
   }
 };
-
-
-
-
 
 exports.createCollectionCenter = async (req, res) => {
   try {
@@ -334,7 +337,6 @@ exports.getAllCollectionCenterPage = async (req, res) => {
     );
 
     console.log(items);
-    
 
     console.log(page);
     console.log(limit);
@@ -483,9 +485,6 @@ exports.sendComplainReply = async (req, res) => {
   }
 };
 
-
-
-
 exports.sendCenterComplainReply = async (req, res) => {
   try {
     const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
@@ -519,10 +518,6 @@ exports.sendCenterComplainReply = async (req, res) => {
       .json({ error: "An error occurred while creating Reply tasks" });
   }
 };
-
-
-
-
 
 exports.getForCreateId = async (req, res) => {
   try {
@@ -642,7 +637,7 @@ exports.getAllCompanyList = async (req, res) => {
 exports.getAllManagerList = async (req, res) => {
   const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
   console.log("Request URL:", fullUrl);
-  
+
   try {
     const companyId = req.params.companyId;
     const centerId = req.params.centerId;
@@ -696,12 +691,10 @@ exports.generateRegCode = (req, res) => {
 exports.getAllCompanies = async (req, res) => {
   try {
     console.log(req.query);
-    const { status = null, search} = req.query;
+    const { status = null, search } = req.query;
 
     // Call the DAO function
-    const results = await CollectionCenterDao.getAllCompanyDAO(
-      search
-    );
+    const results = await CollectionCenterDao.getAllCompanyDAO(search);
 
     console.log("Successfully retrieved all companies");
     res.json({ results, total: results.length }); // Provide total as the length of results
@@ -886,9 +879,7 @@ exports.addDailyTarget = async (req, res) => {
 
     console.log(target);
 
-    const targetId = await CollectionCenterDao.createDailyTargetDao(
-      target
-    );
+    const targetId = await CollectionCenterDao.createDailyTargetDao(target);
     if (!targetId) {
       return res.json({
         message: "Faild create target try again!",
@@ -961,14 +952,13 @@ exports.getCompanyHead = async (req, res) => {
     const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
     console.log(fullUrl);
 
-    const {companyId, page, limit, searchText} = req.query;
+    const { companyId, page, limit, searchText } = req.query;
     // console.log(searchText);
     // const { page, limit, searchText } =
     //   await cropCalendarValidations.getAllCropCalendarSchema.validateAsync(
     //     req.query
     //   );
     const offset = (page - 1) * limit;
-    
 
     const { total, items } = await CollectionCenterDao.getcompanyHeadData(
       companyId,
@@ -977,7 +967,7 @@ exports.getCompanyHead = async (req, res) => {
       searchText
     );
 
-    console.log({items, total});
+    console.log({ items, total });
     res.json({
       items,
       total,
@@ -999,10 +989,9 @@ exports.deleteCompanyHead = async (req, res) => {
     console.log("Request URL:", fullUrl);
 
     // Validate the request parameters
-    const { id } =
-      await ValidateSchema.deleteCompanyHeadSchema.validateAsync(
-        req.params
-      );
+    const { id } = await ValidateSchema.deleteCompanyHeadSchema.validateAsync(
+      req.params
+    );
 
     const affectedRows = await CollectionCenterDao.deleteCompanyHeadData(id);
 
@@ -1025,13 +1014,10 @@ exports.deleteCompanyHead = async (req, res) => {
   }
 };
 
-
-
-
 exports.GetComplainCategoriesByRole = async (req, res) => {
   const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
   console.log("Request URL:", fullUrl);
-  
+
   try {
     const roleId = req.params.roleId;
     const appId = req.params.appId;
@@ -1058,19 +1044,18 @@ exports.GetComplainCategoriesByRole = async (req, res) => {
     }
 
     console.error("Error fetching news:", err);
-    res.status(500).json({ error: "An error occurred while complain categories" });
+    res
+      .status(500)
+      .json({ error: "An error occurred while complain categories" });
   }
 };
-
 
 exports.GetComplainCategoriesByRoleSuper = async (req, res) => {
   const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
   console.log("Request URL:", fullUrl);
-  
+
   try {
-    
     const appId = req.params.appId;
-   
 
     const result = await CollectionCenterDao.GetComplainCategoriesByRoleSuper(
       appId
@@ -1092,20 +1077,18 @@ exports.GetComplainCategoriesByRoleSuper = async (req, res) => {
     }
 
     console.error("Error fetching news:", err);
-    res.status(500).json({ error: "An error occurred while complain categories" });
+    res
+      .status(500)
+      .json({ error: "An error occurred while complain categories" });
   }
 };
-
-
 
 exports.GetAllCompanyForOfficerComplain = async (req, res) => {
   const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
   console.log("Request URL:", fullUrl);
-  
+
   try {
-    
-    const result = await CollectionCenterDao.GetAllCompanyForOfficerComplain(
-    );
+    const result = await CollectionCenterDao.GetAllCompanyForOfficerComplain();
 
     if (result.length === 0) {
       return res
@@ -1123,11 +1106,11 @@ exports.GetAllCompanyForOfficerComplain = async (req, res) => {
     }
 
     console.error("Error fetching news:", err);
-    res.status(500).json({ error: "An error occurred while complain categories" });
+    res
+      .status(500)
+      .json({ error: "An error occurred while complain categories" });
   }
 };
-
-
 
 exports.getAllCollectionCenterPageAW = async (req, res) => {
   try {
@@ -1144,11 +1127,10 @@ exports.getAllCollectionCenterPageAW = async (req, res) => {
     );
 
     console.log(items);
-    
 
     console.log(page);
     console.log(limit);
-    console.log(searchItem);
+    console.log("hit 01", searchItem);
     res.json({
       items,
       total,
