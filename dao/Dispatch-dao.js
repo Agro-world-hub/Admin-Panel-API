@@ -54,6 +54,8 @@ exports.getPreMadePackages = (page, limit, packageStatus, date, search) => {
           o.id AS id,
           o.invNo AS invoiceNum,
           o.packageStatus AS packageStatus,
+          o.addItemStatus AS addItemStatus,
+          o.packItemStatus AS packItemStatus,
           opi.id AS orderPackageItemsId,
           mpp.displayName AS packageName,
           opi.packageSubTotal-IFNULL(SUM(ai.subtotal), 0) AS packagePrice,
