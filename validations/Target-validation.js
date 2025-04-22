@@ -62,3 +62,33 @@ exports.getSelectedOfficerTargetSchema = Joi.object({
   status: Joi.string().optional(),
   searchQuery: Joi.string().optional(),
 });
+
+exports.getSavedCenterCropsSchema = Joi.object({
+  id: Joi.number().integer().required(),
+  date: Joi.date().required(),
+});
+
+exports.getSavedCenterCropsQuaryParam = Joi.object({
+  searchText: Joi.string().optional(),
+});
+
+exports.updateTargetQtySchema = Joi.object({
+  id: Joi.number().integer().allow(null).required(),
+  qty: Joi.number().required(),
+  date: Joi.date().required(),
+  companyCenterId: Joi.number().integer().required(),
+  grade: Joi.string().required(),
+  varietyId: Joi.number().integer().required(),
+});
+
+exports.addOrRemoveCenterCropSchema = Joi.object({
+  centerId: Joi.number().integer().optional(),
+  isAssign: Joi.number().integer().optional(),
+  cropId: Joi.number().integer().optional(),
+});
+
+exports.getCenterCropsSchema = Joi.object({
+  page: Joi.number().integer().min(1).default(1).optional(),
+  limit: Joi.number().integer().min(1).max(100).default(10).optional(),
+  searchText: Joi.string().allow("").optional(),
+});
