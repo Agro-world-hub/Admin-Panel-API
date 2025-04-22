@@ -128,26 +128,75 @@ exports.createMarketProductDao = async (product) => {
 //   });
 // };
 
-exports.getMarketplaceItems = () => {
+exports.getMarketplaceItems = (limit, offset, searchItem, displayTypeValue, categoryValue) => {
   return new Promise((resolve, reject) => {
-    const dataSql = `
-    SELECT m.id, m.displayName, m.discountedPrice, m.discount, m.startValue, m.promo,
-           m.unitType, m.changeby, m.normalPrice, m.category,m.displayType,
-           cg.cropNameEnglish, cv.varietyNameEnglish
-    FROM marketplaceitems m
-    JOIN plant_care.cropvariety cv ON m.varietyId = cv.id
-    JOIN plant_care.cropgroup cg ON cv.cropGroupId = cg.id
-    ORDER BY m.displayName
-    `;
-    marketPlace.query(dataSql, (error, results) => {
-      if (error) {
-        reject(error);
-      } else {
-        resolve(results);
-      }
+    let whereConditions = [];
+    const countParams = [];
+    const dataParams = [];
+
+    // Base SQL queries
+    let countSql = `SELECT COUNT(*) as total 
+                    FROM marketplaceitems m
+                    JOIN plant_care.cropvariety cv ON m.varietyId = cv.id
+                    JOIN plant_care.cropgroup cg ON cv.cropGroupId = cg.id`;
+
+    let dataSql = `SELECT m.id, m.displayName, m.discountedPrice, m.discount, m.startValue, m.promo,
+                    m.unitType, m.changeby, m.normalPrice, m.category, m.displayType,
+                    cg.cropNameEnglish, cv.varietyNameEnglish
+                    FROM marketplaceitems m
+                    JOIN plant_care.cropvariety cv ON m.varietyId = cv.id
+                    JOIN plant_care.cropgroup cg ON cv.cropGroupId = cg.id`;
+
+    // Add search condition if provided
+    if (searchItem) {
+      whereConditions.push("(m.displayName LIKE ? OR cg.cropNameEnglish LIKE ? OR cv.varietyNameEnglish LIKE ?)");
+      const searchQuery = `%${searchItem}%`;
+      countParams.push(searchQuery, searchQuery, searchQuery);
+      dataParams.push(searchQuery, searchQuery, searchQuery);
+    }
+
+    // Add display type condition if provided
+    if (displayTypeValue) {
+      whereConditions.push("m.displayType LIKE ?");
+      countParams.push(displayTypeValue);
+      dataParams.push(displayTypeValue);
+    }
+
+        if (categoryValue) {
+      whereConditions.push("m.category = ?");
+      countParams.push(categoryValue);
+      dataParams.push(categoryValue);
+    }
+
+    // Combine WHERE conditions if any exist
+    if (whereConditions.length > 0) {
+      const whereClause = " WHERE " + whereConditions.join(" AND ");
+      countSql += whereClause;
+      dataSql += whereClause;
+    }
+
+    // Add limit and offset to data query
+    dataSql += " ORDER BY m.displayName LIMIT ? OFFSET ?";
+    dataParams.push(parseInt(limit), parseInt(offset));
+
+    // Execute queries
+    marketPlace.query(countSql, countParams, (countErr, countResults) => {
+      if (countErr) return reject(countErr);
+
+      const total = countResults[0].total;
+
+      marketPlace.query(dataSql, dataParams, (dataErr, dataResults) => {
+        if (dataErr) return reject(dataErr);
+
+        resolve({
+          total: total,
+          items: dataResults,
+        });
+      });
     });
   });
 };
+
 
 exports.deleteMarketplaceItem = async (id) => {
   return new Promise((resolve, reject) => {
