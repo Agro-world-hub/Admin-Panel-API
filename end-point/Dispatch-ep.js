@@ -218,21 +218,70 @@ exports.getSelectedPackages = async (req, res) => {
 
 
 
-// controller/dispatch.j
 
-exports.updatePackAdditionItems = async (req, res) => {
-  try {
-    const { invoiceId, updatedItems } = req.body;
-
-    // if (!invoiceId || !Array.isArray(updatedItems)) {
-    //   return res.status(400).json({ message: 'Invalid request formattttt.' });
-    // }
-
-    await DispatchDao.updatePackItemsAdditional(updatedItems);
-
-    return res.status(200).json({ message: 'Updated successfully.' });
-  } catch (error) {
-    console.error('Error updating custom pack items:', error);
-    return res.status(500).json({ message: 'Internal server error.' });
-  }
-};
+  exports.updatePackAdditionItems = async (req, res) => {
+    try {
+      const { invoiceId, updatedItems } = req.body;
+  
+      console.log('Request received:', { invoiceId, updatedItems });
+  
+      if (!updatedItems || !Array.isArray(updatedItems)) {
+        return res.status(400).json({ message: 'Invalid request format.' });
+      }
+  
+      // Update the items first
+      await DispatchDao.updatePackItemsAdditional(updatedItems);
+      console.log('Items updated successfully');
+  
+      // Get the orderPackageItemsId from the first item
+      if (updatedItems.length > 0) {
+        // We need to determine which ID to use
+        const itemId = updatedItems[0].id;
+        console.log('Processing item ID:', itemId);
+        
+        // Get associated order ID
+        const orderResult = await DispatchDao.getOrderPackageId(itemId);
+        console.log('Order result:', orderResult);
+        
+        if (orderResult && orderResult.length > 0) {
+          const orderId = orderResult[0].orderId;
+          console.log('Found order ID:', orderId);
+          
+          // Get status of additional items for this order
+          const additionalItemsStatus = await DispatchDao.getAdditionalItemsStatus(orderId);
+          console.log('Additional items status:', additionalItemsStatus);
+          
+          const totalItems = additionalItemsStatus.totalItems || 0;
+          const packedItems = additionalItemsStatus.packedItems || 0;
+          
+          // Determine addItemStatus based on packed items
+          let addItemStatus;
+          if (packedItems === 0) {
+            addItemStatus = 'Pending';  // No items packed
+          } else if (packedItems < totalItems) {
+            addItemStatus = 'Opened';   // Some items packed
+          } else {
+            addItemStatus = 'Completed'; // All items packed
+          }
+          console.log('Calculated addItemStatus:', addItemStatus);
+          
+          // Get current packItemStatus
+          const packItemStatus = await DispatchDao.getPackItemStatus(orderId);
+          console.log('Current packItemStatus:', packItemStatus);
+          
+          // Update the order statuses
+          const updateResult = await DispatchDao.updateOrderStatuses(orderId, addItemStatus, packItemStatus);
+          console.log('Update result:', updateResult);
+        } else {
+          console.log('No order found for item ID:', itemId);
+        }
+      }
+  
+      return res.status(200).json({ message: 'Updated successfully.' });
+    } catch (error) {
+      console.error('Error updating custom pack items:', error);
+      return res.status(500).json({ message: 'Internal server error.' });
+    }
+  };
+  
+  

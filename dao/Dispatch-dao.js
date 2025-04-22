@@ -54,20 +54,15 @@ exports.getPreMadePackages = (page, limit, packageStatus, date, search) => {
           o.id AS id,
           o.invNo AS invoiceNum,
           o.packageStatus AS packageStatus,
+          o.addItemStatus AS addItemStatus,
+          o.packItemStatus AS packItemStatus,
           opi.id AS orderPackageItemsId,
           mpp.displayName AS packageName,
-          IFNULL(opi.packageSubTotal, 0) +
-          IFNULL(SUM(mpi.additionalPrice), 0) -
-          IFNULL(SUM(mmi.additionalPrice), 0) AS packagePrice,
+          opi.packageSubTotal-IFNULL(SUM(ai.subtotal), 0) AS packagePrice,
           IFNULL(SUM(ai.subtotal), 0) AS additionalPrice,
           o.scheduleDate AS scheduleDate,
           o.fullSubTotal AS fullSubTotal,
-          (
-            IFNULL(opi.packageSubTotal, 0) +
-            IFNULL(SUM(mpi.additionalPrice), 0) -
-            IFNULL(SUM(mmi.additionalPrice), 0) +
-            IFNULL(SUM(ai.subtotal), 0)
-          ) AS totalPrice
+          opi.packageSubTotal AS totalPrice
         FROM 
           orders o
         INNER JOIN orderpackageitems opi ON o.id = opi.orderId
@@ -212,7 +207,7 @@ exports.getPackageItems = (id) => {
     const params = [id];
 
     const dataSql = `
-      SELECT fopl.id AS packageListId, fopl.orderId, fopl.quantity, fopl.price, fopl.isPacking, o.invNo, mpi.displayName  FROM 
+      SELECT fopl.id AS packageListId, fopl.orderId, fopl.quantity, fopl.price, fopl.isPacking, o.invNo, mpi.displayName, mpi.discountedPrice FROM 
       dash.finalorderpackagelist fopl LEFT JOIN
       dash.orders o ON fopl.orderId = o.id LEFT JOIN 
       market_place.marketplaceitems mpi ON fopl.productId = mpi.id LEFT JOIN
@@ -238,6 +233,51 @@ exports.getPackageItems = (id) => {
   });
 };
 
+// exports.updateIsPackedStatus = (packedItems) => {
+//   return new Promise((resolve, reject) => {
+//     if (!Array.isArray(packedItems)) {
+//       return reject(new Error('packedItems must be an array'));
+//     }
+
+//     if (packedItems.length === 0) {
+//       return resolve({ affectedRows: 0, message: 'No items to update' });
+//     }
+
+//     const updateSql = `
+//       UPDATE finalorderpackagelist 
+//       SET isPacking = ? 
+//       WHERE id = ?
+//     `;
+
+//     let completed = 0;
+//     let totalUpdated = 0;
+//     let failedUpdates = [];
+
+//     packedItems.forEach(({ id, isPacked }) => {
+//       dash.query(updateSql, [isPacked, id], (err, result) => {
+//         completed++;
+
+//         if (err) {
+//           console.error(`Error updating item with ID ${id}:`, err);
+//           failedUpdates.push(id);
+//         } else {
+//           console.log(`Updated item ID ${id} to isPacking = ${isPacked}`);
+//           totalUpdated += result.affectedRows;
+//         }
+
+//         if (completed === packedItems.length) {
+//           resolve({
+//             success: true,
+//             affectedRows: totalUpdated,
+//             failedUpdates,
+//             message: `${totalUpdated} items updated. ${failedUpdates.length ? failedUpdates.length + ' failed.' : 'All successful.'}`
+//           });
+//         }
+//       });
+//     });
+//   });
+// };
+
 exports.updateIsPackedStatus = (packedItems) => {
   return new Promise((resolve, reject) => {
     if (!Array.isArray(packedItems)) {
@@ -254,30 +294,214 @@ exports.updateIsPackedStatus = (packedItems) => {
       WHERE id = ?
     `;
 
-    let completed = 0;
-    let totalUpdated = 0;
-    let failedUpdates = [];
+    // Get all unique orderIds related to the items we're updating
+    const itemIds = packedItems.map(item => item.id);
+    const getOrderIdsSql = `
+      SELECT DISTINCT orderId 
+      FROM finalorderpackagelist 
+      WHERE id IN (?)
+    `;
 
-    packedItems.forEach(({ id, isPacked }) => {
-      dash.query(updateSql, [isPacked, id], (err, result) => {
-        completed++;
+    dash.query(getOrderIdsSql, [itemIds], (err, orderResults) => {
+      if (err) {
+        return reject(new Error(`Error fetching order IDs: ${err.message}`));
+      }
 
-        if (err) {
-          console.error(`Error updating item with ID ${id}:`, err);
-          failedUpdates.push(id);
-        } else {
-          console.log(`Updated item ID ${id} to isPacking = ${isPacked}`);
-          totalUpdated += result.affectedRows;
-        }
+      const orderIds = orderResults.map(row => row.orderId);
+      if (orderIds.length === 0) {
+        return reject(new Error('No related orders found for the given items'));
+      }
 
-        if (completed === packedItems.length) {
-          resolve({
-            success: true,
-            affectedRows: totalUpdated,
-            failedUpdates,
-            message: `${totalUpdated} items updated. ${failedUpdates.length ? failedUpdates.length + ' failed.' : 'All successful.'}`
-          });
-        }
+      let completed = 0;
+      let totalUpdated = 0;
+      let failedUpdates = [];
+
+      // First update all items in finalorderpackagelist
+      packedItems.forEach(({ id, isPacked }) => {
+        dash.query(updateSql, [isPacked, id], (err, result) => {
+          completed++;
+
+          if (err) {
+            console.error(`Error updating item with ID ${id}:`, err);
+            failedUpdates.push(id);
+          } else {
+            console.log(`Updated item ID ${id} to isPacking = ${isPacked}`);
+            totalUpdated += result.affectedRows;
+          }
+
+          // When all item updates are done
+          if (completed === packedItems.length) {
+            // Get all orders info and all items for those orders in a single step
+            const getOrdersInfoSql = `
+              SELECT id, addItemStatus 
+              FROM orders 
+              WHERE id IN (?)
+            `;
+
+            dash.query(getOrdersInfoSql, [orderIds], (err, ordersInfoResults) => {
+              if (err) {
+                console.error('Error fetching orders information:', err);
+                // Still resolve with the item update results
+                return resolve({
+                  success: true,
+                  affectedRows: totalUpdated,
+                  failedUpdates,
+                  message: `${totalUpdated} items updated. ${failedUpdates.length ? failedUpdates.length + ' failed.' : 'All successful.'}`
+                });
+              }
+
+              // Get the current status of all items for the affected orders
+              const getItemsForOrdersSql = `
+                SELECT orderId, isPacking 
+                FROM finalorderpackagelist 
+                WHERE orderId IN (?)
+              `;
+
+              dash.query(getItemsForOrdersSql, [orderIds], (err, allItemsResults) => {
+                if (err) {
+                  console.error('Error fetching items for orders:', err);
+                  // Still resolve with the item update results
+                  return resolve({
+                    success: true,
+                    affectedRows: totalUpdated,
+                    failedUpdates,
+                    message: `${totalUpdated} items updated. ${failedUpdates.length ? failedUpdates.length + ' failed.' : 'All successful.'}`
+                  });
+                }
+
+                // Group items by orderId
+                const itemsByOrder = {};
+                allItemsResults.forEach(item => {
+                  if (!itemsByOrder[item.orderId]) {
+                    itemsByOrder[item.orderId] = [];
+                  }
+                  itemsByOrder[item.orderId].push(item.isPacking);
+                });
+
+                // Create a mapping of orders with their addItemStatus
+                const orderInfoMap = {};
+                ordersInfoResults.forEach(order => {
+                  orderInfoMap[order.id] = {
+                    addItemStatus: order.addItemStatus
+                  };
+                });
+
+                // Process each order to determine both new packItemStatus and packageStatus
+                const orderUpdates = [];
+                
+                for (const orderId in itemsByOrder) {
+                  const itemStatuses = itemsByOrder[orderId];
+                  const allPacked = itemStatuses.every(status => status === 1);
+                  const nonePacked = itemStatuses.every(status => status === 0);
+
+                  // First calculate the new packItemStatus
+                  let newPackItemStatus;
+                  if (allPacked) {
+                    newPackItemStatus = 'Completed';
+                  } else if (nonePacked) {
+                    newPackItemStatus = 'Pending';
+                  } else {
+                    newPackItemStatus = 'Opened';
+                  }
+
+                  // Get addItemStatus for this order
+                  const orderInfo = orderInfoMap[orderId];
+                  if (!orderInfo) continue;
+                  
+                  const addItemStatus = orderInfo.addItemStatus;
+
+                  // Now determine packageStatus using the NEW packItemStatus value and current addItemStatus
+                  let packageStatus;
+
+                  if (newPackItemStatus === 'Pending' && addItemStatus === 'Pending') {
+                    packageStatus = 'Pending';
+                  }
+                  else if (newPackItemStatus === 'Pending' && addItemStatus === 'Opened') {
+                    packageStatus = 'Pending';
+                  }
+                  else if (newPackItemStatus === 'Pending' && addItemStatus === 'Completed') {
+                    packageStatus = 'Pending';
+                  }
+                  else if (newPackItemStatus === 'Opened' && addItemStatus === 'Pending') {
+                    packageStatus = 'Pending';
+                  }
+                  else if (newPackItemStatus === 'Opened' && addItemStatus === 'Opened') {
+                    packageStatus = 'Opened';
+                  }
+                  else if (newPackItemStatus === 'Opened' && addItemStatus === 'Completed') {
+                    packageStatus = 'Opened';
+                  }
+                  else if (newPackItemStatus === 'Completed' && addItemStatus === 'Pending') {
+                    packageStatus = 'Pending';
+                  }
+                  else if (newPackItemStatus === 'Completed' && addItemStatus === 'Opened') {
+                    packageStatus = 'Opened';
+                  }
+                  else if (newPackItemStatus === 'Completed' && addItemStatus === 'Completed') {
+                    packageStatus = 'Completed';
+                  }
+                  else {
+                    // Default case (should theoretically never happen if data is clean)
+                    packageStatus = 'Pending';
+                    console.warn(`Unexpected status combination: packItemStatus=${newPackItemStatus}, addItemStatus=${addItemStatus}`);
+                  }
+
+                  orderUpdates.push({
+                    orderId: orderId,
+                    packItemStatus: newPackItemStatus,
+                    packageStatus: packageStatus
+                  });
+                }
+
+                // Update orders table with both packItemStatus and packageStatus
+                const updateOrderSql = `
+                  UPDATE orders 
+                  SET packItemStatus = ?, packageStatus = ?
+                  WHERE id = ?
+                `;
+
+                let ordersCompleted = 0;
+                let ordersUpdated = 0;
+                let orderUpdateErrors = [];
+
+                if (orderUpdates.length === 0) {
+                  return resolve({
+                    success: true,
+                    affectedRows: totalUpdated,
+                    failedUpdates,
+                    message: `${totalUpdated} items updated. ${failedUpdates.length ? failedUpdates.length + ' failed.' : 'All successful.'}`
+                  });
+                }
+
+                // Update all orders with both statuses
+                orderUpdates.forEach(({ orderId, packItemStatus, packageStatus }) => {
+                  dash.query(updateOrderSql, [packItemStatus, packageStatus, orderId], (err, result) => {
+                    ordersCompleted++;
+
+                    if (err) {
+                      console.error(`Error updating order ${orderId}:`, err);
+                      orderUpdateErrors.push(orderId);
+                    } else {
+                      console.log(`Updated order ${orderId} to packItemStatus = ${packItemStatus} and packageStatus = ${packageStatus}`);
+                      ordersUpdated += result.affectedRows;
+                    }
+
+                    if (ordersCompleted === orderUpdates.length) {
+                      resolve({
+                        success: true,
+                        affectedRows: totalUpdated,
+                        ordersUpdated,
+                        failedUpdates,
+                        orderUpdateErrors,
+                        message: `${totalUpdated} items updated. ${ordersUpdated} orders updated. ${failedUpdates.length ? failedUpdates.length + ' item updates failed.' : ''} ${orderUpdateErrors.length ? orderUpdateErrors.length + ' order updates failed.' : ''}`
+                      });
+                    }
+                  });
+                });
+              });
+            });
+          }
+        });
       });
     });
   });
@@ -288,10 +512,10 @@ exports.updateIsPackedStatus = (packedItems) => {
 
 
 
-  exports.getCustomOrderDetailsById = (id) => {
-    return new Promise((resolve, reject) => {
+exports.getCustomOrderDetailsById = (id) => {
+  return new Promise((resolve, reject) => {
 
-      const sql = `SELECT 
+    const sql = `SELECT 
                     osi.id AS id,
                     cv.varietyNameEnglish AS item,
                     osi.quantity AS quantity,
@@ -304,140 +528,140 @@ exports.updateIsPackedStatus = (packedItems) => {
                    WHERE orderId = ?
                    `;
 
-        dash.query(sql, [id], (err, results) => {
-        if (err) {
-          reject(err);
-        } else {
-          resolve(results);
-        }
-      });
-    });
-  };
-
-
-
-
-
-
-
-  exports.updateCustomPackItems = (items) => {
-    return new Promise((resolve, reject) => {
-      if (items.length === 0) {
-        return resolve();
+    dash.query(sql, [id], (err, results) => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(results);
       }
-  
-      // First, update all the items' isPacked status
-      const updates = items.map(item => {
-        return new Promise((res, rej) => {
-          const sql = `
+    });
+  });
+};
+
+
+
+
+
+
+
+exports.updateCustomPackItems = (items) => {
+  return new Promise((resolve, reject) => {
+    if (items.length === 0) {
+      return resolve();
+    }
+
+    // First, update all the items' isPacked status
+    const updates = items.map(item => {
+      return new Promise((res, rej) => {
+        const sql = `
             UPDATE orderselecteditems 
             SET isPacked = ? 
             WHERE id = ?
           `;
-          dash.query(sql, [item.isPacked, item.id], (err, result) => {
-            if (err) {
-              return rej(err);
-            }
-            res({ result, itemId: item.id });
-          });
+        dash.query(sql, [item.isPacked, item.id], (err, result) => {
+          if (err) {
+            return rej(err);
+          }
+          res({ result, itemId: item.id });
         });
       });
-  
-      Promise.all(updates)
-        .then(() => {
-          // Get all item IDs
-          const itemIds = items.map(item => item.id);
-          
-          // Fetch the orderIds for these items
-          const getOrderIdsSql = `
+    });
+
+    Promise.all(updates)
+      .then(() => {
+        // Get all item IDs
+        const itemIds = items.map(item => item.id);
+
+        // Fetch the orderIds for these items
+        const getOrderIdsSql = `
             SELECT id, orderId 
             FROM orderselecteditems 
             WHERE id IN (${itemIds.join(',')})
           `;
-          
-          return new Promise((res, rej) => {
-            dash.query(getOrderIdsSql, [], (err, results) => {
-              if (err) {
-                return rej(err);
-              }
-              res(results);
-            });
+
+        return new Promise((res, rej) => {
+          dash.query(getOrderIdsSql, [], (err, results) => {
+            if (err) {
+              return rej(err);
+            }
+            res(results);
           });
-        })
-        .then(itemsWithOrderIds => {
-          // Extract the unique orderIds
-          const orderIds = [...new Set(itemsWithOrderIds.map(item => item.orderId))];
-          console.log('Order IDs to process:', orderIds);
-          
-          // For each affected order, check the packing status
-          const orderUpdates = orderIds.map(orderId => {
-            return new Promise((res, rej) => {
-              // Query to count all items and packed items for this order
-              const countSql = `
+        });
+      })
+      .then(itemsWithOrderIds => {
+        // Extract the unique orderIds
+        const orderIds = [...new Set(itemsWithOrderIds.map(item => item.orderId))];
+        console.log('Order IDs to process:', orderIds);
+
+        // For each affected order, check the packing status
+        const orderUpdates = orderIds.map(orderId => {
+          return new Promise((res, rej) => {
+            // Query to count all items and packed items for this order
+            const countSql = `
                 SELECT 
                   COUNT(*) as totalItems,
                   SUM(IF(isPacked = 1, 1, 0)) as packedItems
                 FROM orderselecteditems
                 WHERE orderId = ?
               `;
-              
-              dash.query(countSql, [orderId], (err, counts) => {
-                if (err) {
-                  return rej(err);
-                }
-                
-                const totalItems = parseInt(counts[0].totalItems, 10);
-                const packedItems = parseInt(counts[0].packedItems, 10);
-                
-                console.log(`Order ${orderId}: Total items = ${totalItems}, Packed items = ${packedItems}`);
-                
-                // Determine new packageStatus based on counts
-                let packageStatus = 'Pending';
-                
-                if (totalItems > 0) {
-                  if (packedItems > 0) {
-                    // At least one item is packed
-                    if (packedItems === totalItems) {
-                      // All items are packed
-                      packageStatus = 'Completed';
-                      console.log(`Order ${orderId}: Setting status to Completed`);
-                    } else {
-                      // Some but not all items are packed
-                      packageStatus = 'Opened';
-                      console.log(`Order ${orderId}: Setting status to Opened`);
-                    }
+
+            dash.query(countSql, [orderId], (err, counts) => {
+              if (err) {
+                return rej(err);
+              }
+
+              const totalItems = parseInt(counts[0].totalItems, 10);
+              const packedItems = parseInt(counts[0].packedItems, 10);
+
+              console.log(`Order ${orderId}: Total items = ${totalItems}, Packed items = ${packedItems}`);
+
+              // Determine new packageStatus based on counts
+              let packageStatus = 'Pending';
+
+              if (totalItems > 0) {
+                if (packedItems > 0) {
+                  // At least one item is packed
+                  if (packedItems === totalItems) {
+                    // All items are packed
+                    packageStatus = 'Completed';
+                    console.log(`Order ${orderId}: Setting status to Completed`);
                   } else {
-                    console.log(`Order ${orderId}: Setting status to Pending (no packed items)`);
+                    // Some but not all items are packed
+                    packageStatus = 'Opened';
+                    console.log(`Order ${orderId}: Setting status to Opened`);
                   }
                 } else {
-                  console.log(`Order ${orderId}: No items found for this order`);
+                  console.log(`Order ${orderId}: Setting status to Pending (no packed items)`);
                 }
-                
-                // Update the order's packageStatus
-                const updateOrderSql = `
+              } else {
+                console.log(`Order ${orderId}: No items found for this order`);
+              }
+
+              // Update the order's packageStatus
+              const updateOrderSql = `
                   UPDATE orders
                   SET packageStatus = ?
                   WHERE id = ?
                 `;
-                
-                dash.query(updateOrderSql, [packageStatus, orderId], (err, result) => {
-                  if (err) {
-                    console.error(`Failed to update order ${orderId}:`, err);
-                    return rej(err);
-                  }
-                  console.log(`Successfully updated order ${orderId} to ${packageStatus}`);
-                  res(result);
-                });
+
+              dash.query(updateOrderSql, [packageStatus, orderId], (err, result) => {
+                if (err) {
+                  console.error(`Failed to update order ${orderId}:`, err);
+                  return rej(err);
+                }
+                console.log(`Successfully updated order ${orderId} to ${packageStatus}`);
+                res(result);
               });
             });
           });
-          
-          return Promise.all(orderUpdates);
-        })
-        .then(resolve)
-        .catch(reject);
-    });
-  };
+        });
+
+        return Promise.all(orderUpdates);
+      })
+      .then(resolve)
+      .catch(reject);
+  });
+};
 
 
 
@@ -446,10 +670,10 @@ exports.updateIsPackedStatus = (packedItems) => {
 
 
 
-  exports.getPackageOrderDetailsById = (id) => {
-    return new Promise((resolve, reject) => {
+exports.getPackageOrderDetailsById = (id) => {
+  return new Promise((resolve, reject) => {
 
-      const sql = `SELECT 
+    const sql = `SELECT 
                     ai.id AS id,
                     cv.varietyNameEnglish AS item,
                     ai.quantity AS quantity,
@@ -462,20 +686,42 @@ exports.updateIsPackedStatus = (packedItems) => {
                    WHERE orderPackageItemsId = ?
                    `;
 
-        dash.query(sql, [id], (err, results) => {
-        if (err) {
-          reject(err);
-        } else {
-          resolve(results);
-        }
-      });
+    dash.query(sql, [id], (err, results) => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(results);
+      }
     });
-  };
+  });
+};
 
 
 
 
+exports.getOrderPackageId = (id) => {
+  return new Promise((resolve, reject) => {
+    console.log('Querying order for item ID:', id);
 
+    const sql = `SELECT 
+                    o.id AS orderId
+                   FROM additionalitem ai
+                   JOIN orderpackageitems opi ON ai.orderPackageItemsId = opi.id
+                   JOIN orders o ON opi.orderId = o.id
+                   WHERE ai.id = ?
+                   `;
+
+    dash.query(sql, [id], (err, results) => {
+      if (err) {
+        console.error('Error in getOrderPackageId:', err);
+        reject(err);
+      } else {
+        console.log('getOrderPackageId results:', results);
+        resolve(results);
+      }
+    });
+  });
+};
 
 
 
@@ -509,4 +755,75 @@ exports.updatePackItemsAdditional = (items) => {
   });
 };
 
-  
+exports.getAdditionalItemsStatus = (orderId) => {
+  return new Promise((resolve, reject) => {
+    const sql = `
+      SELECT 
+        COUNT(*) as totalItems,
+        SUM(CASE WHEN ai.isPacked = true THEN 1 ELSE 0 END) as packedItems
+      FROM additionalitem ai
+      JOIN orderpackageitems opi ON ai.orderPackageItemsId = opi.id
+      WHERE opi.orderId = ?
+    `;
+
+    dash.query(sql, [orderId], (err, results) => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(results[0] || { totalItems: 0, packedItems: 0 });
+      }
+    });
+  });
+};
+
+// New function to get packItemStatus
+exports.getPackItemStatus = (orderId) => {
+  return new Promise((resolve, reject) => {
+    const sql = `SELECT packItemStatus FROM orders WHERE id = ?`;
+
+    dash.query(sql, [orderId], (err, results) => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(results[0]?.packItemStatus || 'Pending');
+      }
+    });
+  });
+};
+
+// New function to update order statuses
+exports.updateOrderStatuses = (orderId, addItemStatus, packItemStatus) => {
+  return new Promise((resolve, reject) => {
+    // Calculate packageStatus based on the rules provided
+    let packageStatus;
+
+    // Rule logic for packageStatus
+    if (addItemStatus === 'Completed' && packItemStatus === 'Completed') {
+      packageStatus = 'Completed';
+    } else if ((addItemStatus === 'Opened' || addItemStatus === 'Completed') &&
+      (packItemStatus === 'Opened')) {
+      packageStatus = 'Opened';
+    } else if (addItemStatus === 'Opened' && packItemStatus === 'Completed') {
+      packageStatus = 'Opened';
+    } else {
+      packageStatus = 'Pending';
+    }
+
+    const sql = `
+      UPDATE orders 
+      SET addItemStatus = ?, packageStatus = ?
+      WHERE id = ?
+    `;
+
+    dash.query(sql, [addItemStatus, packageStatus, orderId], (err, result) => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(result);
+      }
+    });
+  });
+};
+
+
+
