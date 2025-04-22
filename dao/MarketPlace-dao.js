@@ -137,6 +137,7 @@ exports.getMarketplaceItems = () => {
     FROM marketplaceitems m
     JOIN plant_care.cropvariety cv ON m.varietyId = cv.id
     JOIN plant_care.cropgroup cg ON cv.cropGroupId = cg.id
+    ORDER BY m.displayName
     `;
     marketPlace.query(dataSql, (error, results) => {
       if (error) {
