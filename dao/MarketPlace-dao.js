@@ -132,7 +132,7 @@ exports.getMarketplaceItems = () => {
   return new Promise((resolve, reject) => {
     const dataSql = `
     SELECT m.id, m.displayName, m.discountedPrice, m.discount, m.startValue, m.promo,
-           m.unitType, m.changeby, m.normalPrice, m.category,
+           m.unitType, m.changeby, m.normalPrice, m.category,m.displayType,
            cg.cropNameEnglish, cv.varietyNameEnglish
     FROM marketplaceitems m
     JOIN plant_care.cropvariety cv ON m.varietyId = cv.id
@@ -297,7 +297,7 @@ exports.getAllProductCropCatogoryDAO = () => {
           cropId,
           normalPrice,
           discountedPrice,
-          discount
+          discount,
         } = item;
 
         if (!groupedData[cropNameEnglish]) {
@@ -360,7 +360,7 @@ exports.creatPackageDetailsDAO = async (data, packageId) => {
       packageId,
       parseInt(data.mpItemId),
       data.quantity,
-      'Kg',
+      "Kg",
       data.discountedPrice,
     ];
 
@@ -373,7 +373,6 @@ exports.creatPackageDetailsDAO = async (data, packageId) => {
     });
   });
 };
-
 
 exports.getProductById = async (id) => {
   return new Promise((resolve, reject) => {
