@@ -11,10 +11,20 @@ const path = require("path");
 exports.getAllCropNameDAO = () => {
   return new Promise((resolve, reject) => {
     const sql = `
-          SELECT cg.id AS cropId, cv.id AS varietyId, cg.cropNameEnglish, cv.varietyNameEnglish AS varietyEnglish, cv.image
-          FROM cropvariety cv, cropgroup cg
-          WHERE cg.id = cv.cropGroupId
-      `;
+      SELECT 
+        cg.id AS cropId, 
+        cv.id AS varietyId, 
+        cg.cropNameEnglish, 
+        cv.varietyNameEnglish AS varietyEnglish, 
+        cv.image
+      FROM 
+        cropvariety cv, 
+        cropgroup cg
+      WHERE 
+        cg.id = cv.cropGroupId
+      ORDER BY 
+        cg.cropNameEnglish ASC
+    `;
 
     plantcare.query(sql, (err, results) => {
       if (err) {
@@ -24,8 +34,7 @@ exports.getAllCropNameDAO = () => {
       const groupedData = {};
 
       results.forEach((item) => {
-        const { cropNameEnglish, varietyEnglish, varietyId, cropId, image } =
-          item;
+        const { cropNameEnglish, varietyEnglish, varietyId, cropId, image } = item;
 
         if (!groupedData[cropNameEnglish]) {
           groupedData[cropNameEnglish] = {
@@ -37,16 +46,23 @@ exports.getAllCropNameDAO = () => {
         groupedData[cropNameEnglish].variety.push({
           id: varietyId,
           varietyEnglish: varietyEnglish,
-          image: image, // Store the Base64 image string
+          image: image,
         });
       });
 
-      // Format the final result
-      const formattedResult = Object.keys(groupedData).map((cropName) => ({
-        cropId: groupedData[cropName].cropId,
-        cropNameEnglish: cropName,
-        variety: groupedData[cropName].variety,
-      }));
+      // Format the final result with variety sorting
+      const formattedResult = Object.keys(groupedData).map((cropName) => {
+        // Sort varieties alphabetically by varietyEnglish
+        const sortedVarieties = groupedData[cropName].variety.sort((a, b) =>
+          a.varietyEnglish.localeCompare(b.varietyEnglish)
+        );
+
+        return {
+          cropId: groupedData[cropName].cropId,
+          cropNameEnglish: cropName,
+          variety: sortedVarieties,
+        };
+      });
 
       resolve(formattedResult);
     });
