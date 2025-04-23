@@ -390,7 +390,9 @@ exports.getProductById = async (id) => {
             MPI.unitType,
             MPI.startValue,
             MPI.changeby,
-            MPI.tags
+            MPI.tags,
+            MPI.displaytype,
+            MPI.discount
           FROM marketplaceitems MPI
           JOIN plant_care.cropvariety CV ON MPI.varietyId = CV.id
           JOIN plant_care.cropgroup CG ON CV.cropGroupId = CG.id
@@ -428,8 +430,10 @@ exports.updateMarketProductDao = async (product, id) => {
         startValue = ?, 
         changeby = ?, 
         tags = ?, 
+        displayType = ?,
         category = ?,
-        discount = ?
+        discount = ?,
+        varietyId = ?
         WHERE id = ?
       `;
     const values = [
@@ -441,8 +445,10 @@ exports.updateMarketProductDao = async (product, id) => {
       product.startValue,
       product.changeby,
       product.tags,
+      product.displaytype,
       product.category,
       product.discount,
+      product.varietyId,
       id,
     ];
 
