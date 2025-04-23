@@ -407,6 +407,7 @@ exports.getProductById = async (req, res) => {
     );
 
     const result = await MarketPlaceDao.getProductById(id);
+    console.log(result);
 
     res.json(result);
     console.log("Successfully fetched marketplace items");
