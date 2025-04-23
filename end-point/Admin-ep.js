@@ -200,11 +200,11 @@ exports.getAllUsers = async (req, res) => {
   try {
     console.log(req.query);
 
-    const { page, limit, nic } =
+    const { page, limit, nic, regStatus, district} =
       await ValidateSchema.getAllUsersSchema.validateAsync(req.query);
     const offset = (page - 1) * limit;
 
-    const { total, items } = await adminDao.getAllUsers(limit, offset, nic);
+    const { total, items } = await adminDao.getAllUsers(limit, offset, nic, regStatus, district);
 
     console.log("Successfully fetched users");
     res.json({

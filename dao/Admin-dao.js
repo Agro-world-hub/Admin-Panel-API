@@ -109,28 +109,55 @@ exports.adminCreateUser = (firstName, lastName, phoneNumber, NICnumber) => {
   });
 };
 
-exports.getAllUsers = (limit, offset, searchItem) => {
+exports.getAllUsers = (limit, offset, searchItem, regStatus, district) => {
   return new Promise((resolve, reject) => {
+    let whereConditions = [];
+    let countParams = [];
+    let dataParams = [];
+
+    console.log(regStatus);
+    // Base SQL queries
     let countSql = "SELECT COUNT(*) as total FROM users";
     let dataSql = "SELECT * FROM users";
-    const params = [];
 
-    // Add search condition for NICnumber if provided
+    // Add search condition for NICnumber, firstName, lastName, or phoneNumber if provided
     if (searchItem) {
-      countSql +=
-        " WHERE users.NICnumber LIKE ? OR users.firstName LIKE ? OR users.lastName LIKE ? OR users.phoneNumber LIKE ?";
-      dataSql +=
-        " WHERE users.NICnumber LIKE ? OR users.firstName LIKE ? OR users.lastName LIKE ? OR users.phoneNumber LIKE ?";
+      whereConditions.push("(users.NICnumber LIKE ? OR users.firstName LIKE ? OR users.lastName LIKE ? OR users.phoneNumber LIKE ?)");
       const searchQuery = `%${searchItem}%`;
-      params.push(searchQuery, searchQuery, searchQuery, searchQuery);
+      countParams.push(searchQuery, searchQuery, searchQuery, searchQuery);
+      dataParams.push(searchQuery, searchQuery, searchQuery, searchQuery);
+    }
+
+    // Add registration status condition if provided
+// Add registration status condition if provided
+if (regStatus === "Registered") {
+  console.log('Hit 01');
+  whereConditions.push("LENGTH(users.farmerQr) > 0");
+} else if (regStatus === "Unregistered") {
+  console.log('Hit 01');
+  whereConditions.push("LENGTH(users.farmerQr) = 0 OR users.farmerQr IS NULL");
+}
+    // Add district condition if provided
+    if (district) {
+      whereConditions.push("users.district LIKE ?");
+      const districtQuery = `%${district}%`;
+      countParams.push(districtQuery);
+      dataParams.push(districtQuery);
+    }
+
+    // Combine WHERE conditions if any exist
+    if (whereConditions.length > 0) {
+      const whereClause = " WHERE " + whereConditions.join(" AND ");
+      countSql += whereClause;
+      dataSql += whereClause;
     }
 
     // Add order, limit, and offset clauses
     dataSql += " ORDER BY created_at DESC LIMIT ? OFFSET ?";
-    params.push(limit, offset);
+    dataParams.push(parseInt(limit), parseInt(offset));
 
     // Execute the count query
-    plantcare.query(countSql, params, (countErr, countResults) => {
+    plantcare.query(countSql, countParams, (countErr, countResults) => {
       if (countErr) {
         return reject(countErr);
       }
@@ -138,24 +165,11 @@ exports.getAllUsers = (limit, offset, searchItem) => {
       const total = countResults[0].total;
 
       // Execute the data query
-      plantcare.query(dataSql, params, (dataErr, dataResults) => {
+      plantcare.query(dataSql, dataParams, (dataErr, dataResults) => {
         if (dataErr) {
           return reject(dataErr);
         }
 
-        // Process each user's image
-        // const processedDataResults = dataResults.map((user) => {
-        //   if (user.profileImage) {
-        //     const base64Image = Buffer.from(user.profileImage).toString(
-        //       "base64"
-        //     );
-        //     const mimeType = "image/png"; // Adjust the MIME type if needed
-        //     user.profileImage = `data:${mimeType};base64,${base64Image}`;
-        //   }
-        //   return user;
-        // });
-
-        // Resolve with total count and the processed results
         resolve({
           total: total,
           items: dataResults,
