@@ -100,15 +100,16 @@ exports.getAllCropGroups = async (req, res) => {
   try {
     const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
     console.log(fullUrl);
-    const { page, limit } =
-      await cropCalendarValidations.getAllCropCalendarSchema.validateAsync(
+    const { page, limit, searchText } =
+      await cropCalendarValidations.getAllCropGroupsSchema.validateAsync(
         req.query
       );
     const offset = (page - 1) * limit;
 
     const { total, items } = await cropCalendarDao.getAllCropGroups(
       limit,
-      offset
+      offset,
+      searchText
     );
 
     console.log("Successfully fetched crop groups");
