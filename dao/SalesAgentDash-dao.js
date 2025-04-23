@@ -106,10 +106,13 @@ exports.getAllSalesAgentsDao = (
             SA.empId,
             SA.firstName,
             SA.lastName,
-            (SELECT COUNT(*) FROM orders WHERE salesAgentId = SA.id AND DATE(createdAt) = ?) AS targetComplete
+            SAS.completed AS targetComplete,
+            SAS.target AS target
         FROM 
             salesagent SA
-        WHERE SA.status = 'Approved'
+        JOIN
+            salesagentstars SAS ON SA.id = SAS.salesagentId
+        WHERE SA.status = 'Approved' AND SAS.date = ?
         `;
     const countParams = [];
     const dataParams = [date];
