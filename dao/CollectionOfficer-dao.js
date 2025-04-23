@@ -423,6 +423,7 @@ exports.getAllCollectionOfficers = (page, limit, searchNIC, companyid, role) => 
                     OR coff.phoneNumber02 LIKE ?
                     OR coff.district LIKE ?
                     OR coff.empId LIKE ?
+                    OR cc.centerName LIKE ?
                 )
             `;
       countSql += searchCondition;
@@ -435,9 +436,11 @@ exports.getAllCollectionOfficers = (page, limit, searchNIC, companyid, role) => 
         searchValue,
         searchValue,
         searchValue,
+        searchValue,
         searchValue
       );
       dataParams.push(
+        searchValue,
         searchValue,
         searchValue,
         searchValue,
