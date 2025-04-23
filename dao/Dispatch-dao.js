@@ -169,6 +169,7 @@ exports.getSelectedPackages = (page, limit, packageStatus, date, search) => {
         INNER JOIN orderselecteditems osi ON o.id = osi.orderId
         ${whereClause}
         GROUP BY o.id, o.invNo
+        ORDER BY o.createdAt DESC
         LIMIT ? OFFSET ?
       `;
 
