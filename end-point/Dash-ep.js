@@ -424,7 +424,7 @@ exports.getAllOrders = async (req, res) => {
     //     req.query
     //   );
 
-    const { page, limit, orderStatus, paymentMethod, paymentStatus, deliveryType, searchText } = req.query;
+    const { page, limit, orderStatus, paymentMethod, paymentStatus, deliveryType, searchText, date } = req.query;
 
     // const { page, limit, nic, company } = validatedQuery;
 
@@ -436,7 +436,8 @@ exports.getAllOrders = async (req, res) => {
       paymentMethod,
       paymentStatus,
       deliveryType,
-      searchText
+      searchText,
+      date
 
     );
 

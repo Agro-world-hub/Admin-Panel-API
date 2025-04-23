@@ -67,10 +67,10 @@ exports.getCollectionOfficersByPosition = () => {
     const sql = `
             SELECT 
                 CASE 
-                    WHEN jobRole = 'Collection Center Head' THEN 'CCH'
-                    WHEN jobRole = 'Collection Center Manager' THEN 'CCM'
-                    WHEN jobRole = 'Collection Officer' THEN 'COO'
-                    WHEN jobRole = 'Customer Officer' THEN 'CUO'
+                   WHEN jobRole = 'Collection Center Head' AND companyId = '1' AND status = 'Approved' THEN 'CCH'
+                    WHEN jobRole = 'Collection Center Manager' AND companyId = '1' AND status = 'Approved' THEN 'CCM'
+                    WHEN jobRole = 'Collection Officer' AND companyId = '1' AND status = 'Approved' THEN 'COO'
+                    WHEN jobRole = 'Customer Officer' AND companyId = '1' AND status = 'Approved' THEN 'CUO'
                 END AS job,
                 COUNT(id) AS officerCount
             FROM collectionofficer
@@ -96,7 +96,7 @@ exports.getCollectionOfficersByPosition = () => {
 exports.getNewCollectionOfficers = () => {
   return new Promise((resolve, reject) => {
     const sql = `
-              SELECT COUNT(*) AS count FROM collectionofficer WHERE DATE(createdAt) = CURDATE();
+              SELECT COUNT(*) AS count FROM collectionofficer WHERE DATE(createdAt) = CURDATE() AND companyId = '1' AND status = 'Approved';
 
             `;
     collectionofficer.query(sql, (err, results) => {
@@ -131,7 +131,7 @@ exports.getAllCollectionOfficers = () => {
 exports.getActiveCollectionOfficers = () => {
   return new Promise((resolve, reject) => {
     const sql = `
-      SELECT COUNT(*) AS activeOfficerCount FROM collectionofficer WHERE status = 'Approved';
+      SELECT COUNT(*) AS activeOfficerCount FROM collectionofficer WHERE onlineStatus = 1 AND companyId = '1' AND status = 'Approved';
             `;
     collectionofficer.query(sql, (err, results) => {
       if (err) {

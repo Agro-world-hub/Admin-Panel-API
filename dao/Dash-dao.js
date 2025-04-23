@@ -710,7 +710,8 @@ const getAllOrders = (
   paymentMethod,
   paymentStatus,
   deliveryType,
-  searchText
+  searchText,
+  date
 ) => {
   return new Promise((resolve, reject) => {
     const offset = (page - 1) * limit;
@@ -732,7 +733,6 @@ const getAllOrders = (
               o.paymentStatus,
               o.fullDiscount,
               o.fullTotal,
-              o.timeSlot,
               o.deliveryType,
               o.createdAt,
               c.cusId,
@@ -812,6 +812,12 @@ const getAllOrders = (
       whereConditions.push(`o.deliveryType = ?`);
       countParams.push(deliveryType);
       dataParams.push(deliveryType);
+    }
+
+    if (date) {
+      whereConditions.push(`o.scheduleDate = ?`);
+      countParams.push(date);
+      dataParams.push(date);
     }
 
     // Append WHERE conditions if any exist
