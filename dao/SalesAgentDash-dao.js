@@ -206,10 +206,10 @@ exports.saveTargetDao = (target, userId) => {
 exports.getTotalTargetDao = (date) => {
   return new Promise((resolve, reject) => {
     const sql = `
-        SELECT targetValue FROM target WHERE DATE(createdAt) = ? 
+        SELECT targetValue FROM target 
       `;
 
-    dash.query(sql, [date], (err, results) => {
+    dash.query(sql, (err, results) => {
       if (err) {
         return reject(err); // Reject if an error occurs
       }
