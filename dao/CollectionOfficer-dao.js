@@ -361,7 +361,7 @@ exports.getQrImage = (id) => {
 //   });
 // };
 
-exports.getAllCollectionOfficers = (page, limit, searchNIC, companyid, role) => {
+exports.getAllCollectionOfficers = (page, limit, searchNIC, companyid, role, centerStatus, status) => {
   return new Promise((resolve, reject) => {
     const offset = (page - 1) * limit;
 
@@ -404,6 +404,34 @@ exports.getAllCollectionOfficers = (page, limit, searchNIC, companyid, role) => 
       countParams.push(companyid);
       dataParams.push(companyid);
     }
+
+    if (centerStatus) {
+      // Convert centerStatus to corresponding numeric value
+      let claimStatusValue;
+      if (centerStatus === "Claimed") {
+        claimStatusValue = 1;
+      } else if (centerStatus === "Disclaimed") {
+        claimStatusValue = 0;
+      }
+
+      console.log('this is claimstatus value', claimStatusValue);
+    
+      // Apply filter only if it's a valid value
+      if (claimStatusValue !== undefined) {
+        countSql += " AND coff.claimStatus = ? ";
+        dataSql += " AND coff.claimStatus = ? ";
+        countParams.push(claimStatusValue);
+        dataParams.push(claimStatusValue);
+      }
+    }
+    
+
+    if (status) {
+      countSql += " AND coff.status LIKE ? ";
+      dataSql += " AND coff.status LIKE ? ";
+      countParams.push(status);
+      dataParams.push(status);
+  }
 
     if (role) {
       countSql += " AND coff.jobRole = ?";
@@ -1484,7 +1512,7 @@ exports.updateCenterHeadDetails = (
 exports.getAllCenterNamesDao = (district) => {
   return new Promise((resolve, reject) => {
     const sql = `
-            SELECT id, centerName
+            SELECT id, regCode, centerName
             FROM collectioncenter
         `;
     collectionofficer.query(sql, [district], (err, results) => {
