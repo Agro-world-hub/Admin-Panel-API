@@ -283,6 +283,10 @@ exports.updatePlantCareUserSchema = Joi.object({
     "any.required": "membership name is required",
     "string.empty": "membership name cannot be empty",
   }),
+  language: Joi.string().min(1).max(50).required().messages({
+    "any.required": "language name is required",
+    "string.empty": "language name cannot be empty",
+  }),
   accNumber: Joi.string().min(1).max(50).required().messages({
     "any.required": "account number is required",
     "string.empty": "account number cannot be empty",

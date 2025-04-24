@@ -951,6 +951,7 @@ exports.updatePlantCareUserById = (userData, id) => {
       NICnumber,
       district,
       membership,
+      language,
       profileImageUrl,
       accNumber,
       accHolderName,
@@ -1000,7 +1001,8 @@ exports.updatePlantCareUserById = (userData, id) => {
                   phoneNumber = ?, 
                   NICnumber = ?, 
                   district = ?, 
-                  membership = ?
+                  membership = ?,
+                  language = ?
             `;
             let values = [
               firstName,
@@ -1009,6 +1011,7 @@ exports.updatePlantCareUserById = (userData, id) => {
               NICnumber,
               district,
               membership,
+              language
             ];
 
             if (profileImageUrl) {
