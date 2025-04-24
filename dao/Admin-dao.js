@@ -1200,6 +1200,7 @@ exports.createPlantCareUser = (userData) => {
       NICnumber,
       district,
       membership,
+      language,
       profileImageUrl,
       accNumber,
       accHolderName,
@@ -1238,8 +1239,8 @@ exports.createPlantCareUser = (userData) => {
 
             // Insert user
             connection.query(
-              `INSERT INTO users (firstName, lastName, phoneNumber, NICnumber, district, membership, profileImage)
-               VALUES (?, ?, ?, ?, ?, ?, ?)`,
+              `INSERT INTO users (firstName, lastName, phoneNumber, NICnumber, district, membership,language, profileImage)
+               VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
               [
                 firstName,
                 lastName,
@@ -1247,6 +1248,7 @@ exports.createPlantCareUser = (userData) => {
                 NICnumber,
                 district,
                 membership,
+                language,
                 profileImageUrl,
               ],
               (insertUserErr, insertUserResults) => {

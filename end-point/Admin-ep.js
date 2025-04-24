@@ -1305,6 +1305,7 @@ exports.createPlantCareUser = async (req, res) => {
       NICnumber,
       district,
       membership,
+      language,
       // Add bank details fields
       accNumber,
       accHolderName,
@@ -1332,6 +1333,7 @@ exports.createPlantCareUser = async (req, res) => {
       NICnumber,
       district,
       membership,
+      language,
       profileImageUrl,
       // Include bank details in userData
       accNumber,
