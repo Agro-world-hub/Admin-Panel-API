@@ -370,7 +370,7 @@ exports.getAllCollectionOfficers = (page, limit, searchNIC, companyid, role, cen
             FROM collectionofficer coff
             JOIN company cm ON coff.companyId = cm.id
             LEFT JOIN collectioncenter cc ON coff.centerId = cc.id
-            WHERE coff.jobRole != 'Collection Center Head'
+            WHERE coff.jobRole NOT IN ('Collection Center Head', 'Driver')
         `;
 
     let dataSql = `
@@ -391,7 +391,7 @@ exports.getAllCollectionOfficers = (page, limit, searchNIC, companyid, role, cen
             FROM collectionofficer coff
             JOIN company cm ON coff.companyId = cm.id
             LEFT JOIN collectioncenter cc ON coff.centerId = cc.id
-            WHERE coff.jobRole != 'Collection Center Head' AND coff.jobRole != 'Driver'
+            WHERE coff.jobRole NOT IN ('Collection Center Head', 'Driver')
         `;
 
     const countParams = [];
