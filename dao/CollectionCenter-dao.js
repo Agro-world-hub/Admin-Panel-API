@@ -325,7 +325,7 @@ exports.GetAllCenterComplainDAO = (page, limit, status, category, comCategory, f
       LEFT JOIN  company c ON co.companyId = c.id
       LEFT JOIN  collectioncenter coc ON co.centerId = coc.id
       LEFT JOIN agro_world_admin.adminroles ar ON cc.roleId = ar.id
-      WHERE 1 = 1
+      WHERE complainAssign = 'Admin'
     `;
 
     // SQL to fetch paginated data
@@ -340,7 +340,7 @@ exports.GetAllCenterComplainDAO = (page, limit, status, category, comCategory, f
         ar.role,
         oc.createdAt,
         oc.complain,
-        oc.complainAssign AS status,
+        oc.AdminStatus AS status,
         oc.reply,
         coc.regCode
       FROM officercomplains oc
@@ -349,7 +349,7 @@ exports.GetAllCenterComplainDAO = (page, limit, status, category, comCategory, f
       LEFT JOIN  company c ON co.companyId = c.id
       LEFT JOIN  collectioncenter coc ON co.centerId = coc.id
       LEFT JOIN agro_world_admin.adminroles ar ON cc.roleId = ar.id
-      WHERE 1 = 1
+      WHERE complainAssign = 'Admin'
     `;
 
     // Add filter for status
@@ -739,13 +739,13 @@ exports.sendCenterComplainReply = (complainId, reply) => {
 
     const sql = `
       UPDATE officercomplains 
-      SET reply = ?, status = ?, complainAssign = ? 
+      SET reply = ?, COOStatus = ?, CCMStatus = ? , CCHStatus = ? , AdminStatus = ?
       WHERE id = ?
     `;
 
-    const status = "Opened";
+    const status = "Closed";
     const adminStatus = "Closed";
-    const values = [reply, status, adminStatus, complainId];
+    const values = [reply, status, status,status, status, complainId];
 
     collectionofficer.query(sql, values, (err, results) => {
       if (err) {
