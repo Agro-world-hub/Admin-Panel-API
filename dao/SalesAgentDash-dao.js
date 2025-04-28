@@ -186,6 +186,40 @@ exports.saveTargetDao = (target, userId) => {
   });
 };
 
+
+exports.getAllTargets = () => {
+  return new Promise((resolve, reject) => {
+    const sql = `SELECT * FROM target`;
+    dash.query(sql, (err, results) => {
+      if (err) {
+        return reject(err);
+      }
+      resolve(results);
+    });
+  });
+};
+
+exports.restoreTargets = (targets) => {
+  return new Promise((resolve, reject) => {
+    if (targets.length === 0) return resolve(); // Nothing to restore
+
+    const sql = `
+      INSERT INTO target (targetValue, createdBy, createdAt)
+      VALUES ?
+    `;
+
+    // Map data into the format MySQL expects
+    const values = targets.map(target => [target.targetValue, target.createdBy, target.createdAt]);
+
+    dash.query(sql, [values], (err, results) => {
+      if (err) {
+        return reject(err);
+      }
+      resolve(results);
+    });
+  });
+};
+
 //not usage
 // exports.getDailyTarget = () => {
 //     return new Promise((resolve, reject) => {
@@ -226,11 +260,10 @@ exports.getTotalTargetDao = (date) => {
   });
 };
 
-exports.removeTargetDao = (target, userId) => {
+exports.removeTargetDao = () => {
   return new Promise((resolve, reject) => {
     const sql = `
-        DELETE FROM target 
-        WHERE DATE(createdAt) = CURDATE()
+        DELETE FROM target
     `;
 
     dash.query(sql, (err, results) => {
