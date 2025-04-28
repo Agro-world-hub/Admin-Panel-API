@@ -437,13 +437,15 @@ exports.creatPackageDAO = async (data, profileImageUrl) => {
 exports.creatPackageDetailsDAO = async (data, packageId) => {
   return new Promise((resolve, reject) => {
     const sql =
-      "INSERT INTO packagedetails (packageId, mpItemId, quantity, quantityType, price) VALUES (?, ?, ?, ?, ?)";
+      "INSERT INTO packagedetails (packageId, mpItemId, quantity, quantityType, price, discount, discountedPrice) VALUES (?, ?, ?, ?, ?, ?, ?)";
     const values = [
       packageId,
       parseInt(data.mpItemId),
       data.quantity,
       "Kg",
-      data.discountedPrice,
+      data.normalPrice * data.quantity,
+      data.discount * data.quantity,
+      (data.normalPrice * data.quantity) - (data.discount * data.quantity)
     ];
 
     marketPlace.query(sql, values, (err, results) => {
@@ -768,14 +770,14 @@ exports.getMarketplacePackageByIdWithDetailsDAO = (packageId) => {
         mp.description, 
         mp.status, 
         mp.total, 
-        mp.discount, 
-        mp.subtotal, 
         mp.created_at,
         pd.packageId,
         pd.mpItemId,
         pd.quantity,
         pd.quantityType,
         pd.price,
+        pd.discount AS detailDiscount,
+        pd.discountedPrice,
         pd.createdAt AS detailCreatedAt,
         mi.displayName AS itemDisplayName,
         mi.normalPrice AS itemNormalPrice   -- SQL-style comment (or remove entirely)
@@ -817,6 +819,8 @@ exports.getMarketplacePackageByIdWithDetailsDAO = (packageId) => {
             quantity: row.quantity,
             quantityType: row.quantityType,
             price: row.price,
+            discount: row.detailDiscount,
+            discountedPrice: row.discountedPrice,
             createdAt: row.detailCreatedAt,
           });
         }
