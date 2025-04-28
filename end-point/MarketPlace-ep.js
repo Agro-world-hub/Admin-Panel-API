@@ -74,7 +74,6 @@ exports.createMarketProduct = async (req, res) => {
     console.log("Request URL:", fullUrl);
     console.log(req.body);
 
-    // Prepare the product object based on the DAO expectations
     const product = {
       cropName: req.body.displayName || req.body.cropName,
       normalPrice: req.body.normalPrice,
@@ -90,6 +89,16 @@ exports.createMarketProduct = async (req, res) => {
       displaytype: req.body.displaytype,
     };
 
+    // First check if the product already exists
+    const exists = await MarketPlaceDao.checkMarketProductExistsDao(product.varietyId, product.cropName);
+    if (exists) {
+      return res.status(201).json({
+        message: "A product with this variety ID and display name already exists",
+        status: false,
+      });
+    }
+
+    // If not exists, create
     const result = await MarketPlaceDao.createMarketProductDao(product);
     console.log(result);
 
@@ -109,7 +118,6 @@ exports.createMarketProduct = async (req, res) => {
     });
   } catch (err) {
     if (err.isJoi) {
-      // Validation error
       return res
         .status(400)
         .json({ error: err.details[0].message, status: false });
@@ -122,6 +130,7 @@ exports.createMarketProduct = async (req, res) => {
     });
   }
 };
+
 
 exports.getMarketplaceItems = async (req, res) => {
   try {

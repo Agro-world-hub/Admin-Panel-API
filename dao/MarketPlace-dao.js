@@ -97,6 +97,22 @@ exports.getAllCropNameDAO = () => {
 //     });
 //   });
 // };
+exports.checkMarketProductExistsDao = async (varietyId, displayName) => {
+  return new Promise((resolve, reject) => {
+    const sql =
+      "SELECT * FROM marketplaceitems WHERE varietyId = ? OR displayName = ?";
+    const values = [varietyId, displayName];
+
+    marketPlace.query(sql, values, (err, results) => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(results.length > 0); // true if exists
+      }
+    });
+  });
+};
+
 
 exports.createMarketProductDao = async (product) => {
   return new Promise((resolve, reject) => {
