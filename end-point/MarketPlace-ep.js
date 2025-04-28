@@ -787,7 +787,7 @@ exports.updatePackage = async (req, res) => {
 
       // Then recreate all items from the request
       for (const item of package.Items) {
-        await MarketPlaceDao.creatPackageDetailsDAO(
+        await MarketPlaceDao.creatPackageDetailsDAOEdit(
           item,
           package.packageId || req.params.id
         );

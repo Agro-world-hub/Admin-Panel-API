@@ -458,6 +458,31 @@ exports.creatPackageDetailsDAO = async (data, packageId) => {
   });
 };
 
+
+exports.creatPackageDetailsDAOEdit = async (data, packageId) => {
+  return new Promise((resolve, reject) => {
+    const sql =
+      "INSERT INTO packagedetails (packageId, mpItemId, quantity, quantityType, price, discount, discountedPrice) VALUES (?, ?, ?, ?, ?, ?, ?)";
+    const values = [
+      packageId,
+      parseInt(data.mpItemId),
+      data.quantity,
+      "Kg",
+      data.discountedPrice + data.detailDiscount,
+      data.detailDiscount,
+      data.discountedPrice
+    ];
+
+    marketPlace.query(sql, values, (err, results) => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(results.insertId);
+      }
+    });
+  });
+};
+
 exports.getProductById = async (id) => {
   return new Promise((resolve, reject) => {
     const sql = `
