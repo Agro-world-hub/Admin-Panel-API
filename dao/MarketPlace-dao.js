@@ -693,6 +693,8 @@ exports.getMarketplacePackageByIdDAO = (packageId) => {
         pd.quantityType,
         pd.quantity,
         pd.price AS detailPrice,
+        pd.discount AS detailDiscount,
+        pd.discountedPrice AS detailDiscountedPrice,
         mi.varietyId,
         mi.displayName AS itemDisplayName,
         mi.category,
@@ -741,6 +743,8 @@ exports.getMarketplacePackageByIdDAO = (packageId) => {
             quantityType: row.quantityType,
             quantity: row.quantity, // Add this line to include quantity
             price: row.detailPrice,
+            detailDiscount: row.detailDiscount,
+            detailDiscountedPrice: row.detailDiscountedPrice,
             itemDetails: {
               varietyId: row.varietyId,
               displayName: row.itemDisplayName,

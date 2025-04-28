@@ -634,6 +634,8 @@ exports.getMarketplacePackageById = async (req, res) => {
             quantityType: detail.quantityType,
             quantity: detail.quantity,
             price: detail.price,
+            detailDiscount: detail.detailDiscount,
+            detailDiscountedPrice: detail.detailDiscountedPrice,
             item: {
               varietyId: detail.itemDetails.varietyId,
               displayName: detail.itemDetails.displayName,
