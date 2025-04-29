@@ -362,6 +362,7 @@ exports.getAllProductCropCatogoryDAO = () => {
           SELECT cg.id AS cropId, mpi.normalPrice, mpi.discountedPrice,mpi.discount, mpi.id AS varietyId, cg.cropNameEnglish, mpi.displayName
           FROM marketplaceitems mpi, plant_care.cropvariety cv, plant_care.cropgroup cg
           WHERE mpi.varietyId = cv.id AND cv.cropGroupId = cg.id
+          ORDER BY cg.cropNameEnglish, mpi.displayName
       `;
 
     marketPlace.query(sql, (err, results) => {
