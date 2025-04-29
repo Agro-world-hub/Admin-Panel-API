@@ -478,9 +478,9 @@ exports.CheckRegCodeExistDAO = (regCode) => {
   });
 };
 
-exports.getAllCenterPage = (limit, offset, searchItem) => {
+exports.getAllCenterPage = (limit, offset, district, province, searchItem) => {
   return new Promise((resolve, reject) => {
-    let countSql = "SELECT COUNT(*) as total FROM collectioncenter";
+    let countSql = "SELECT COUNT(*) as total FROM collectioncenter C";
     let sql = `
       SELECT 
           C.id,
@@ -507,19 +507,29 @@ exports.getAllCenterPage = (limit, offset, searchItem) => {
       FROM collectioncenter C
     `;
 
+    let whereClause = " WHERE 1=1";
     const searchParams = [];
-    const dataParams = [];
 
     if (searchItem) {
-      console.log(searchItem);
       const searchQuery = `%${searchItem}%`;
-      countSql += " WHERE regCode LIKE ? OR centerName LIKE ?";
-      sql += " WHERE regCode LIKE ? OR centerName LIKE ?";
+      whereClause += " AND (C.regCode LIKE ? OR C.centerName LIKE ?)";
       searchParams.push(searchQuery, searchQuery);
     }
 
-    sql += " ORDER BY C.regCode ASC LIMIT ? OFFSET ?";
-    dataParams.push(...searchParams, limit, offset);
+    if (district) {
+      whereClause += " AND C.district = ?";
+      searchParams.push(district);
+    }
+
+    if (province) {
+      whereClause += " AND C.province = ?";
+      searchParams.push(province);
+    }
+
+    // Add where clause to both count and main SQL
+    countSql += whereClause;
+    sql += whereClause + " ORDER BY C.regCode ASC LIMIT ? OFFSET ?";
+    const dataParams = [...searchParams, limit, offset];
 
     collectionofficer.query(countSql, searchParams, (countErr, countResults) => {
       if (countErr) {
@@ -551,6 +561,8 @@ exports.getAllCenterPage = (limit, offset, searchItem) => {
     });
   });
 };
+
+
 
 
 // exports.getCenterByIdDAO = (id) => {
@@ -1491,7 +1503,7 @@ exports.GetAllCompanyForOfficerComplain= () => {
 };
 
 
-exports.getAllCenterPageAW = (limit, offset, searchItem, companyId) => {
+exports.getAllCenterPageAW = (limit, offset, district, province, searchItem, companyId) => {
   return new Promise((resolve, reject) => {
     let countSql = "SELECT COUNT(*) as total FROM collectioncenter C";
     let sql = `
@@ -1536,12 +1548,49 @@ exports.getAllCenterPageAW = (limit, offset, searchItem, companyId) => {
         sql += " AND (C.regCode LIKE ? OR C.centerName LIKE ?)";
         searchParams.push(searchQuery, searchQuery);
       }
-    } else if (searchItem) {
-      // Only searchItem, no companyId
-      const searchQuery = `%${searchItem}%`;
-      countSql += " WHERE C.regCode LIKE ? OR C.centerName LIKE ?";
-      sql += " WHERE C.regCode LIKE ? OR C.centerName LIKE ?";
-      searchParams.push(searchQuery, searchQuery);
+
+      if (district) {
+        countSql += " AND C.district LIKE ? ";
+        sql += " AND C.district LIKE ? ";
+        // countParams.push(district);
+        searchParams.push(district);
+      }
+
+      if (province) {
+        countSql += " AND C.province LIKE ? ";
+        sql += " AND C.province LIKE ? ";
+        // countParams.push(district);
+        searchParams.push(province);
+      }
+    } else {
+
+      let whereClause = " WHERE 1=1";
+
+      if (searchItem) {
+        // Only searchItem, no companyId
+        const searchQuery = `%${searchItem}%`;
+        whereClause += " AND C.regCode LIKE ? OR C.centerName LIKE ?";
+        countSql += whereClause;
+        sql += whereClause;
+        searchParams.push(searchQuery, searchQuery);
+      }
+
+      if (district) {
+        whereClause += " AND C.district LIKE ? ";
+        countSql += whereClause;
+        sql += whereClause;
+        // countParams.push(district);
+        searchParams.push(district);
+      }
+
+      if (province) {
+        whereClause += " AND C.province LIKE ? ";
+        countSql += whereClause;
+        sql += whereClause;
+        // countParams.push(district);
+        searchParams.push(province);
+      }
+
     }
 
     sql += " GROUP BY C.id ORDER BY C.regCode ASC LIMIT ? OFFSET ?";

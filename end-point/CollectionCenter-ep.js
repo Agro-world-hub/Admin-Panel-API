@@ -324,8 +324,10 @@ exports.createCollectionCenter = async (req, res) => {
 };
 
 exports.getAllCollectionCenterPage = async (req, res) => {
+  const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
+  console.log(fullUrl);
   try {
-    const { page, limit, searchItem } =
+    const { page, limit, district, province, searchItem } =
       await ValidateSchema.getAllUsersSchema.validateAsync(req.query);
 
     const offset = (page - 1) * limit;
@@ -333,6 +335,8 @@ exports.getAllCollectionCenterPage = async (req, res) => {
     const { total, items } = await CollectionCenterDao.getAllCenterPage(
       limit,
       offset,
+      district,
+      province,
       searchItem
     );
 
@@ -1113,8 +1117,11 @@ exports.GetAllCompanyForOfficerComplain = async (req, res) => {
 };
 
 exports.getAllCollectionCenterPageAW = async (req, res) => {
+
+  const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
+  console.log("Request URL:", fullUrl);
   try {
-    const { page, limit, searchItem, companyId } =
+    const { page, limit, companyId, district, province, searchItem } =
       await ValidateSchema.getAWCentersSchema.validateAsync(req.query);
 
     const offset = (page - 1) * limit;
@@ -1122,6 +1129,8 @@ exports.getAllCollectionCenterPageAW = async (req, res) => {
     const { total, items } = await CollectionCenterDao.getAllCenterPageAW(
       limit,
       offset,
+      district,
+      province,
       searchItem,
       companyId
     );
