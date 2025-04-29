@@ -510,7 +510,7 @@ exports.updateCropVariety = (id, updates) => {
 
 
 
-exports.getAllCropCalendars = (limit, offset, searchText) => {
+exports.getAllCropCalendars = (limit, offset, searchText, category) => {
   return new Promise((resolve, reject) => {
     // 🔹 Ensure JOINs are included in COUNT query
     let countSql = `
@@ -554,6 +554,19 @@ exports.getAllCropCalendars = (limit, offset, searchText) => {
       const searchValue = `%${searchText}%`;
       countParams.push(searchValue, searchValue, searchValue, searchValue, searchValue, searchValue);
       dataParams.push(searchValue, searchValue, searchValue, searchValue, searchValue, searchValue);
+    }
+
+    if (category) {
+      const searchCondition = `
+          WHERE (
+              cropgroup.category = ?
+          )
+      `;
+      countSql += searchCondition;  // 🔹 Add WHERE condition to COUNT query
+      dataSql += searchCondition;
+      const crop = `%${category}%`;
+      countParams.push(crop);
+      dataParams.push(crop);
     }
 
     // 🔹 Ensure limit & offset are integers

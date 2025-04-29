@@ -3,7 +3,8 @@ const Joi = require('joi');
 exports.getAllCropCalendarSchema = Joi.object({
     page: Joi.number().integer().min(1).default(1),
     limit: Joi.number().integer().min(1).max(100).default(10),
-    searchText: Joi.string().optional()
+    searchText: Joi.string().optional(),
+    category: Joi.string().optional(),
 });
 
 
