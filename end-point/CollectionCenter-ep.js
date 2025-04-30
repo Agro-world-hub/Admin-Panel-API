@@ -171,6 +171,7 @@ exports.getAllCenterComplains = async (req, res) => {
       comCategory,
       filterCompany,
       searchText,
+      rpstatus
     } = req.query;
 
     const { results, total } =
@@ -181,7 +182,9 @@ exports.getAllCenterComplains = async (req, res) => {
         category,
         comCategory,
         filterCompany,
-        searchText
+        searchText,
+        rpstatus
+
       );
 
     console.log("Successfully retrieved all collection center");

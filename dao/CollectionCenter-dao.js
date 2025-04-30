@@ -322,7 +322,7 @@ exports.GetAllComplainDAO = (page, limit, status, category, comCategory, searchT
 
 
 
-exports.GetAllCenterComplainDAO = (page, limit, status, category, comCategory, filterCompany, searchText) => {
+exports.GetAllCenterComplainDAO = (page, limit, status, category, comCategory, filterCompany, searchText, rpstatus) => {
   return new Promise((resolve, reject) => {
     const Sqlparams = [];
     const Counterparams = [];
@@ -405,6 +405,17 @@ exports.GetAllCenterComplainDAO = (page, limit, status, category, comCategory, f
       const searchQuery = `%${searchText}%`;
       Sqlparams.push(searchQuery, searchQuery);
       Counterparams.push(searchQuery, searchQuery);
+    }
+
+
+    if (rpstatus) {
+      if (rpstatus === "Yes") {
+        countSql += " AND oc.reply IS NOT NULL ";
+        sql += " AND oc.reply IS NOT NULL ";
+      } else {
+        countSql += " AND oc.reply IS NULL ";
+        sql += " AND oc.reply IS NULL ";
+      }
     }
 
     // Add pagination
