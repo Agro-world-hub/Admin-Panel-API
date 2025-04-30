@@ -207,7 +207,7 @@ exports.deleteCollectionCenterDAo = async (id) => {
 //   });
 // };
 
-exports.GetAllComplainDAO = (page, limit, status, category, comCategory, searchText) => {
+exports.GetAllComplainDAO = (page, limit, status, category, comCategory, searchText, rpstatus) => {
   return new Promise((resolve, reject) => {
     const Sqlparams = [];
     const Counterparams = [];
@@ -231,6 +231,7 @@ exports.GetAllComplainDAO = (page, limit, status, category, comCategory, searchT
         u.NICnumber AS NIC,
         u.firstName AS farmerName,
         u.lastName AS lastName,
+        u.language AS language,
         cc.categoryEnglish AS complainCategory,
         ar.role,
         fc.createdAt,
@@ -278,6 +279,17 @@ exports.GetAllComplainDAO = (page, limit, status, category, comCategory, searchT
       Sqlparams.push(searchQuery, searchQuery, searchQuery , searchQuery);
       Counterparams.push(searchQuery, searchQuery, searchQuery, searchQuery);
     }
+
+    if (rpstatus) {
+      if (rpstatus === "Yes") {
+        countSql += " AND fc.reply IS NOT NULL ";
+        sql += " AND fc.reply IS NOT NULL ";
+      } else {
+        countSql += " AND fc.reply IS NULL ";
+        sql += " AND fc.reply IS NULL ";
+      }
+    }
+    
 
     // Add pagination
     sql += " ORDER BY fc.createdAt DESC LIMIT ? OFFSET ?";

@@ -133,7 +133,7 @@ exports.addNewCollectionCenter = async (req, res) => {
 exports.getAllComplains = async (req, res) => {
   try {
     console.log(req.query);
-    const { page, limit, status, category, comCategory, searchText } =
+    const { page, limit, status, category, comCategory, searchText , rpstatus} =
       req.query;
 
     const { results, total } = await CollectionCenterDao.GetAllComplainDAO(
@@ -142,7 +142,8 @@ exports.getAllComplains = async (req, res) => {
       status,
       category,
       comCategory,
-      searchText
+      searchText,
+      rpstatus
     );
 
     console.log("Successfully retrieved all collection center");

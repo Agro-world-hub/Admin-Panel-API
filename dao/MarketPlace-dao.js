@@ -361,7 +361,7 @@ exports.getAllProductCropCatogoryDAO = () => {
     const sql = `
           SELECT cg.id AS cropId, mpi.normalPrice, mpi.discountedPrice,mpi.discount, mpi.id AS varietyId, cg.cropNameEnglish, mpi.displayName
           FROM marketplaceitems mpi, plant_care.cropvariety cv, plant_care.cropgroup cg
-          WHERE mpi.varietyId = cv.id AND cv.cropGroupId = cg.id
+          WHERE mpi.varietyId = cv.id AND cv.cropGroupId = cg.id AND mpi.category = 'Retail'
           ORDER BY cg.cropNameEnglish, mpi.displayName
       `;
 
