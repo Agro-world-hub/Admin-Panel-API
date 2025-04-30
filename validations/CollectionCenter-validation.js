@@ -16,6 +16,8 @@ exports.createCollectionCenterValidation = Joi.object({
 exports.getAllUsersSchema = Joi.object({
     page: Joi.number().integer().min(1).default(1),
     limit: Joi.number().integer().min(1).max(100).default(10),
+    district: Joi.string().allow(''),
+    province: Joi.string().allow(''),
     searchItem: Joi.string().allow('')
 });
 
@@ -35,6 +37,8 @@ exports.deleteCompanyHeadSchema = Joi.object({
 exports.getAWCentersSchema = Joi.object({
     page: Joi.number().integer().min(1).default(1),
     limit: Joi.number().integer().min(1).max(100).default(10),
-    searchItem: Joi.string().allow(''),
     companyId: Joi.number().integer().min(1).default(1),
+    district: Joi.string().allow(''),
+    province: Joi.string().allow(''),
+    searchItem: Joi.string().allow(''),
 });

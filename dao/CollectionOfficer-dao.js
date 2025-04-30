@@ -835,6 +835,21 @@ exports.SendGeneratedPasswordDao = async (
       },
     });
 
+    // const transporter = nodemailer.createTransport({
+    //   host: "smtp.gmail.com",
+    //   port: 465, // SSL
+    //   secure: true, // true for 465, false for 587
+    //   auth: {
+    //     user: process.env.EMAIL_USER,
+    //     pass: process.env.EMAIL_PASS,
+    //   },
+    //   tls: {
+    //     rejectUnauthorized: false, // <-- This allows self-signed certificates
+    //     family: 4, // optional if you want to force IPv4
+    //   },
+    // });
+    
+
     const mailOptions = {
       from: process.env.EMAIL_USER,
       to: email,
