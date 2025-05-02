@@ -81,6 +81,19 @@ exports.getSystemApplicationDao = () => {
   });
 };
 
+exports.CheckCategoryEnglishExists = (categoryEnglish) => {
+  return new Promise((resolve, reject) => {
+    const sql = `SELECT id FROM complaincategory WHERE categoryEnglish = ? LIMIT 1`;
+    admin.query(sql, [categoryEnglish], (err, results) => {
+      if (err) {
+        return reject(err);
+      }
+      resolve(results.length > 0);
+    });
+  });
+};
+
+
 
 exports.AddNewComplainCategoryDao = (data) => {
   return new Promise((resolve, reject) => {

@@ -961,6 +961,69 @@ const GetAllSalesAgentComplainDAO = (
   });
 };
 
+
+
+
+const getComplainById = (id) => {
+  return new Promise((resolve, reject) => {
+    const sql = ` 
+    SELECT dc.id, dc.refNo, dc.createdAt, dc.language, dc.complain,dc.complainCategory,dc.reply, u.firstName AS firstName, u.lastName AS lastName,u.phoneCode1,  u.phoneNumber1, cc.categoryEnglish AS complainCategory
+    FROM dashcomplain dc
+    LEFT JOIN dash.salesagent u ON dc.saId = u.id
+    LEFT JOIN agro_world_admin.complaincategory cc ON dc.complainCategory = cc.id
+    WHERE dc.id = ? 
+    `;
+    dash.query(sql, [id], (err, results) => {
+      if (err) {
+        return reject(err);
+      }
+      resolve(results);
+    });
+  });
+};
+
+
+const sendComplainReply = (complainId, reply) => {
+  return new Promise((resolve, reject) => {
+    // Input validation
+    if (!complainId) {
+      return reject(new Error("Complain ID is required"));
+    }
+
+    if (reply === undefined || reply === null || reply.trim() === "") {
+      return reject(new Error("Reply cannot be empty"));
+    }
+
+    const sql = `
+      UPDATE dashcomplain 
+      SET reply = ?, status = ?, adminStatus = ? 
+      WHERE id = ?
+    `;
+
+    const status = "Opened";
+    const adminStatus = "Closed";
+    const values = [reply, status, adminStatus, complainId];
+
+    dash.query(sql, values, (err, results) => {
+      if (err) {
+        console.error("Database error details:", err);
+        return reject(err);
+      }
+
+      if (results.affectedRows === 0) {
+        console.warn(`No record found with id: ${complainId}`);
+        return reject(new Error(`No record found with id: ${complainId}`));
+      }
+
+      console.log("Update successful:", results);
+      resolve({
+        message: "Reply sent successfully",
+        affectedRows: results.affectedRows,
+      });
+    });
+  });
+};
+
 module.exports = {
   GetAllSalesAgentComplainDAO,
   getAllSalesCustomers,
@@ -976,4 +1039,6 @@ module.exports = {
   UpdateSalesAgentStatusAndPasswordDao,
   getSalesAgentEmailDao,
   getAllOrders,
+  getComplainById,
+  sendComplainReply
 };

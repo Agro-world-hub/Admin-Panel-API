@@ -175,26 +175,36 @@ exports.getAdminComplaintsCategory = async (req, res) => {
 exports.AddNewComplaintCategory = async (req, res) => {
   const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
   console.log(fullUrl);
+
   try {
     const complainCategory =
       await ComplainCategoryValidate.AddNewComplainCategorySchema.validateAsync(
         req.body
       );
 
-    const result = await ComplainCategoryDAO.AddNewComplainCategoryDao(
-      complainCategory
-    );
-    console.log(result);
-    if (result.affectedRows === 0) {
-      return res.json({ status: false });
+    // Check if the category already exists
+    const exists = await ComplainCategoryDAO.CheckCategoryEnglishExists(complainCategory.categoryEnglish);
+    if (exists) {
+      return res.status(409).json({
+        status: false,
+        message: "Category already added",
+      });
     }
 
-    res.status(200).json({ status: true });
+    const result = await ComplainCategoryDAO.AddNewComplainCategoryDao(complainCategory);
+    console.log(result);
+
+    if (result.affectedRows === 0) {
+      return res.status(500).json({ status: false, message: "Insert failed" });
+    }
+
+    res.status(200).json({ status: true, message: "Category added successfully" });
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: "Internal server error" });
   }
 };
+
 
 exports.getCategoriesDetailsById = async (req, res) => {
   const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
