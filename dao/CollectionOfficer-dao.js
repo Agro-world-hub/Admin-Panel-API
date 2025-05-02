@@ -825,7 +825,7 @@ exports.SendGeneratedPasswordDao = async (
     const transporter = nodemailer.createTransport({
       host: "smtp.gmail.com",
       port: 465, // or 587 for TLS
-      secure: true,
+      secure: false,
       auth: {
         user: process.env.EMAIL_USER,
         pass: process.env.EMAIL_PASS,
