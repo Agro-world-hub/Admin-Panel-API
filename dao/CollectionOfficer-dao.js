@@ -743,7 +743,7 @@ exports.SendGeneratedPasswordDao = async (
     doc.on("data", pdfBuffer.push.bind(pdfBuffer));
     doc.on("end", () => {});
 
-    const watermarkPath = "./assets/bg.png";
+    const watermarkPath = "../assets/bg.png";
     doc.opacity(0.2).image(watermarkPath, 100, 300, { width: 400 }).opacity(1);
 
     doc
