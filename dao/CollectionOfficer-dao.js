@@ -743,8 +743,20 @@ exports.SendGeneratedPasswordDao = async (
     doc.on("data", pdfBuffer.push.bind(pdfBuffer));
     doc.on("end", () => {});
 
-    const watermarkPath = "../assets/bg.png";
-    doc.opacity(0.2).image(watermarkPath, 100, 300, { width: 400 }).opacity(1);
+    let watermarkPath;
+
+    try {
+      watermarkPath = path.join(__dirname, 'assets', 'bg.png');
+      // Verify the file exists
+      await fs.promises.access(watermarkPath);
+    } catch (err) {
+      console.warn('Watermark image not found, proceeding without it');
+      watermarkPath = null;
+    }
+
+    if (watermarkPath) {
+      doc.opacity(0.2).image(watermarkPath, 100, 300, { width: 400 }).opacity(1);
+    }
 
     doc
       .fontSize(20)
