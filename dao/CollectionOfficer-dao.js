@@ -10,6 +10,7 @@ const PDFDocument = require("pdfkit");
 const fs = require("fs");
 const uploadFileToS3 = require("../middlewares/s3upload");
 const { resolve } = require("path");
+const path = require("path");
 
 exports.getCollectionOfficerDistrictReports = (district) => {
   return new Promise((resolve, reject) => {
@@ -743,20 +744,8 @@ exports.SendGeneratedPasswordDao = async (
     doc.on("data", pdfBuffer.push.bind(pdfBuffer));
     doc.on("end", () => {});
 
-    let watermarkPath;
-
-    try {
-      watermarkPath = path.join(__dirname, 'assets', 'bg.png');
-      // Verify the file exists
-      await fs.promises.access(watermarkPath);
-    } catch (err) {
-      console.warn('Watermark image not found, proceeding without it');
-      watermarkPath = null;
-    }
-
-    if (watermarkPath) {
-      doc.opacity(0.2).image(watermarkPath, 100, 300, { width: 400 }).opacity(1);
-    }
+    const watermarkPath = path.resolve(__dirname, "../assets/bg.png");
+    doc.opacity(0.2).image(watermarkPath, 100, 300, { width: 400 }).opacity(1);
 
     doc
       .fontSize(20)
@@ -837,7 +826,7 @@ exports.SendGeneratedPasswordDao = async (
     const transporter = nodemailer.createTransport({
       host: "smtp.gmail.com",
       port: 465, // or 587 for TLS
-      secure: false,
+      secure: true,
       auth: {
         user: process.env.EMAIL_USER,
         pass: process.env.EMAIL_PASS,
