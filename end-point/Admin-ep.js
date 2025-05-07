@@ -13,16 +13,37 @@ const bcrypt = require("bcryptjs");
 const { v4: uuidv4 } = require("uuid");
 const uploadFileToS3 = require("../middlewares/s3upload");
 const deleteFromS3 = require("../middlewares/s3delete");
+const SECRET_KEY = "agroworldadmin";
+const CryptoJS = require("crypto-js");
+
+function encryptResponse(data, secretKey) {
+  const encrypted = CryptoJS.AES.encrypt(JSON.stringify(data), secretKey).toString();
+  return { data: encrypted };
+}
 
 exports.loginAdmin = async (req, res) => {
   const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
   console.log(fullUrl);
 
   try {
-    // Validate request body
-    await ValidateSchema.loginAdminSchema.validateAsync(req.body);
 
-    const { email, password } = req.body;
+    const encrypted = req.body.data;
+    if (!encrypted) {
+      return res.status(400).json({ error: "Missing encrypted data" });
+    }
+
+    let decrypted;
+    try {
+      const bytes = CryptoJS.AES.decrypt(encrypted, SECRET_KEY);
+      const decryptedStr = bytes.toString(CryptoJS.enc.Utf8);
+      decrypted = JSON.parse(decryptedStr);
+    } catch (err) {
+      return res.status(400).json({ error: "Invalid encrypted data format" });
+    }
+    // Validate request body
+    await ValidateSchema.loginAdminSchema.validateAsync(decrypted);
+
+    const { email, password } = decrypted;
 
     // Fetch user and permissions from the database
     const [user] = await adminDao.loginAdmin(email);
@@ -66,7 +87,10 @@ exports.loginAdmin = async (req, res) => {
       expiresIn: 18000,
     };
 
-    res.json(data);
+    const encryptedResponse = encryptResponse(data, SECRET_KEY);
+    res.json(encryptedResponse);
+
+   
   } catch (err) {
     console.error("Error during login:", err);
 
