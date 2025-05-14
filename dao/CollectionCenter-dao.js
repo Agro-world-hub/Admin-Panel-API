@@ -366,8 +366,8 @@ exports.GetAllCenterComplainDAO = (page, limit, status, category, comCategory, f
 
     // Add filter for status
     if (status) {
-      countSql += " AND oc.complainAssign = ? ";
-      sql += " AND oc.complainAssign = ? ";
+      countSql += " AND oc.AdminStatus = ? ";
+      sql += " AND oc.AdminStatus = ? ";
       Sqlparams.push(status);
       Counterparams.push(status);
     }
