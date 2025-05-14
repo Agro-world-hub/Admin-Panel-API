@@ -31,8 +31,8 @@ exports.getPermissionsByRole = (role, position) => {
 
 exports.loginAdmin = (email) => {
   return new Promise((resolve, reject) => {
-    const sql = "SELECT * FROM adminusers WHERE mail = ?";
-    admin.query(sql, [email], (err, results) => {
+    const sql = "SELECT * FROM adminusers WHERE mail = ? OR userName = ?";
+    admin.query(sql, [email, email], (err, results) => {
       if (err) {
         reject(err);
       } else {
@@ -1374,6 +1374,31 @@ exports.getUserById = (userId) => {
     });
   });
 };
+
+exports.findAdminByEmailOrUsername = (email, userName) => {
+  return new Promise((resolve, reject) => {
+    const sql = `
+      SELECT * FROM adminusers WHERE mail = ? OR userName = ?
+    `;
+    admin.query(sql, [email, userName], (err, results) => {
+      if (err) return reject(err);
+      resolve(results);
+    });
+  });
+};
+
+exports.countSuperAdmins = () => {
+  return new Promise((resolve, reject) => {
+    const sql = `
+      SELECT COUNT(*) AS count FROM adminusers WHERE role = 'Super Admin'
+    `;
+    admin.query(sql, (err, results) => {
+      if (err) return reject(err);
+      resolve(results[0].count);
+    });
+  });
+};
+
 
 exports.createAdmin = (adminData, hashedPassword) => {
   return new Promise((resolve, reject) => {
