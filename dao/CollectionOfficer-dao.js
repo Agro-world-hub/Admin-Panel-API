@@ -1865,7 +1865,8 @@ exports.downloadPurchaseReport = (centerId, startDate, endDate, search) => {
         ub.bankName AS bankName,
         ub.branchName AS branchName,
         co.empId AS empId,
-        TIME(rfp.createdAt) AS createdAt
+        TIME(rfp.createdAt) AS createdAt,
+        DATE(rfp.createdAt) AS createdDate
       FROM 
         registeredfarmerpayments rfp
       LEFT JOIN 

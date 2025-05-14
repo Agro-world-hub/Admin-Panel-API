@@ -2597,13 +2597,14 @@ exports.getFarmerListReport = async (req, res) => {
     // Fetch farmer list report data from the DAO
     const cropList = await adminDao.getFarmerCropListReport(id);
     const userdetails = await adminDao.getReportfarmerDetails(userId);
+    const date = await adminDao.getFarmerCropListReportDate(id);
 
     console.log("Successfully fetched farmer list report");
     console.log(userdetails);
 
     // Respond with the farmer list report data
     //
-    res.json({ crops: [cropList], farmer: [userdetails] });
+    res.json({ crops: [cropList], farmer: [userdetails], date: [date] });
   } catch (error) {
     console.error("Error fetching farmer list report:", error);
     return res.status(500).json({

@@ -164,7 +164,7 @@ router.get(
 
 router.get(
   "/get-centers-for-purchase-report",
-  authMiddleware,
+  // authMiddleware,
   CollectionOfficerEp.getAllCentersForPurchaseReport
 );
 
@@ -191,8 +191,8 @@ router.get('/download-purchase-report', async (req, res) => {
         {
           'GRN': item.grnNumber,
           'Amount': item.amount,
-          'Center Reg Code': item.regCode,
-          'Center Name': item.centerName,
+          'Centre Reg Code': item.regCode,
+          'Centre Name': item.centerName,
           'Farmer NIC': item.nic,
           'Farmer Name': item.firstName + ' ' + item.lastName,
           'Farmer contact': item.phoneNumber,
@@ -201,7 +201,8 @@ router.get('/download-purchase-report', async (req, res) => {
           'Bank Name': item.bankName,
           'Branch Name': item.branchName,
           'Officer EMP ID': item.empId,
-          'Collected time': item.createdAt
+          'Collected time': item.createdAt,
+          'Collected Date': item.createdDate
 
         },
         
@@ -224,6 +225,7 @@ router.get('/download-purchase-report', async (req, res) => {
         { wch: 20 }, // Bank Name
         { wch: 20 }, // Branch Name
         { wch: 15 }, // Officer EMP ID
+        { wch: 15 },  // Collected Time
         { wch: 15 }  // Collected Time
       ];
 
@@ -251,7 +253,7 @@ router.get('/download-purchase-report', async (req, res) => {
 
   router.get(
     "/get-collection-report",
-    authMiddleware,
+    // authMiddleware,
     CollectionOfficerEp.getCollectionReport
   );
 
@@ -275,7 +277,7 @@ router.get('/download-purchase-report', async (req, res) => {
       const formattedData = data.flatMap(item => [
         {
           'Reg Code': item.regCode,
-          'Center Name': item.centerName,
+          'Centre Name': item.centerName,
           'Crop Name': item.cropGroupName,
           'Variety Name': item.varietyName,
           'Grade A (Kg)': item.gradeAquan,

@@ -2383,6 +2383,29 @@ WHERE
   });
 };
 
+
+exports.getFarmerCropListReportDate = (id) => {
+  return new Promise((resolve, reject) => {
+    const dataSql = `
+SELECT 
+  rfp.createdAt,
+  rfp.invNo
+FROM 
+  registeredfarmerpayments rfp
+WHERE 
+  rfp.id  = ?
+    `;
+
+    collectionofficer.query(dataSql, [id], (error, results) => {
+      if (error) {
+        return reject(error);
+      }
+      resolve(results);
+    });
+  });
+};
+
+
 exports.getReportfarmerDetails = (userId) => {
   return new Promise((resolve, reject) => {
     const dataSql = `
