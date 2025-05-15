@@ -2254,6 +2254,7 @@ exports.getPaymentSlipReport = (
           u.NICnumber,
           co.firstNameEnglish AS officerFirstName,
           co.lastNameEnglish AS officerLastName,
+          rp.invNo,
           rp.createdAt
       FROM 
           registeredfarmerpayments rp
