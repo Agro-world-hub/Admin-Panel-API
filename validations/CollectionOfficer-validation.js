@@ -67,7 +67,8 @@ exports.getAllCollectionOfficersSchema = Joi.object({
     status: Joi.string().optional(),
     nic: Joi.string().allow('').optional(),
     company: Joi.number().optional(),
-    role: Joi.string().optional()
+    role: Joi.string().optional(),
+    centerId: Joi.number().optional(),
 });
 
 

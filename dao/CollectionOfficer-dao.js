@@ -369,7 +369,8 @@ exports.getAllCollectionOfficers = (
   companyid,
   role,
   centerStatus,
-  status
+  status,
+  centerId
 ) => {
   return new Promise((resolve, reject) => {
     const offset = (page - 1) * limit;
@@ -446,6 +447,13 @@ exports.getAllCollectionOfficers = (
       dataSql += " AND coff.jobRole = ?";
       countParams.push(role);
       dataParams.push(role);
+    }
+
+    if (centerId) {
+      countSql += " AND coff.centerId = ?";
+      dataSql += " AND coff.centerId = ?";
+      countParams.push(centerId);
+      dataParams.push(centerId);
     }
 
     // Apply search filters for NIC or related fields
