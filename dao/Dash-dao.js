@@ -298,10 +298,10 @@ const createSalesAgent = (officerData, profileImageUrl) => {
                   INSERT INTO salesagent (
                       firstName, lastName, empId, empType, phoneCode1, phoneNumber1, phoneCode2, phoneNumber2,
                       nic, email, houseNumber, streetName, city, district, province, country,
-                      accHolderName, accNumber, bankName, branchName, status
+                      accHolderName, accNumber, bankName, branchName, image, status
                   ) VALUES (
                            ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,
-                           ?, ?, ?, ?, ?, ?, ?, ?, ?,?, 'Not Approved')
+                           ?, ?, ?, ?, ?, ?, ?, ?, ?,?,?, 'Not Approved')
               `;
 
       // Database query with QR image data added
@@ -328,7 +328,7 @@ const createSalesAgent = (officerData, profileImageUrl) => {
           officerData.accNumber,
           officerData.bankName,
           officerData.branchName,
-          // imageUrl,
+          imageUrl
         ],
         (err, results) => {
           if (err) {
@@ -392,7 +392,7 @@ const updateSalesAgentDetails = (
                UPDATE salesagent
                   SET firstName = ?, lastName = ?, empId = ?, empType = ?, phoneCode1 = ?, phoneNumber1 = ?, phoneCode2 = ?, phoneNumber2 = ?,
                       nic = ?, email = ?, houseNumber = ?, streetName = ?, city = ?, district = ?, province = ?, country = ?,
-                      accHolderName = ?, accNumber = ?, bankName = ?, branchName = ?, status = 'Not Approved'
+                      accHolderName = ?, accNumber = ?, bankName = ?, branchName = ?, image = ? , status = 'Not Approved'
             `;
     let values = [
       firstName,
@@ -415,7 +415,7 @@ const updateSalesAgentDetails = (
       accNumber,
       bankName,
       branchName,
-      // profileImageUrl,
+      profileImageUrl,
     ];
 
     sql += ` WHERE id = ?`;
