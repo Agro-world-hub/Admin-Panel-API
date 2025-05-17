@@ -920,3 +920,93 @@ exports.deletePackageDetails = async (packageId) => {
     });
   });
 };
+
+
+
+
+exports.getNextBannerIndexRetail = () => {
+  return new Promise((resolve, reject) => {
+    const query = `
+      SELECT COALESCE(MAX(indexId), 0) + 1 AS nextOrderNumber
+      FROM banners
+      WHERE type = 'Retail'
+    `;
+
+    marketPlace.query(query, (error, results) => {
+      if (error) {
+        return reject(error); // Handle error
+      }
+
+      resolve(results[0].nextOrderNumber); // Return the next order number
+    });
+  });
+};
+
+
+
+
+exports.createBanner = async (data) => {
+  return new Promise((resolve, reject) => {
+    const sql =
+      "INSERT INTO banners (indexId, details, image, type) VALUES (?, ?, ?, ?)";
+    const values = [
+      data.index,
+      data.name,
+      data.image,
+      "Retail"
+    ];
+
+    marketPlace.query(sql, values, (err, results) => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve({
+          insertId: results.insertId,
+          message: "Banner created successfully"
+        });
+      }
+    });
+  });
+};
+
+
+
+exports.getAllBanners = () => {
+  return new Promise((resolve, reject) => {
+    const sql = "SELECT * FROM banners ORDER BY indexId";
+
+    marketPlace.query(sql, (err, results) => {
+      if (err) {
+        return reject(err); // Reject promise if an error occurs
+      }
+
+      resolve(results); // No need to wrap in arrays, return results directly
+    });
+  });
+};
+
+
+
+exports.updateFeedbackOrder = async (feedbacks) => {
+  return new Promise((resolve, reject) => {
+    const sql = "UPDATE feedbacklist SET orderNumber = ? WHERE id = ?";
+
+    const queries = feedbacks.map((feedback) => {
+      return new Promise((resolveInner, rejectInner) => {
+        plantcare.query(
+          sql,
+          [feedback.orderNumber, feedback.id],
+          (err, results) => {
+            if (err) {
+              return rejectInner(err);
+            }
+            resolveInner(results);
+          }
+        );
+      });
+    });
+    Promise.all(queries)
+      .then((results) => resolve(results))
+      .catch((err) => reject(err));
+  });
+};

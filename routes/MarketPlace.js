@@ -96,6 +96,36 @@ router.get(
   marketPlaceEp.getMarketplacePackageWithDetailsById
 );
 
-router.patch("/edit-product/:id", authMiddleware, marketPlaceEp.updatePackage);
+router.patch(
+  "/edit-product/:id", 
+  authMiddleware, 
+  marketPlaceEp.updatePackage
+);
+
+router.get(
+  "/next-reatil-banner-number",
+  // authMiddleware,
+  marketPlaceEp.getNextBannerIndexRetail
+);
+
+router.post(
+  '/upload-banner', 
+  authMiddleware, 
+  upload.single('image'), 
+  marketPlaceEp.uploadBanner
+);
+
+
+router.get(
+  "/get-all-banners",
+  // authMiddleware,
+  marketPlaceEp.getAllBanners
+);
+
+
+router.put(
+  "/update-feedback-order", 
+  marketPlaceEp.updateFeedbackOrder
+);
 
 module.exports = router;
