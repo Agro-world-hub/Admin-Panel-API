@@ -945,6 +945,27 @@ exports.getNextBannerIndexRetail = () => {
 
 
 
+exports.getNextBannerIndexWholesale = () => {
+  return new Promise((resolve, reject) => {
+    const query = `
+      SELECT COALESCE(MAX(indexId), 0) + 1 AS nextOrderNumber
+      FROM banners
+      WHERE type = 'Wholesale'
+    `;
+
+    marketPlace.query(query, (error, results) => {
+      if (error) {
+        return reject(error); // Handle error
+      }
+
+      resolve(results[0].nextOrderNumber); // Return the next order number
+    });
+  });
+};
+
+
+
+
 exports.createBanner = async (data) => {
   return new Promise((resolve, reject) => {
     const sql =
@@ -970,10 +991,35 @@ exports.createBanner = async (data) => {
 };
 
 
+exports.createBannerWholesale = async (data) => {
+  return new Promise((resolve, reject) => {
+    const sql =
+      "INSERT INTO banners (indexId, details, image, type) VALUES (?, ?, ?, ?)";
+    const values = [
+      data.index,
+      data.name,
+      data.image,
+      "Wholesale"
+    ];
+
+    marketPlace.query(sql, values, (err, results) => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve({
+          insertId: results.insertId,
+          message: "Banner created successfully"
+        });
+      }
+    });
+  });
+};
+
+
 
 exports.getAllBanners = () => {
   return new Promise((resolve, reject) => {
-    const sql = "SELECT * FROM banners ORDER BY indexId";
+    const sql = "SELECT * FROM banners WHERE type = 'Retail' ORDER BY indexId";
 
     marketPlace.query(sql, (err, results) => {
       if (err) {
@@ -986,14 +1032,28 @@ exports.getAllBanners = () => {
 };
 
 
-
-exports.updateFeedbackOrder = async (feedbacks) => {
+exports.getAllBannersWholesale = () => {
   return new Promise((resolve, reject) => {
-    const sql = "UPDATE feedbacklist SET orderNumber = ? WHERE id = ?";
+    const sql = "SELECT * FROM banners WHERE type = 'Wholesale' ORDER BY indexId";
+
+    marketPlace.query(sql, (err, results) => {
+      if (err) {
+        return reject(err); // Reject promise if an error occurs
+      }
+
+      resolve(results); // No need to wrap in arrays, return results directly
+    });
+  });
+};
+
+
+exports.updateBannerOrder = async (feedbacks) => {
+  return new Promise((resolve, reject) => {
+    const sql = "UPDATE banners SET indexId = ? WHERE id = ?";
 
     const queries = feedbacks.map((feedback) => {
       return new Promise((resolveInner, rejectInner) => {
-        plantcare.query(
+        marketPlace.query(
           sql,
           [feedback.orderNumber, feedback.id],
           (err, results) => {
@@ -1008,5 +1068,68 @@ exports.updateFeedbackOrder = async (feedbacks) => {
     Promise.all(queries)
       .then((results) => resolve(results))
       .catch((err) => reject(err));
+  });
+};
+
+
+exports.getBannerById = async (feedbackId) => {
+  return new Promise((resolve, reject) => {
+    const sql = "SELECT * FROM banners WHERE id = ?";
+    marketPlace.query(sql, [feedbackId], (err, results) => {
+      if (err) {
+        return reject(err);
+      }
+      resolve(results[0]);
+    });
+  });
+};
+
+
+exports.deleteBannerRetail = async (feedbackId, orderNumber) => {
+  return new Promise((resolve, reject) => {
+    const deleteSql = "DELETE FROM banners WHERE id = ?";
+    const updateSql =
+      "UPDATE banners SET indexId = indexId - 1 WHERE indexId > ? AND type = 'Retail'";
+
+    marketPlace.query(deleteSql, [feedbackId], (deleteErr, deleteResults) => {
+      if (deleteErr) {
+        return reject(deleteErr);
+      }
+      marketPlace.query(updateSql, [orderNumber], (updateErr, updateResults) => {
+        if (updateErr) {
+          return reject(updateErr);
+        }
+
+        resolve({
+          deleteResults,
+          updateResults,
+        });
+      });
+    });
+  });
+};
+
+
+exports.deleteBannerWhole = async (feedbackId, orderNumber) => {
+  return new Promise((resolve, reject) => {
+    const deleteSql = "DELETE FROM banners WHERE id = ?";
+    const updateSql =
+      "UPDATE banners SET indexId = indexId - 1 WHERE indexId > ? AND type = 'Wholesale'";
+
+    marketPlace.query(deleteSql, [feedbackId], (deleteErr, deleteResults) => {
+      if (deleteErr) {
+        return reject(deleteErr);
+      }
+      marketPlace.query(updateSql, [orderNumber], (updateErr, updateResults) => {
+        if (updateErr) {
+          return reject(updateErr);
+        }
+
+        resolve({
+          deleteResults,
+          updateResults,
+        });
+      });
+    });
   });
 };

@@ -108,11 +108,25 @@ router.get(
   marketPlaceEp.getNextBannerIndexRetail
 );
 
+router.get(
+  "/next-wholesale-banner-number",
+  // authMiddleware,
+  marketPlaceEp.getNextBannerIndexWholesale
+);
+
 router.post(
   '/upload-banner', 
   authMiddleware, 
   upload.single('image'), 
   marketPlaceEp.uploadBanner
+);
+
+
+router.post(
+  '/upload-banner-wholesale', 
+  authMiddleware, 
+  upload.single('image'), 
+  marketPlaceEp.uploadBannerWholesale
 );
 
 
@@ -122,10 +136,29 @@ router.get(
   marketPlaceEp.getAllBanners
 );
 
+router.get(
+  "/get-all-banners-wholesale",
+  // authMiddleware,
+  marketPlaceEp.getAllBannersWholesale
+);
+
 
 router.put(
-  "/update-feedback-order", 
-  marketPlaceEp.updateFeedbackOrder
+  "/update-banner-order", 
+  marketPlaceEp.updateBannerOrder
+);
+
+
+router.delete(
+  "/delete-banner-retail/:id", 
+  authMiddleware, 
+  marketPlaceEp.deleteBannerRetail
+);
+
+router.delete(
+  "/delete-banner-whole/:id", 
+  authMiddleware, 
+  marketPlaceEp.deleteBannerWhole
 );
 
 module.exports = router;

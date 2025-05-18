@@ -832,6 +832,23 @@ exports.getNextBannerIndexRetail = async (req, res) => {
   }
 };
 
+exports.getNextBannerIndexWholesale = async (req, res) => {
+  try {
+    const nextOrderNumber = await MarketPlaceDao.getNextBannerIndexWholesale(); // Call the DAO function
+    res.status(200).json({
+      success: true,
+      nextOrderNumber: nextOrderNumber,
+    });
+  } catch (error) {
+    console.error("Error fetching next order number:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to retrieve the next order number.",
+      error: error.message,
+    });
+  }
+};
+
 
 
 
@@ -881,6 +898,52 @@ exports.uploadBanner = async (req, res) => {
 
 
 
+
+exports.uploadBannerWholesale = async (req, res) => {
+  try {
+ 
+    const validatedBody = req.body;
+
+    const {
+      index,
+      name
+    } = validatedBody;
+
+    let image;
+
+    if (req.file) {
+      const fileBuffer = req.file.buffer;
+      const fileName = req.file.originalname;
+
+      image = await uploadFileToS3(
+        fileBuffer,
+        fileName,
+        "marketplacebanners/image"
+      );
+    }
+
+    const bannerData = {
+      index,
+      name,
+      image
+    };
+
+    
+    const result = await MarketPlaceDao.createBannerWholesale(bannerData);
+
+    console.log("PlantCare user created successfully");
+    return res.status(201).json({
+      message: result.message,
+    });
+  } catch (error) {
+    console.error("Error creating PlantCare user:", error);
+    return res
+      .status(500)
+      .json({ error: "An error occurred while creating PlantCare user" });
+  }
+};
+
+
 exports.getAllBanners = async (req, res) => {
   try {
     const banners = await MarketPlaceDao.getAllBanners();
@@ -900,12 +963,32 @@ exports.getAllBanners = async (req, res) => {
 };
 
 
-exports.updateFeedbackOrder = async (req, res) => {
+
+exports.getAllBannersWholesale = async (req, res) => {
+  try {
+    const banners = await MarketPlaceDao.getAllBannersWholesale();
+
+    console.log("Successfully fetched feedback list");
+    res.json({
+      banners,
+    });
+  } catch (err) {
+    if (err.isJoi) {
+      // Validation error
+      return res.status(400).json({ error: err.details[0].message });
+    }
+    console.error("Error executing query:", err);
+    res.status(500).send("An error occurred while fetching data.");
+  }
+};
+
+
+exports.updateBannerOrder = async (req, res) => {
   try {
     const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
     console.log("Request URL:", fullUrl);
     const feedbacks = req.body.feedbacks; // Array of {id, orderNumber}
-    const result = await MarketPlaceDao.updateFeedbackOrder(feedbacks);
+    const result = await MarketPlaceDao.updateBannerOrder(feedbacks);
 
     if (result) {
       return res.status(200).json({
@@ -924,5 +1007,72 @@ exports.updateFeedbackOrder = async (req, res) => {
       status: false,
       message: "Internal server error",
     });
+  }
+};
+
+
+
+exports.deleteBannerRetail = async (req, res) => {
+  const bannerId = parseInt(req.params.id, 10);
+
+  if (isNaN(bannerId)) {
+    return res.status(400).json({ error: "Invalid bannerId ID" });
+  }
+
+  try {
+    // Retrieve the feedback's current orderNumber before deletion
+    const banner = await MarketPlaceDao.getBannerById(bannerId);
+    if (!banner) {
+      return res.status(404).json({ error: "banner not found" });
+    }
+
+    const orderNumber = banner.indexId;
+
+    // Delete feedback and update subsequent order numbers
+    const result = await MarketPlaceDao.deleteBannerRetail(
+      bannerId,
+      orderNumber
+    );
+
+    return res.status(200).json({
+      message: "banner deleted and order updated successfully",
+      result,
+    });
+  } catch (error) {
+    console.error("Error deleting feedbannerback:", error);
+    return res.status(500).json({ error: "Internal server error" });
+  }
+};
+
+
+exports.deleteBannerWhole = async (req, res) => {
+  const bannerId = parseInt(req.params.id, 10);
+
+  if (isNaN(bannerId)) {
+    return res.status(400).json({ error: "Invalid bannerId ID" });
+  }
+
+  try {
+    // Retrieve the feedback's current orderNumber before deletion
+    const banner = await MarketPlaceDao.getBannerById(bannerId);
+    if (!banner) {
+      return res.status(404).json({ error: "banner not found" });
+    }
+
+    const orderNumber = banner.indexId;
+
+    // Delete feedback and update subsequent order numbers
+    const result = await MarketPlaceDao.deleteBannerWhole(
+      bannerId,
+      orderNumber
+    );
+
+    return res.status(200).json({
+      message: "banner deleted and order updated successfully",
+      result,
+    });
+  } catch (error) {
+    console.error("Error deleting feedbannerback:", error);
+    return res.status(500).json({ error: "Internal server error" });
   }
 };
