@@ -40,7 +40,8 @@ const SalesAgentDash = require('./routes/SalesAgentDash');
 const TargetRoutes  =require('./routes/Target');
 const ProcumentRoutes  =require('./routes/Procuments');
 const DispatchRoutes  =require('./routes/Dispatch');
-
+// const DistributionRoutes =require('./routes/Distribution')
+const DistributionRoutes =require('./routes/DistributionRoutes')
 
 const heathRoutes = require('./routes/heathRoutes')
 const DashRoutes = require('./routes/Dash')
@@ -126,6 +127,7 @@ app.use(BASE_PATH + '/api/dash', DashRoutes);
 app.use(BASE_PATH + '/api/target', TargetRoutes)
 app.use(BASE_PATH + '/api/procument', ProcumentRoutes)
 app.use(BASE_PATH + '/api/dispatch', DispatchRoutes)
+app.use(BASE_PATH + '/api/distribution', DistributionRoutes)
 
 
 
