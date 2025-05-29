@@ -100,7 +100,6 @@ exports.GetCentersByCompanyIdDAO = (companyId) => {
   });
 };
 
-
 //delete collection center
 exports.deleteCollectionCenterDAo = async (id) => {
   return new Promise((resolve, reject) => {
@@ -207,7 +206,15 @@ exports.deleteCollectionCenterDAo = async (id) => {
 //   });
 // };
 
-exports.GetAllComplainDAO = (page, limit, status, category, comCategory, searchText, rpstatus) => {
+exports.GetAllComplainDAO = (
+  page,
+  limit,
+  status,
+  category,
+  comCategory,
+  searchText,
+  rpstatus
+) => {
   return new Promise((resolve, reject) => {
     const Sqlparams = [];
     const Counterparams = [];
@@ -276,7 +283,7 @@ exports.GetAllComplainDAO = (page, limit, status, category, comCategory, searchT
         AND (fc.refNo LIKE ? OR u.firstName LIKE ? OR u.lastName LIKE ? OR u.NICnumber LIKE ?)
       `;
       const searchQuery = `%${searchText}%`;
-      Sqlparams.push(searchQuery, searchQuery, searchQuery , searchQuery);
+      Sqlparams.push(searchQuery, searchQuery, searchQuery, searchQuery);
       Counterparams.push(searchQuery, searchQuery, searchQuery, searchQuery);
     }
 
@@ -289,7 +296,6 @@ exports.GetAllComplainDAO = (page, limit, status, category, comCategory, searchT
         sql += " AND fc.reply IS NULL ";
       }
     }
-    
 
     // Add pagination
     sql += " ORDER BY fc.createdAt DESC LIMIT ? OFFSET ?";
@@ -319,10 +325,16 @@ exports.GetAllComplainDAO = (page, limit, status, category, comCategory, searchT
   });
 };
 
-
-
-
-exports.GetAllCenterComplainDAO = (page, limit, status, category, comCategory, filterCompany, searchText, rpstatus) => {
+exports.GetAllCenterComplainDAO = (
+  page,
+  limit,
+  status,
+  category,
+  comCategory,
+  filterCompany,
+  searchText,
+  rpstatus
+) => {
   return new Promise((resolve, reject) => {
     const Sqlparams = [];
     const Counterparams = [];
@@ -407,7 +419,6 @@ exports.GetAllCenterComplainDAO = (page, limit, status, category, comCategory, f
       Counterparams.push(searchQuery, searchQuery);
     }
 
-
     if (rpstatus) {
       if (rpstatus === "Yes") {
         countSql += " AND oc.reply IS NOT NULL ";
@@ -464,9 +475,6 @@ exports.getComplainById = (id) => {
   });
 };
 
-
-
-
 exports.getCenterComplainById = (id) => {
   return new Promise((resolve, reject) => {
     const sql = ` 
@@ -484,10 +492,6 @@ exports.getCenterComplainById = (id) => {
     });
   });
 };
-
-
-
-
 
 exports.CheckRegCodeExistDAO = (regCode) => {
   return new Promise((resolve, reject) => {
@@ -554,39 +558,40 @@ exports.getAllCenterPage = (limit, offset, district, province, searchItem) => {
     sql += whereClause + " ORDER BY C.regCode ASC LIMIT ? OFFSET ?";
     const dataParams = [...searchParams, limit, offset];
 
-    collectionofficer.query(countSql, searchParams, (countErr, countResults) => {
-      if (countErr) {
-        return reject(countErr);
-      }
-
-      const total = countResults[0].total;
-
-      collectionofficer.query(sql, dataParams, (dataErr, dataResults) => {
-        if (dataErr) {
-          return reject(dataErr);
+    collectionofficer.query(
+      countSql,
+      searchParams,
+      (countErr, countResults) => {
+        if (countErr) {
+          return reject(countErr);
         }
 
-        const processedDataResults = dataResults.map((center) => ({
-          ...center,
-          companies: center.companies
-            ? center.companies.split("; ").map((company) => {
-                const [id, name] = company.split(":");
-                return { id: parseInt(id, 10), companyNameEnglish: name };
-              })
-            : []
-        }));
+        const total = countResults[0].total;
 
-        resolve({
-          total: total,
-          items: processedDataResults,
+        collectionofficer.query(sql, dataParams, (dataErr, dataResults) => {
+          if (dataErr) {
+            return reject(dataErr);
+          }
+
+          const processedDataResults = dataResults.map((center) => ({
+            ...center,
+            companies: center.companies
+              ? center.companies.split("; ").map((company) => {
+                  const [id, name] = company.split(":");
+                  return { id: parseInt(id, 10), companyNameEnglish: name };
+                })
+              : [],
+          }));
+
+          resolve({
+            total: total,
+            items: processedDataResults,
+          });
         });
-      });
-    });
+      }
+    );
   });
 };
-
-
-
 
 // exports.getCenterByIdDAO = (id) => {
 //   return new Promise((resolve, reject) => {
@@ -759,8 +764,6 @@ exports.sendComplainReply = (complainId, reply) => {
   });
 };
 
-
-
 exports.sendCenterComplainReply = (complainId, reply) => {
   return new Promise((resolve, reject) => {
     // Input validation
@@ -780,7 +783,7 @@ exports.sendCenterComplainReply = (complainId, reply) => {
 
     const status = "Closed";
     const adminStatus = "Closed";
-    const values = [reply, status, status,status, status, complainId];
+    const values = [reply, status, status, status, status, complainId];
 
     collectionofficer.query(sql, values, (err, results) => {
       if (err) {
@@ -801,9 +804,6 @@ exports.sendCenterComplainReply = (complainId, reply) => {
     });
   });
 };
-
-
-
 
 exports.getForCreateId = (role) => {
   return new Promise((resolve, reject) => {
@@ -846,11 +846,13 @@ exports.createCompany = async (
   foName,
   foConCode,
   foConNum,
-  foEmail
+  foEmail,
+  logo,
+  favicon
 ) => {
   return new Promise((resolve, reject) => {
     const sql =
-      "INSERT INTO company (regNumber, companyNameEnglish, companyNameSinhala, companyNameTamil, email, oicName, oicEmail, oicConCode1, oicConNum1, oicConCode2, oicConNum2, accHolderName, accNumber, bankName, branchName, foName, foConCode, foConNum, foEmail) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
+      "INSERT INTO company (regNumber, companyNameEnglish, companyNameSinhala, companyNameTamil, email, oicName, oicEmail, oicConCode1, oicConNum1, oicConCode2, oicConNum2, accHolderName, accNumber, bankName, branchName, foName, foConCode, foConNum, foEmail, logo, favicon) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
     const values = [
       regNumber,
       companyNameEnglish,
@@ -871,6 +873,8 @@ exports.createCompany = async (
       foConCode,
       foConNum,
       foEmail,
+      logo,
+      favicon,
     ];
 
     collectionofficer.query(sql, values, (err, results) => {
@@ -997,18 +1001,15 @@ exports.getAllCompanyDAO = (search) => {
     `;
     const params = [];
 
-
     if (search) {
-      sql +=" WHERE c.companyNameEnglish LIKE ?";
+      sql += " WHERE c.companyNameEnglish LIKE ?";
       const searchQuery = `%${search}%`;
       params.push(searchQuery);
     }
 
     sql += " GROUP BY c.id ORDER BY companyName ASC";
 
-
-
-    collectionofficer.query(sql,params, (err, results) => {
+    collectionofficer.query(sql, params, (err, results) => {
       if (err) {
         return reject(err);
       }
@@ -1050,7 +1051,9 @@ exports.updateCompany = (
   foConCode,
   foConNum,
   foEmail,
-  status
+  status,
+  logo,
+  favicon
 ) => {
   return new Promise((resolve, reject) => {
     const sql = `
@@ -1074,7 +1077,9 @@ exports.updateCompany = (
         foConCode = ?,
         foConNum = ?,
         foEmail = ?,
-        status = ?
+        status = ?,
+        logo = ?,
+      favicon = ?
       WHERE id = ?
     `;
 
@@ -1099,6 +1104,8 @@ exports.updateCompany = (
       foConNum,
       foEmail,
       status,
+      logo,
+      favicon,
       id,
     ];
 
@@ -1182,7 +1189,7 @@ exports.createDailyTargetDao = (target) => {
         target.fromDate,
         target.toDate,
         target.fromTime,
-        target.toTime
+        target.toTime,
       ],
       (err, results) => {
         if (err) {
@@ -1358,18 +1365,18 @@ exports.differenceBetweenExpences = (centerId) => {
         return reject(err);
       }
 
-      let roundedDifExpences = 100
+      let roundedDifExpences = 100;
 
       if (results.length < 2) {
         // return reject(new Error("Not enough data to compare two months."));
-        return resolve (roundedDifExpences)
+        return resolve(roundedDifExpences);
       }
 
       const difExpences =
         ((results[0].monthexpences - results[1].monthexpences) /
           results[0].monthexpences) *
         100;
-       roundedDifExpences = parseFloat(difExpences.toFixed(2));
+      roundedDifExpences = parseFloat(difExpences.toFixed(2));
 
       resolve(roundedDifExpences);
     });
@@ -1393,10 +1400,8 @@ exports.getCenterNameAndOficerCountDao = (centerId) => {
   });
 };
 
-
 exports.getcompanyHeadData = (companyId, limit, offset, searchText) => {
   return new Promise((resolve, reject) => {
-    
     let countSql = `
       SELECT COUNT(*) AS total 
       FROM collectionofficer
@@ -1440,8 +1445,26 @@ exports.getcompanyHeadData = (companyId, limit, offset, searchText) => {
       countSql += searchCondition;
       dataSql += searchCondition;
       const searchValue = `%${searchText}%`;
-      countParams.push(searchValue, searchValue, searchValue, searchValue, searchValue, searchValue, searchValue, searchValue);
-      dataParams.push(searchValue, searchValue, searchValue, searchValue, searchValue, searchValue, searchValue, searchValue);
+      countParams.push(
+        searchValue,
+        searchValue,
+        searchValue,
+        searchValue,
+        searchValue,
+        searchValue,
+        searchValue,
+        searchValue
+      );
+      dataParams.push(
+        searchValue,
+        searchValue,
+        searchValue,
+        searchValue,
+        searchValue,
+        searchValue,
+        searchValue,
+        searchValue
+      );
     }
 
     limit = parseInt(limit, 10) || 10; // Default limit to 10 if not provided
@@ -1470,7 +1493,6 @@ exports.getcompanyHeadData = (companyId, limit, offset, searchText) => {
   });
 };
 
-
 exports.deleteCompanyHeadData = async (id) => {
   return new Promise((resolve, reject) => {
     const sql = "DELETE FROM collectionofficer WHERE id = ?";
@@ -1484,13 +1506,11 @@ exports.deleteCompanyHeadData = async (id) => {
   });
 };
 
-
-
-exports.GetComplainCategoriesByRole= (roleId, appId) => {
+exports.GetComplainCategoriesByRole = (roleId, appId) => {
   return new Promise((resolve, reject) => {
     const sql =
       "SELECT id, categoryEnglish FROM complaincategory WHERE roleId=? AND appId=?";
-      admin.query(sql, [roleId, appId], (err, results) => {
+    admin.query(sql, [roleId, appId], (err, results) => {
       if (err) {
         return reject(err);
       }
@@ -1499,11 +1519,11 @@ exports.GetComplainCategoriesByRole= (roleId, appId) => {
   });
 };
 
-exports.GetComplainCategoriesByRoleSuper= (appId) => {
+exports.GetComplainCategoriesByRoleSuper = (appId) => {
   return new Promise((resolve, reject) => {
     const sql =
       "SELECT id, categoryEnglish FROM complaincategory WHERE appId=?";
-      admin.query(sql, [appId], (err, results) => {
+    admin.query(sql, [appId], (err, results) => {
       if (err) {
         return reject(err);
       }
@@ -1512,11 +1532,10 @@ exports.GetComplainCategoriesByRoleSuper= (appId) => {
   });
 };
 
-exports.GetAllCompanyForOfficerComplain= () => {
+exports.GetAllCompanyForOfficerComplain = () => {
   return new Promise((resolve, reject) => {
-    const sql =
-      "SELECT id, companyNameEnglish FROM company";
-      collectionofficer.query(sql, (err, results) => {
+    const sql = "SELECT id, companyNameEnglish FROM company";
+    collectionofficer.query(sql, (err, results) => {
       if (err) {
         return reject(err);
       }
@@ -1525,8 +1544,14 @@ exports.GetAllCompanyForOfficerComplain= () => {
   });
 };
 
-
-exports.getAllCenterPageAW = (limit, offset, district, province, searchItem, companyId) => {
+exports.getAllCenterPageAW = (
+  limit,
+  offset,
+  district,
+  province,
+  searchItem,
+  companyId
+) => {
   return new Promise((resolve, reject) => {
     let countSql = "SELECT COUNT(*) as total FROM collectioncenter C";
     let sql = `
@@ -1557,13 +1582,15 @@ exports.getAllCenterPageAW = (limit, offset, district, province, searchItem, com
 
     const searchParams = [];
     const dataParams = [];
-    
+
     // Add JOIN with companycenter when filtering by companyId
     if (companyId) {
-      countSql += " JOIN companycenter CMC ON C.id = CMC.centerId WHERE CMC.companyId = ?";
-      sql += " JOIN companycenter CMC ON C.id = CMC.centerId WHERE CMC.companyId = ?";
+      countSql +=
+        " JOIN companycenter CMC ON C.id = CMC.centerId WHERE CMC.companyId = ?";
+      sql +=
+        " JOIN companycenter CMC ON C.id = CMC.centerId WHERE CMC.companyId = ?";
       searchParams.push(companyId);
-      
+
       // If we also have a search term, use AND instead of WHERE
       if (searchItem) {
         const searchQuery = `%${searchItem}%`;
@@ -1586,7 +1613,6 @@ exports.getAllCenterPageAW = (limit, offset, district, province, searchItem, com
         searchParams.push(province);
       }
     } else {
-
       let whereClause = " WHERE 1=1";
 
       if (searchItem) {
@@ -1613,39 +1639,42 @@ exports.getAllCenterPageAW = (limit, offset, district, province, searchItem, com
         // countParams.push(district);
         searchParams.push(province);
       }
-
     }
 
     sql += " GROUP BY C.id ORDER BY C.regCode ASC LIMIT ? OFFSET ?";
     dataParams.push(...searchParams, limit, offset);
 
-    collectionofficer.query(countSql, searchParams, (countErr, countResults) => {
-      if (countErr) {
-        return reject(countErr);
-      }
-
-      const total = countResults[0].total;
-
-      collectionofficer.query(sql, dataParams, (dataErr, dataResults) => {
-        if (dataErr) {
-          return reject(dataErr);
+    collectionofficer.query(
+      countSql,
+      searchParams,
+      (countErr, countResults) => {
+        if (countErr) {
+          return reject(countErr);
         }
 
-        const processedDataResults = dataResults.map((center) => ({
-          ...center,
-          companies: center.companies
-            ? center.companies.split("; ").map((company) => {
-                const [id, name] = company.split(":");
-                return { id: parseInt(id, 10), companyNameEnglish: name };
-              })
-            : []
-        }));
+        const total = countResults[0].total;
 
-        resolve({
-          total: total,
-          items: processedDataResults,
+        collectionofficer.query(sql, dataParams, (dataErr, dataResults) => {
+          if (dataErr) {
+            return reject(dataErr);
+          }
+
+          const processedDataResults = dataResults.map((center) => ({
+            ...center,
+            companies: center.companies
+              ? center.companies.split("; ").map((company) => {
+                  const [id, name] = company.split(":");
+                  return { id: parseInt(id, 10), companyNameEnglish: name };
+                })
+              : [],
+          }));
+
+          resolve({
+            total: total,
+            items: processedDataResults,
+          });
         });
-      });
-    });
+      }
+    );
   });
 };
