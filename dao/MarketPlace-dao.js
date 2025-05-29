@@ -131,7 +131,7 @@ exports.createMarketProductDao = async (product) => {
       product.discount,
       product.varietyId,
       product.displaytype,
-      product.maxQuantity,
+      product.category === 'WholeSale' ? product.maxQuantity : null,
     ];
 
     marketPlace.query(sql, values, (err, results) => {
@@ -496,14 +496,16 @@ exports.getProductById = async (id) => {
             MPI.displayName AS cropName,
             MPI.category,
             MPI.normalPrice,
-            MPI.discountedPrice,
+            MPI.discountedPrice AS salePrice,
             MPI.promo,
             MPI.unitType,
             MPI.startValue,
             MPI.changeby,
             MPI.tags,
             MPI.displayType AS displaytype,
-            MPI.maxQuantity
+            MPI.maxQuantity,
+            MPI.discount,
+            ROUND((MPI.discount / MPI.normalPrice) * 100, 2) AS discountedPrice
           FROM marketplaceitems MPI
           JOIN plant_care.cropvariety CV ON MPI.varietyId = CV.id
           JOIN plant_care.cropgroup CG ON CV.cropGroupId = CG.id
@@ -531,8 +533,8 @@ exports.getProductById = async (id) => {
 
 exports.updateMarketProductDao = async (product, id) => {
   return new Promise((resolve, reject) => {
-    const sql = `UPDATE marketplaceitems
-       SET  
+    const sql = `
+      UPDATE marketplaceitems SET  
         displayName = ?, 
         normalPrice = ?, 
         discountedPrice = ?, 
@@ -544,8 +546,9 @@ exports.updateMarketProductDao = async (product, id) => {
         category = ?,
         discount = ?,
         maxQuantity = ?
-        WHERE id = ?
-      `;
+      WHERE id = ?
+    `;
+
     const values = [
       product.cropName,
       product.normalPrice,
@@ -557,8 +560,8 @@ exports.updateMarketProductDao = async (product, id) => {
       product.tags,
       product.category,
       product.discount,
-      product.maxQuantity,
-      id,
+      product.category === 'WholeSale' ? product.maxQuantity : null,
+      id
     ];
 
     marketPlace.query(sql, values, (err, results) => {
@@ -570,6 +573,8 @@ exports.updateMarketProductDao = async (product, id) => {
     });
   });
 };
+
+
 
 exports.getAllMarketplacePackagesDAO = () => {
   return new Promise((resolve, reject) => {
