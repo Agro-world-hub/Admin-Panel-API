@@ -87,6 +87,7 @@ exports.createMarketProduct = async (req, res) => {
       discount: req.body.discount,
       varietyId: req.body.varietyId,
       displaytype: req.body.displaytype,
+      maxQuantity: req.body.maxQuantity,
     };
 
     // First check if the product already exists
