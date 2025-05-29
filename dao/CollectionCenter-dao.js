@@ -1051,7 +1051,9 @@ exports.updateCompany = (
   foConCode,
   foConNum,
   foEmail,
-  status
+  status,
+  logo,
+  favicon
 ) => {
   return new Promise((resolve, reject) => {
     const sql = `
@@ -1075,7 +1077,9 @@ exports.updateCompany = (
         foConCode = ?,
         foConNum = ?,
         foEmail = ?,
-        status = ?
+        status = ?,
+        logo = ?,
+      favicon = ?
       WHERE id = ?
     `;
 
@@ -1100,6 +1104,8 @@ exports.updateCompany = (
       foConNum,
       foEmail,
       status,
+      logo,
+      favicon,
       id,
     ];
 

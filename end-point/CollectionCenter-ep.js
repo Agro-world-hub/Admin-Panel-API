@@ -781,6 +781,8 @@ exports.updateCompany = async (req, res) => {
       foConNum,
       foEmail,
       status,
+      logo,
+      favicon,
     } = req.body;
     // Call DAO function to update the company record
     const result = await CollectionCenterDao.updateCompany(
@@ -804,7 +806,9 @@ exports.updateCompany = async (req, res) => {
       foConCode,
       foConNum,
       foEmail,
-      status
+      status,
+      logo,
+      favicon
     );
 
     // Check if any rows were affected (successful update)
