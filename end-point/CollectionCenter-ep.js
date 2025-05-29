@@ -133,7 +133,7 @@ exports.addNewCollectionCenter = async (req, res) => {
 exports.getAllComplains = async (req, res) => {
   try {
     console.log(req.query);
-    const { page, limit, status, category, comCategory, searchText , rpstatus} =
+    const { page, limit, status, category, comCategory, searchText, rpstatus } =
       req.query;
 
     const { results, total } = await CollectionCenterDao.GetAllComplainDAO(
@@ -171,7 +171,7 @@ exports.getAllCenterComplains = async (req, res) => {
       comCategory,
       filterCompany,
       searchText,
-      rpstatus
+      rpstatus,
     } = req.query;
 
     const { results, total } =
@@ -184,7 +184,6 @@ exports.getAllCenterComplains = async (req, res) => {
         filterCompany,
         searchText,
         rpstatus
-
       );
 
     console.log("Successfully retrieved all collection center");
@@ -575,6 +574,8 @@ exports.createCompany = async (req, res) => {
       foConCode,
       foConNum,
       foEmail,
+      logo,
+      favicon,
     } = req.body;
 
     const newsId = await CollectionCenterDao.createCompany(
@@ -596,7 +597,9 @@ exports.createCompany = async (req, res) => {
       foName,
       foConCode,
       foConNum,
-      foEmail
+      foEmail,
+      logo,
+      favicon
     );
 
     console.log("company creation success");
@@ -1121,7 +1124,6 @@ exports.GetAllCompanyForOfficerComplain = async (req, res) => {
 };
 
 exports.getAllCollectionCenterPageAW = async (req, res) => {
-
   const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
   console.log("Request URL:", fullUrl);
   try {
