@@ -117,7 +117,7 @@ exports.checkMarketProductExistsDao = async (varietyId, displayName) => {
 exports.createMarketProductDao = async (product) => {
   return new Promise((resolve, reject) => {
     const sql =
-      "INSERT INTO marketplaceitems (displayName, normalPrice, discountedPrice, promo, unitType, startValue, changeby, tags, category, discount, varietyId, displayType) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+      "INSERT INTO marketplaceitems (displayName, normalPrice, discountedPrice, promo, unitType, startValue, changeby, tags, category, discount, varietyId, displayType, maxQuantity) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
     const values = [
       product.cropName,
       product.normalPrice,
@@ -131,6 +131,7 @@ exports.createMarketProductDao = async (product) => {
       product.discount,
       product.varietyId,
       product.displaytype,
+      product.maxQuantity,
     ];
 
     marketPlace.query(sql, values, (err, results) => {
@@ -491,7 +492,7 @@ exports.getProductById = async (id) => {
             CG.id AS cropGroupId,
             CV.image,
             CV.id AS varietyId,
-            CV.varietyNameEnglish,
+            CV.varietyNameEnglish AS variety,
             MPI.displayName AS cropName,
             MPI.category,
             MPI.normalPrice,
@@ -500,7 +501,9 @@ exports.getProductById = async (id) => {
             MPI.unitType,
             MPI.startValue,
             MPI.changeby,
-            MPI.tags
+            MPI.tags,
+            MPI.displayType AS displaytype,
+            MPI.maxQuantity
           FROM marketplaceitems MPI
           JOIN plant_care.cropvariety CV ON MPI.varietyId = CV.id
           JOIN plant_care.cropgroup CG ON CV.cropGroupId = CG.id
@@ -539,13 +542,14 @@ exports.updateMarketProductDao = async (product, id) => {
         changeby = ?, 
         tags = ?, 
         category = ?,
-        discount = ?
+        discount = ?,
+        maxQuantity = ?
         WHERE id = ?
       `;
     const values = [
       product.cropName,
       product.normalPrice,
-      product.discountedPrice,
+      product.salePrice,
       product.promo,
       product.unitType,
       product.startValue,
@@ -553,6 +557,7 @@ exports.updateMarketProductDao = async (product, id) => {
       product.tags,
       product.category,
       product.discount,
+      product.maxQuantity,
       id,
     ];
 
