@@ -22,28 +22,23 @@ console.log("EMAIL_PASS:", process.env.EMAIL_PASS);
 // console.log('AWS_S3_BUCKET_NAME:', process.env.AWS_S3_BUCKET_NAME);
 console.log("----------------------");
 
-const express = require("express");
-const {
-  admin,
-  plantcare,
-  collectionofficer,
-  marketPlace,
-  dash,
-} = require("./startup/database");
-const routes = require("./routes/Admin");
-const collectionOfficerRoutes = require("./routes/CollectionOfficer");
-const routesNewws = require("./routes/News");
-const CollectionCenterRoutes = require("./routes/CollectionCenter");
-const MarketPrice = require("./routes/MarketPrice");
-const MarketPlace = require("./routes/MarketPlace");
-const CropCalendar = require("./routes/CropCalendar");
-const Permission = require("./routes/Permission");
-const ComplainCategory = require("./routes/ComplainCategory");
-const Stakeholder = require("./routes/stakeholder");
-const SalesAgentDash = require("./routes/SalesAgentDash");
-const TargetRoutes = require("./routes/Target");
-const ProcumentRoutes = require("./routes/Procuments");
-const DispatchRoutes = require("./routes/Dispatch");
+const express = require('express');
+const {  admin, plantcare, collectionofficer, marketPlace, dash } = require('./startup/database');
+const routes = require('./routes/Admin');
+const collectionOfficerRoutes = require('./routes/CollectionOfficer');
+const routesNewws = require('./routes/News');
+const CollectionCenterRoutes = require('./routes/CollectionCenter');
+const MarketPrice = require('./routes/MarketPrice');
+const MarketPlace = require('./routes/MarketPlace');
+const CropCalendar = require('./routes/CropCalendar');
+const Permission = require('./routes/Permission');
+const ComplainCategory = require('./routes/ComplainCategory');
+const Stakeholder = require('./routes/stakeholder');
+const SalesAgentDash = require('./routes/SalesAgentDash');
+const TargetRoutes  =require('./routes/Target');
+const ProcumentRoutes  =require('./routes/Procuments');
+const DispatchRoutes  =require('./routes/Dispatch');
+const DistributionRoutes =require('./routes/DistributionRoutes')
 
 const heathRoutes = require("./routes/heathRoutes");
 const DashRoutes = require("./routes/Dash");
@@ -133,16 +128,18 @@ app.use(BASE_PATH + process.env.AUTHOR, collectionOfficerRoutes);
 app.use(BASE_PATH + process.env.AUTHOR, routesNewws);
 app.use(BASE_PATH + process.env.AUTHOR, CollectionCenterRoutes);
 app.use(BASE_PATH + process.env.MARKETPRICE, MarketPrice);
-app.use(BASE_PATH + "/api/market-place", MarketPlace);
-app.use(BASE_PATH + "/api/crop-calendar", CropCalendar);
-app.use(BASE_PATH + "/api/permission", Permission);
-app.use(BASE_PATH + "/api/complain", ComplainCategory);
-app.use(BASE_PATH + "/api/stakeholder", Stakeholder);
-app.use(BASE_PATH + "/api/sales-agent-dash", SalesAgentDash);
-app.use(BASE_PATH + "/api/dash", DashRoutes);
-app.use(BASE_PATH + "/api/target", TargetRoutes);
-app.use(BASE_PATH + "/api/procument", ProcumentRoutes);
-app.use(BASE_PATH + "/api/dispatch", DispatchRoutes);
+app.use(BASE_PATH + '/api/market-place', MarketPlace);
+app.use(BASE_PATH + '/api/crop-calendar', CropCalendar);
+app.use(BASE_PATH + '/api/permission', Permission);
+app.use(BASE_PATH + '/api/complain', ComplainCategory);
+app.use(BASE_PATH + '/api/stakeholder', Stakeholder);
+app.use(BASE_PATH + '/api/sales-agent-dash', SalesAgentDash);
+app.use(BASE_PATH + '/api/dash', DashRoutes);
+app.use(BASE_PATH + '/api/target', TargetRoutes)
+app.use(BASE_PATH + '/api/procument', ProcumentRoutes)
+app.use(BASE_PATH + '/api/dispatch', DispatchRoutes)
+app.use(BASE_PATH + '/api/distribution', DistributionRoutes)
+
 
 app.use("/uploads", express.static("uploads"));
 
