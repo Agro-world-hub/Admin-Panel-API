@@ -161,4 +161,17 @@ router.delete(
   marketPlaceEp.deleteBannerWhole
 );
 
+router.post(
+  "/create-product-type", 
+  authMiddleware, 
+  marketPlaceEp.createProductType
+);
+
+
+router.get(
+  "/view-all-product-type", 
+  authMiddleware, 
+  marketPlaceEp.viewProductType
+);
+
 module.exports = router;

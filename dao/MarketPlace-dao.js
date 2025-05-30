@@ -1139,3 +1139,29 @@ exports.deleteBannerWhole = async (feedbackId, orderNumber) => {
     });
   });
 };
+
+
+exports.createProductTypesDao = async (data) => {
+  return new Promise((resolve, reject) => {
+    const sql = "INSERT INTO Producttypes (typeName, shortCode) VALUES (?, ?)";
+    marketPlace.query(sql, [data.typeName, data.shortCode], (err, results) => {
+      if (err) {
+        return reject(err);
+      }
+      resolve(results);
+    });
+  });
+};
+
+
+exports.viewProductTypeDao = async () => {
+  return new Promise((resolve, reject) => {
+    const sql = "SELECT * FROM Producttypes";
+    marketPlace.query(sql, (err, results) => {
+      if (err) {
+        return reject(err);
+      }
+      resolve(results);
+    });
+  });
+};

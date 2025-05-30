@@ -136,7 +136,7 @@ exports.getMarketplaceItems = async (req, res) => {
   try {
     const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
     console.log("Request URL:", fullUrl);
-    
+
     const { page, limit, search, displayTypeValue, categoryValue } = req.query;
     const parsedLimit = parseInt(limit, 10) || 10;
     const parsedPage = parseInt(page, 10) || 1;
@@ -146,9 +146,9 @@ exports.getMarketplaceItems = async (req, res) => {
     console.log("Display Type Value:", displayTypeValue);
 
     const { total, items } = await MarketPlaceDao.getMarketplaceItems(
-      parsedLimit, 
-      offset, 
-      search, 
+      parsedLimit,
+      offset,
+      search,
       displayTypeValue, // This should now contain the correct value
       categoryValue
     );
@@ -855,7 +855,7 @@ exports.getNextBannerIndexWholesale = async (req, res) => {
 
 exports.uploadBanner = async (req, res) => {
   try {
- 
+
     const validatedBody = req.body;
 
     const {
@@ -882,7 +882,7 @@ exports.uploadBanner = async (req, res) => {
       image
     };
 
-    
+
     const result = await MarketPlaceDao.createBanner(bannerData);
 
     console.log("PlantCare user created successfully");
@@ -902,7 +902,7 @@ exports.uploadBanner = async (req, res) => {
 
 exports.uploadBannerWholesale = async (req, res) => {
   try {
- 
+
     const validatedBody = req.body;
 
     const {
@@ -929,7 +929,7 @@ exports.uploadBannerWholesale = async (req, res) => {
       image
     };
 
-    
+
     const result = await MarketPlaceDao.createBannerWholesale(bannerData);
 
     console.log("PlantCare user created successfully");
@@ -1074,6 +1074,46 @@ exports.deleteBannerWhole = async (req, res) => {
     });
   } catch (error) {
     console.error("Error deleting feedbannerback:", error);
+    return res.status(500).json({ error: "Internal server error" });
+  }
+};
+
+
+exports.createProductType = async (req, res) => {
+  try {
+    const data = await MarketPriceValidate.createProductTypeSchema.validateAsync(req.body);
+    const result = await MarketPlaceDao.createProductTypesDao(data);
+
+    if( result.affectedRows === 0) {
+      return res.json({
+        message: "Product type creation failed",
+        status: false,
+      });
+    }
+
+
+    return res.status(201).json({
+      message: "Product type created successfully",
+      status: true,
+    });
+  } catch (error) {
+    console.error("Error creating Product type:", error);
+    return res.status(500).json({ error: "Internal server error" });
+  }
+};
+
+
+exports.viewProductType = async (req, res) => {
+  try {
+    const result = await MarketPlaceDao.viewProductTypeDao();
+
+    return res.status(201).json({
+      message: "Product find successfully",
+      status: true,
+      data: result
+    });
+  } catch (error) {
+    console.error("Error creating Product type:", error);
     return res.status(500).json({ error: "Internal server error" });
   }
 };

@@ -54,3 +54,9 @@ UpdatePackageSchema = Joi.object({
   discount: Joi.number().min(0).optional(),
   subtotal: Joi.number().min(0).optional(),
 });
+
+
+exports.createProductTypeSchema = Joi.object({
+  typeName: Joi.string().required(),
+  shortCode: Joi.string().required()
+});
