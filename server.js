@@ -108,14 +108,14 @@ marketPlace.getConnection((err, connection) => {
   connection.release();
 });
 
-dash.getConnection((err, connection) => {
-  if (err) {
-    console.error("Error connecting to the database in index.js (dash):", err);
-    return;
-  }
-  console.log("Connected to the MySQL database in server.js.(dash)  ✅  ");
-  connection.release();
-});
+// dash.getConnection((err, connection) => {
+//   if (err) {
+//     console.error("Error connecting to the database in index.js (dash):", err);
+//     return;
+//   }
+//   console.log("Connected to the MySQL database in server.js.(dash)  ✅  ");
+//   connection.release();
+// });
 
 // Add base path for all routes
 const BASE_PATH = "/agro-api/admin-api";
