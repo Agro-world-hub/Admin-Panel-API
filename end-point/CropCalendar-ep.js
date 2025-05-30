@@ -100,15 +100,16 @@ exports.getAllCropGroups = async (req, res) => {
   try {
     const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
     console.log(fullUrl);
-    const { page, limit } =
-      await cropCalendarValidations.getAllCropCalendarSchema.validateAsync(
+    const { page, limit, searchText } =
+      await cropCalendarValidations.getAllCropGroupsSchema.validateAsync(
         req.query
       );
     const offset = (page - 1) * limit;
 
     const { total, items } = await cropCalendarDao.getAllCropGroups(
       limit,
-      offset
+      offset,
+      searchText
     );
 
     console.log("Successfully fetched crop groups");
@@ -609,7 +610,7 @@ exports.getAllCropCalender = async (req, res) => {
 
     // const {page, limit, searchText} = req.query;
     // console.log(searchText);
-    const { page, limit, searchText } =
+    const { page, limit, searchText, category } =
       await cropCalendarValidations.getAllCropCalendarSchema.validateAsync(
         req.query
       );
@@ -618,7 +619,8 @@ exports.getAllCropCalender = async (req, res) => {
     const { total, items } = await cropCalendarDao.getAllCropCalendars(
       limit,
       offset,
-      searchText
+      searchText,
+      category
     );
 
     console.log("Successfully fetched crop caledars");

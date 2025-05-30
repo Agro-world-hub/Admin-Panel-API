@@ -63,9 +63,12 @@ exports.createCollectionOfficerSchema = Joi.object({
 exports.getAllCollectionOfficersSchema = Joi.object({
     page: Joi.number().integer().min(1).default(1).optional(),
     limit: Joi.number().integer().min(1).max(100).default(10).optional(),
+    centerStatus: Joi.string().optional(),
+    status: Joi.string().optional(),
     nic: Joi.string().allow('').optional(),
     company: Joi.number().optional(),
-    role: Joi.string().optional()
+    role: Joi.string().optional(),
+    centerId: Joi.number().optional(),
 });
 
 

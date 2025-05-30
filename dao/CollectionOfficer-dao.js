@@ -10,6 +10,7 @@ const PDFDocument = require("pdfkit");
 const fs = require("fs");
 const uploadFileToS3 = require("../middlewares/s3upload");
 const { resolve } = require("path");
+const path = require("path");
 
 exports.getCollectionOfficerDistrictReports = (district) => {
   return new Promise((resolve, reject) => {
@@ -361,7 +362,16 @@ exports.getQrImage = (id) => {
 //   });
 // };
 
-exports.getAllCollectionOfficers = (page, limit, searchNIC, companyid, role) => {
+exports.getAllCollectionOfficers = (
+  page,
+  limit,
+  searchNIC,
+  companyid,
+  role,
+  centerStatus,
+  status,
+  centerId
+) => {
   return new Promise((resolve, reject) => {
     const offset = (page - 1) * limit;
 
@@ -370,7 +380,7 @@ exports.getAllCollectionOfficers = (page, limit, searchNIC, companyid, role) => 
             FROM collectionofficer coff
             JOIN company cm ON coff.companyId = cm.id
             LEFT JOIN collectioncenter cc ON coff.centerId = cc.id
-            WHERE coff.jobRole != 'Collection Center Head'
+            WHERE coff.jobRole NOT IN ('Collection Center Head', 'Driver') AND cm.id = 1
         `;
 
     let dataSql = `
@@ -391,7 +401,7 @@ exports.getAllCollectionOfficers = (page, limit, searchNIC, companyid, role) => 
             FROM collectionofficer coff
             JOIN company cm ON coff.companyId = cm.id
             LEFT JOIN collectioncenter cc ON coff.centerId = cc.id
-            WHERE coff.jobRole != 'Collection Center Head' AND coff.jobRole != 'Driver'
+            WHERE coff.jobRole NOT IN ('Collection Center Head', 'Driver') AND cm.id = 1
         `;
 
     const countParams = [];
@@ -405,11 +415,45 @@ exports.getAllCollectionOfficers = (page, limit, searchNIC, companyid, role) => 
       dataParams.push(companyid);
     }
 
+    if (centerStatus) {
+      // Convert centerStatus to corresponding numeric value
+      let claimStatusValue;
+      if (centerStatus === "Claimed") {
+        claimStatusValue = 1;
+      } else if (centerStatus === "Disclaimed") {
+        claimStatusValue = 0;
+      }
+
+      console.log("this is claimstatus value", claimStatusValue);
+
+      // Apply filter only if it's a valid value
+      if (claimStatusValue !== undefined) {
+        countSql += " AND coff.claimStatus = ? ";
+        dataSql += " AND coff.claimStatus = ? ";
+        countParams.push(claimStatusValue);
+        dataParams.push(claimStatusValue);
+      }
+    }
+
+    if (status) {
+      countSql += " AND coff.status LIKE ? ";
+      dataSql += " AND coff.status LIKE ? ";
+      countParams.push(status);
+      dataParams.push(status);
+    }
+
     if (role) {
       countSql += " AND coff.jobRole = ?";
       dataSql += " AND coff.jobRole = ?";
       countParams.push(role);
       dataParams.push(role);
+    }
+
+    if (centerId) {
+      countSql += " AND coff.centerId = ?";
+      dataSql += " AND coff.centerId = ?";
+      countParams.push(centerId);
+      dataParams.push(centerId);
     }
 
     // Apply search filters for NIC or related fields
@@ -423,6 +467,7 @@ exports.getAllCollectionOfficers = (page, limit, searchNIC, companyid, role) => 
                     OR coff.phoneNumber02 LIKE ?
                     OR coff.district LIKE ?
                     OR coff.empId LIKE ?
+                    OR cc.centerName LIKE ?
                 )
             `;
       countSql += searchCondition;
@@ -435,9 +480,11 @@ exports.getAllCollectionOfficers = (page, limit, searchNIC, companyid, role) => 
         searchValue,
         searchValue,
         searchValue,
+        searchValue,
         searchValue
       );
       dataParams.push(
+        searchValue,
         searchValue,
         searchValue,
         searchValue,
@@ -631,18 +678,25 @@ exports.getFarmerPaymentsCropsByRegisteredFarmerId = (registeredFarmerId) => {
 exports.getCollectionOfficerProvinceReports = (province) => {
   return new Promise((resolve, reject) => {
     const sql = `
-            SELECT cg.cropNameEnglish AS cropName,
-             c.province, 
-             SUM(fpc.gradeAquan) AS qtyA, 
-             SUM(fpc.gradeBquan) AS qtyB, 
-             SUM(fpc.gradeCquan) AS qtyC, 
-             SUM(fpc.gradeAprice) AS priceA, 
-             SUM(fpc.gradeBprice) AS priceB, 
-             SUM(fpc.gradeCprice) AS priceC
-            FROM registeredfarmerpayments rp, collectionofficer c, plant_care.cropvariety cv , plant_care.cropgroup cg, farmerpaymentscrops fpc
-            WHERE rp.id = fpc.registerFarmerId AND rp.collectionOfficerId = c.id AND fpc.cropId = cv.id AND cv.cropGroupId = cg.id AND c.province = ? AND c.companyId = 1
-            GROUP BY cg.cropNameEnglish, c.province
-        `;
+      SELECT 
+        cg.cropNameEnglish AS cropName,
+        c.province, 
+        SUM(fpc.gradeAquan) AS qtyA, 
+        SUM(fpc.gradeBquan) AS qtyB, 
+        SUM(fpc.gradeCquan) AS qtyC, 
+        SUM(fpc.gradeAprice) AS priceA, 
+        SUM(fpc.gradeBprice) AS priceB, 
+        SUM(fpc.gradeCprice) AS priceC
+      FROM registeredfarmerpayments rp
+      INNER JOIN collectionofficer c ON rp.collectionOfficerId = c.id
+      INNER JOIN farmerpaymentscrops fpc ON rp.id = fpc.registerFarmerId
+      INNER JOIN plant_care.cropvariety cv ON fpc.cropId = cv.id
+      INNER JOIN plant_care.cropgroup cg ON cv.cropGroupId = cg.id
+      INNER JOIN collectioncenter cc ON c.centerId = cc.id
+      WHERE cc.province = ? AND c.companyId = 1
+      GROUP BY cg.cropNameEnglish, cc.province
+    `;
+    
     collectionofficer.query(sql, [province], (err, results) => {
       if (err) {
         return reject(err);
@@ -651,6 +705,7 @@ exports.getCollectionOfficerProvinceReports = (province) => {
     });
   });
 };
+
 
 exports.getAllCompanyNamesDao = (district) => {
   return new Promise((resolve, reject) => {
@@ -705,7 +760,7 @@ exports.SendGeneratedPasswordDao = async (
     doc.on("data", pdfBuffer.push.bind(pdfBuffer));
     doc.on("end", () => {});
 
-    const watermarkPath = "./assets/bg.png";
+    const watermarkPath = path.resolve(__dirname, "../assets/bg.png");
     doc.opacity(0.2).image(watermarkPath, 100, 300, { width: 400 }).opacity(1);
 
     doc
@@ -796,6 +851,21 @@ exports.SendGeneratedPasswordDao = async (
         family: 4,
       },
     });
+
+    // const transporter = nodemailer.createTransport({
+    //   host: "smtp.gmail.com",
+    //   port: 465, // SSL
+    //   secure: true, // true for 465, false for 587
+    //   auth: {
+    //     user: process.env.EMAIL_USER,
+    //     pass: process.env.EMAIL_PASS,
+    //   },
+    //   tls: {
+    //     rejectUnauthorized: false, // <-- This allows self-signed certificates
+    //     family: 4, // optional if you want to force IPv4
+    //   },
+    // });
+    
 
     const mailOptions = {
       from: process.env.EMAIL_USER,
@@ -1346,7 +1416,6 @@ exports.createCenterHeadPersonal = (officerData, profileImageUrl) => {
       collectionofficer.query(
         sql,
         [
-          
           officerData.companyId,
           officerData.irmId,
           officerData.firstNameEnglish,
@@ -1392,7 +1461,6 @@ exports.createCenterHeadPersonal = (officerData, profileImageUrl) => {
   });
 };
 
-
 exports.updateCenterHeadDetails = (
   id,
   companyId,
@@ -1434,7 +1502,6 @@ exports.updateCenterHeadDetails = (
                     accHolderName = ?, accNumber = ?, bankName = ?, branchName = ?, image = ?, status = 'Not Approved'
           `;
     let values = [
-      
       companyId,
       irmId || null,
       firstNameEnglish,
@@ -1481,7 +1548,7 @@ exports.updateCenterHeadDetails = (
 exports.getAllCenterNamesDao = (district) => {
   return new Promise((resolve, reject) => {
     const sql = `
-            SELECT id, centerName
+            SELECT id, regCode, centerName
             FROM collectioncenter
         `;
     collectionofficer.query(sql, [district], (err, results) => {
@@ -1515,7 +1582,7 @@ exports.getAllCenterManagerDao = () => {
       FROM collectionofficer
       WHERE jobRole = 'Collection Center Manager';
     `;
-    
+
     collectionofficer.query(sql, (err, results) => {
       if (err) {
         return reject(err); // Reject promise if an error occurs
@@ -1541,27 +1608,14 @@ exports.claimOfficerDetailsDao = (id, centerId, irmId) => {
   });
 };
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-exports.getPurchaseReport = (page, limit, centerId, startDate, endDate, search) => {
+exports.getPurchaseReport = (
+  page,
+  limit,
+  centerId,
+  startDate,
+  endDate,
+  search
+) => {
   return new Promise((resolve, reject) => {
     const offset = (page - 1) * limit;
 
@@ -1625,8 +1679,18 @@ exports.getPurchaseReport = (page, limit, centerId, startDate, endDate, search) 
       `;
       const searchPattern = `%${search}%`;
       params.push(searchPattern, searchPattern, searchPattern, searchPattern);
-      countParams.push(searchPattern, searchPattern, searchPattern, searchPattern);
-      totalParams.push(searchPattern, searchPattern, searchPattern, searchPattern);
+      countParams.push(
+        searchPattern,
+        searchPattern,
+        searchPattern,
+        searchPattern
+      );
+      totalParams.push(
+        searchPattern,
+        searchPattern,
+        searchPattern,
+        searchPattern
+      );
     }
 
     countSql = `
@@ -1646,7 +1710,7 @@ exports.getPurchaseReport = (page, limit, centerId, startDate, endDate, search) 
         company c ON co.companyId = c.id
       ${whereClause}
     `;
-    
+
     let grandTotalSql = `
       SELECT 
         ROUND(SUM(subquery.amount), 2) AS grandTotal
@@ -1700,7 +1764,7 @@ exports.getPurchaseReport = (page, limit, centerId, startDate, endDate, search) 
       LIMIT ${limit} OFFSET ${offset}
     `;
 
-    console.log('Executing Count Query...');
+    console.log("Executing Count Query...");
     collectionofficer.query(countSql, countParams, (countErr, countResults) => {
       if (countErr) {
         console.error("Error in count query:", countErr);
@@ -1709,42 +1773,39 @@ exports.getPurchaseReport = (page, limit, centerId, startDate, endDate, search) 
 
       const total = countResults[0].total;
 
-      console.log('Executing Grand Total Query...');
-      collectionofficer.query(grandTotalSql, totalParams, (grandTotalErr, grandTotalResults) => {
-        if (grandTotalErr) {
-          console.error("Error in grand total query:", grandTotalErr);
-          return reject(grandTotalErr);
-        }
-
-        const grandTotal = grandTotalResults[0].grandTotal || 0;
-
-        console.log('Executing Data Query...');
-        collectionofficer.query(dataSql, params, (dataErr, dataResults) => {
-          if (dataErr) {
-            console.error("Error in data query:", dataErr);
-            return reject(dataErr);
+      console.log("Executing Grand Total Query...");
+      collectionofficer.query(
+        grandTotalSql,
+        totalParams,
+        (grandTotalErr, grandTotalResults) => {
+          if (grandTotalErr) {
+            console.error("Error in grand total query:", grandTotalErr);
+            return reject(grandTotalErr);
           }
 
-          resolve({ items: dataResults, total, grandTotal });
-        });
-      });
+          const grandTotal = grandTotalResults[0].grandTotal || 0;
+
+          console.log("Executing Data Query...");
+          collectionofficer.query(dataSql, params, (dataErr, dataResults) => {
+            if (dataErr) {
+              console.error("Error in data query:", dataErr);
+              return reject(dataErr);
+            }
+
+            resolve({ items: dataResults, total, grandTotal });
+          });
+        }
+      );
     });
   });
 };
 
-
-
-
-
 exports.downloadPurchaseReport = (centerId, startDate, endDate, search) => {
   return new Promise((resolve, reject) => {
-  
-
     const params = [];
     const countParams = [];
     const totalParams = [];
 
-    
     let whereClause = "WHERE c.id = 1";
 
     if (centerId) {
@@ -1782,11 +1843,20 @@ exports.downloadPurchaseReport = (centerId, startDate, endDate, search) => {
       `;
       const searchPattern = `%${search}%`;
       params.push(searchPattern, searchPattern, searchPattern, searchPattern);
-      countParams.push(searchPattern, searchPattern, searchPattern, searchPattern);
-      totalParams.push(searchPattern, searchPattern, searchPattern, searchPattern);
+      countParams.push(
+        searchPattern,
+        searchPattern,
+        searchPattern,
+        searchPattern
+      );
+      totalParams.push(
+        searchPattern,
+        searchPattern,
+        searchPattern,
+        searchPattern
+      );
     }
 
-   
     let dataSql = `
       SELECT 
         invNo AS grnNumber,
@@ -1803,7 +1873,8 @@ exports.downloadPurchaseReport = (centerId, startDate, endDate, search) => {
         ub.bankName AS bankName,
         ub.branchName AS branchName,
         co.empId AS empId,
-        TIME(rfp.createdAt) AS createdAt
+        TIME(rfp.createdAt) AS createdAt,
+        DATE(rfp.createdAt) AS createdDate
       FROM 
         registeredfarmerpayments rfp
       LEFT JOIN 
@@ -1822,7 +1893,7 @@ exports.downloadPurchaseReport = (centerId, startDate, endDate, search) => {
       GROUP BY rfp.id
     `;
 
-    console.log('Executing Count Query...');
+    console.log("Executing Count Query...");
 
     collectionofficer.query(dataSql, params, (err, results) => {
       if (err) {
@@ -1832,17 +1903,6 @@ exports.downloadPurchaseReport = (centerId, startDate, endDate, search) => {
     });
   });
 };
-
-
-
-
-
-
-
-
-
-
-
 
 exports.getAllCentersForPurchaseReport = () => {
   return new Promise((resolve, reject) => {
@@ -1856,7 +1916,7 @@ exports.getAllCentersForPurchaseReport = () => {
         GROUP BY cc.centerId
         `;
 
-        collectionofficer.query(sql, (err, results) => {
+    collectionofficer.query(sql, (err, results) => {
       if (err) {
         return reject(err);
       }
@@ -1865,14 +1925,14 @@ exports.getAllCentersForPurchaseReport = () => {
   });
 };
 
-
-
-
-
-
-
-
-exports.getCollectionReport = (page, limit, centerId, startDate, endDate, search) => {
+exports.getCollectionReport = (
+  page,
+  limit,
+  centerId,
+  startDate,
+  endDate,
+  search
+) => {
   return new Promise((resolve, reject) => {
     const offset = (page - 1) * limit;
 
@@ -1911,7 +1971,12 @@ exports.getCollectionReport = (page, limit, centerId, startDate, endDate, search
       `;
       const searchPattern = `%${search}%`;
       params.push(searchPattern, searchPattern, searchPattern, searchPattern);
-      countParams.push(searchPattern, searchPattern, searchPattern, searchPattern);
+      countParams.push(
+        searchPattern,
+        searchPattern,
+        searchPattern,
+        searchPattern
+      );
     }
 
     const countSql = `
@@ -1958,7 +2023,7 @@ exports.getCollectionReport = (page, limit, centerId, startDate, endDate, search
     // Add limit and offset to the end of params
     params.push(parseInt(limit), parseInt(offset));
 
-    console.log('Executing Count Query...');
+    console.log("Executing Count Query...");
     collectionofficer.query(countSql, countParams, (countErr, countResults) => {
       if (countErr) {
         console.error("Error in count query:", countErr);
@@ -1967,7 +2032,7 @@ exports.getCollectionReport = (page, limit, centerId, startDate, endDate, search
 
       const total = countResults[0]?.total || 0;
 
-      console.log('Executing Data Query...');
+      console.log("Executing Data Query...");
       collectionofficer.query(dataSql, params, (dataErr, dataResults) => {
         if (dataErr) {
           console.error("Error in data query:", dataErr);
@@ -1976,28 +2041,19 @@ exports.getCollectionReport = (page, limit, centerId, startDate, endDate, search
 
         resolve({
           items: dataResults,
-          total
+          total,
         });
       });
     });
   });
 };
 
-
-
-
-
-
-
 exports.downloadCollectionReport = (centerId, startDate, endDate, search) => {
   return new Promise((resolve, reject) => {
-  
-
     const params = [];
     const countParams = [];
     const totalParams = [];
 
-    
     let whereClause = "WHERE c.id = 1";
 
     if (centerId) {
@@ -2035,11 +2091,20 @@ exports.downloadCollectionReport = (centerId, startDate, endDate, search) => {
       `;
       const searchPattern = `%${search}%`;
       params.push(searchPattern, searchPattern, searchPattern, searchPattern);
-      countParams.push(searchPattern, searchPattern, searchPattern, searchPattern);
-      totalParams.push(searchPattern, searchPattern, searchPattern, searchPattern);
+      countParams.push(
+        searchPattern,
+        searchPattern,
+        searchPattern,
+        searchPattern
+      );
+      totalParams.push(
+        searchPattern,
+        searchPattern,
+        searchPattern,
+        searchPattern
+      );
     }
 
-   
     let dataSql = `
       SELECT 
         fpc.id AS id,
@@ -2065,7 +2130,7 @@ exports.downloadCollectionReport = (centerId, startDate, endDate, search) => {
       GROUP BY fpc.id
     `;
 
-    console.log('Executing Count Query...');
+    console.log("Executing Count Query...");
 
     collectionofficer.query(dataSql, params, (err, results) => {
       if (err) {

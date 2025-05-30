@@ -2,7 +2,7 @@
 const Joi = require("joi");
 
 exports.loginAdminSchema = Joi.object({
-  email: Joi.string().email().required(),
+  email: Joi.string().required(),
   password: Joi.string().required(),
 });
 
@@ -24,6 +24,8 @@ exports.getAllUsersSchema = Joi.object({
   page: Joi.number().integer().min(1).default(1),
   limit: Joi.number().integer().min(1).max(100).default(10),
   nic: Joi.string().allow(""),
+  regStatus: Joi.string().allow(""),
+  district: Joi.string().allow(""),
 });
 
 exports.getAllUsersRepSchema = Joi.object({
@@ -280,6 +282,10 @@ exports.updatePlantCareUserSchema = Joi.object({
   membership: Joi.string().min(1).max(50).required().messages({
     "any.required": "membership name is required",
     "string.empty": "membership name cannot be empty",
+  }),
+  language: Joi.string().min(1).max(50).required().messages({
+    "any.required": "language name is required",
+    "string.empty": "language name cannot be empty",
   }),
   accNumber: Joi.string().min(1).max(50).required().messages({
     "any.required": "account number is required",

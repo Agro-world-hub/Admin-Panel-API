@@ -55,10 +55,12 @@ exports.createCropGroup = async (
 
 
 
-exports.getAllCropGroups = (limit, offset) => {
+exports.getAllCropGroups = (limit, offset, searchText) => {
   return new Promise((resolve, reject) => {
-    const countSql = "SELECT COUNT(*) AS total FROM cropgroup";
-    const dataSql = `
+    const dataParams = [];
+    const countParams = [];
+    let countSql = "SELECT COUNT(*) AS total FROM cropgroup";
+    let dataSql = `
         SELECT 
           cg.*,
           COUNT(cv.id) as varietyCount,
@@ -67,18 +69,31 @@ exports.getAllCropGroups = (limit, offset) => {
           cropgroup cg
         LEFT JOIN 
           cropvariety cv ON cg.id = cv.cropGroupId
+        
+      `;
+
+      if(searchText){
+        dataSql+=` WHERE  cg.cropNameEnglish LIKE ?`
+        countSql+=` WHERE  cropNameEnglish LIKE ?`
+        dataParams.push(`%${searchText}%`)
+        countParams.push(`%${searchText}%`)
+      }
+
+      dataSql+=`
         GROUP BY 
           cg.id
         ORDER BY 
           cg.createdAt DESC
-        LIMIT ? OFFSET ?;
-      `;
+        LIMIT ? OFFSET ?
+      `
+      dataParams.push(limit,offset);
 
-      plantcare.query(countSql, (countErr, countResults) => {
+
+      plantcare.query(countSql,countParams, (countErr, countResults) => {
       if (countErr) {
         reject(countErr);
       } else {
-        plantcare.query(dataSql, [limit, offset], (dataErr, dataResults) => {
+        plantcare.query(dataSql, dataParams, (dataErr, dataResults) => {
           if (dataErr) {
             reject(dataErr);
           } else {
@@ -495,7 +510,7 @@ exports.updateCropVariety = (id, updates) => {
 
 
 
-exports.getAllCropCalendars = (limit, offset, searchText) => {
+exports.getAllCropCalendars = (limit, offset, searchText, category) => {
   return new Promise((resolve, reject) => {
     // 🔹 Ensure JOINs are included in COUNT query
     let countSql = `
@@ -539,6 +554,19 @@ exports.getAllCropCalendars = (limit, offset, searchText) => {
       const searchValue = `%${searchText}%`;
       countParams.push(searchValue, searchValue, searchValue, searchValue, searchValue, searchValue);
       dataParams.push(searchValue, searchValue, searchValue, searchValue, searchValue, searchValue);
+    }
+
+    if (category) {
+      const searchCondition = `
+          WHERE (
+              cropgroup.category = ?
+          )
+      `;
+      countSql += searchCondition;  // 🔹 Add WHERE condition to COUNT query
+      dataSql += searchCondition;
+      const crop = `%${category}%`;
+      countParams.push(crop);
+      dataParams.push(crop);
     }
 
     // 🔹 Ensure limit & offset are integers

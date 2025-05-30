@@ -133,7 +133,7 @@ exports.addNewCollectionCenter = async (req, res) => {
 exports.getAllComplains = async (req, res) => {
   try {
     console.log(req.query);
-    const { page, limit, status, category, comCategory, searchText } =
+    const { page, limit, status, category, comCategory, searchText, rpstatus } =
       req.query;
 
     const { results, total } = await CollectionCenterDao.GetAllComplainDAO(
@@ -142,7 +142,8 @@ exports.getAllComplains = async (req, res) => {
       status,
       category,
       comCategory,
-      searchText
+      searchText,
+      rpstatus
     );
 
     console.log("Successfully retrieved all collection center");
@@ -170,6 +171,7 @@ exports.getAllCenterComplains = async (req, res) => {
       comCategory,
       filterCompany,
       searchText,
+      rpstatus,
     } = req.query;
 
     const { results, total } =
@@ -180,7 +182,8 @@ exports.getAllCenterComplains = async (req, res) => {
         category,
         comCategory,
         filterCompany,
-        searchText
+        searchText,
+        rpstatus
       );
 
     console.log("Successfully retrieved all collection center");
@@ -324,8 +327,10 @@ exports.createCollectionCenter = async (req, res) => {
 };
 
 exports.getAllCollectionCenterPage = async (req, res) => {
+  const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
+  console.log(fullUrl);
   try {
-    const { page, limit, searchItem } =
+    const { page, limit, district, province, searchItem } =
       await ValidateSchema.getAllUsersSchema.validateAsync(req.query);
 
     const offset = (page - 1) * limit;
@@ -333,6 +338,8 @@ exports.getAllCollectionCenterPage = async (req, res) => {
     const { total, items } = await CollectionCenterDao.getAllCenterPage(
       limit,
       offset,
+      district,
+      province,
       searchItem
     );
 
@@ -567,6 +574,8 @@ exports.createCompany = async (req, res) => {
       foConCode,
       foConNum,
       foEmail,
+      logo,
+      favicon,
     } = req.body;
 
     const newsId = await CollectionCenterDao.createCompany(
@@ -588,7 +597,9 @@ exports.createCompany = async (req, res) => {
       foName,
       foConCode,
       foConNum,
-      foEmail
+      foEmail,
+      logo,
+      favicon
     );
 
     console.log("company creation success");
@@ -770,6 +781,8 @@ exports.updateCompany = async (req, res) => {
       foConNum,
       foEmail,
       status,
+      logo,
+      favicon,
     } = req.body;
     // Call DAO function to update the company record
     const result = await CollectionCenterDao.updateCompany(
@@ -793,7 +806,9 @@ exports.updateCompany = async (req, res) => {
       foConCode,
       foConNum,
       foEmail,
-      status
+      status,
+      logo,
+      favicon
     );
 
     // Check if any rows were affected (successful update)
@@ -1113,8 +1128,10 @@ exports.GetAllCompanyForOfficerComplain = async (req, res) => {
 };
 
 exports.getAllCollectionCenterPageAW = async (req, res) => {
+  const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
+  console.log("Request URL:", fullUrl);
   try {
-    const { page, limit, searchItem, companyId } =
+    const { page, limit, companyId, district, province, searchItem } =
       await ValidateSchema.getAWCentersSchema.validateAsync(req.query);
 
     const offset = (page - 1) * limit;
@@ -1122,6 +1139,8 @@ exports.getAllCollectionCenterPageAW = async (req, res) => {
     const { total, items } = await CollectionCenterDao.getAllCenterPageAW(
       limit,
       offset,
+      district,
+      province,
       searchItem,
       companyId
     );

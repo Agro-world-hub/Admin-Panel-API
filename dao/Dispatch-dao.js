@@ -339,6 +339,13 @@ exports.updateIsPackedStatus = (packedItems) => {
               WHERE id IN (?)
             `;
 
+            // Add query to get isAdditionalItems status for each order
+            const getAdditionalItemStatusSql = `
+              SELECT orderId, isAdditionalItems 
+              FROM orderpackageitems 
+              WHERE orderId IN (?)
+            `;
+
             dash.query(getOrdersInfoSql, [orderIds], (err, ordersInfoResults) => {
               if (err) {
                 console.error('Error fetching orders information:', err);
@@ -351,17 +358,10 @@ exports.updateIsPackedStatus = (packedItems) => {
                 });
               }
 
-              // Get the current status of all items for the affected orders
-              const getItemsForOrdersSql = `
-                SELECT orderId, isPacking 
-                FROM finalorderpackagelist 
-                WHERE orderId IN (?)
-              `;
-
-              dash.query(getItemsForOrdersSql, [orderIds], (err, allItemsResults) => {
+              // Get the isAdditionalItems status for each order
+              dash.query(getAdditionalItemStatusSql, [orderIds], (err, additionalItemsResults) => {
                 if (err) {
-                  console.error('Error fetching items for orders:', err);
-                  // Still resolve with the item update results
+                  console.error('Error fetching additional items status:', err);
                   return resolve({
                     success: true,
                     affectedRows: totalUpdated,
@@ -370,133 +370,168 @@ exports.updateIsPackedStatus = (packedItems) => {
                   });
                 }
 
-                // Group items by orderId
-                const itemsByOrder = {};
-                allItemsResults.forEach(item => {
-                  if (!itemsByOrder[item.orderId]) {
-                    itemsByOrder[item.orderId] = [];
-                  }
-                  itemsByOrder[item.orderId].push(item.isPacking);
+                // Create a map of orderId to isAdditionalItems value
+                const additionalItemsMap = {};
+                additionalItemsResults.forEach(item => {
+                  additionalItemsMap[item.orderId] = item.isAdditionalItems;
                 });
 
-                // Create a mapping of orders with their addItemStatus
-                const orderInfoMap = {};
-                ordersInfoResults.forEach(order => {
-                  orderInfoMap[order.id] = {
-                    addItemStatus: order.addItemStatus
-                  };
-                });
-
-                // Process each order to determine both new packItemStatus and packageStatus
-                const orderUpdates = [];
-                
-                for (const orderId in itemsByOrder) {
-                  const itemStatuses = itemsByOrder[orderId];
-                  const allPacked = itemStatuses.every(status => status === 1);
-                  const nonePacked = itemStatuses.every(status => status === 0);
-
-                  // First calculate the new packItemStatus
-                  let newPackItemStatus;
-                  if (allPacked) {
-                    newPackItemStatus = 'Completed';
-                  } else if (nonePacked) {
-                    newPackItemStatus = 'Pending';
-                  } else {
-                    newPackItemStatus = 'Opened';
-                  }
-
-                  // Get addItemStatus for this order
-                  const orderInfo = orderInfoMap[orderId];
-                  if (!orderInfo) continue;
-                  
-                  const addItemStatus = orderInfo.addItemStatus;
-
-                  // Now determine packageStatus using the NEW packItemStatus value and current addItemStatus
-                  let packageStatus;
-
-                  if (newPackItemStatus === 'Pending' && addItemStatus === 'Pending') {
-                    packageStatus = 'Pending';
-                  }
-                  else if (newPackItemStatus === 'Pending' && addItemStatus === 'Opened') {
-                    packageStatus = 'Pending';
-                  }
-                  else if (newPackItemStatus === 'Pending' && addItemStatus === 'Completed') {
-                    packageStatus = 'Pending';
-                  }
-                  else if (newPackItemStatus === 'Opened' && addItemStatus === 'Pending') {
-                    packageStatus = 'Pending';
-                  }
-                  else if (newPackItemStatus === 'Opened' && addItemStatus === 'Opened') {
-                    packageStatus = 'Opened';
-                  }
-                  else if (newPackItemStatus === 'Opened' && addItemStatus === 'Completed') {
-                    packageStatus = 'Opened';
-                  }
-                  else if (newPackItemStatus === 'Completed' && addItemStatus === 'Pending') {
-                    packageStatus = 'Pending';
-                  }
-                  else if (newPackItemStatus === 'Completed' && addItemStatus === 'Opened') {
-                    packageStatus = 'Opened';
-                  }
-                  else if (newPackItemStatus === 'Completed' && addItemStatus === 'Completed') {
-                    packageStatus = 'Completed';
-                  }
-                  else {
-                    // Default case (should theoretically never happen if data is clean)
-                    packageStatus = 'Pending';
-                    console.warn(`Unexpected status combination: packItemStatus=${newPackItemStatus}, addItemStatus=${addItemStatus}`);
-                  }
-
-                  orderUpdates.push({
-                    orderId: orderId,
-                    packItemStatus: newPackItemStatus,
-                    packageStatus: packageStatus
-                  });
-                }
-
-                // Update orders table with both packItemStatus and packageStatus
-                const updateOrderSql = `
-                  UPDATE orders 
-                  SET packItemStatus = ?, packageStatus = ?
-                  WHERE id = ?
+                // Get the current status of all items for the affected orders
+                const getItemsForOrdersSql = `
+                  SELECT orderId, isPacking 
+                  FROM finalorderpackagelist 
+                  WHERE orderId IN (?)
                 `;
 
-                let ordersCompleted = 0;
-                let ordersUpdated = 0;
-                let orderUpdateErrors = [];
+                dash.query(getItemsForOrdersSql, [orderIds], (err, allItemsResults) => {
+                  if (err) {
+                    console.error('Error fetching items for orders:', err);
+                    // Still resolve with the item update results
+                    return resolve({
+                      success: true,
+                      affectedRows: totalUpdated,
+                      failedUpdates,
+                      message: `${totalUpdated} items updated. ${failedUpdates.length ? failedUpdates.length + ' failed.' : 'All successful.'}`
+                    });
+                  }
 
-                if (orderUpdates.length === 0) {
-                  return resolve({
-                    success: true,
-                    affectedRows: totalUpdated,
-                    failedUpdates,
-                    message: `${totalUpdated} items updated. ${failedUpdates.length ? failedUpdates.length + ' failed.' : 'All successful.'}`
+                  // Group items by orderId
+                  const itemsByOrder = {};
+                  allItemsResults.forEach(item => {
+                    if (!itemsByOrder[item.orderId]) {
+                      itemsByOrder[item.orderId] = [];
+                    }
+                    itemsByOrder[item.orderId].push(item.isPacking);
                   });
-                }
 
-                // Update all orders with both statuses
-                orderUpdates.forEach(({ orderId, packItemStatus, packageStatus }) => {
-                  dash.query(updateOrderSql, [packItemStatus, packageStatus, orderId], (err, result) => {
-                    ordersCompleted++;
+                  // Create a mapping of orders with their addItemStatus
+                  const orderInfoMap = {};
+                  ordersInfoResults.forEach(order => {
+                    orderInfoMap[order.id] = {
+                      addItemStatus: order.addItemStatus
+                    };
+                  });
 
-                    if (err) {
-                      console.error(`Error updating order ${orderId}:`, err);
-                      orderUpdateErrors.push(orderId);
+                  // Process each order to determine both new packItemStatus and packageStatus
+                  const orderUpdates = [];
+                  
+                  for (const orderId in itemsByOrder) {
+                    const itemStatuses = itemsByOrder[orderId];
+                    const allPacked = itemStatuses.every(status => status === 1);
+                    const nonePacked = itemStatuses.every(status => status === 0);
+
+                    // First calculate the new packItemStatus
+                    let newPackItemStatus;
+                    if (allPacked) {
+                      newPackItemStatus = 'Completed';
+                    } else if (nonePacked) {
+                      newPackItemStatus = 'Pending';
                     } else {
-                      console.log(`Updated order ${orderId} to packItemStatus = ${packItemStatus} and packageStatus = ${packageStatus}`);
-                      ordersUpdated += result.affectedRows;
+                      newPackItemStatus = 'Opened';
                     }
 
-                    if (ordersCompleted === orderUpdates.length) {
-                      resolve({
-                        success: true,
-                        affectedRows: totalUpdated,
-                        ordersUpdated,
-                        failedUpdates,
-                        orderUpdateErrors,
-                        message: `${totalUpdated} items updated. ${ordersUpdated} orders updated. ${failedUpdates.length ? failedUpdates.length + ' item updates failed.' : ''} ${orderUpdateErrors.length ? orderUpdateErrors.length + ' order updates failed.' : ''}`
-                      });
+                    // Get addItemStatus for this order
+                    const orderInfo = orderInfoMap[orderId];
+                    if (!orderInfo) continue;
+                    
+                    const addItemStatus = orderInfo.addItemStatus;
+                    
+                    // Check if this order has isAdditionalItems set to 1
+                    const hasAdditionalItems = additionalItemsMap[orderId] === 1;
+
+                    // Now determine packageStatus differently based on isAdditionalItems
+                    let packageStatus;
+
+                    if (!hasAdditionalItems) {
+                      // If isAdditionalItems is 0, only consider packItemStatus
+                      packageStatus = newPackItemStatus;
+                    } else {
+                      // If isAdditionalItems is 1, use the original logic
+                      if (newPackItemStatus === 'Pending' && addItemStatus === 'Pending') {
+                        packageStatus = 'Pending';
+                      }
+                      else if (newPackItemStatus === 'Pending' && addItemStatus === 'Opened') {
+                        packageStatus = 'Pending';
+                      }
+                      else if (newPackItemStatus === 'Pending' && addItemStatus === 'Completed') {
+                        packageStatus = 'Pending';
+                      }
+                      else if (newPackItemStatus === 'Opened' && addItemStatus === 'Pending') {
+                        packageStatus = 'Pending';
+                      }
+                      else if (newPackItemStatus === 'Opened' && addItemStatus === 'Opened') {
+                        packageStatus = 'Opened';
+                      }
+                      else if (newPackItemStatus === 'Opened' && addItemStatus === 'Completed') {
+                        packageStatus = 'Opened';
+                      }
+                      else if (newPackItemStatus === 'Completed' && addItemStatus === 'Pending') {
+                        packageStatus = 'Pending';
+                      }
+                      else if (newPackItemStatus === 'Completed' && addItemStatus === 'Opened') {
+                        packageStatus = 'Opened';
+                      }
+                      else if (newPackItemStatus === 'Completed' && addItemStatus === 'Completed') {
+                        packageStatus = 'Completed';
+                      }
+                      else {
+                        // Default case (should theoretically never happen if data is clean)
+                        packageStatus = 'Pending';
+                        console.warn(`Unexpected status combination: packItemStatus=${newPackItemStatus}, addItemStatus=${addItemStatus}`);
+                      }
                     }
+
+                    orderUpdates.push({
+                      orderId: orderId,
+                      packItemStatus: newPackItemStatus,
+                      packageStatus: packageStatus
+                    });
+                  }
+
+                  // Update orders table with both packItemStatus and packageStatus
+                  const updateOrderSql = `
+                    UPDATE orders 
+                    SET packItemStatus = ?, packageStatus = ?
+                    WHERE id = ?
+                  `;
+
+                  let ordersCompleted = 0;
+                  let ordersUpdated = 0;
+                  let orderUpdateErrors = [];
+
+                  if (orderUpdates.length === 0) {
+                    return resolve({
+                      success: true,
+                      affectedRows: totalUpdated,
+                      failedUpdates,
+                      message: `${totalUpdated} items updated. ${failedUpdates.length ? failedUpdates.length + ' failed.' : 'All successful.'}`
+                    });
+                  }
+
+                  // Update all orders with both statuses
+                  orderUpdates.forEach(({ orderId, packItemStatus, packageStatus }) => {
+                    dash.query(updateOrderSql, [packItemStatus, packageStatus, orderId], (err, result) => {
+                      ordersCompleted++;
+
+                      if (err) {
+                        console.error(`Error updating order ${orderId}:`, err);
+                        orderUpdateErrors.push(orderId);
+                      } else {
+                        console.log(`Updated order ${orderId} to packItemStatus = ${packItemStatus} and packageStatus = ${packageStatus}`);
+                        ordersUpdated += result.affectedRows;
+                      }
+
+                      if (ordersCompleted === orderUpdates.length) {
+                        resolve({
+                          success: true,
+                          affectedRows: totalUpdated,
+                          ordersUpdated,
+                          failedUpdates,
+                          orderUpdateErrors,
+                          message: `${totalUpdated} items updated. ${ordersUpdated} orders updated. ${failedUpdates.length ? failedUpdates.length + ' item updates failed.' : ''} ${orderUpdateErrors.length ? orderUpdateErrors.length + ' order updates failed.' : ''}`
+                        });
+                      }
+                    });
                   });
                 });
               });

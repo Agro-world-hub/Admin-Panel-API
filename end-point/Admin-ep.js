@@ -13,16 +13,37 @@ const bcrypt = require("bcryptjs");
 const { v4: uuidv4 } = require("uuid");
 const uploadFileToS3 = require("../middlewares/s3upload");
 const deleteFromS3 = require("../middlewares/s3delete");
+const SECRET_KEY = "agroworldadmin";
+const CryptoJS = require("crypto-js");
+
+function encryptResponse(data, secretKey) {
+  const encrypted = CryptoJS.AES.encrypt(JSON.stringify(data), secretKey).toString();
+  return { data: encrypted };
+}
 
 exports.loginAdmin = async (req, res) => {
   const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
   console.log(fullUrl);
 
   try {
-    // Validate request body
-    await ValidateSchema.loginAdminSchema.validateAsync(req.body);
 
-    const { email, password } = req.body;
+    const encrypted = req.body.data;
+    if (!encrypted) {
+      return res.status(400).json({ error: "Missing encrypted data" });
+    }
+
+    let decrypted;
+    try {
+      const bytes = CryptoJS.AES.decrypt(encrypted, SECRET_KEY);
+      const decryptedStr = bytes.toString(CryptoJS.enc.Utf8);
+      decrypted = JSON.parse(decryptedStr);
+    } catch (err) {
+      return res.status(400).json({ error: "Invalid encrypted data format" });
+    }
+    // Validate request body
+    await ValidateSchema.loginAdminSchema.validateAsync(decrypted);
+
+    const { email, password } = decrypted;
 
     // Fetch user and permissions from the database
     const [user] = await adminDao.loginAdmin(email);
@@ -66,7 +87,10 @@ exports.loginAdmin = async (req, res) => {
       expiresIn: 18000,
     };
 
-    res.json(data);
+    const encryptedResponse = encryptResponse(data, SECRET_KEY);
+    res.json(encryptedResponse);
+
+   
   } catch (err) {
     console.error("Error during login:", err);
 
@@ -200,11 +224,11 @@ exports.getAllUsers = async (req, res) => {
   try {
     console.log(req.query);
 
-    const { page, limit, nic } =
+    const { page, limit, nic, regStatus, district} =
       await ValidateSchema.getAllUsersSchema.validateAsync(req.query);
     const offset = (page - 1) * limit;
 
-    const { total, items } = await adminDao.getAllUsers(limit, offset, nic);
+    const { total, items } = await adminDao.getAllUsers(limit, offset, nic, regStatus, district);
 
     console.log("Successfully fetched users");
     res.json({
@@ -1219,6 +1243,7 @@ exports.updatePlantCareUser = async (req, res) => {
       NICnumber,
       district,
       membership,
+      language,
       accNumber,
       accHolderName,
       bankName,
@@ -1257,6 +1282,7 @@ exports.updatePlantCareUser = async (req, res) => {
       NICnumber,
       district,
       membership,
+      language,
       profileImageUrl,
       accNumber,
       accHolderName,
@@ -1305,6 +1331,7 @@ exports.createPlantCareUser = async (req, res) => {
       NICnumber,
       district,
       membership,
+      language,
       // Add bank details fields
       accNumber,
       accHolderName,
@@ -1332,6 +1359,7 @@ exports.createPlantCareUser = async (req, res) => {
       NICnumber,
       district,
       membership,
+      language,
       profileImageUrl,
       // Include bank details in userData
       accNumber,
@@ -1432,11 +1460,29 @@ exports.getUserById = async (req, res) => {
 
 exports.createAdmin = async (req, res) => {
   try {
-    // Validate the request body
     const validatedBody = req.body;
-    const hashedPassword = await bcrypt.hash(validatedBody.password, 10);
 
-    // Create admin data in the database
+    const existingUser = await adminDao.findAdminByEmailOrUsername(
+      validatedBody.mail,
+      validatedBody.userName
+    );
+
+    if (existingUser.length > 0) {
+      return res.status(400).json({
+        error: "An admin with the same email or username already exists.",
+      });
+    }
+
+    if (validatedBody.role === "Super Admin") {
+      const superAdminCount = await adminDao.countSuperAdmins();
+      if (superAdminCount >= 3) {
+        return res.status(400).json({
+          error: "Super Admin limit reached. Cannot create more than 3.",
+        });
+      }
+    }
+
+    const hashedPassword = await bcrypt.hash(validatedBody.password, 10);
     const result = await adminDao.createAdmin(validatedBody, hashedPassword);
 
     console.log("Admin created successfully");
@@ -1446,7 +1492,6 @@ exports.createAdmin = async (req, res) => {
     });
   } catch (error) {
     if (error.isJoi) {
-      // Validation error
       return res.status(400).json({ error: error.details[0].message });
     }
 
@@ -1456,6 +1501,7 @@ exports.createAdmin = async (req, res) => {
       .json({ error: "An error occurred while creating admin user" });
   }
 };
+
 
 // exports.getTotalFixedAssetValue = (req, res) => {
 //     const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
@@ -2551,13 +2597,14 @@ exports.getFarmerListReport = async (req, res) => {
     // Fetch farmer list report data from the DAO
     const cropList = await adminDao.getFarmerCropListReport(id);
     const userdetails = await adminDao.getReportfarmerDetails(userId);
+    const date = await adminDao.getFarmerCropListReportDate(id);
 
     console.log("Successfully fetched farmer list report");
     console.log(userdetails);
 
     // Respond with the farmer list report data
     //
-    res.json({ crops: [cropList], farmer: [userdetails] });
+    res.json({ crops: [cropList], farmer: [userdetails], date: [date] });
   } catch (error) {
     console.error("Error fetching farmer list report:", error);
     return res.status(500).json({

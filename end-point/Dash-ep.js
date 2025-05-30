@@ -189,8 +189,20 @@ exports.createSalesAgent = async (req, res) => {
       }
     }
 
+
+    //   if (req.body.file) {
+    //   const fileBuffer = req.body.file.buffer;
+    //   const fileName = req.body.file.originalname;
+
+    //   profileImageUrl = await uploadFileToS3(
+    //     fileBuffer,
+    //     fileName,
+    //     "users/profile-images"
+    //   );
+    // }
+
     // Save officer data (without image if no image is uploaded)
-    console.log('got to dao');
+    console.log('got to dao',profileImageUrl);
     const resultsPersonal =
       await DashDao.createSalesAgent(
         officerData,
@@ -245,10 +257,13 @@ exports.updateSalesAgentDetails = async (req, res) => {
 
   const officerData = JSON.parse(req.body.officerData);
   // const qrCode = await collectionofficerDao.getQrImage(id);
+  const officerDataForImage = await DashDao.getSalesAgentDataById(id);
 
   // let qrImageUrl;
 
   let profileImageUrl = null;
+
+   const exProfileImageUrl = officerDataForImage.image;
 
   if (req.body.file) {
     console.log("Recieved");
@@ -256,6 +271,10 @@ exports.updateSalesAgentDetails = async (req, res) => {
     // if (qrImageUrl) {
     //   await deleteFromS3(qrImageUrl);
     // }
+    if (exProfileImageUrl) {
+        await deleteFromS3(exProfileImageUrl);
+      }
+
 
     const base64String = req.body.file.split(",")[1]; // Extract the Base64 content
     const mimeType = req.body.file.match(/data:(.*?);base64,/)[1]; // Extract MIME type
@@ -424,7 +443,7 @@ exports.getAllOrders = async (req, res) => {
     //     req.query
     //   );
 
-    const { page, limit, orderStatus, paymentMethod, paymentStatus, deliveryType, searchText } = req.query;
+    const { page, limit, orderStatus, paymentMethod, paymentStatus, deliveryType, searchText, date } = req.query;
 
     // const { page, limit, nic, company } = validatedQuery;
 
@@ -436,7 +455,8 @@ exports.getAllOrders = async (req, res) => {
       paymentMethod,
       paymentStatus,
       deliveryType,
-      searchText
+      searchText,
+      date
 
     );
 

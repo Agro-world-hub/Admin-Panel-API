@@ -298,10 +298,10 @@ const createSalesAgent = (officerData, profileImageUrl) => {
                   INSERT INTO salesagent (
                       firstName, lastName, empId, empType, phoneCode1, phoneNumber1, phoneCode2, phoneNumber2,
                       nic, email, houseNumber, streetName, city, district, province, country,
-                      accHolderName, accNumber, bankName, branchName, status
+                      accHolderName, accNumber, bankName, branchName, image, status
                   ) VALUES (
                            ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,
-                           ?, ?, ?, ?, ?, ?, ?, ?, ?,?, 'Not Approved')
+                           ?, ?, ?, ?, ?, ?, ?, ?, ?,?,?, 'Not Approved')
               `;
 
       // Database query with QR image data added
@@ -328,7 +328,7 @@ const createSalesAgent = (officerData, profileImageUrl) => {
           officerData.accNumber,
           officerData.bankName,
           officerData.branchName,
-          // imageUrl,
+          imageUrl
         ],
         (err, results) => {
           if (err) {
@@ -392,7 +392,7 @@ const updateSalesAgentDetails = (
                UPDATE salesagent
                   SET firstName = ?, lastName = ?, empId = ?, empType = ?, phoneCode1 = ?, phoneNumber1 = ?, phoneCode2 = ?, phoneNumber2 = ?,
                       nic = ?, email = ?, houseNumber = ?, streetName = ?, city = ?, district = ?, province = ?, country = ?,
-                      accHolderName = ?, accNumber = ?, bankName = ?, branchName = ?, status = 'Not Approved'
+                      accHolderName = ?, accNumber = ?, bankName = ?, branchName = ?, image = ? , status = 'Not Approved'
             `;
     let values = [
       firstName,
@@ -415,7 +415,7 @@ const updateSalesAgentDetails = (
       accNumber,
       bankName,
       branchName,
-      // profileImageUrl,
+      profileImageUrl,
     ];
 
     sql += ` WHERE id = ?`;
@@ -710,7 +710,8 @@ const getAllOrders = (
   paymentMethod,
   paymentStatus,
   deliveryType,
-  searchText
+  searchText,
+  date
 ) => {
   return new Promise((resolve, reject) => {
     const offset = (page - 1) * limit;
@@ -732,7 +733,6 @@ const getAllOrders = (
               o.paymentStatus,
               o.fullDiscount,
               o.fullTotal,
-              o.timeSlot,
               o.deliveryType,
               o.createdAt,
               c.cusId,
@@ -812,6 +812,12 @@ const getAllOrders = (
       whereConditions.push(`o.deliveryType = ?`);
       countParams.push(deliveryType);
       dataParams.push(deliveryType);
+    }
+
+    if (date) {
+      whereConditions.push(`o.scheduleDate = ?`);
+      countParams.push(date);
+      dataParams.push(date);
     }
 
     // Append WHERE conditions if any exist
@@ -955,6 +961,69 @@ const GetAllSalesAgentComplainDAO = (
   });
 };
 
+
+
+
+const getComplainById = (id) => {
+  return new Promise((resolve, reject) => {
+    const sql = ` 
+    SELECT dc.id, dc.refNo, dc.createdAt, dc.language, dc.complain,dc.complainCategory,dc.reply, u.firstName AS firstName, u.lastName AS lastName,u.phoneCode1,  u.phoneNumber1, cc.categoryEnglish AS complainCategory
+    FROM dashcomplain dc
+    LEFT JOIN dash.salesagent u ON dc.saId = u.id
+    LEFT JOIN agro_world_admin.complaincategory cc ON dc.complainCategory = cc.id
+    WHERE dc.id = ? 
+    `;
+    dash.query(sql, [id], (err, results) => {
+      if (err) {
+        return reject(err);
+      }
+      resolve(results);
+    });
+  });
+};
+
+
+const sendComplainReply = (complainId, reply) => {
+  return new Promise((resolve, reject) => {
+    // Input validation
+    if (!complainId) {
+      return reject(new Error("Complain ID is required"));
+    }
+
+    if (reply === undefined || reply === null || reply.trim() === "") {
+      return reject(new Error("Reply cannot be empty"));
+    }
+
+    const sql = `
+      UPDATE dashcomplain 
+      SET reply = ?, status = ?, adminStatus = ? 
+      WHERE id = ?
+    `;
+
+    const status = "Opened";
+    const adminStatus = "Closed";
+    const values = [reply, status, adminStatus, complainId];
+
+    dash.query(sql, values, (err, results) => {
+      if (err) {
+        console.error("Database error details:", err);
+        return reject(err);
+      }
+
+      if (results.affectedRows === 0) {
+        console.warn(`No record found with id: ${complainId}`);
+        return reject(new Error(`No record found with id: ${complainId}`));
+      }
+
+      console.log("Update successful:", results);
+      resolve({
+        message: "Reply sent successfully",
+        affectedRows: results.affectedRows,
+      });
+    });
+  });
+};
+
 module.exports = {
   GetAllSalesAgentComplainDAO,
   getAllSalesCustomers,
@@ -970,4 +1039,6 @@ module.exports = {
   UpdateSalesAgentStatusAndPasswordDao,
   getSalesAgentEmailDao,
   getAllOrders,
+  getComplainById,
+  sendComplainReply
 };

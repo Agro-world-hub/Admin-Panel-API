@@ -380,11 +380,11 @@ exports.getAllMarketPriceAgroDAO = (crop, grade, search, centerId, companyId) =>
       }
 
       if (search) {
-        sql += " AND cg.cropNameEnglish LIKE ?";
-        countSql += " AND cg.cropNameEnglish LIKE ?";
+        sql += " AND cg.cropNameEnglish LIKE ? OR cv.varietyNameEnglish LIKE ?";
+        countSql += " AND cg.cropNameEnglish LIKE ? OR cv.varietyNameEnglish LIKE ?";
         const searchQuery = `%${search}%`;
-        params.push(searchQuery);
-        countParams.push(searchQuery);
+        params.push(searchQuery, searchQuery);
+        countParams.push(searchQuery, searchQuery);
       }
 
       sql += ` ORDER BY cg.cropNameEnglish, cv.varietyNameEnglish, m.grade`;
