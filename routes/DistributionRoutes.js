@@ -11,4 +11,10 @@ router.post(
     distributionEp.createDistributionCenter
   );
 
+  router.get(
+    "/get-all-distribution-centre",
+    authMiddleware,
+    distributionEp.getAllDistributionCentre
+  );
+
 module.exports = router;
