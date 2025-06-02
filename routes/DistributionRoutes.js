@@ -11,6 +11,12 @@ router.post(
 );
 
 router.get(
+  "/get-all-distribution-centre",
+  authMiddleware,
+  distributionEp.getAllDistributionCentre
+);
+
+router.get(
   "/get-all-companies",
   // authMiddleware,
   distributionEp.getAllCompanies
