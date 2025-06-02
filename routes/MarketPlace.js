@@ -97,5 +97,6 @@ router.get(
 );
 
 router.patch("/edit-product/:id", authMiddleware, marketPlaceEp.updatePackage);
+router.get('/marketplace-users',authMiddleware, marketPlaceEp.getMarketplaceUsers);
 
 module.exports = router;
