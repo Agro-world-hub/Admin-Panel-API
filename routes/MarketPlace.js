@@ -174,4 +174,10 @@ router.get(
   marketPlaceEp.viewProductType
 );
 
+router.get(
+  "/get-product-type", 
+  authMiddleware, 
+  marketPlaceEp.getProductType
+);
+
 module.exports = router;

@@ -372,6 +372,7 @@ exports.createPackage = async (req, res) => {
         });
       }
     }
+    console.log(profileImageUrl)
 
     // Create main package
     const packageId = await MarketPlaceDao.creatPackageDAO(
@@ -388,17 +389,28 @@ exports.createPackage = async (req, res) => {
 
     // Create package details
     try {
-      for (const item of package.Items) {
-        await MarketPlaceDao.creatPackageDetailsDAO(item, packageId);
+      const quantities = package.quantities; // object like { '2': 2, '3': 0 }
+
+      for (const [productTypeId, qty] of Object.entries(quantities)) {
+        // Skip if quantity is 0 or less
+        if (qty <= 0) continue;
+
+        // Construct item data for DAO
+        const itemData = {
+          productTypeId: parseInt(productTypeId),
+          qty: parseInt(qty)
+        };
+
+        await MarketPlaceDao.creatPackageDetailsDAO(itemData, packageId);
       }
     } catch (err) {
       console.error("Error creating package details:", err);
-      // You might want to delete the main package here if details creation fails
       return res.status(500).json({
         error: "Error creating package details",
         status: false,
       });
     }
+
 
     return res.status(201).json({
       message: "Package created successfully",
@@ -1085,7 +1097,7 @@ exports.createProductType = async (req, res) => {
     const data = await MarketPriceValidate.createProductTypeSchema.validateAsync(req.body);
     const result = await MarketPlaceDao.createProductTypesDao(data);
 
-    if( result.affectedRows === 0) {
+    if (result.affectedRows === 0) {
       return res.json({
         message: "Product type creation failed",
         status: false,
@@ -1107,6 +1119,22 @@ exports.createProductType = async (req, res) => {
 exports.viewProductType = async (req, res) => {
   try {
     const result = await MarketPlaceDao.viewProductTypeDao();
+
+    return res.status(201).json({
+      message: "Product find successfully",
+      status: true,
+      data: result
+    });
+  } catch (error) {
+    console.error("Error creating Product type:", error);
+    return res.status(500).json({ error: "Internal server error" });
+  }
+};
+
+
+exports.getProductType = async (req, res) => {
+  try {
+    const result = await MarketPlaceDao.getProductType();
 
     return res.status(201).json({
       message: "Product find successfully",

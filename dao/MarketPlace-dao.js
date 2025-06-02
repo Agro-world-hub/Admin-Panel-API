@@ -415,14 +415,16 @@ exports.getAllProductCropCatogoryDAO = () => {
 exports.creatPackageDAO = async (data, profileImageUrl) => {
   return new Promise((resolve, reject) => {
     const sql =
-      "INSERT INTO marketplacepackages (displayName, status, total, image, description, discount) VALUES (?, ?, ?, ?, ?, ?)";
+      "INSERT INTO marketplacepackages (displayName, status, productPrice, packingFee, serviceFee, image, description) VALUES (?, ?, ?, ?, ?, ?, ?)";
     const values = [
       data.displayName,
       data.status,
-      data.total,
+      data.productPrice,
+      data.packageFee,
+      data.serviceFee,
       profileImageUrl,
       data.description,
-      data.discount,
+
     ];
 
     marketPlace.query(sql, values, (err, results) => {
@@ -438,16 +440,14 @@ exports.creatPackageDAO = async (data, profileImageUrl) => {
 
 exports.creatPackageDetailsDAO = async (data, packageId) => {
   return new Promise((resolve, reject) => {
-    const sql =
-      "INSERT INTO packagedetails (packageId, mpItemId, quantity, quantityType, price, discount, discountedPrice) VALUES (?, ?, ?, ?, ?, ?, ?)";
+    const sql = `
+      INSERT INTO packagedetails (packageId, productTypeId, qty)
+      VALUES (?, ?, ?)
+    `;
     const values = [
       packageId,
-      parseInt(data.mpItemId),
-      data.quantity,
-      "Kg",
-      data.normalPrice * data.quantity,
-      data.discount * data.quantity,
-      (data.normalPrice * data.quantity) - (data.discount * data.quantity)
+      data.productTypeId,
+      data.qty
     ];
 
     marketPlace.query(sql, values, (err, results) => {
@@ -1162,6 +1162,18 @@ exports.createProductTypesDao = async (data) => {
 exports.viewProductTypeDao = async () => {
   return new Promise((resolve, reject) => {
     const sql = "SELECT * FROM Producttypes";
+    marketPlace.query(sql, (err, results) => {
+      if (err) {
+        return reject(err);
+      }
+      resolve(results);
+    });
+  });
+};
+
+exports.getProductType = async () => {
+  return new Promise((resolve, reject) => {
+    const sql = "SELECT typeName, shortCode, id FROM producttypes";
     marketPlace.query(sql, (err, results) => {
       if (err) {
         return reject(err);
