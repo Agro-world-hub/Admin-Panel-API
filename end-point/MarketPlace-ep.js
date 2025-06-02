@@ -819,6 +819,36 @@ exports.updatePackage = async (req, res) => {
   }
 };
 
+exports.getMarketplaceUsers = async (req, res) => {
+  const buyerType = req.query.buyerType || 'retail'; // default to 'retail'
+  const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
+  console.log("URL:", fullUrl);
+
+  try {
+    const result = await MarketPlaceDao.getMarketplaceUsers(buyerType);
+    console.log("Successfully fetched marketplace users");
+    return res.status(200).json(result);
+  } catch (error) {
+    console.error("Error fetching marketplace users:", error);
+    return res.status(500).json({ error: "An error occurred while fetching marketplace users" });
+  }
+};
+
+exports.getMarketplaceUsers = async (req, res) => {
+  const buyerType = req.query.buyerType || 'retail'; // default to 'retail'
+  const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
+  console.log("URL:", fullUrl);
+
+  try {
+    const result = await MarketPlaceDao.getMarketplaceUsers(buyerType);
+    console.log("Successfully fetched marketplace users");
+    return res.status(200).json(result);
+  } catch (error) {
+    console.error("Error fetching marketplace users:", error);
+    return res.status(500).json({ error: "An error occurred while fetching marketplace users" });
+  }
+};
+
 
 exports.getNextBannerIndexRetail = async (req, res) => {
   try {
