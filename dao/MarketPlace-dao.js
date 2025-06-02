@@ -577,24 +577,26 @@ exports.updateMarketProductDao = async (product, id) => {
 
 
 
-exports.getAllMarketplacePackagesDAO = () => {
+exports.getAllMarketplacePackagesDAO = (searchText) => {
   return new Promise((resolve, reject) => {
-    const sql = `
-      SELECT 
-        id, 
-        displayName, 
-        image, 
-        description, 
-        status, 
-        total, 
-        discount, 
-        subtotal, 
-        created_at
+    const sqlParams = [];
+    let sql = `
+      SELECT
+        id,
+        displayName,
+        (productPrice + packingFee + serviceFee) AS total,
+        status
       FROM marketplacepackages
-      ORDER BY created_at DESC
     `;
 
-    marketPlace.query(sql, (err, results) => {
+    if(searchText){
+      sql += ` WHERE displayName LIKE ? `;
+      sqlParams.push(`%${searchText}%`);
+    }
+
+    sql += ` ORDER BY created_at DESC `
+
+    marketPlace.query(sql, sqlParams, (err, results) => {
       if (err) {
         return reject(err);
       }
@@ -1148,7 +1150,7 @@ exports.deleteBannerWhole = async (feedbackId, orderNumber) => {
 
 exports.createProductTypesDao = async (data) => {
   return new Promise((resolve, reject) => {
-    const sql = "INSERT INTO Producttypes (typeName, shortCode) VALUES (?, ?)";
+    const sql = "INSERT INTO producttypes (typeName, shortCode) VALUES (?, ?)";
     marketPlace.query(sql, [data.typeName, data.shortCode], (err, results) => {
       if (err) {
         return reject(err);
@@ -1161,7 +1163,7 @@ exports.createProductTypesDao = async (data) => {
 
 exports.viewProductTypeDao = async () => {
   return new Promise((resolve, reject) => {
-    const sql = "SELECT * FROM Producttypes";
+    const sql = "SELECT * FROM producttypes";
     marketPlace.query(sql, (err, results) => {
       if (err) {
         return reject(err);

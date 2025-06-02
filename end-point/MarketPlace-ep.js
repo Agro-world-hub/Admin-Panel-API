@@ -490,7 +490,10 @@ exports.getAllMarketplacePackages = async (req, res) => {
   console.log("Request URL:", fullUrl);
 
   try {
-    const packages = await MarketPlaceDao.getAllMarketplacePackagesDAO();
+    const { searchText } = await MarketPriceValidate.getAllPackageSchema.validateAsync(req.query);
+    console.log("Search Text:", searchText);
+    
+    const packages = await MarketPlaceDao.getAllMarketplacePackagesDAO(searchText);
 
     console.log("Successfully fetched marketplace packages");
     return res.status(200).json({
@@ -1085,7 +1088,7 @@ exports.createProductType = async (req, res) => {
     const data = await MarketPriceValidate.createProductTypeSchema.validateAsync(req.body);
     const result = await MarketPlaceDao.createProductTypesDao(data);
 
-    if( result.affectedRows === 0) {
+    if (result.affectedRows === 0) {
       return res.json({
         message: "Product type creation failed",
         status: false,
