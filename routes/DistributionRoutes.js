@@ -22,6 +22,12 @@ router.get(
   distributionEp.getAllCompanies
 );
 
+router.get(
+  "/get-companies",
+  // authMiddleware,
+  distributionEp.getCompanies
+);
+
 router.delete(
   "/delete-company/:id",
   // authMiddleware,

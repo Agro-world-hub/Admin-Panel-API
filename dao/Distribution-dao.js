@@ -47,6 +47,7 @@ exports.getAllDistributionCentre = (
   offset,
   district,
   province,
+  company,
   searchItem
 ) => {
   return new Promise((resolve, reject) => {
@@ -90,6 +91,10 @@ exports.getAllDistributionCentre = (
     if (province) {
       whereClause += " AND dc.province = ?";
       searchParams.push(province);
+    }
+    if (company) {
+      whereClause += " AND c.companyNameEnglish = ?";
+      searchParams.push(company);
     }
 
     // Add where clause to both count and main SQL
@@ -256,6 +261,31 @@ exports.getAllDistributionCentreHead = (
           }
         });
       }
+    });
+  });
+};
+
+exports.getCompanyDAO = () => {
+  return new Promise((resolve, reject) => {
+    let sql = `
+      SELECT 
+        c.id,
+        c.companyNameEnglish,
+        c.email AS companyEmail,
+        c.logo,
+        c.status
+      FROM 
+        company c
+      WHERE c.status = 'ACTIVE'
+      ORDER BY c.companyNameEnglish ASC
+    `;
+
+    collectionofficer.query(sql, (err, results) => {
+      if (err) {
+        return reject(err);
+      }
+      console.log("All companies retrieved successfully");
+      resolve(results);
     });
   });
 };

@@ -47,7 +47,7 @@ exports.getAllDistributionCentre = async (req, res) => {
   const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
   console.log(fullUrl);
   try {
-    const { page, limit, district, province, searchItem } =
+    const { page, limit, district, province, company, searchItem } =
       await DistributionValidation.getAllDistributionCentreSchema.validateAsync(
         req.query
       );
@@ -59,6 +59,7 @@ exports.getAllDistributionCentre = async (req, res) => {
       offset,
       district,
       province,
+      company,
       searchItem
     );
 
@@ -153,5 +154,31 @@ exports.getAllDistributionCentreHead = async (req, res) => {
   } catch (err) {
     console.error("Error executing query:", err);
     res.status(500).send("An error occurred while fetching data.");
+  }
+};
+
+exports.getCompanies = async (req, res) => {
+  try {
+    const results = await DistributionDao.getCompanyDAO();
+    const companies = results.map((company) => ({
+      id: company.id,
+      name: company.companyNameEnglish,
+      companyNameEnglish: company.companyNameEnglish,
+      email: company.companyEmail,
+      logo: company.logo,
+    }));
+
+    console.log("Successfully retrieved all companies");
+    res.json({
+      success: true,
+      message: "Companies retrieved successfully",
+      data: companies,
+    });
+  } catch (err) {
+    console.error("Error fetching companies:", err);
+    res.status(500).json({
+      success: false,
+      error: "An error occurred while fetching companies",
+    });
   }
 };
