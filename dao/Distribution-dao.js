@@ -204,3 +204,58 @@ exports.deleteCompanyById = async (id) => {
     });
   });
 };
+
+exports.getAllDistributionCentreHead = (
+  companyId,
+  limit,
+  offset,
+  searchText
+) => {
+  return new Promise((resolve, reject) => {
+    let countSql = `SELECT COUNT(*) AS total FROM collectionofficer WHERE companyId = ? AND jobRole = 'Distribution Center Manager'`;
+    let dataSql = `SELECT 
+        co.id,
+        co.empId,
+        co.firstNameEnglish,
+        co.lastNameEnglish,
+        co.email,
+        co.status,
+        co.phoneCode01,
+        co.phoneNumber01,
+        co.phoneCode02,
+        co.phoneNumber02,
+        co.createdAt FROM collectionofficer co WHERE co.companyId = ? AND co.jobRole = 'Distribution Center Manager'`;
+    const countParams = [companyId];
+    const dataParams = [companyId];
+    if (searchText) {
+      const searchCondition = ` AND (co.firstNameEnglish LIKE ? OR co.lastNameEnglish LIKE ? OR co.email LIKE ?)`;
+      countSql += searchCondition;
+      dataSql += searchCondition;
+      const searchValue = `%${searchText}%`;
+      countParams.push(searchValue, searchValue, searchValue);
+      dataParams.push(searchValue, searchValue, searchValue);
+    }
+    limit = parseInt(limit, 10) || 10;
+    offset = parseInt(offset, 10) || 0;
+
+    dataSql += ` ORDER BY co.createdAt DESC LIMIT ? OFFSET ?`;
+    dataParams.push(limit, offset); // Add limit and offset to parameters
+
+    collectionofficer.query(countSql, countParams, (countErr, countResults) => {
+      if (countErr) {
+        reject(countErr);
+      } else {
+        collectionofficer.query(dataSql, dataParams, (dataErr, dataResults) => {
+          if (dataErr) {
+            reject(dataErr);
+          } else {
+            resolve({
+              total: countResults[0].total,
+              items: dataResults,
+            });
+          }
+        });
+      }
+    });
+  });
+};

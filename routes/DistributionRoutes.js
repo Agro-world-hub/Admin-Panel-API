@@ -1,7 +1,6 @@
 const express = require("express");
 const authMiddleware = require("../middlewares/authMiddleware");
 const distributionEp = require("../end-point/Distribution-ep");
-const upload = require("../middlewares/uploadMiddleware");
 
 const router = express.Router();
 
@@ -27,6 +26,12 @@ router.delete(
   "/delete-company/:id",
   // authMiddleware,
   distributionEp.deleteCompany
+);
+
+router.get(
+  "/get-distributioncompany-head",
+  authMiddleware,
+  distributionEp.getAllDistributionCentreHead
 );
 
 module.exports = router;
