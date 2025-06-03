@@ -623,60 +623,40 @@ exports.getMarketplacePackageById = async (req, res) => {
     const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
     console.log("Request URL:", fullUrl);
 
-    const { id } = await MarketPriceValidate.IdparamsSchema.validateAsync(
-      req.params
-    );
+    const { id } = await MarketPriceValidate.IdparamsSchema.validateAsync(req.params);
 
-    const result = await MarketPlaceDao.getMarketplacePackageByIdDAO(id);
+    const resultRows = await MarketPlaceDao.getMarketplacePackageByIdDAO(id);
 
-    // If you want to modify the image URL to be absolute (if it's stored as relative)
-    if (result.image && !result.image.startsWith("http")) {
-      result.image = `${req.protocol}://${req.get("host")}/${result.image}`;
-    }
+    // Take common fields from the first row
+    const firstRow = resultRows[0];
 
-    // Format the response structure
-    const response = {
-      success: true,
-      data: {
-        package: {
-          id: result.id,
-          displayName: result.displayName,
-          image: result.image,
-          description: result.description,
-          status: result.status,
-          pricing: {
-            total: result.total,
-            discount: result.discount,
-            subtotal: result.subtotal,
-          },
-          createdAt: result.createdAt,
-          items: result.packageDetails.map((detail) => ({
-            id: detail.id,
-            packageId: detail.packageId,
-            mpItemId: detail.mpItemId,
-            quantityType: detail.quantityType,
-            quantity: detail.quantity,
-            price: detail.price,
-            detailDiscount: detail.detailDiscount,
-            detailDiscountedPrice: detail.detailDiscountedPrice,
-            item: {
-              varietyId: detail.itemDetails.varietyId,
-              displayName: detail.itemDetails.displayName,
-              category: detail.itemDetails.category,
-              pricing: {
-                normalPrice: detail.itemDetails.normalPrice,
-                discountedPrice: detail.itemDetails.discountedPrice,
-                discount: detail.itemDetails.discount,
-                promo: detail.itemDetails.promo,
-              },
-              unitType: detail.itemDetails.unitType,
-            },
-          })),
-        },
-      },
+    const productPrice = parseFloat(firstRow.productPrice) || 0;
+    const packingFee = parseFloat(firstRow.packingFee) || 0;
+    const serviceFee = parseFloat(firstRow.serviceFee) || 0;
+
+    const total = productPrice + packingFee + serviceFee;
+
+    const packageData = {
+      displayName: firstRow.displayName,
+      status: firstRow.status || 'Enabled',
+      description: firstRow.description,
+      productPrice,
+      packageFee: packingFee,
+      serviceFee,
+      approximatedPrice: parseFloat(total.toFixed(2)),
+      imageUrl: firstRow.image && !firstRow.image.startsWith("http")
+        ? `${req.protocol}://${req.get("host")}/${firstRow.image}`
+        : firstRow.image,
+      quantities: {}
     };
 
-    res.json(response);
+    // Build quantities map
+    resultRows.forEach(row => {
+      packageData.quantities[row.productTypeId] = row.qty;
+    });
+    console.log(packageData);
+
+    res.json(packageData);
     console.log("Successfully fetched marketplace package");
   } catch (error) {
     console.error("Error fetching marketplace package:", error);
@@ -694,6 +674,7 @@ exports.getMarketplacePackageById = async (req, res) => {
     });
   }
 };
+
 
 exports.getMarketplacePackageWithDetailsById = async (req, res) => {
   try {
@@ -1187,5 +1168,99 @@ exports.getProductType = async (req, res) => {
   } catch (error) {
     console.error("Error creating Product type:", error);
     return res.status(500).json({ error: "Internal server error" });
+  }
+};
+
+exports.editPackage = async (req, res) => {
+  try {
+    const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
+    console.log("Request URL:", fullUrl);
+
+    const package = JSON.parse(req.body.package);
+    const id = req.params.id;
+    console.log(id);
+
+    let profileImageUrl = null;
+
+    if (req.body.file) {
+      try {
+        const base64String = req.body.file.split(",")[1];
+        const mimeType = req.body.file.match(/data:(.*?);base64,/)[1];
+        const fileBuffer = Buffer.from(base64String, "base64");
+        const fileExtension = mimeType.split("/")[1];
+        const fileName = `${package.displayName}.${fileExtension}`;
+
+        profileImageUrl = await uploadFileToS3(
+          fileBuffer,
+          fileName,
+          "marketplacepackages/image"
+        );
+      } catch (err) {
+        console.error("Error processing image file:", err);
+        return res.status(400).json({
+          error: "Invalid file format or file upload error",
+          status: false,
+        });
+      }
+    }
+    console.log(profileImageUrl)
+
+    // Create main package
+    const results = await MarketPlaceDao.editPackageDAO(
+      package,
+      profileImageUrl,
+      id
+    );
+
+    if (!results) {
+      return res.status(500).json({
+        message: "Package creation failed",
+        status: false,
+      });
+    }
+
+    // Create package details
+    try {
+      const quantities = package.quantities; // object like { '2': 2, '3': 0 }
+
+      for (const [productTypeId, qty] of Object.entries(quantities)) {
+        // Skip if quantity is 0 or less
+        if (qty <= 0) continue;
+
+        // Construct item data for DAO
+        const itemData = {
+          productTypeId: parseInt(productTypeId),
+          qty: parseInt(qty)
+        };
+
+        await MarketPlaceDao.editPackageDetailsDAO(itemData, id);
+      }
+    } catch (err) {
+      console.error("Error creating package details:", err);
+      return res.status(500).json({
+        error: "Error creating package details",
+        status: false,
+      });
+    }
+
+
+    return res.status(201).json({
+      message: "Package created successfully",
+      status: true,
+      id: id,
+    });
+  } catch (err) {
+    if (err.isJoi) {
+      return res.status(400).json({
+        error: err.details[0].message,
+        status: false,
+      });
+    }
+
+    console.error("Error creating package:", err);
+    return res.status(500).json({
+      error: "An error occurred while creating marketplace package",
+      status: false,
+    });
   }
 };

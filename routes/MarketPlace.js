@@ -181,4 +181,11 @@ router.get(
   marketPlaceEp.getProductType
 );
 
+router.post(
+  '/edit-package/:id', 
+  authMiddleware, 
+  upload.single('image'), 
+  marketPlaceEp.editPackage
+);
+
 module.exports = router;
