@@ -28,4 +28,10 @@ router.delete(
   distributionEp.deleteCompany
 );
 
+router.get(
+  "/get-distributioncompany-head",
+  authMiddleware,
+  distributionEp.getAllDistributionCentreHead
+);
+
 module.exports = router;

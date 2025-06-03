@@ -129,3 +129,29 @@ exports.deleteCompany = async (req, res) => {
       .json({ error: "An error occurred while deleting the company" });
   }
 };
+
+exports.getAllDistributionCentreHead = async (req, res) => {
+  try {
+    const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
+    console.log(fullUrl);
+
+    const { companyId, page, limit, searchText } = req.query;
+    const offset = (page - 1) * limit;
+
+    const { total, items } = await DistributionDao.getAllDistributionCentreHead(
+      companyId,
+      limit,
+      offset,
+      searchText
+    );
+
+    console.log({ items, total });
+    res.json({
+      items,
+      total,
+    });
+  } catch (err) {
+    console.error("Error executing query:", err);
+    res.status(500).send("An error occurred while fetching data.");
+  }
+};
