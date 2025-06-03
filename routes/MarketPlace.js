@@ -173,6 +173,7 @@ router.get(
   authMiddleware, 
   marketPlaceEp.viewProductType
 );
+router.get('/marketplace-users',authMiddleware, marketPlaceEp.getMarketplaceUsers);
 
 router.get(
   "/get-product-type", 

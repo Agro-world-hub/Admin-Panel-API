@@ -60,3 +60,7 @@ exports.createProductTypeSchema = Joi.object({
   typeName: Joi.string().required(),
   shortCode: Joi.string().required()
 });
+
+exports.getAllPackageSchema = Joi.object({
+  searchText: Joi.string().optional()
+});

@@ -1,20 +1,37 @@
 const express = require("express");
 const authMiddleware = require("../middlewares/authMiddleware");
 const distributionEp = require("../end-point/Distribution-ep");
-const upload = require("../middlewares/uploadMiddleware");
 
 const router = express.Router();
 
 router.post(
-    "/create-distribution-center",
-    authMiddleware,
-    distributionEp.createDistributionCenter
-  );
+  "/create-distribution-center",
+  authMiddleware,
+  distributionEp.createDistributionCenter
+);
 
-  router.get(
-    "/get-all-distribution-centre",
-    authMiddleware,
-    distributionEp.getAllDistributionCentre
-  );
+router.get(
+  "/get-all-distribution-centre",
+  authMiddleware,
+  distributionEp.getAllDistributionCentre
+);
+
+router.get(
+  "/get-all-companies",
+  // authMiddleware,
+  distributionEp.getAllCompanies
+);
+
+router.delete(
+  "/delete-company/:id",
+  // authMiddleware,
+  distributionEp.deleteCompany
+);
+
+router.get(
+  "/get-distributioncompany-head",
+  authMiddleware,
+  distributionEp.getAllDistributionCentreHead
+);
 
 module.exports = router;

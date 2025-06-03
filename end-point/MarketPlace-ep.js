@@ -91,10 +91,14 @@ exports.createMarketProduct = async (req, res) => {
     };
 
     // First check if the product already exists
-    const exists = await MarketPlaceDao.checkMarketProductExistsDao(product.varietyId, product.cropName);
+    const exists = await MarketPlaceDao.checkMarketProductExistsDao(
+      product.varietyId,
+      product.cropName
+    );
     if (exists) {
       return res.status(201).json({
-        message: "A product with this variety ID and display name already exists",
+        message:
+          "A product with this variety ID and display name already exists",
         status: false,
       });
     }
@@ -132,7 +136,6 @@ exports.createMarketProduct = async (req, res) => {
   }
 };
 
-
 exports.getMarketplaceItems = async (req, res) => {
   try {
     const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
@@ -158,7 +161,7 @@ exports.getMarketplaceItems = async (req, res) => {
 
     res.json({
       items,
-      total
+      total,
     });
   } catch (error) {
     console.error("Error fetching marketplace items:", error);
@@ -502,7 +505,13 @@ exports.getAllMarketplacePackages = async (req, res) => {
   console.log("Request URL:", fullUrl);
 
   try {
-    const packages = await MarketPlaceDao.getAllMarketplacePackagesDAO();
+    const { searchText } =
+      await MarketPriceValidate.getAllPackageSchema.validateAsync(req.query);
+    console.log("Search Text:", searchText);
+
+    const packages = await MarketPlaceDao.getAllMarketplacePackagesDAO(
+      searchText
+    );
 
     console.log("Successfully fetched marketplace packages");
     return res.status(200).json({
@@ -698,11 +707,37 @@ exports.getMarketplacePackageWithDetailsById = async (req, res) => {
     const packageData =
       await MarketPlaceDao.getMarketplacePackageByIdWithDetailsDAO(id);
 
-    // Format the response if needed (the DAO already formats it)
+    // Calculate total price and product type totals
+    const baseTotal =
+      packageData.productPrice +
+      packageData.packingFee +
+      packageData.serviceFee;
+
+    // Calculate total value of all items in package
+    const productsTotal = packageData.packageDetails.reduce((sum, item) => {
+      return sum + item.productType.price * item.qty;
+    }, 0);
+
+    // Format the response with enhanced details
+    const formattedResponse = {
+      ...packageData,
+      pricingSummary: {
+        basePrice: packageData.productPrice,
+        packingFee: packageData.packingFee,
+        serviceFee: packageData.serviceFee,
+        productsTotal: productsTotal,
+        grandTotal: baseTotal + productsTotal,
+      },
+      packageDetails: packageData.packageDetails.map((detail) => ({
+        ...detail,
+        totalPrice: detail.productType.price * detail.qty,
+      })),
+    };
+
     const response = {
       success: true,
       message: "Marketplace package retrieved successfully",
-      data: packageData,
+      data: formattedResponse,
     };
 
     res.status(200).json(response);
@@ -828,6 +863,39 @@ exports.updatePackage = async (req, res) => {
   }
 };
 
+exports.getMarketplaceUsers = async (req, res) => {
+  const buyerType = req.query.buyerType || "retail"; // default to 'retail'
+  const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
+  console.log("URL:", fullUrl);
+
+  try {
+    const result = await MarketPlaceDao.getMarketplaceUsers(buyerType);
+    console.log("Successfully fetched marketplace users");
+    return res.status(200).json(result);
+  } catch (error) {
+    console.error("Error fetching marketplace users:", error);
+    return res
+      .status(500)
+      .json({ error: "An error occurred while fetching marketplace users" });
+  }
+};
+
+exports.getMarketplaceUsers = async (req, res) => {
+  const buyerType = req.query.buyerType || "retail"; // default to 'retail'
+  const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
+  console.log("URL:", fullUrl);
+
+  try {
+    const result = await MarketPlaceDao.getMarketplaceUsers(buyerType);
+    console.log("Successfully fetched marketplace users");
+    return res.status(200).json(result);
+  } catch (error) {
+    console.error("Error fetching marketplace users:", error);
+    return res
+      .status(500)
+      .json({ error: "An error occurred while fetching marketplace users" });
+  }
+};
 
 exports.getNextBannerIndexRetail = async (req, res) => {
   try {
@@ -863,18 +931,11 @@ exports.getNextBannerIndexWholesale = async (req, res) => {
   }
 };
 
-
-
-
 exports.uploadBanner = async (req, res) => {
   try {
-
     const validatedBody = req.body;
 
-    const {
-      index,
-      name
-    } = validatedBody;
+    const { index, name } = validatedBody;
 
     let image;
 
@@ -892,9 +953,8 @@ exports.uploadBanner = async (req, res) => {
     const bannerData = {
       index,
       name,
-      image
+      image,
     };
-
 
     const result = await MarketPlaceDao.createBanner(bannerData);
 
@@ -910,18 +970,11 @@ exports.uploadBanner = async (req, res) => {
   }
 };
 
-
-
-
 exports.uploadBannerWholesale = async (req, res) => {
   try {
-
     const validatedBody = req.body;
 
-    const {
-      index,
-      name
-    } = validatedBody;
+    const { index, name } = validatedBody;
 
     let image;
 
@@ -939,9 +992,8 @@ exports.uploadBannerWholesale = async (req, res) => {
     const bannerData = {
       index,
       name,
-      image
+      image,
     };
-
 
     const result = await MarketPlaceDao.createBannerWholesale(bannerData);
 
@@ -956,7 +1008,6 @@ exports.uploadBannerWholesale = async (req, res) => {
       .json({ error: "An error occurred while creating PlantCare user" });
   }
 };
-
 
 exports.getAllBanners = async (req, res) => {
   try {
@@ -976,8 +1027,6 @@ exports.getAllBanners = async (req, res) => {
   }
 };
 
-
-
 exports.getAllBannersWholesale = async (req, res) => {
   try {
     const banners = await MarketPlaceDao.getAllBannersWholesale();
@@ -995,7 +1044,6 @@ exports.getAllBannersWholesale = async (req, res) => {
     res.status(500).send("An error occurred while fetching data.");
   }
 };
-
 
 exports.updateBannerOrder = async (req, res) => {
   try {
@@ -1023,8 +1071,6 @@ exports.updateBannerOrder = async (req, res) => {
     });
   }
 };
-
-
 
 exports.deleteBannerRetail = async (req, res) => {
   const bannerId = parseInt(req.params.id, 10);
@@ -1058,7 +1104,6 @@ exports.deleteBannerRetail = async (req, res) => {
   }
 };
 
-
 exports.deleteBannerWhole = async (req, res) => {
   const bannerId = parseInt(req.params.id, 10);
 
@@ -1091,10 +1136,10 @@ exports.deleteBannerWhole = async (req, res) => {
   }
 };
 
-
 exports.createProductType = async (req, res) => {
   try {
-    const data = await MarketPriceValidate.createProductTypeSchema.validateAsync(req.body);
+    const data =
+      await MarketPriceValidate.createProductTypeSchema.validateAsync(req.body);
     const result = await MarketPlaceDao.createProductTypesDao(data);
 
     if (result.affectedRows === 0) {
@@ -1103,7 +1148,6 @@ exports.createProductType = async (req, res) => {
         status: false,
       });
     }
-
 
     return res.status(201).json({
       message: "Product type created successfully",
@@ -1115,7 +1159,6 @@ exports.createProductType = async (req, res) => {
   }
 };
 
-
 exports.viewProductType = async (req, res) => {
   try {
     const result = await MarketPlaceDao.viewProductTypeDao();
@@ -1123,7 +1166,7 @@ exports.viewProductType = async (req, res) => {
     return res.status(201).json({
       message: "Product find successfully",
       status: true,
-      data: result
+      data: result,
     });
   } catch (error) {
     console.error("Error creating Product type:", error);
