@@ -34,7 +34,8 @@ exports.getAllCropNameDAO = () => {
       const groupedData = {};
 
       results.forEach((item) => {
-        const { cropNameEnglish, varietyEnglish, varietyId, cropId, image } = item;
+        const { cropNameEnglish, varietyEnglish, varietyId, cropId, image } =
+          item;
 
         if (!groupedData[cropNameEnglish]) {
           groupedData[cropNameEnglish] = {
@@ -113,7 +114,6 @@ exports.checkMarketProductExistsDao = async (varietyId, displayName) => {
   });
 };
 
-
 exports.createMarketProductDao = async (product) => {
   return new Promise((resolve, reject) => {
     const sql =
@@ -131,7 +131,7 @@ exports.createMarketProductDao = async (product) => {
       product.discount,
       product.varietyId,
       product.displaytype,
-      product.category === 'WholeSale' ? product.maxQuantity : null,
+      product.category === "WholeSale" ? product.maxQuantity : null,
     ];
 
     marketPlace.query(sql, values, (err, results) => {
@@ -161,7 +161,13 @@ exports.createMarketProductDao = async (product) => {
 //   });
 // };
 
-exports.getMarketplaceItems = (limit, offset, searchItem, displayTypeValue, categoryValue) => {
+exports.getMarketplaceItems = (
+  limit,
+  offset,
+  searchItem,
+  displayTypeValue,
+  categoryValue
+) => {
   return new Promise((resolve, reject) => {
     let whereConditions = [];
     const countParams = [];
@@ -182,7 +188,9 @@ exports.getMarketplaceItems = (limit, offset, searchItem, displayTypeValue, cate
 
     // Add search condition if provided
     if (searchItem) {
-      whereConditions.push("(m.displayName LIKE ? OR cg.cropNameEnglish LIKE ? OR cv.varietyNameEnglish LIKE ?)");
+      whereConditions.push(
+        "(m.displayName LIKE ? OR cg.cropNameEnglish LIKE ? OR cv.varietyNameEnglish LIKE ?)"
+      );
       const searchQuery = `%${searchItem}%`;
       countParams.push(searchQuery, searchQuery, searchQuery);
       dataParams.push(searchQuery, searchQuery, searchQuery);
@@ -195,7 +203,7 @@ exports.getMarketplaceItems = (limit, offset, searchItem, displayTypeValue, cate
       dataParams.push(displayTypeValue);
     }
 
-        if (categoryValue) {
+    if (categoryValue) {
       whereConditions.push("m.category = ?");
       countParams.push(categoryValue);
       dataParams.push(categoryValue);
@@ -229,7 +237,6 @@ exports.getMarketplaceItems = (limit, offset, searchItem, displayTypeValue, cate
     });
   });
 };
-
 
 exports.deleteMarketplaceItem = async (id) => {
   return new Promise((resolve, reject) => {
@@ -447,7 +454,7 @@ exports.creatPackageDetailsDAO = async (data, packageId) => {
       "Kg",
       data.normalPrice * data.quantity,
       data.discount * data.quantity,
-      (data.normalPrice * data.quantity) - (data.discount * data.quantity)
+      data.normalPrice * data.quantity - data.discount * data.quantity,
     ];
 
     marketPlace.query(sql, values, (err, results) => {
@@ -460,7 +467,6 @@ exports.creatPackageDetailsDAO = async (data, packageId) => {
   });
 };
 
-
 exports.creatPackageDetailsDAOEdit = async (data, packageId) => {
   return new Promise((resolve, reject) => {
     const sql =
@@ -472,7 +478,7 @@ exports.creatPackageDetailsDAOEdit = async (data, packageId) => {
       "Kg",
       data.discountedPrice + data.detailDiscount,
       data.detailDiscount,
-      data.discountedPrice
+      data.discountedPrice,
     ];
 
     marketPlace.query(sql, values, (err, results) => {
@@ -561,8 +567,8 @@ exports.updateMarketProductDao = async (product, id) => {
       product.displaytype,
       product.category,
       product.discount,
-      product.category === 'WholeSale' ? product.maxQuantity : null,
-      id
+      product.category === "WholeSale" ? product.maxQuantity : null,
+      id,
     ];
 
     marketPlace.query(sql, values, (err, results) => {
@@ -574,8 +580,6 @@ exports.updateMarketProductDao = async (product, id) => {
     });
   });
 };
-
-
 
 exports.getAllMarketplacePackagesDAO = (searchText) => {
   return new Promise((resolve, reject) => {
@@ -589,12 +593,12 @@ exports.getAllMarketplacePackagesDAO = (searchText) => {
       FROM marketplacepackages
     `;
 
-    if(searchText){
+    if (searchText) {
       sql += ` WHERE displayName LIKE ? `;
       sqlParams.push(`%${searchText}%`);
     }
 
-    sql += ` ORDER BY created_at DESC `
+    sql += ` ORDER BY created_at DESC `;
 
     marketPlace.query(sql, sqlParams, (err, results) => {
       if (err) {
@@ -812,21 +816,21 @@ exports.getMarketplacePackageByIdWithDetailsDAO = (packageId) => {
         mp.image, 
         mp.description, 
         mp.status, 
-        mp.total, 
+        mp.productPrice,
+        mp.packingFee,
+        mp.serviceFee,
         mp.created_at,
+        pd.id AS detailId,
         pd.packageId,
-        pd.mpItemId,
-        pd.quantity,
-        pd.quantityType,
-        pd.price,
-        pd.discount AS detailDiscount,
-        pd.discountedPrice,
-        pd.createdAt AS detailCreatedAt,
-        mi.displayName AS itemDisplayName,
-        mi.normalPrice AS itemNormalPrice   -- SQL-style comment (or remove entirely)
+        pd.productTypeId,
+        pd.qty,
+        pt.id AS productTypeId,
+        pt.typeName AS productTypeName,
+        pt.shortCode AS productTypeShortCode,
+        pt.created_at AS productTypeCreatedAt
       FROM marketplacepackages mp
       LEFT JOIN packagedetails pd ON mp.id = pd.packageId
-      LEFT JOIN marketplaceitems mi ON pd.mpItemId = mi.id
+      LEFT JOIN producttypes pt ON pd.productTypeId = pt.id
       WHERE mp.id = ?
     `;
 
@@ -845,31 +849,32 @@ exports.getMarketplacePackageByIdWithDetailsDAO = (packageId) => {
         image: results[0].image,
         description: results[0].description,
         status: results[0].status,
-        total: results[0].total,
-        discount: results[0].discount,
-        subtotal: results[0].subtotal,
+        productPrice: results[0].productPrice,
+        packingFee: results[0].packingFee,
+        serviceFee: results[0].serviceFee,
         createdAt: results[0].created_at,
         packageDetails: [],
       };
 
       results.forEach((row) => {
-        if (row.mpItemId) {
+        if (row.productTypeId) {
           pkg.packageDetails.push({
+            id: row.detailId,
             packageId: row.packageId,
-            mpItemId: row.mpItemId,
-            itemDisplayName: row.itemDisplayName,
-            normalPrice: row.itemNormalPrice,
-            quantity: row.quantity,
-            quantityType: row.quantityType,
-            price: row.price,
-            discount: row.detailDiscount,
-            discountedPrice: row.discountedPrice,
-            createdAt: row.detailCreatedAt,
+            productType: {
+              id: row.productTypeId,
+              typeName: row.productTypeName,
+              shortCode: row.productTypeShortCode,
+              price: row.productTypePrice,
+              createdAt: row.productTypeCreatedAt,
+            },
+            qty: row.qty,
           });
         }
       });
 
       resolve(pkg);
+      console.log("Package with details:", pkg);
     });
   });
 };
@@ -934,7 +939,6 @@ exports.deletePackageDetails = async (packageId) => {
   });
 };
 
-
 exports.getMarketplaceUsers = async (buyerType) => {
   return new Promise((resolve, reject) => {
     const sql = `
@@ -953,7 +957,6 @@ exports.getMarketplaceUsers = async (buyerType) => {
   });
 };
 
-
 exports.getMarketplaceUsers = async (buyerType) => {
   return new Promise((resolve, reject) => {
     const sql = `
@@ -971,9 +974,6 @@ exports.getMarketplaceUsers = async (buyerType) => {
     });
   });
 };
-
-
-
 
 exports.getNextBannerIndexRetail = () => {
   return new Promise((resolve, reject) => {
@@ -993,9 +993,6 @@ exports.getNextBannerIndexRetail = () => {
   });
 };
 
-
-
-
 exports.getNextBannerIndexWholesale = () => {
   return new Promise((resolve, reject) => {
     const query = `
@@ -1014,19 +1011,11 @@ exports.getNextBannerIndexWholesale = () => {
   });
 };
 
-
-
-
 exports.createBanner = async (data) => {
   return new Promise((resolve, reject) => {
     const sql =
       "INSERT INTO banners (indexId, details, image, type) VALUES (?, ?, ?, ?)";
-    const values = [
-      data.index,
-      data.name,
-      data.image,
-      "Retail"
-    ];
+    const values = [data.index, data.name, data.image, "Retail"];
 
     marketPlace.query(sql, values, (err, results) => {
       if (err) {
@@ -1034,24 +1023,18 @@ exports.createBanner = async (data) => {
       } else {
         resolve({
           insertId: results.insertId,
-          message: "Banner created successfully"
+          message: "Banner created successfully",
         });
       }
     });
   });
 };
-
 
 exports.createBannerWholesale = async (data) => {
   return new Promise((resolve, reject) => {
     const sql =
       "INSERT INTO banners (indexId, details, image, type) VALUES (?, ?, ?, ?)";
-    const values = [
-      data.index,
-      data.name,
-      data.image,
-      "Wholesale"
-    ];
+    const values = [data.index, data.name, data.image, "Wholesale"];
 
     marketPlace.query(sql, values, (err, results) => {
       if (err) {
@@ -1059,14 +1042,12 @@ exports.createBannerWholesale = async (data) => {
       } else {
         resolve({
           insertId: results.insertId,
-          message: "Banner created successfully"
+          message: "Banner created successfully",
         });
       }
     });
   });
 };
-
-
 
 exports.getAllBanners = () => {
   return new Promise((resolve, reject) => {
@@ -1082,10 +1063,10 @@ exports.getAllBanners = () => {
   });
 };
 
-
 exports.getAllBannersWholesale = () => {
   return new Promise((resolve, reject) => {
-    const sql = "SELECT * FROM banners WHERE type = 'Wholesale' ORDER BY indexId";
+    const sql =
+      "SELECT * FROM banners WHERE type = 'Wholesale' ORDER BY indexId";
 
     marketPlace.query(sql, (err, results) => {
       if (err) {
@@ -1096,7 +1077,6 @@ exports.getAllBannersWholesale = () => {
     });
   });
 };
-
 
 exports.updateBannerOrder = async (feedbacks) => {
   return new Promise((resolve, reject) => {
@@ -1122,7 +1102,6 @@ exports.updateBannerOrder = async (feedbacks) => {
   });
 };
 
-
 exports.getBannerById = async (feedbackId) => {
   return new Promise((resolve, reject) => {
     const sql = "SELECT * FROM banners WHERE id = ?";
@@ -1135,7 +1114,6 @@ exports.getBannerById = async (feedbackId) => {
   });
 };
 
-
 exports.deleteBannerRetail = async (feedbackId, orderNumber) => {
   return new Promise((resolve, reject) => {
     const deleteSql = "DELETE FROM banners WHERE id = ?";
@@ -1146,20 +1124,23 @@ exports.deleteBannerRetail = async (feedbackId, orderNumber) => {
       if (deleteErr) {
         return reject(deleteErr);
       }
-      marketPlace.query(updateSql, [orderNumber], (updateErr, updateResults) => {
-        if (updateErr) {
-          return reject(updateErr);
-        }
+      marketPlace.query(
+        updateSql,
+        [orderNumber],
+        (updateErr, updateResults) => {
+          if (updateErr) {
+            return reject(updateErr);
+          }
 
-        resolve({
-          deleteResults,
-          updateResults,
-        });
-      });
+          resolve({
+            deleteResults,
+            updateResults,
+          });
+        }
+      );
     });
   });
 };
-
 
 exports.deleteBannerWhole = async (feedbackId, orderNumber) => {
   return new Promise((resolve, reject) => {
@@ -1171,20 +1152,23 @@ exports.deleteBannerWhole = async (feedbackId, orderNumber) => {
       if (deleteErr) {
         return reject(deleteErr);
       }
-      marketPlace.query(updateSql, [orderNumber], (updateErr, updateResults) => {
-        if (updateErr) {
-          return reject(updateErr);
-        }
+      marketPlace.query(
+        updateSql,
+        [orderNumber],
+        (updateErr, updateResults) => {
+          if (updateErr) {
+            return reject(updateErr);
+          }
 
-        resolve({
-          deleteResults,
-          updateResults,
-        });
-      });
+          resolve({
+            deleteResults,
+            updateResults,
+          });
+        }
+      );
     });
   });
 };
-
 
 exports.createProductTypesDao = async (data) => {
   return new Promise((resolve, reject) => {
@@ -1197,7 +1181,6 @@ exports.createProductTypesDao = async (data) => {
     });
   });
 };
-
 
 exports.viewProductTypeDao = async () => {
   return new Promise((resolve, reject) => {
