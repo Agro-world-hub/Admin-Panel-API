@@ -269,11 +269,7 @@ exports.getCompanyDAO = () => {
   return new Promise((resolve, reject) => {
     let sql = `
       SELECT 
-        c.id,
-        c.companyNameEnglish,
-        c.email AS companyEmail,
-        c.logo,
-        c.status
+        c.companyNameEnglish
       FROM 
         company c
       WHERE c.status = 'ACTIVE'
@@ -284,7 +280,7 @@ exports.getCompanyDAO = () => {
       if (err) {
         return reject(err);
       }
-      console.log("All companies retrieved successfully");
+      console.log("Company names retrieved successfully");
       resolve(results);
     });
   });

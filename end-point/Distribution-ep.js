@@ -160,25 +160,19 @@ exports.getAllDistributionCentreHead = async (req, res) => {
 exports.getCompanies = async (req, res) => {
   try {
     const results = await DistributionDao.getCompanyDAO();
-    const companies = results.map((company) => ({
-      id: company.id,
-      name: company.companyNameEnglish,
-      companyNameEnglish: company.companyNameEnglish,
-      email: company.companyEmail,
-      logo: company.logo,
-    }));
+    const companyNames = results.map((company) => company.companyNameEnglish);
 
-    console.log("Successfully retrieved all companies");
+    console.log("Successfully retrieved company names");
     res.json({
       success: true,
-      message: "Companies retrieved successfully",
-      data: companies,
+      message: "Company names retrieved successfully",
+      data: companyNames, // Now just an array of strings
     });
   } catch (err) {
-    console.error("Error fetching companies:", err);
+    console.error("Error fetching company names:", err);
     res.status(500).json({
       success: false,
-      error: "An error occurred while fetching companies",
+      error: "An error occurred while fetching company names",
     });
   }
 };
