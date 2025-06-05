@@ -297,7 +297,7 @@ exports.createDistributionHeadPersonal = (officerData, profileImageUrl) => {
                     jobRole, empId, empType, phoneCode01, phoneNumber01, phoneCode02, phoneNumber02,
                     nic, email, houseNumber, streetName, city, district, province, country,
                     languages, accHolderName, accNumber, bankName, branchName, image, QRcode, status
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Not Approved')
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Not Approved')
             `;
 
       collectionofficer.query(
@@ -383,6 +383,23 @@ exports.GetAllCompanyList = () => {
   return new Promise((resolve, reject) => {
     const sql = "SELECT id, companyNameEnglish FROM company";
     collectionofficer.query(sql, (err, results) => {
+      if (err) {
+        return reject(err);
+      }
+      resolve(results);
+    });
+  });
+};
+
+exports.GetDistributedCenterByCompanyIdDAO = (companyId) => {
+  return new Promise((resolve, reject) => {
+    const sql = `
+      SELECT dc.* 
+      FROM distributedcenter dc
+      JOIN distributedcompanycenter dcc ON dc.id = dcc.centerId
+      WHERE dcc.companyId = ?
+    `;
+    collectionofficer.query(sql, [companyId], (err, results) => {
       if (err) {
         return reject(err);
       }

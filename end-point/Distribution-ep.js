@@ -256,7 +256,7 @@ exports.getAllCompanyList = async (req, res) => {
   const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
   console.log("Request URL:", fullUrl);
   try {
-    const result = await CollectionCenterDao.GetAllCompanyList();
+    const result = await DistributionDao.GetAllCompanyList();
 
     if (result.length === 0) {
       return res
@@ -275,5 +275,45 @@ exports.getAllCompanyList = async (req, res) => {
 
     console.error("Error fetching news:", err);
     res.status(500).json({ error: "An error occurred while fetching news" });
+  }
+};
+
+exports.getAllDistributedCentersByCompany = async (req, res) => {
+  try {
+    const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
+    console.log("Request URL:", fullUrl);
+
+    const companyId = req.params.companyId;
+    const result = await DistributionDao.GetDistributedCenterByCompanyIdDAO(
+      companyId
+    );
+
+    if (result.length === 0) {
+      return res.status(404).json({
+        message: "No distributed centers found for this company",
+        data: [],
+      });
+    }
+
+    console.log("Successfully retrieved all distributed centers for company");
+    res.status(200).json({
+      message: "Distributed centers retrieved successfully",
+      data: result,
+    });
+  } catch (err) {
+    if (err.isJoi) {
+      // Validation error
+      console.error("Validation error:", err.details[0].message);
+      return res.status(400).json({
+        error: "Validation error",
+        details: err.details[0].message,
+      });
+    }
+
+    console.error("Error fetching distributed centers:", err);
+    res.status(500).json({
+      error: "An error occurred while fetching distributed centers",
+      details: err.message,
+    });
   }
 };
