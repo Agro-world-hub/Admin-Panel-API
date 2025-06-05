@@ -721,22 +721,22 @@ const getAllOrders = (
 
     let countSql = `
           SELECT COUNT(*) as total
-          FROM orders o
-          JOIN marketplaceusers c ON o.customerId = c.id
-          JOIN marketPlace.salesagent sa ON o.salesAgentId = sa.id
+          FROM processorders po, orders o
+          JOIN marketplaceusers c ON o.userId = c.id
+          JOIN salesagent sa ON c.salesAgent = sa.id
       `;
 
     let dataSql = `
           SELECT
               o.id,
-              o.InvNo AS invNo,
-              o.orderStatus,
-              o.scheduleDate,
-              o.paymentMethod,
-              o.paymentStatus,
-              o.fullDiscount,
+              po.InvNo AS invNo,
+              po.status AS orderStatus,
+              o.sheduleDate AS scheduleDate,
+              po.paymentMethod,
+              po.isPaid AS paymentStatus,
+              o.discount AS fullDiscount,
               o.fullTotal,
-              o.deliveryType,
+              o.delivaryMethod AS deliveryType,
               o.createdAt,
               c.cusId,
               c.firstName,
@@ -744,7 +744,8 @@ const getAllOrders = (
               sa.empId
           FROM orders o
           JOIN marketplaceusers c ON o.userId = c.id
-          JOIN salesagent sa ON o.salesAgentId = sa.id 
+          JOIN salesagent sa ON c.salesAgent = sa.id 
+          JOIN processorders po ON o.id = po.orderId
       `;
 
     const countParams = [];
@@ -758,12 +759,12 @@ const getAllOrders = (
                   c.cusId LIKE ?
                   OR c.firstName LIKE ?
                   OR c.lastName LIKE ?
-                  OR o.invNo Like ?
+                  OR po.invNo Like ?
                   OR sa.empId LIKE ?
-                  OR o.deliveryType LIKE ?
-                  OR o.paymentStatus LIKE ?
-                  OR o.orderStatus LIKE ?
-                  OR o.paymentMethod LIKE ?
+                  OR o.delivaryMethod LIKE ?
+                  OR po.isPaid LIKE ?
+                  OR po.status LIKE ?
+                  OR po.paymentMethod LIKE ?
                   
               )
           `);
@@ -794,19 +795,23 @@ const getAllOrders = (
     }
 
     if (orderStatus) {
-      whereConditions.push(`o.orderStatus = ?`);
+      console.log("Order Status:", orderStatus);
+      
+      whereConditions.push(` po.status = ? `);
       countParams.push(orderStatus);
       dataParams.push(orderStatus);
     }
 
     if (paymentMethod) {
-      whereConditions.push(`o.paymentMethod = ?`);
+      whereConditions.push(`po.paymentMethod = ?`);
       countParams.push(paymentMethod);
       dataParams.push(paymentMethod);
     }
 
     if (paymentStatus) {
-      whereConditions.push(`o.paymentStatus = ?`);
+      console.log("----------",paymentStatus,"------------");
+      
+      whereConditions.push(`po.isPaid = ?`);
       countParams.push(+paymentStatus); // Convert string to number
       dataParams.push(+paymentStatus);
     }
@@ -818,7 +823,7 @@ const getAllOrders = (
     }
 
     if (date) {
-      whereConditions.push(`o.scheduleDate = ?`);
+      whereConditions.push(`o.sheduleDate = ?`);
       countParams.push(date);
       dataParams.push(date);
     }
