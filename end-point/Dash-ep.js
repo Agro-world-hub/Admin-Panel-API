@@ -202,7 +202,7 @@ exports.createSalesAgent = async (req, res) => {
     // }
 
     // Save officer data (without image if no image is uploaded)
-    console.log('got to dao',profileImageUrl);
+    console.log('got to dao', profileImageUrl);
     const resultsPersonal =
       await DashDao.createSalesAgent(
         officerData,
@@ -257,24 +257,16 @@ exports.updateSalesAgentDetails = async (req, res) => {
 
   const officerData = JSON.parse(req.body.officerData);
   // const qrCode = await collectionofficerDao.getQrImage(id);
-  const officerDataForImage = await DashDao.getSalesAgentDataById(id);
+  // const officerDataForImage = await DashDao.getSalesAgentDataById(id);
+  console.log(officerData);
+
 
   // let qrImageUrl;
 
-  let profileImageUrl = null;
-
-   const exProfileImageUrl = officerDataForImage.image;
-
   if (req.body.file) {
-    console.log("Recieved");
-    // qrImageUrl = qrCode.image;
-    // if (qrImageUrl) {
-    //   await deleteFromS3(qrImageUrl);
-    // }
-    if (exProfileImageUrl) {
-        await deleteFromS3(exProfileImageUrl);
-      }
-
+    await deleteFromS3(officerData.image);
+    console.log(req.body.file);
+    
 
     const base64String = req.body.file.split(",")[1]; // Extract the Base64 content
     const mimeType = req.body.file.match(/data:(.*?);base64,/)[1]; // Extract MIME type
@@ -283,14 +275,11 @@ exports.updateSalesAgentDetails = async (req, res) => {
     const fileExtension = mimeType.split("/")[1]; // Extract file extension from MIME type
     const fileName = `${officerData.firstName}_${officerData.lastName}.${fileExtension}`;
 
-    profileImageUrl = await uploadFileToS3(
+    officerData.image = await uploadFileToS3(
       fileBuffer,
       fileName,
       "salesagent/image"
     );
-  } else {
-    // profileImageUrl = qrCode.image;
-    profileImageUrl = null;
   }
 
   const {
@@ -315,6 +304,7 @@ exports.updateSalesAgentDetails = async (req, res) => {
     accNumber,
     bankName,
     branchName,
+    image
   } = officerData;
   console.log(empId);
 
@@ -342,7 +332,7 @@ exports.updateSalesAgentDetails = async (req, res) => {
       accNumber,
       bankName,
       branchName,
-      profileImageUrl
+      image
     );
     res.json({ message: "Collection officer details updated successfully" });
   } catch (err) {
