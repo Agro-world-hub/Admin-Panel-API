@@ -176,3 +176,144 @@ exports.getCompanies = async (req, res) => {
     });
   }
 };
+
+exports.createDistributionHead = async (req, res) => {
+  const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
+  console.log(fullUrl);
+
+  try {
+    const officerData = JSON.parse(req.body.officerData);
+
+    const isExistingNIC = await DistributionDao.checkNICExist(officerData.nic);
+    const isExistingEmail = await DistributionDao.checkEmailExist(
+      officerData.email
+    );
+
+    if (isExistingNIC) {
+      return res.status(500).json({
+        error: "NIC already exists",
+      });
+    }
+
+    if (isExistingEmail) {
+      return res.status(500).json({
+        error: "Email already exists",
+      });
+    }
+
+    let profileImageUrl = null; // Default to null if no image is provided
+
+    // Check if an image file is provided
+    if (req.body.file) {
+      try {
+        const base64String = req.body.file.split(",")[1]; // Extract the Base64 content
+        const mimeType = req.body.file.match(/data:(.*?);base64,/)[1]; // Extract MIME type
+        const fileBuffer = Buffer.from(base64String, "base64"); // Decode Base64 to buffer
+
+        const fileExtension = mimeType.split("/")[1]; // Extract file extension from MIME type
+        const fileName = `${officerData.firstNameEnglish}_${officerData.lastNameEnglish}.${fileExtension}`;
+
+        // Upload image to S3
+        profileImageUrl = await uploadFileToS3(
+          fileBuffer,
+          fileName,
+          "collectionofficer/image"
+        );
+      } catch (err) {
+        console.error("Error processing image file:", err);
+        return res
+          .status(400)
+          .json({ error: "Invalid file format or file upload error" });
+      }
+    }
+
+    // Save officer data (without image if no image is uploaded)
+    const resultsPersonal =
+      await DistributionDao.createDistributionHeadPersonal(
+        officerData,
+        profileImageUrl
+      );
+
+    console.log("Distribution Head created successfully");
+    return res.status(201).json({
+      message: "Distribution Head created successfully",
+      id: resultsPersonal.insertId,
+      status: true,
+    });
+  } catch (error) {
+    if (error.isJoi) {
+      return res.status(400).json({ error: error.details[0].message });
+    }
+
+    console.error("Error creating collection officer:", error);
+    return res.status(500).json({
+      error: "An error occurred while creating the collection officer",
+    });
+  }
+};
+
+exports.getAllCompanyList = async (req, res) => {
+  const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
+  console.log("Request URL:", fullUrl);
+  try {
+    const result = await DistributionDao.GetAllCompanyList();
+
+    if (result.length === 0) {
+      return res
+        .status(404)
+        .json({ message: "No news items found", data: result });
+    }
+
+    console.log("Successfully retrieved all collection center");
+    res.json(result);
+  } catch (err) {
+    if (err.isJoi) {
+      // Validation error
+      console.error("Validation error:", err.details[0].message);
+      return res.status(400).json({ error: err.details[0].message });
+    }
+
+    console.error("Error fetching news:", err);
+    res.status(500).json({ error: "An error occurred while fetching news" });
+  }
+};
+
+exports.getAllDistributedCentersByCompany = async (req, res) => {
+  try {
+    const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
+    console.log("Request URL:", fullUrl);
+
+    const companyId = req.params.companyId;
+    const result = await DistributionDao.GetDistributedCenterByCompanyIdDAO(
+      companyId
+    );
+
+    if (result.length === 0) {
+      return res.status(404).json({
+        message: "No distributed centers found for this company",
+        data: [],
+      });
+    }
+
+    console.log("Successfully retrieved all distributed centers for company");
+    res.status(200).json({
+      message: "Distributed centers retrieved successfully",
+      data: result,
+    });
+  } catch (err) {
+    if (err.isJoi) {
+      // Validation error
+      console.error("Validation error:", err.details[0].message);
+      return res.status(400).json({
+        error: "Validation error",
+        details: err.details[0].message,
+      });
+    }
+
+    console.error("Error fetching distributed centers:", err);
+    res.status(500).json({
+      error: "An error occurred while fetching distributed centers",
+      details: err.message,
+    });
+  }
+};

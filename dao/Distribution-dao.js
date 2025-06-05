@@ -217,7 +217,7 @@ exports.getAllDistributionCentreHead = (
   searchText
 ) => {
   return new Promise((resolve, reject) => {
-    let countSql = `SELECT COUNT(*) AS total FROM collectionofficer WHERE companyId = ? AND jobRole = 'Distribution Center Manager'`;
+    let countSql = `SELECT COUNT(*) AS total FROM collectionofficer WHERE companyId = ? AND jobRole = 'Distribution Center Head'`;
     let dataSql = `SELECT 
         co.id,
         co.empId,
@@ -229,7 +229,7 @@ exports.getAllDistributionCentreHead = (
         co.phoneNumber01,
         co.phoneCode02,
         co.phoneNumber02,
-        co.createdAt FROM collectionofficer co WHERE co.companyId = ? AND co.jobRole = 'Distribution Center Manager'`;
+        co.createdAt FROM collectionofficer co WHERE co.companyId = ? AND co.jobRole = 'Distribution Center Head'`;
     const countParams = [companyId];
     const dataParams = [companyId];
     if (searchText) {
@@ -281,6 +281,128 @@ exports.getCompanyDAO = () => {
         return reject(err);
       }
       console.log("Company names retrieved successfully");
+      resolve(results);
+    });
+  });
+};
+
+exports.createDistributionHeadPersonal = (officerData, profileImageUrl) => {
+  return new Promise(async (resolve, reject) => {
+    try {
+      const imageUrl = profileImageUrl || null;
+
+      const sql = `
+                INSERT INTO collectionofficer (
+                    centerId, companyId, irmId, firstNameEnglish, lastNameEnglish,
+                    jobRole, empId, empType, phoneCode01, phoneNumber01, phoneCode02, phoneNumber02,
+                    nic, email, houseNumber, streetName, city, district, province, country,
+                    languages, accHolderName, accNumber, bankName, branchName, image, QRcode, status
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Not Approved')
+            `;
+
+      collectionofficer.query(
+        sql,
+        [
+          officerData.centerId,
+          officerData.companyId,
+          officerData.irmId,
+          officerData.firstNameEnglish,
+          officerData.lastNameEnglish,
+          officerData.jobRole,
+          officerData.empId,
+          officerData.empType,
+          officerData.phoneCode01,
+          officerData.phoneNumber01,
+          officerData.phoneCode02,
+          officerData.phoneNumber02,
+          officerData.nic,
+          officerData.email,
+          officerData.houseNumber,
+          officerData.streetName,
+          officerData.city,
+          officerData.district,
+          officerData.province,
+          officerData.country,
+          officerData.languages,
+          officerData.accHolderName,
+          officerData.accNumber,
+          officerData.bankName,
+          officerData.branchName,
+          imageUrl,
+          null, // QRcode field set to null
+        ],
+        (err, results) => {
+          if (err) {
+            console.log(err);
+            return reject(err);
+          }
+          resolve(results);
+        }
+      );
+    } catch (error) {
+      reject(error);
+    }
+  });
+};
+
+exports.checkNICExist = (nic) => {
+  return new Promise((resolve, reject) => {
+    const sql = `
+            SELECT COUNT(*) AS count 
+            FROM collectionofficer 
+            WHERE nic = ?
+        `;
+
+    collectionofficer.query(sql, [nic], (err, results) => {
+      if (err) {
+        return reject(err);
+      }
+      resolve(results[0].count > 0);
+    });
+  });
+};
+
+exports.checkEmailExist = (email) => {
+  return new Promise((resolve, reject) => {
+    const sql = `
+            SELECT COUNT(*) AS count 
+            FROM collectionofficer 
+            WHERE email = ?
+        `;
+
+    collectionofficer.query(sql, [email], (err, results) => {
+      if (err) {
+        return reject(err);
+      }
+      resolve(results[0].count > 0); // Return true if either NIC or email exists
+    });
+  });
+};
+
+exports.GetAllCompanyList = () => {
+  return new Promise((resolve, reject) => {
+    const sql = "SELECT id, companyNameEnglish FROM company";
+    collectionofficer.query(sql, (err, results) => {
+      if (err) {
+        return reject(err);
+      }
+      resolve(results);
+    });
+  });
+};
+
+exports.GetDistributedCenterByCompanyIdDAO = (companyId) => {
+  return new Promise((resolve, reject) => {
+    const sql = `
+      SELECT dc.* 
+      FROM distributedcenter dc
+      JOIN distributedcompanycenter dcc ON dc.id = dcc.centerId
+      WHERE dcc.companyId = ?
+    `;
+    collectionofficer.query(sql, [companyId], (err, results) => {
+      if (err) {
+        return reject(err);
+      }
       resolve(results);
     });
   });
