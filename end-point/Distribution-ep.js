@@ -10,6 +10,8 @@ exports.createDistributionCenter = async (req, res) => {
         req.body
       );
 
+      console.log(data);
+
     // Check for existing NIC or unique field
     // const existing = await DistributionDao.findByName(data.name);
     // if (existing) {
@@ -167,6 +169,26 @@ exports.getCompanies = async (req, res) => {
       success: true,
       message: "Company names retrieved successfully",
       data: companyNames, // Now just an array of strings
+    });
+  } catch (err) {
+    console.error("Error fetching company names:", err);
+    res.status(500).json({
+      success: false,
+      error: "An error occurred while fetching company names",
+    });
+  }
+};
+
+exports.getCompany = async (req, res) => {
+  try {
+    const results = await DistributionDao.getCompanyDetails();
+    console.log(results);
+
+    console.log("Successfully retrieved company names");
+    res.json({
+      success: true,
+      message: "Company names retrieved successfully",
+      data: results,
     });
   } catch (err) {
     console.error("Error fetching company names:", err);

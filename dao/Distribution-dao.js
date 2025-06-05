@@ -10,13 +10,13 @@ const path = require("path");
 
 exports.createDistributionCenter = (data) => {
   return new Promise((resolve, reject) => {
-    const sql = `
-        INSERT INTO distribution_centers 
-        (name, officerInCharge, contact1, contact1Code, contact2, contact2Code, latitude, longitude, email, country, province, district, city)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-      `;
+    const sql1 = `
+      INSERT INTO distributedcenter 
+      (centerName, OfficerName, contact01, code1, contact02, code2, latitude, longitude, email, country, province, district, city)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `;
 
-    const values = [
+    const values1 = [
       data.name,
       data.officerInCharge,
       data.contact1,
@@ -32,15 +32,39 @@ exports.createDistributionCenter = (data) => {
       data.city,
     ];
 
-    dash.query(sql, values, (err, result) => {
+    // First insert into distributedcenter
+    collectionofficer.query(sql1, values1, (err, result1) => {
       if (err) {
         console.error("Error inserting distribution center:", err);
         return reject(err);
       }
-      resolve(result);
+
+      const centerId = result1.insertId; // Get the inserted center's ID
+      const companyId = data.company;   // Get the company ID from request data
+
+      const sql2 = `
+        INSERT INTO distributedcompanycenter (companyId, centerId)
+        VALUES (?, ?)
+      `;
+
+      const values2 = [companyId, centerId];
+
+      // Then insert into distributedcompanycenter
+      collectionofficer.query(sql2, values2, (err, result2) => {
+        if (err) {
+          console.error("Error inserting into distributedcompanycenter:", err);
+          return reject(err);
+        }
+
+        resolve({
+          centerInsertResult: result1,
+          companyMappingResult: result2,
+        });
+      });
     });
   });
 };
+
 
 exports.getAllDistributionCentre = (
   limit,
@@ -281,6 +305,29 @@ exports.getCompanyDAO = () => {
         return reject(err);
       }
       console.log("Company names retrieved successfully");
+      console.log(results)
+      resolve(results);
+    });
+  });
+};
+
+exports.getCompanyDetails = () => {
+  return new Promise((resolve, reject) => {
+    let sql = `
+      SELECT 
+        c.companyNameEnglish, c.id
+      FROM 
+        company c
+      WHERE c.status = 1
+      ORDER BY c.companyNameEnglish ASC
+    `;
+
+    collectionofficer.query(sql, (err, results) => {
+      if (err) {
+        return reject(err);
+      }
+      console.log("Company names retrieved successfully");
+      console.log(results)
       resolve(results);
     });
   });
