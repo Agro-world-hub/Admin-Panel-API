@@ -1,5 +1,6 @@
 const MarketPlaceDao = require("../dao/MarketPlace-dao");
 const uploadFileToS3 = require("../middlewares/s3upload");
+const deleteFromS3 = require("../middlewares/s3delete");
 const MarketPriceValidate = require("../validations/MarketPlace-validation");
 
 //get all crop category
@@ -1179,10 +1180,19 @@ exports.editPackage = async (req, res) => {
     const package = JSON.parse(req.body.package);
     const id = req.params.id;
     console.log(id);
+    console.log(package);
+    console.log(req.body.file);
 
     let profileImageUrl = null;
 
+    // Check if a new image file was uploaded
     if (req.body.file) {
+      // Delete old image from S3 if it exists
+      const imageUrl = package.imageUrl;
+      if (imageUrl) {
+        await deleteFromS3(imageUrl);
+      }
+
       try {
         const base64String = req.body.file.split(",")[1];
         const mimeType = req.body.file.match(/data:(.*?);base64,/)[1];
@@ -1202,10 +1212,14 @@ exports.editPackage = async (req, res) => {
           status: false,
         });
       }
+    } else {
+      // No new image uploaded, keep the existing image URL
+      profileImageUrl = package.imageUrl;
     }
-    console.log(profileImageUrl)
 
-    // Create main package
+    console.log(profileImageUrl);
+
+    // Update main package
     const results = await MarketPlaceDao.editPackageDAO(
       package,
       profileImageUrl,
@@ -1214,12 +1228,12 @@ exports.editPackage = async (req, res) => {
 
     if (!results) {
       return res.status(500).json({
-        message: "Package creation failed",
+        message: "Package update failed",
         status: false,
       });
     }
 
-    // Create package details
+    // Update package details
     try {
       const quantities = package.quantities; // object like { '2': 2, '3': 0 }
 
@@ -1236,16 +1250,15 @@ exports.editPackage = async (req, res) => {
         await MarketPlaceDao.editPackageDetailsDAO(itemData, id);
       }
     } catch (err) {
-      console.error("Error creating package details:", err);
+      console.error("Error updating package details:", err);
       return res.status(500).json({
-        error: "Error creating package details",
+        error: "Error updating package details",
         status: false,
       });
     }
 
-
-    return res.status(201).json({
-      message: "Package created successfully",
+    return res.status(200).json({
+      message: "Package updated successfully",
       status: true,
       id: id,
     });
@@ -1257,9 +1270,9 @@ exports.editPackage = async (req, res) => {
       });
     }
 
-    console.error("Error creating package:", err);
+    console.error("Error updating package:", err);
     return res.status(500).json({
-      error: "An error occurred while creating marketplace package",
+      error: "An error occurred while updating marketplace package",
       status: false,
     });
   }

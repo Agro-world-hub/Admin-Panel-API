@@ -60,4 +60,10 @@ router.get(
   distributionEp.getAllDistributedCentersByCompany
 );
 
+router.get(
+  "/get-company",
+  // authMiddleware,
+  distributionEp.getCompany
+);
+
 module.exports = router;

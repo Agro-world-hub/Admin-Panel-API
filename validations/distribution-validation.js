@@ -2,6 +2,7 @@ const Joi = require('joi');
 
 exports.getDistributionCenterDetailsSchema = Joi.object({
   name: Joi.string().required(),
+  company: Joi.number().integer().required(),
   officerInCharge: Joi.string().required(),
   contact1: Joi.string().required(),
   contact1Code: Joi.string().required(),
