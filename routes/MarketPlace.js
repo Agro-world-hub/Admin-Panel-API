@@ -96,11 +96,7 @@ router.get(
   marketPlaceEp.getMarketplacePackageWithDetailsById
 );
 
-router.patch(
-  "/edit-product/:id", 
-  authMiddleware, 
-  marketPlaceEp.updatePackage
-);
+router.patch("/edit-product/:id", authMiddleware, marketPlaceEp.updatePackage);
 
 router.get(
   "/next-reatil-banner-number",
@@ -115,20 +111,18 @@ router.get(
 );
 
 router.post(
-  '/upload-banner', 
-  authMiddleware, 
-  upload.single('image'), 
+  "/upload-banner",
+  authMiddleware,
+  upload.single("image"),
   marketPlaceEp.uploadBanner
 );
 
-
 router.post(
-  '/upload-banner-wholesale', 
-  authMiddleware, 
-  upload.single('image'), 
+  "/upload-banner-wholesale",
+  authMiddleware,
+  upload.single("image"),
   marketPlaceEp.uploadBannerWholesale
 );
-
 
 router.get(
   "/get-all-banners",
@@ -142,50 +136,50 @@ router.get(
   marketPlaceEp.getAllBannersWholesale
 );
 
-
-router.put(
-  "/update-banner-order", 
-  marketPlaceEp.updateBannerOrder
-);
-
+router.put("/update-banner-order", marketPlaceEp.updateBannerOrder);
 
 router.delete(
-  "/delete-banner-retail/:id", 
-  authMiddleware, 
+  "/delete-banner-retail/:id",
+  authMiddleware,
   marketPlaceEp.deleteBannerRetail
 );
 
 router.delete(
-  "/delete-banner-whole/:id", 
-  authMiddleware, 
+  "/delete-banner-whole/:id",
+  authMiddleware,
   marketPlaceEp.deleteBannerWhole
 );
 
 router.post(
-  "/create-product-type", 
-  authMiddleware, 
+  "/create-product-type",
+  authMiddleware,
   marketPlaceEp.createProductType
 );
 
-
 router.get(
-  "/view-all-product-type", 
-  authMiddleware, 
+  "/view-all-product-type",
+  authMiddleware,
   marketPlaceEp.viewProductType
 );
-router.get('/marketplace-users',authMiddleware, marketPlaceEp.getMarketplaceUsers);
-
 router.get(
-  "/get-product-type", 
-  authMiddleware, 
-  marketPlaceEp.getProductType
+  "/marketplace-users",
+  authMiddleware,
+  marketPlaceEp.getMarketplaceUsers
 );
 
+router.get("/get-product-type", authMiddleware, marketPlaceEp.getProductType);
+
 router.post(
-  '/edit-package/:id', 
-  authMiddleware, 
-  upload.single('image'), 
+  "/edit-package/:id",
+  authMiddleware,
+  upload.single("image"),
   marketPlaceEp.editPackage
+);
+
+router.get(
+  "/get-all-delivery-charges",
+  authMiddleware,
+  marketPlaceEp.getAllDeliveryCharges
 );
 
 module.exports = router;

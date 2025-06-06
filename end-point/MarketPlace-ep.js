@@ -375,7 +375,7 @@ exports.createPackage = async (req, res) => {
         });
       }
     }
-    console.log(profileImageUrl)
+    console.log(profileImageUrl);
 
     // Create main package
     const packageId = await MarketPlaceDao.creatPackageDAO(
@@ -401,7 +401,7 @@ exports.createPackage = async (req, res) => {
         // Construct item data for DAO
         const itemData = {
           productTypeId: parseInt(productTypeId),
-          qty: parseInt(qty)
+          qty: parseInt(qty),
         };
 
         await MarketPlaceDao.creatPackageDetailsDAO(itemData, packageId);
@@ -413,7 +413,6 @@ exports.createPackage = async (req, res) => {
         status: false,
       });
     }
-
 
     return res.status(201).json({
       message: "Package created successfully",
@@ -623,7 +622,9 @@ exports.getMarketplacePackageById = async (req, res) => {
     const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
     console.log("Request URL:", fullUrl);
 
-    const { id } = await MarketPriceValidate.IdparamsSchema.validateAsync(req.params);
+    const { id } = await MarketPriceValidate.IdparamsSchema.validateAsync(
+      req.params
+    );
 
     const resultRows = await MarketPlaceDao.getMarketplacePackageByIdDAO(id);
 
@@ -638,20 +639,21 @@ exports.getMarketplacePackageById = async (req, res) => {
 
     const packageData = {
       displayName: firstRow.displayName,
-      status: firstRow.status || 'Enabled',
+      status: firstRow.status || "Enabled",
       description: firstRow.description,
       productPrice,
       packageFee: packingFee,
       serviceFee,
       approximatedPrice: parseFloat(total.toFixed(2)),
-      imageUrl: firstRow.image && !firstRow.image.startsWith("http")
-        ? `${req.protocol}://${req.get("host")}/${firstRow.image}`
-        : firstRow.image,
-      quantities: {}
+      imageUrl:
+        firstRow.image && !firstRow.image.startsWith("http")
+          ? `${req.protocol}://${req.get("host")}/${firstRow.image}`
+          : firstRow.image,
+      quantities: {},
     };
 
     // Build quantities map
-    resultRows.forEach(row => {
+    resultRows.forEach((row) => {
       packageData.quantities[row.productTypeId] = row.qty;
     });
     console.log(packageData);
@@ -674,7 +676,6 @@ exports.getMarketplacePackageById = async (req, res) => {
     });
   }
 };
-
 
 exports.getMarketplacePackageWithDetailsById = async (req, res) => {
   try {
@@ -1155,7 +1156,6 @@ exports.viewProductType = async (req, res) => {
   }
 };
 
-
 exports.getProductType = async (req, res) => {
   try {
     const result = await MarketPlaceDao.getProductType();
@@ -1163,7 +1163,7 @@ exports.getProductType = async (req, res) => {
     return res.status(201).json({
       message: "Product find successfully",
       status: true,
-      data: result
+      data: result,
     });
   } catch (error) {
     console.error("Error creating Product type:", error);
@@ -1203,7 +1203,7 @@ exports.editPackage = async (req, res) => {
         });
       }
     }
-    console.log(profileImageUrl)
+    console.log(profileImageUrl);
 
     // Create main package
     const results = await MarketPlaceDao.editPackageDAO(
@@ -1230,7 +1230,7 @@ exports.editPackage = async (req, res) => {
         // Construct item data for DAO
         const itemData = {
           productTypeId: parseInt(productTypeId),
-          qty: parseInt(qty)
+          qty: parseInt(qty),
         };
 
         await MarketPlaceDao.editPackageDetailsDAO(itemData, id);
@@ -1242,7 +1242,6 @@ exports.editPackage = async (req, res) => {
         status: false,
       });
     }
-
 
     return res.status(201).json({
       message: "Package created successfully",
@@ -1262,5 +1261,24 @@ exports.editPackage = async (req, res) => {
       error: "An error occurred while creating marketplace package",
       status: false,
     });
+  }
+};
+
+exports.getAllDeliveryCharges = async (req, res) => {
+  try {
+    console.log(req.query);
+
+    const { searchItem, city } = req.query;
+
+    const deliveryCharges = await MarketPlaceDao.getAllDeliveryCharges(
+      searchItem,
+      city
+    );
+
+    console.log("Successfully fetched delivery charges");
+    res.json(deliveryCharges);
+  } catch (err) {
+    console.error("Error executing query:", err);
+    res.status(500).send("An error occurred while fetching delivery charges.");
   }
 };

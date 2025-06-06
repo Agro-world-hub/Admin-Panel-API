@@ -431,7 +431,6 @@ exports.creatPackageDAO = async (data, profileImageUrl) => {
       data.serviceFee,
       profileImageUrl,
       data.description,
-
     ];
 
     marketPlace.query(sql, values, (err, results) => {
@@ -451,11 +450,7 @@ exports.creatPackageDetailsDAO = async (data, packageId) => {
       INSERT INTO packagedetails (packageId, productTypeId, qty)
       VALUES (?, ?, ?)
     `;
-    const values = [
-      packageId,
-      data.productTypeId,
-      data.qty
-    ];
+    const values = [packageId, data.productTypeId, data.qty];
 
     marketPlace.query(sql, values, (err, results) => {
       if (err) {
@@ -716,9 +711,6 @@ exports.updateMarketplacePackageDAO = (packageId, updateData) => {
       });
     });
   });
-
-  
-  
 };
 
 exports.getMarketplacePackageByIdDAO = async (id) => {
@@ -748,15 +740,15 @@ exports.getMarketplacePackageByIdDAO = async (id) => {
 // exports.getMarketplacePackageByIdDAO = (packageId) => {
 //   return new Promise((resolve, reject) => {
 //     const sql = `
-//       SELECT 
-//         mp.id, 
-//         mp.displayName, 
-//         mp.image, 
-//         mp.description, 
-//         mp.status, 
-//         mp.total, 
-//         mp.discount, 
-//         mp.subtotal, 
+//       SELECT
+//         mp.id,
+//         mp.displayName,
+//         mp.image,
+//         mp.description,
+//         mp.status,
+//         mp.total,
+//         mp.discount,
+//         mp.subtotal,
 //         mp.created_at,
 //         pd.id AS detailId,
 //         pd.packageId,
@@ -1280,9 +1272,9 @@ exports.editPackageDetailsDAO = async (data, packageId) => {
     `;
 
     const values = [
-      data.qty,        // Set new quantity
-      packageId,       // Match package ID
-      data.productTypeId // Match product type ID
+      data.qty, // Set new quantity
+      packageId, // Match package ID
+      data.productTypeId, // Match product type ID
     ];
 
     marketPlace.query(sql, values, (err, results) => {
@@ -1295,3 +1287,33 @@ exports.editPackageDetailsDAO = async (data, packageId) => {
   });
 };
 
+exports.getAllDeliveryCharges = (searchItem, city) => {
+  return new Promise((resolve, reject) => {
+    let whereConditions = [];
+    let params = [];
+    let sql = "SELECT * FROM deliverycharge";
+
+    if (searchItem) {
+      whereConditions.push("city LIKE ?");
+      params.push(`%${searchItem}%`);
+    }
+
+    if (city) {
+      whereConditions.push("city = ?");
+      params.push(city);
+    }
+
+    if (whereConditions.length > 0) {
+      sql += " WHERE " + whereConditions.join(" AND ");
+    }
+
+    sql += " ORDER BY createdAt DESC";
+    collectionofficer.query(sql, params, (err, results) => {
+      if (err) {
+        return reject(err);
+      }
+
+      resolve(results);
+    });
+  });
+};
