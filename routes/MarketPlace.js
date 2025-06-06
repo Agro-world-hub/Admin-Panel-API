@@ -2,8 +2,20 @@ const express = require("express");
 const authMiddleware = require("../middlewares/authMiddleware");
 const marketPlaceEp = require("../end-point/MarketPlace-ep");
 const upload = require("../middlewares/uploadMiddleware");
+const path = require("path");
+const multer = require("multer");
 
 const router = express.Router();
+
+const uploadfile = multer({
+  fileFilter: function (req, file, callback) {
+    var ext = path.extname(file.originalname);
+    if (ext !== ".xlsx" && ext !== ".xls") {
+      return callback(new Error("Only Excel files are allowed"));
+    }
+    callback(null, true);
+  },
+});
 
 router.get(
   "/get-crop-category",
