@@ -188,4 +188,22 @@ router.post(
   marketPlaceEp.editPackage
 );
 
+router.get(
+  "/get-product-type-by-id/:id", 
+  authMiddleware, 
+  marketPlaceEp.getProductTypeById
+);
+
+router.patch(
+  "/edit-product-type/:id", 
+  authMiddleware, 
+  marketPlaceEp.editProductType
+);
+
+router.delete(
+  "/delete-product-type/:id", 
+  authMiddleware, 
+  marketPlaceEp.deleteProductType
+);
+
 module.exports = router;

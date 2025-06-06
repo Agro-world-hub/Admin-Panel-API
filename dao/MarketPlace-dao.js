@@ -1295,3 +1295,45 @@ exports.editPackageDetailsDAO = async (data, packageId) => {
   });
 };
 
+
+exports.getProductTypeByIdDao = async (id) => {
+  return new Promise((resolve, reject) => {
+    const sql = "SELECT typeName, shortCode FROM producttypes WHERE id = ?";
+    marketPlace.query(sql,[id], (err, results) => {
+      if (err) {
+        return reject(err);
+      }
+      resolve(results[0]);
+    });
+  });
+};
+
+exports.editProductTypesDao = async (data, id) => {
+  return new Promise((resolve, reject) => {
+    const sql = `
+                UPDATE producttypes 
+                SET 
+                  typeName = ?, shortCode = ?
+                WHERE id = ?
+              `;
+    marketPlace.query(sql, [data.typeName, data.shortCode, id], (err, results) => {
+      if (err) {
+        return reject(err);
+      }
+      resolve(results);
+    });
+  });
+};
+
+
+exports.DeleteProductTypeByIdDao = async (id) => {
+  return new Promise((resolve, reject) => {
+    const sql = "DELETE FROM producttypes WHERE id = ?";
+    marketPlace.query(sql,[id], (err, results) => {
+      if (err) {
+        return reject(err);
+      }
+      resolve(results);
+    });
+  });
+};

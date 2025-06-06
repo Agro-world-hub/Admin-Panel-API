@@ -1277,3 +1277,68 @@ exports.editPackage = async (req, res) => {
     });
   }
 };
+
+
+exports.getProductTypeById = async (req, res) => {
+  try {
+    const { id } = await MarketPriceValidate.IdparamsSchema.validateAsync(req.params);
+
+    const result = await MarketPlaceDao.getProductTypeByIdDao(id);
+
+    res.status(201).json({
+      message: "Product find successfully",
+      status: true,
+      data: result
+    });
+  } catch (error) {
+    console.error("Error creating Product type:", error);
+    return res.status(500).json({ error: "Internal server error" });
+  }
+};
+
+
+exports.editProductType = async (req, res) => {
+  try {
+    const { id } = await MarketPriceValidate.IdparamsSchema.validateAsync(req.params);
+    const data = await MarketPriceValidate.createProductTypeSchema.validateAsync(req.body);
+    const result = await MarketPlaceDao.editProductTypesDao(data, id);
+
+    if (result.affectedRows === 0) {
+      return res.json({
+        message: "Product type edit failed",
+        status: false,
+      });
+    }
+
+    return res.status(201).json({
+      message: "Product type edit successfully",
+      status: true,
+    });
+  } catch (error) {
+    console.error("Error edit Product type:", error);
+    return res.status(500).json({ error: "Internal server error" });
+  }
+};
+
+
+exports.deleteProductType = async (req, res) => {
+  try {
+    const { id } = await MarketPriceValidate.IdparamsSchema.validateAsync(req.params);
+    const result = await MarketPlaceDao.DeleteProductTypeByIdDao( id);
+
+    if (result.affectedRows === 0) {
+      return res.json({
+        message: "Product type delete failed",
+        status: false,
+      });
+    }
+
+    return res.status(201).json({
+      message: "Product type delete successfully",
+      status: true,
+    });
+  } catch (error) {
+    console.error("Error edit Product type:", error);
+    return res.status(500).json({ error: "Internal server error" });
+  }
+};
