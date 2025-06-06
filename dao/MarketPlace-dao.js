@@ -1295,3 +1295,67 @@ exports.editPackageDetailsDAO = async (data, packageId) => {
   });
 };
 
+
+exports.getAllRetailOrderDetails = (limit, offset, status, method, searchItem, formattedDate) => {
+  return new Promise((resolve, reject) => {
+    let countSql = "SELECT COUNT(*) as total FROM market_place.orders o LEFT JOIN market_place.processorders po ON o.id = po.orderId"
+    let sql = `
+    SELECT o.id, o.fullName AS customerName, o.delivaryMethod AS method, po.amount, po.invNo, po.status, o.createdAt AS orderdDate FROM market_place.orders o
+    LEFT JOIN market_place.processorders po ON o.id = po.orderId
+    `;
+
+    let whereClause = " WHERE 1=1"
+    const searchParams = [];
+
+    if (searchItem) {
+      // Turn "ap" into "%a%p%" to match "apple"
+      const searchQuery = `%${searchItem.split('').join('%')}%`
+      whereClause += " AND (po.invNo LIKE ? OR o.fullName LIKE ?)"
+      searchParams.push(searchQuery, searchQuery);
+    }
+    
+    if (status) {
+      whereClause += " AND po.status = ?"
+      searchParams.push(status);
+    }
+
+    if (method) {
+      whereClause += " AND o.delivaryMethod = ?"
+      searchParams.push(method);
+    }
+
+    if (formattedDate) {
+      whereClause += " AND DATE(o.createdAt) = ?"
+      searchParams.push(formattedDate);
+    }
+
+    // Add where clause to both count and main SQL
+    countSql += whereClause;
+    sql += whereClause + " ORDER BY o.createdAt ASC LIMIT ? OFFSET ?";
+    const dataParams = [...searchParams, limit, offset];
+
+    marketPlace.query(
+      countSql,
+      searchParams,
+      (countErr, countResults) => {
+        if (countErr) {
+          return reject(countErr);
+        }
+
+        const total = countResults[0].total;
+
+        marketPlace.query(sql, dataParams, (dataErr, dataResults) => {
+          if (dataErr) {
+            return reject(dataErr);
+          }
+
+          resolve({
+            total: total,
+            items: dataResults,
+          });
+        });
+      }
+    );
+  });
+};
+

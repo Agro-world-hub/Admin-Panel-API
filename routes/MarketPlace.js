@@ -188,4 +188,10 @@ router.post(
   marketPlaceEp.editPackage
 );
 
+router.get(
+  "/get-all-retail-orders",
+  authMiddleware,
+  marketPlaceEp.getAllRetailOrders
+);
+
 module.exports = router;
