@@ -84,7 +84,7 @@ router.get(
 );
 
 router.put(
-  "/reply-complain/:id/",
+  "/reply-complain/:id",
   authMiddleware,
   ComplainCategoryEP.sendComplainReply
 );

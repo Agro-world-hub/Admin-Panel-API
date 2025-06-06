@@ -740,7 +740,7 @@ exports.sendComplainReply = (complainId, reply) => {
       WHERE id = ?
     `;
 
-    const status = "Opened";
+    const status = "Closed";
     const adminStatus = "Closed";
     const values = [reply, status, adminStatus, complainId];
 

@@ -878,7 +878,7 @@ const GetAllSalesAgentComplainDAO = (
     // SQL to count total records
     let countSql = `
       SELECT COUNT(*) AS total
-      FROM marketPlacecomplain dc
+      FROM dashcomplain dc
       LEFT JOIN plant_care.users u ON dc.saId = u.id
       LEFT JOIN agro_world_admin.complaincategory cc ON dc.complainCategory = cc.id
       LEFT JOIN agro_world_admin.adminroles ar ON cc.roleId = ar.id
@@ -901,7 +901,7 @@ const GetAllSalesAgentComplainDAO = (
         dc.complain,
         dc.language,
         dc.saId AS agentId
-      FROM marketPlacecomplain dc
+      FROM dashcomplain dc
       LEFT JOIN plant_care.users u ON dc.saId = u.id
       LEFT JOIN agro_world_admin.complaincategory cc ON dc.complainCategory = cc.id
       LEFT JOIN agro_world_admin.adminroles ar ON cc.roleId = ar.id
@@ -976,8 +976,8 @@ const getComplainById = (id) => {
   return new Promise((resolve, reject) => {
     const sql = ` 
     SELECT dc.id, dc.refNo, dc.createdAt, dc.language, dc.complain,dc.complainCategory,dc.reply, u.firstName AS firstName, u.lastName AS lastName,u.phoneCode1,  u.phoneNumber1, cc.categoryEnglish AS complainCategory
-    FROM marketPlacecomplain dc
-    LEFT JOIN marketPlace.salesagent u ON dc.saId = u.id
+    FROM dashcomplain dc
+    LEFT JOIN salesagent u ON dc.saId = u.id
     LEFT JOIN agro_world_admin.complaincategory cc ON dc.complainCategory = cc.id
     WHERE dc.id = ? 
     `;
@@ -1003,12 +1003,12 @@ const sendComplainReply = (complainId, reply) => {
     }
 
     const sql = `
-      UPDATE marketPlacecomplain 
+      UPDATE dashcomplain 
       SET reply = ?, status = ?, adminStatus = ? 
       WHERE id = ?
     `;
 
-    const status = "Opened";
+    const status = "Closed";
     const adminStatus = "Closed";
     const values = [reply, status, adminStatus, complainId];
 
