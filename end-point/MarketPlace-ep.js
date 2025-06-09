@@ -1282,3 +1282,31 @@ exports.getAllDeliveryCharges = async (req, res) => {
     res.status(500).send("An error occurred while fetching delivery charges.");
   }
 };
+
+exports.uploadDeliveryCharges = async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({
+        success: false,
+        message: "No file uploaded",
+      });
+    }
+
+    const result = await MarketPlaceDao.uploadDeliveryCharges(req.file.buffer);
+
+    return res.status(200).json({
+      success: true,
+      message: result.message,
+      data: {
+        inserted: result.inserted,
+        duplicates: result.duplicates,
+      },
+    });
+  } catch (error) {
+    console.error("Error uploading delivery charges:", error);
+    return res.status(500).json({
+      success: false,
+      message: error.message || "Failed to upload delivery charges",
+    });
+  }
+};

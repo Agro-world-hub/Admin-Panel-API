@@ -7,6 +7,7 @@ const {
 const { error } = require("console");
 const Joi = require("joi");
 const path = require("path");
+const XLSX = require("xlsx");
 
 exports.getAllCropNameDAO = () => {
   return new Promise((resolve, reject) => {
@@ -1315,5 +1316,99 @@ exports.getAllDeliveryCharges = (searchItem, city) => {
 
       resolve(results);
     });
+  });
+};
+
+exports.uploadDeliveryCharges = async (fileBuffer) => {
+  return new Promise(async (resolve, reject) => {
+    try {
+      // Read the Excel file
+      const workbook = XLSX.read(fileBuffer, { type: "buffer" });
+      const worksheet = workbook.Sheets[workbook.SheetNames[0]];
+      const data = XLSX.utils.sheet_to_json(worksheet);
+
+      // Validate data structure
+      if (data.length === 0) {
+        return reject(new Error("Excel file is empty"));
+      }
+
+      const requiredColumns = ["City Name", "Charge (Rs.)"];
+      const headers = Object.keys(data[0]);
+
+      if (!requiredColumns.every((col) => headers.includes(col))) {
+        return reject(
+          new Error(
+            "Excel file must contain 'City Name' and 'Charge (Rs.)' columns"
+          )
+        );
+      }
+
+      // Process data and remove duplicates
+      const chargesToInsert = [];
+      const cityMap = new Map();
+
+      for (const row of data) {
+        const city = row["City Name"]?.toString().trim();
+        const charge = parseFloat(row["Charge (Rs.)"]);
+
+        if (!city || isNaN(charge)) {
+          continue; // Skip invalid rows
+        }
+
+        // Check if city already exists in this batch
+        if (!cityMap.has(city.toLowerCase())) {
+          cityMap.set(city.toLowerCase(), true);
+          chargesToInsert.push({ city, charge });
+        }
+      }
+
+      if (chargesToInsert.length === 0) {
+        return resolve({
+          inserted: 0,
+          duplicates: 0,
+          message: "No valid data to insert",
+        });
+      }
+
+      // Check against existing database entries
+      const existingCities = await new Promise((resolve, reject) => {
+        const sql =
+          "SELECT LOWER(city) as city FROM deliverycharge WHERE city IN (?)";
+        const cities = chargesToInsert.map((c) => c.city);
+        collectionofficer.query(sql, [cities], (err, results) => {
+          if (err) return reject(err);
+          resolve(results.map((r) => r.city));
+        });
+      });
+
+      // Filter out duplicates that exist in database
+      const finalCharges = chargesToInsert.filter(
+        (charge) => !existingCities.includes(charge.city.toLowerCase())
+      );
+
+      if (finalCharges.length === 0) {
+        return resolve({
+          inserted: 0,
+          duplicates: chargesToInsert.length,
+          message: "All cities already exist in database",
+        });
+      }
+
+      // Insert non-duplicate records
+      const sql = "INSERT INTO deliverycharge (city, charge) VALUES ?";
+      const values = finalCharges.map((charge) => [charge.city, charge.charge]);
+
+      collectionofficer.query(sql, [values], (err, result) => {
+        if (err) return reject(err);
+
+        resolve({
+          inserted: result.affectedRows,
+          duplicates: chargesToInsert.length - finalCharges.length,
+          message: "Delivery charges uploaded successfully",
+        });
+      });
+    } catch (error) {
+      reject(error);
+    }
   });
 };

@@ -194,4 +194,11 @@ router.get(
   marketPlaceEp.getAllDeliveryCharges
 );
 
+router.post(
+  "/upload-delivery-charges",
+  authMiddleware,
+  upload.single("file"),
+  marketPlaceEp.uploadDeliveryCharges
+);
+
 module.exports = router;
