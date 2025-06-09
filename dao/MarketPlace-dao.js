@@ -1412,3 +1412,23 @@ exports.uploadDeliveryCharges = async (fileBuffer) => {
     }
   });
 };
+
+exports.editDeliveryChargeDAO = async (data, id) => {
+  return new Promise((resolve, reject) => {
+    const sql = `
+      UPDATE deliverycharge 
+      SET city = ?, charge = ? 
+      WHERE id = ?
+    `;
+
+    const values = [data.city, data.charge, id];
+
+    collectionofficer.query(sql, values, (err, results) => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(results);
+      }
+    });
+  });
+};

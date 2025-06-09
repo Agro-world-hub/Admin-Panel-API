@@ -201,4 +201,10 @@ router.post(
   marketPlaceEp.uploadDeliveryCharges
 );
 
+router.post(
+  "/edit-delivery-charge/:id",
+  authMiddleware,
+  marketPlaceEp.editDeliveryCharge
+);
+
 module.exports = router;

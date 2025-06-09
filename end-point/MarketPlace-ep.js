@@ -1310,3 +1310,55 @@ exports.uploadDeliveryCharges = async (req, res) => {
     });
   }
 };
+
+exports.editDeliveryCharge = async (req, res) => {
+  try {
+    const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
+    console.log("Request URL:", fullUrl);
+
+    const deliveryData = req.body; // Assuming JSON data is sent directly in body
+    const id = req.params.id;
+    console.log("Delivery Charge ID:", id);
+    console.log("Update Data:", deliveryData);
+
+    // Validate required fields
+    if (!deliveryData.city || !deliveryData.charge) {
+      return res.status(400).json({
+        error: "City and charge are required fields",
+        status: false,
+      });
+    }
+
+    // Update delivery charge
+    const results = await MarketPlaceDao.editDeliveryChargeDAO(
+      deliveryData,
+      id
+    );
+
+    if (!results || results.affectedRows === 0) {
+      return res.status(404).json({
+        message: "Delivery charge not found or update failed",
+        status: false,
+      });
+    }
+
+    return res.status(200).json({
+      message: "Delivery charge updated successfully",
+      status: true,
+      id: id,
+    });
+  } catch (err) {
+    if (err.isJoi) {
+      return res.status(400).json({
+        error: err.details[0].message,
+        status: false,
+      });
+    }
+
+    console.error("Error updating delivery charge:", err);
+    return res.status(500).json({
+      error: "An error occurred while updating delivery charge",
+      status: false,
+    });
+  }
+};
