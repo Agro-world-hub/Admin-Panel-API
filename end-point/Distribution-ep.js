@@ -10,7 +10,7 @@ exports.createDistributionCenter = async (req, res) => {
         req.body
       );
 
-      console.log(data);
+    console.log(data);
 
     // Check for existing NIC or unique field
     // const existing = await DistributionDao.findByName(data.name);
@@ -337,5 +337,34 @@ exports.getCompany = async (req, res) => {
       success: false,
       error: "An error occurred while fetching company names",
     });
+  }
+};
+
+exports.deleteDistributionHead = async (req, res) => {
+  const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
+  console.log(fullUrl);
+
+  try {
+    const { id } = req.params;
+
+    const results = await DistributionDao.DeleteDistributionHeadDao(id);
+
+    console.log("Successfully Deleted Distribution Head");
+    if (results.affectedRows > 0) {
+      res.status(200).json({ results: results, status: true });
+    } else {
+      res.json({ results: results, status: false });
+    }
+  } catch (error) {
+    if (error.isJoi) {
+      return res
+        .status(400)
+        .json({ error: error.details[0].message, status: false });
+    }
+
+    console.error("Error deleting Distribution Head:", error);
+    return res
+      .status(500)
+      .json({ error: "An error occurred while deleting Distribution Head" });
   }
 };

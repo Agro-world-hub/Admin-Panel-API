@@ -66,4 +66,9 @@ router.get(
   distributionEp.getCompany
 );
 
+router.delete(
+  "/delete-officer/:id",
+  authMiddleware,
+  distributionEp.deleteDistributionHead
+);
 module.exports = router;

@@ -40,7 +40,7 @@ exports.createDistributionCenter = (data) => {
       }
 
       const centerId = result1.insertId; // Get the inserted center's ID
-      const companyId = data.company;   // Get the company ID from request data
+      const companyId = data.company; // Get the company ID from request data
 
       const sql2 = `
         INSERT INTO distributedcompanycenter (companyId, centerId)
@@ -64,7 +64,6 @@ exports.createDistributionCenter = (data) => {
     });
   });
 };
-
 
 exports.getAllDistributionCentre = (
   limit,
@@ -305,7 +304,7 @@ exports.getCompanyDAO = () => {
         return reject(err);
       }
       console.log("Company names retrieved successfully");
-      console.log(results)
+      console.log(results);
       resolve(results);
     });
   });
@@ -327,7 +326,7 @@ exports.getCompanyDetails = () => {
         return reject(err);
       }
       console.log("Company names retrieved successfully");
-      console.log(results)
+      console.log(results);
       resolve(results);
     });
   });
@@ -447,6 +446,21 @@ exports.GetDistributedCenterByCompanyIdDAO = (companyId) => {
       WHERE dcc.companyId = ?
     `;
     collectionofficer.query(sql, [companyId], (err, results) => {
+      if (err) {
+        return reject(err);
+      }
+      resolve(results);
+    });
+  });
+};
+
+exports.DeleteDistributionHeadDao = (id) => {
+  return new Promise((resolve, reject) => {
+    const sql = `
+            DELETE FROM collectionofficer
+            WHERE id = ?
+        `;
+    collectionofficer.query(sql, [parseInt(id)], (err, results) => {
       if (err) {
         return reject(err);
       }
