@@ -7,6 +7,7 @@ const {
 const { error } = require("console");
 const Joi = require("joi");
 const path = require("path");
+const XLSX = require("xlsx");
 
 exports.getAllCropNameDAO = () => {
   return new Promise((resolve, reject) => {
@@ -431,7 +432,6 @@ exports.creatPackageDAO = async (data, profileImageUrl) => {
       data.serviceFee,
       profileImageUrl,
       data.description,
-
     ];
 
     marketPlace.query(sql, values, (err, results) => {
@@ -451,11 +451,7 @@ exports.creatPackageDetailsDAO = async (data, packageId) => {
       INSERT INTO packagedetails (packageId, productTypeId, qty)
       VALUES (?, ?, ?)
     `;
-    const values = [
-      packageId,
-      data.productTypeId,
-      data.qty
-    ];
+    const values = [packageId, data.productTypeId, data.qty];
 
     marketPlace.query(sql, values, (err, results) => {
       if (err) {
@@ -716,9 +712,6 @@ exports.updateMarketplacePackageDAO = (packageId, updateData) => {
       });
     });
   });
-
-  
-  
 };
 
 exports.getMarketplacePackageByIdDAO = async (id) => {
@@ -748,15 +741,15 @@ exports.getMarketplacePackageByIdDAO = async (id) => {
 // exports.getMarketplacePackageByIdDAO = (packageId) => {
 //   return new Promise((resolve, reject) => {
 //     const sql = `
-//       SELECT 
-//         mp.id, 
-//         mp.displayName, 
-//         mp.image, 
-//         mp.description, 
-//         mp.status, 
-//         mp.total, 
-//         mp.discount, 
-//         mp.subtotal, 
+//       SELECT
+//         mp.id,
+//         mp.displayName,
+//         mp.image,
+//         mp.description,
+//         mp.status,
+//         mp.total,
+//         mp.discount,
+//         mp.subtotal,
 //         mp.created_at,
 //         pd.id AS detailId,
 //         pd.packageId,
@@ -1280,9 +1273,9 @@ exports.editPackageDetailsDAO = async (data, packageId) => {
     `;
 
     const values = [
-      data.qty,        // Set new quantity
-      packageId,       // Match package ID
-      data.productTypeId // Match product type ID
+      data.qty, // Set new quantity
+      packageId, // Match package ID
+      data.productTypeId, // Match product type ID
     ];
 
     marketPlace.query(sql, values, (err, results) => {
@@ -1295,37 +1288,44 @@ exports.editPackageDetailsDAO = async (data, packageId) => {
   });
 };
 
-
-exports.getAllRetailOrderDetails = (limit, offset, status, method, searchItem, formattedDate) => {
+exports.getAllRetailOrderDetails = (
+  limit,
+  offset,
+  status,
+  method,
+  searchItem,
+  formattedDate
+) => {
   return new Promise((resolve, reject) => {
-    let countSql = "SELECT COUNT(*) as total FROM market_place.orders o LEFT JOIN market_place.processorders po ON o.id = po.orderId"
+    let countSql =
+      "SELECT COUNT(*) as total FROM market_place.orders o LEFT JOIN market_place.processorders po ON o.id = po.orderId";
     let sql = `
     SELECT o.id, o.fullName AS customerName, o.delivaryMethod AS method, po.amount, po.invNo, po.status, o.createdAt AS orderdDate FROM market_place.orders o
     LEFT JOIN market_place.processorders po ON o.id = po.orderId
     `;
 
-    let whereClause = " WHERE 1=1"
+    let whereClause = " WHERE 1=1";
     const searchParams = [];
 
     if (searchItem) {
       // Turn "ap" into "%a%p%" to match "apple"
-      const searchQuery = `%${searchItem.split('').join('%')}%`
-      whereClause += " AND (po.invNo LIKE ? OR o.fullName LIKE ?)"
+      const searchQuery = `%${searchItem.split("").join("%")}%`;
+      whereClause += " AND (po.invNo LIKE ? OR o.fullName LIKE ?)";
       searchParams.push(searchQuery, searchQuery);
     }
-    
+
     if (status) {
-      whereClause += " AND po.status = ?"
+      whereClause += " AND po.status = ?";
       searchParams.push(status);
     }
 
     if (method) {
-      whereClause += " AND o.delivaryMethod = ?"
+      whereClause += " AND o.delivaryMethod = ?";
       searchParams.push(method);
     }
 
     if (formattedDate) {
-      whereClause += " AND DATE(o.createdAt) = ?"
+      whereClause += " AND DATE(o.createdAt) = ?";
       searchParams.push(formattedDate);
     }
 
@@ -1334,39 +1334,31 @@ exports.getAllRetailOrderDetails = (limit, offset, status, method, searchItem, f
     sql += whereClause + " ORDER BY o.createdAt ASC LIMIT ? OFFSET ?";
     const dataParams = [...searchParams, limit, offset];
 
-    marketPlace.query(
-      countSql,
-      searchParams,
-      (countErr, countResults) => {
-        if (countErr) {
-          return reject(countErr);
+    marketPlace.query(countSql, searchParams, (countErr, countResults) => {
+      if (countErr) {
+        return reject(countErr);
+      }
+
+      const total = countResults[0].total;
+
+      marketPlace.query(sql, dataParams, (dataErr, dataResults) => {
+        if (dataErr) {
+          return reject(dataErr);
         }
 
-        const total = countResults[0].total;
-
-        marketPlace.query(sql, dataParams, (dataErr, dataResults) => {
-          if (dataErr) {
-            return reject(dataErr);
-          }
-
-          resolve({
-            total: total,
-            items: dataResults,
-          });
+        resolve({
+          total: total,
+          items: dataResults,
         });
-      }
-    );
+      });
+    });
   });
 };
-
-
-
-
 
 exports.getProductTypeByIdDao = async (id) => {
   return new Promise((resolve, reject) => {
     const sql = "SELECT typeName, shortCode FROM producttypes WHERE id = ?";
-    marketPlace.query(sql,[id], (err, results) => {
+    marketPlace.query(sql, [id], (err, results) => {
       if (err) {
         return reject(err);
       }
@@ -1383,7 +1375,23 @@ exports.editProductTypesDao = async (data, id) => {
                   typeName = ?, shortCode = ?
                 WHERE id = ?
               `;
-    marketPlace.query(sql, [data.typeName, data.shortCode, id], (err, results) => {
+    marketPlace.query(
+      sql,
+      [data.typeName, data.shortCode, id],
+      (err, results) => {
+        if (err) {
+          return reject(err);
+        }
+        resolve(results);
+      }
+    );
+  });
+};
+
+exports.DeleteProductTypeByIdDao = async (id) => {
+  return new Promise((resolve, reject) => {
+    const sql = "DELETE FROM producttypes WHERE id = ?";
+    marketPlace.query(sql, [id], (err, results) => {
       if (err) {
         return reject(err);
       }
@@ -1391,16 +1399,147 @@ exports.editProductTypesDao = async (data, id) => {
     });
   });
 };
-
-
-exports.DeleteProductTypeByIdDao = async (id) => {
+exports.getAllDeliveryCharges = (searchItem, city) => {
   return new Promise((resolve, reject) => {
-    const sql = "DELETE FROM producttypes WHERE id = ?";
-    marketPlace.query(sql,[id], (err, results) => {
+    let whereConditions = [];
+    let params = [];
+    let sql = "SELECT * FROM deliverycharge";
+
+    if (searchItem) {
+      whereConditions.push("city LIKE ?");
+      params.push(`%${searchItem}%`);
+    }
+
+    if (city) {
+      whereConditions.push("city = ?");
+      params.push(city);
+    }
+
+    if (whereConditions.length > 0) {
+      sql += " WHERE " + whereConditions.join(" AND ");
+    }
+
+    sql += " ORDER BY createdAt DESC";
+    collectionofficer.query(sql, params, (err, results) => {
       if (err) {
         return reject(err);
       }
+
       resolve(results);
+    });
+  });
+};
+
+exports.uploadDeliveryCharges = async (fileBuffer) => {
+  return new Promise(async (resolve, reject) => {
+    try {
+      // Read the Excel file
+      const workbook = XLSX.read(fileBuffer, { type: "buffer" });
+      const worksheet = workbook.Sheets[workbook.SheetNames[0]];
+      const data = XLSX.utils.sheet_to_json(worksheet);
+
+      // Validate data structure
+      if (data.length === 0) {
+        return reject(new Error("Excel file is empty"));
+      }
+
+      const requiredColumns = ["City Name", "Charge (Rs.)"];
+      const headers = Object.keys(data[0]);
+
+      if (!requiredColumns.every((col) => headers.includes(col))) {
+        return reject(
+          new Error(
+            "Excel file must contain 'City Name' and 'Charge (Rs.)' columns"
+          )
+        );
+      }
+
+      // Process data and remove duplicates
+      const chargesToInsert = [];
+      const cityMap = new Map();
+
+      for (const row of data) {
+        const city = row["City Name"]?.toString().trim();
+        const charge = parseFloat(row["Charge (Rs.)"]);
+
+        if (!city || isNaN(charge)) {
+          continue; // Skip invalid rows
+        }
+
+        // Check if city already exists in this batch
+        if (!cityMap.has(city.toLowerCase())) {
+          cityMap.set(city.toLowerCase(), true);
+          chargesToInsert.push({ city, charge });
+        }
+      }
+
+      if (chargesToInsert.length === 0) {
+        return resolve({
+          inserted: 0,
+          duplicates: 0,
+          message: "No valid data to insert",
+        });
+      }
+
+      // Check against existing database entries
+      const existingCities = await new Promise((resolve, reject) => {
+        const sql =
+          "SELECT LOWER(city) as city FROM deliverycharge WHERE city IN (?)";
+        const cities = chargesToInsert.map((c) => c.city);
+        collectionofficer.query(sql, [cities], (err, results) => {
+          if (err) return reject(err);
+          resolve(results.map((r) => r.city));
+        });
+      });
+
+      // Filter out duplicates that exist in database
+      const finalCharges = chargesToInsert.filter(
+        (charge) => !existingCities.includes(charge.city.toLowerCase())
+      );
+
+      if (finalCharges.length === 0) {
+        return resolve({
+          inserted: 0,
+          duplicates: chargesToInsert.length,
+          message: "All cities already exist in database",
+        });
+      }
+
+      // Insert non-duplicate records
+      const sql = "INSERT INTO deliverycharge (city, charge) VALUES ?";
+      const values = finalCharges.map((charge) => [charge.city, charge.charge]);
+
+      collectionofficer.query(sql, [values], (err, result) => {
+        if (err) return reject(err);
+
+        resolve({
+          inserted: result.affectedRows,
+          duplicates: chargesToInsert.length - finalCharges.length,
+          message: "Delivery charges uploaded successfully",
+        });
+      });
+    } catch (error) {
+      reject(error);
+    }
+  });
+};
+
+exports.editDeliveryChargeDAO = async (data, id) => {
+  return new Promise((resolve, reject) => {
+    const sql = `
+      UPDATE deliverycharge 
+      SET city = ?, charge = ? 
+      WHERE id = ?
+    `;
+
+    const values = [data.city, data.charge, id];
+
+    collectionofficer.query(sql, values, (err, results) => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(results);
+      }
     });
   });
 };

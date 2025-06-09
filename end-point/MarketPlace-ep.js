@@ -376,7 +376,7 @@ exports.createPackage = async (req, res) => {
         });
       }
     }
-    console.log(profileImageUrl)
+    console.log(profileImageUrl);
 
     // Create main package
     const packageId = await MarketPlaceDao.creatPackageDAO(
@@ -402,7 +402,7 @@ exports.createPackage = async (req, res) => {
         // Construct item data for DAO
         const itemData = {
           productTypeId: parseInt(productTypeId),
-          qty: parseInt(qty)
+          qty: parseInt(qty),
         };
 
         await MarketPlaceDao.creatPackageDetailsDAO(itemData, packageId);
@@ -414,7 +414,6 @@ exports.createPackage = async (req, res) => {
         status: false,
       });
     }
-
 
     return res.status(201).json({
       message: "Package created successfully",
@@ -624,7 +623,9 @@ exports.getMarketplacePackageById = async (req, res) => {
     const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
     console.log("Request URL:", fullUrl);
 
-    const { id } = await MarketPriceValidate.IdparamsSchema.validateAsync(req.params);
+    const { id } = await MarketPriceValidate.IdparamsSchema.validateAsync(
+      req.params
+    );
 
     const resultRows = await MarketPlaceDao.getMarketplacePackageByIdDAO(id);
 
@@ -639,20 +640,21 @@ exports.getMarketplacePackageById = async (req, res) => {
 
     const packageData = {
       displayName: firstRow.displayName,
-      status: firstRow.status || 'Enabled',
+      status: firstRow.status || "Enabled",
       description: firstRow.description,
       productPrice,
       packageFee: packingFee,
       serviceFee,
       approximatedPrice: parseFloat(total.toFixed(2)),
-      imageUrl: firstRow.image && !firstRow.image.startsWith("http")
-        ? `${req.protocol}://${req.get("host")}/${firstRow.image}`
-        : firstRow.image,
-      quantities: {}
+      imageUrl:
+        firstRow.image && !firstRow.image.startsWith("http")
+          ? `${req.protocol}://${req.get("host")}/${firstRow.image}`
+          : firstRow.image,
+      quantities: {},
     };
 
     // Build quantities map
-    resultRows.forEach(row => {
+    resultRows.forEach((row) => {
       packageData.quantities[row.productTypeId] = row.qty;
     });
     console.log(packageData);
@@ -675,7 +677,6 @@ exports.getMarketplacePackageById = async (req, res) => {
     });
   }
 };
-
 
 exports.getMarketplacePackageWithDetailsById = async (req, res) => {
   try {
@@ -1156,7 +1157,6 @@ exports.viewProductType = async (req, res) => {
   }
 };
 
-
 exports.getProductType = async (req, res) => {
   try {
     const result = await MarketPlaceDao.getProductType();
@@ -1164,7 +1164,7 @@ exports.getProductType = async (req, res) => {
     return res.status(201).json({
       message: "Product find successfully",
       status: true,
-      data: result
+      data: result,
     });
   } catch (error) {
     console.error("Error creating Product type:", error);
@@ -1244,7 +1244,7 @@ exports.editPackage = async (req, res) => {
         // Construct item data for DAO
         const itemData = {
           productTypeId: parseInt(productTypeId),
-          qty: parseInt(qty)
+          qty: parseInt(qty),
         };
 
         await MarketPlaceDao.editPackageDetailsDAO(itemData, id);
@@ -1278,17 +1278,18 @@ exports.editPackage = async (req, res) => {
   }
 };
 
-
 exports.getProductTypeById = async (req, res) => {
   try {
-    const { id } = await MarketPriceValidate.IdparamsSchema.validateAsync(req.params);
+    const { id } = await MarketPriceValidate.IdparamsSchema.validateAsync(
+      req.params
+    );
 
     const result = await MarketPlaceDao.getProductTypeByIdDao(id);
 
     res.status(201).json({
       message: "Product find successfully",
       status: true,
-      data: result
+      data: result,
     });
   } catch (error) {
     console.error("Error creating Product type:", error);
@@ -1296,11 +1297,13 @@ exports.getProductTypeById = async (req, res) => {
   }
 };
 
-
 exports.editProductType = async (req, res) => {
   try {
-    const { id } = await MarketPriceValidate.IdparamsSchema.validateAsync(req.params);
-    const data = await MarketPriceValidate.createProductTypeSchema.validateAsync(req.body);
+    const { id } = await MarketPriceValidate.IdparamsSchema.validateAsync(
+      req.params
+    );
+    const data =
+      await MarketPriceValidate.createProductTypeSchema.validateAsync(req.body);
     const result = await MarketPlaceDao.editProductTypesDao(data, id);
 
     if (result.affectedRows === 0) {
@@ -1320,11 +1323,12 @@ exports.editProductType = async (req, res) => {
   }
 };
 
-
 exports.deleteProductType = async (req, res) => {
   try {
-    const { id } = await MarketPriceValidate.IdparamsSchema.validateAsync(req.params);
-    const result = await MarketPlaceDao.DeleteProductTypeByIdDao( id);
+    const { id } = await MarketPriceValidate.IdparamsSchema.validateAsync(
+      req.params
+    );
+    const result = await MarketPlaceDao.DeleteProductTypeByIdDao(id);
 
     if (result.affectedRows === 0) {
       return res.json({
@@ -1348,7 +1352,9 @@ exports.getAllRetailOrders = async (req, res) => {
   console.log(fullUrl);
   try {
     const { page, limit, status, method, searchItem, formattedDate } =
-      await MarketPriceValidate.getAllRetailOrderSchema.validateAsync(req.query);
+      await MarketPriceValidate.getAllRetailOrderSchema.validateAsync(
+        req.query
+      );
 
     const offset = (page - 1) * limit;
 
@@ -1377,5 +1383,104 @@ exports.getAllRetailOrders = async (req, res) => {
     }
     console.error("Error executing query:", err);
     res.status(500).send("An error occurred while fetching data.");
+  }
+};
+
+exports.getAllDeliveryCharges = async (req, res) => {
+  try {
+    console.log(req.query);
+
+    const { searchItem, city } = req.query;
+
+    const deliveryCharges = await MarketPlaceDao.getAllDeliveryCharges(
+      searchItem,
+      city
+    );
+
+    console.log("Successfully fetched delivery charges");
+    res.json(deliveryCharges);
+  } catch (err) {
+    console.error("Error executing query:", err);
+    res.status(500).send("An error occurred while fetching delivery charges.");
+  }
+};
+
+exports.uploadDeliveryCharges = async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({
+        success: false,
+        message: "No file uploaded",
+      });
+    }
+
+    const result = await MarketPlaceDao.uploadDeliveryCharges(req.file.buffer);
+
+    return res.status(200).json({
+      success: true,
+      message: result.message,
+      data: {
+        inserted: result.inserted,
+        duplicates: result.duplicates,
+      },
+    });
+  } catch (error) {
+    console.error("Error uploading delivery charges:", error);
+    return res.status(500).json({
+      success: false,
+      message: error.message || "Failed to upload delivery charges",
+    });
+  }
+};
+
+exports.editDeliveryCharge = async (req, res) => {
+  try {
+    const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
+    console.log("Request URL:", fullUrl);
+
+    const deliveryData = req.body; // Assuming JSON data is sent directly in body
+    const id = req.params.id;
+    console.log("Delivery Charge ID:", id);
+    console.log("Update Data:", deliveryData);
+
+    // Validate required fields
+    if (!deliveryData.city || !deliveryData.charge) {
+      return res.status(400).json({
+        error: "City and charge are required fields",
+        status: false,
+      });
+    }
+
+    // Update delivery charge
+    const results = await MarketPlaceDao.editDeliveryChargeDAO(
+      deliveryData,
+      id
+    );
+
+    if (!results || results.affectedRows === 0) {
+      return res.status(404).json({
+        message: "Delivery charge not found or update failed",
+        status: false,
+      });
+    }
+
+    return res.status(200).json({
+      message: "Delivery charge updated successfully",
+      status: true,
+      id: id,
+    });
+  } catch (err) {
+    if (err.isJoi) {
+      return res.status(400).json({
+        error: err.details[0].message,
+        status: false,
+      });
+    }
+
+    console.error("Error updating delivery charge:", err);
+    return res.status(500).json({
+      error: "An error occurred while updating delivery charge",
+      status: false,
+    });
   }
 };

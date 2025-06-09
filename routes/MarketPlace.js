@@ -2,8 +2,20 @@ const express = require("express");
 const authMiddleware = require("../middlewares/authMiddleware");
 const marketPlaceEp = require("../end-point/MarketPlace-ep");
 const upload = require("../middlewares/uploadMiddleware");
+const path = require("path");
+const multer = require("multer");
 
 const router = express.Router();
+
+const uploadfile = multer({
+  fileFilter: function (req, file, callback) {
+    var ext = path.extname(file.originalname);
+    if (ext !== ".xlsx" && ext !== ".xls") {
+      return callback(new Error("Only Excel files are allowed"));
+    }
+    callback(null, true);
+  },
+});
 
 router.get(
   "/get-crop-category",
@@ -96,11 +108,7 @@ router.get(
   marketPlaceEp.getMarketplacePackageWithDetailsById
 );
 
-router.patch(
-  "/edit-product/:id", 
-  authMiddleware, 
-  marketPlaceEp.updatePackage
-);
+router.patch("/edit-product/:id", authMiddleware, marketPlaceEp.updatePackage);
 
 router.get(
   "/next-reatil-banner-number",
@@ -115,20 +123,18 @@ router.get(
 );
 
 router.post(
-  '/upload-banner', 
-  authMiddleware, 
-  upload.single('image'), 
+  "/upload-banner",
+  authMiddleware,
+  upload.single("image"),
   marketPlaceEp.uploadBanner
 );
 
-
 router.post(
-  '/upload-banner-wholesale', 
-  authMiddleware, 
-  upload.single('image'), 
+  "/upload-banner-wholesale",
+  authMiddleware,
+  upload.single("image"),
   marketPlaceEp.uploadBannerWholesale
 );
-
 
 router.get(
   "/get-all-banners",
@@ -142,67 +148,61 @@ router.get(
   marketPlaceEp.getAllBannersWholesale
 );
 
-
-router.put(
-  "/update-banner-order", 
-  marketPlaceEp.updateBannerOrder
-);
-
+router.put("/update-banner-order", marketPlaceEp.updateBannerOrder);
 
 router.delete(
-  "/delete-banner-retail/:id", 
-  authMiddleware, 
+  "/delete-banner-retail/:id",
+  authMiddleware,
   marketPlaceEp.deleteBannerRetail
 );
 
 router.delete(
-  "/delete-banner-whole/:id", 
-  authMiddleware, 
+  "/delete-banner-whole/:id",
+  authMiddleware,
   marketPlaceEp.deleteBannerWhole
 );
 
 router.post(
-  "/create-product-type", 
-  authMiddleware, 
+  "/create-product-type",
+  authMiddleware,
   marketPlaceEp.createProductType
 );
 
-
 router.get(
-  "/view-all-product-type", 
-  authMiddleware, 
+  "/view-all-product-type",
+  authMiddleware,
   marketPlaceEp.viewProductType
 );
-router.get('/marketplace-users',authMiddleware, marketPlaceEp.getMarketplaceUsers);
-
 router.get(
-  "/get-product-type", 
-  authMiddleware, 
-  marketPlaceEp.getProductType
+  "/marketplace-users",
+  authMiddleware,
+  marketPlaceEp.getMarketplaceUsers
 );
 
+router.get("/get-product-type", authMiddleware, marketPlaceEp.getProductType);
+
 router.post(
-  '/edit-package/:id', 
-  authMiddleware, 
-  upload.single('image'), 
+  "/edit-package/:id",
+  authMiddleware,
+  upload.single("image"),
   marketPlaceEp.editPackage
 );
 
 router.get(
-  "/get-product-type-by-id/:id", 
-  authMiddleware, 
+  "/get-product-type-by-id/:id",
+  authMiddleware,
   marketPlaceEp.getProductTypeById
 );
 
 router.patch(
-  "/edit-product-type/:id", 
-  authMiddleware, 
+  "/edit-product-type/:id",
+  authMiddleware,
   marketPlaceEp.editProductType
 );
 
 router.delete(
-  "/delete-product-type/:id", 
-  authMiddleware, 
+  "/delete-product-type/:id",
+  authMiddleware,
   marketPlaceEp.deleteProductType
 );
 
@@ -210,6 +210,25 @@ router.get(
   "/get-all-retail-orders",
   authMiddleware,
   marketPlaceEp.getAllRetailOrders
+);
+
+router.get(
+  "/get-all-delivery-charges",
+  authMiddleware,
+  marketPlaceEp.getAllDeliveryCharges
+);
+
+router.post(
+  "/upload-delivery-charges",
+  authMiddleware,
+  upload.single("file"),
+  marketPlaceEp.uploadDeliveryCharges
+);
+
+router.post(
+  "/edit-delivery-charge/:id",
+  authMiddleware,
+  marketPlaceEp.editDeliveryCharge
 );
 
 module.exports = router;
