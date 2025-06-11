@@ -78,4 +78,10 @@ router.get(
   distributionEp.getDistributionHeadDetailsById
 );
 
+router.put(
+  "/update-collection-officer/:id",
+  authMiddleware,
+  distributionEp.updateCollectionOfficerDetails
+);
+
 module.exports = router;

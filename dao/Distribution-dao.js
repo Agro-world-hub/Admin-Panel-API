@@ -495,3 +495,63 @@ exports.GetDistributionHeadDetailsByIdDao = (id) => {
     });
   });
 };
+
+exports.UpdateDistributionHeadDao = (id, updateData) => {
+  console.log("id", id);
+  console.log("updateData", updateData);
+
+  return new Promise((resolve, reject) => {
+    let sql = `
+      UPDATE collectionofficer
+      SET 
+        companyId = ?, irmId = ?, firstNameEnglish = ?, lastNameEnglish = ?, 
+        jobRole = ?, empId = ?, empType = ?, phoneCode01 = ?, phoneNumber01 = ?, 
+        phoneCode02 = ?, phoneNumber02 = ?, nic = ?, email = ?, houseNumber = ?, 
+        streetName = ?, city = ?, district = ?, province = ?, country = ?, 
+        languages = ?, accHolderName = ?, accNumber = ?, bankName = ?, 
+        branchName = ?, image = ?, status = ?, claimStatus = ?, onlineStatus = ?
+      WHERE id = ?
+    `;
+
+    const values = [
+      updateData.companyId,
+      updateData.irmId,
+      updateData.firstNameEnglish,
+      updateData.lastNameEnglish,
+      updateData.jobRole,
+      updateData.empId,
+      updateData.empType,
+      updateData.phoneCode01,
+      updateData.phoneNumber01,
+      updateData.phoneCode02,
+      updateData.phoneNumber02,
+      updateData.nic,
+      updateData.email,
+      updateData.houseNumber,
+      updateData.streetName,
+      updateData.city,
+      updateData.district,
+      updateData.province,
+      updateData.country,
+      updateData.languages,
+      updateData.accHolderName,
+      updateData.accNumber,
+      updateData.bankName,
+      updateData.branchName,
+      updateData.image,
+      updateData.status,
+      updateData.claimStatus,
+      updateData.onlineStatus,
+      id,
+    ];
+
+    collectionofficer.query(sql, values, (err, results) => {
+      if (err) {
+        return reject(err);
+      }
+      console.log("Collection Officer details updated successfully");
+      console.log("Affected rows:", results.affectedRows);
+      resolve(results);
+    });
+  });
+};
