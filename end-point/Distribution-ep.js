@@ -368,3 +368,39 @@ exports.deleteDistributionHead = async (req, res) => {
       .json({ error: "An error occurred while deleting Distribution Head" });
   }
 };
+
+exports.getDistributionHeadDetailsById = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    if (!id) {
+      return res.status(400).json({
+        success: false,
+        error: "Distribution Head ID is required",
+      });
+    }
+
+    const officerDetails =
+      await DistributionDao.GetDistributionHeadDetailsByIdDao(id);
+
+    if (!officerDetails) {
+      return res.status(404).json({
+        success: false,
+        error: "Distribution Head not found",
+      });
+    }
+
+    console.log("Successfully retrieved Distribution Head details");
+    res.json({
+      success: true,
+      message: "Distribution Head details retrieved successfully",
+      data: officerDetails,
+    });
+  } catch (err) {
+    console.error("Error fetching distribution head details:", err);
+    res.status(500).json({
+      success: false,
+      error: "An error occurred while fetching distribution head details",
+    });
+  }
+};

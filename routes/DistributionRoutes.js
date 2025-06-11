@@ -71,4 +71,11 @@ router.delete(
   authMiddleware,
   distributionEp.deleteDistributionHead
 );
+
+router.get(
+  "/get-distribution-head/:id",
+  authMiddleware,
+  distributionEp.getDistributionHeadDetailsById
+);
+
 module.exports = router;

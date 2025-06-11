@@ -468,3 +468,30 @@ exports.DeleteDistributionHeadDao = (id) => {
     });
   });
 };
+
+exports.GetDistributionHeadDetailsByIdDao = (id) => {
+  console.log("id", id);
+
+  return new Promise((resolve, reject) => {
+    let sql = `
+      SELECT 
+        id, companyId, irmId, firstNameEnglish, lastNameEnglish, jobRole, empId, empType,
+        phoneCode01, phoneNumber01, phoneCode02, phoneNumber02, nic, email,
+        houseNumber, streetName, city, district, province, country, languages,
+        accHolderName, accNumber, bankName, branchName, image, status,
+        claimStatus, onlineStatus
+      FROM 
+        collectionofficer
+      WHERE id = ?
+    `;
+
+    collectionofficer.query(sql, [id], (err, results) => {
+      if (err) {
+        return reject(err);
+      }
+      console.log("Distribution Head details retrieved successfully");
+      console.log("Details:", results[0]);
+      resolve(results[0]);
+    });
+  });
+};
