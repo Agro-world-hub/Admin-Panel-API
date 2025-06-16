@@ -1,54 +1,48 @@
 const {
-    admin,
-    plantcare,
-    collectionofficer,
-    marketPlace,
-    dash,
-  } = require("../startup/database");
+  admin,
+  plantcare,
+  collectionofficer,
+  marketPlace,
+  dash,
+} = require("../startup/database");
 
+exports.getRecievedOrdersQuantity = (page, limit, filterType, date, search) => {
+  return new Promise((resolve, reject) => {
+    const offset = (page - 1) * limit;
+    const params = [];
+    const countParams = [];
 
+    // Default to OrderDate if filterType not set
+    const validFilters = {
+      OrderDate: "DATE(o.createdAt)",
+      scheduleDate: "DATE(o.scheduleDate)",
+      toCollectionCenter: "DATE_SUB(o.scheduleDate, INTERVAL 2 DAY)",
+      toDispatchCenter: "DATE_SUB(o.scheduleDate, INTERVAL 1 DAY)",
+    };
 
+    const dateFilterColumn =
+      validFilters[filterType] || validFilters["OrderDate"];
 
-
-
-
-
-  exports.getRecievedOrdersQuantity = (page, limit, filterType, date, search) => {
-    return new Promise((resolve, reject) => {
-      const offset = (page - 1) * limit;
-      const params = [];
-      const countParams = [];
-  
-      // Default to OrderDate if filterType not set
-      const validFilters = {
-        OrderDate: "DATE(o.createdAt)",
-        scheduleDate: "DATE(o.scheduleDate)",
-        toCollectionCenter: "DATE_SUB(o.scheduleDate, INTERVAL 2 DAY)",
-        toDispatchCenter: "DATE_SUB(o.scheduleDate, INTERVAL 1 DAY)"
-      };
-  
-      const dateFilterColumn = validFilters[filterType] || validFilters["OrderDate"];
-  
-      let whereClause = `
+    let whereClause = `
         WHERE o.deleteStatus IS NOT TRUE
         AND o.orderStatus != 'Cancelled'
         AND cv.varietyNameEnglish IS NOT NULL
       `;
-  
-      if (date) {
-        whereClause += ` AND ${dateFilterColumn} = ?`;
-        params.push(date);
-        countParams.push(date);
-      }
-  
-      if (search) {
-        whereClause += ` AND (cv.varietyNameEnglish LIKE ? OR cg.cropNameEnglish LIKE ?)`;
-        const searchTerm = `%${search}%`;
-        params.push(searchTerm, searchTerm);
-        countParams.push(searchTerm, searchTerm);
-      }
-  
-      const baseSelect = `
+
+    if (date) {
+      whereClause += ` AND ${dateFilterColumn} = ?`;
+      params.push(date);
+      countParams.push(date);
+    }
+
+    if (search) {
+      whereClause += ` AND (cv.varietyNameEnglish LIKE ? OR cg.cropNameEnglish LIKE ?)`;
+      const searchTerm = `%${search}%`;
+      params.push(searchTerm, searchTerm);
+      countParams.push(searchTerm, searchTerm);
+    }
+
+    const baseSelect = `
         FROM orders o
         LEFT JOIN (
             SELECT osi.orderId, mi.varietyId, SUM(osi.quantity) AS TotalQuantity
@@ -74,15 +68,15 @@ const {
         LEFT JOIN plant_care.cropvariety cv ON cv.id = item_qty.varietyId
         JOIN plant_care.cropgroup cg ON cv.cropGroupId = cg.id
       `;
-  
-      const countSql = `
+
+    const countSql = `
         SELECT COUNT(*) AS total
         ${baseSelect}
         ${whereClause}
         GROUP BY cv.varietyNameEnglish, ${dateFilterColumn}, DATE(o.scheduleDate)
       `;
-  
-      const dataSql = `
+
+    const dataSql = `
         SELECT 
           cv.varietyNameEnglish,
           cg.cropNameEnglish,
@@ -97,70 +91,66 @@ const {
         ORDER BY OrderDate DESC, cg.cropNameEnglish, cv.varietyNameEnglish
         LIMIT ? OFFSET ?
       `;
-  
-      params.push(parseInt(limit), parseInt(offset));
-  
-      console.log('Executing Count Query...');
-      dash.query(countSql, countParams, (countErr, countResults) => {
-        if (countErr) {
-          console.error("Count query error:", countErr);
-          return reject(countErr);
+
+    params.push(parseInt(limit), parseInt(offset));
+
+    console.log("Executing Count Query...");
+    dash.query(countSql, countParams, (countErr, countResults) => {
+      if (countErr) {
+        console.error("Count query error:", countErr);
+        return reject(countErr);
+      }
+
+      const total = countResults.length;
+
+      console.log("Executing Data Query...");
+      dash.query(dataSql, params, (dataErr, dataResults) => {
+        if (dataErr) {
+          console.error("Data query error:", dataErr);
+          return reject(dataErr);
         }
-  
-        const total = countResults.length;
-  
-        console.log('Executing Data Query...');
-        dash.query(dataSql, params, (dataErr, dataResults) => {
-          if (dataErr) {
-            console.error("Data query error:", dataErr);
-            return reject(dataErr);
-          }
-  
-          resolve({
-            items: dataResults,
-            total
-          });
+
+        resolve({
+          items: dataResults,
+          total,
         });
       });
     });
-  };
-  
+  });
+};
 
+exports.DownloadRecievedOrdersQuantity = (filterType, date, search) => {
+  return new Promise((resolve, reject) => {
+    const params = [];
 
+    const validFilters = {
+      OrderDate: "DATE(o.createdAt)",
+      scheduleDate: "DATE(o.scheduleDate)",
+      toCollectionCenter: "DATE_SUB(o.scheduleDate, INTERVAL 2 DAY)",
+      toDispatchCenter: "DATE_SUB(o.scheduleDate, INTERVAL 1 DAY)",
+    };
 
+    const dateFilterColumn =
+      validFilters[filterType] || validFilters["OrderDate"];
 
-
-  exports.DownloadRecievedOrdersQuantity = (filterType, date, search) => {
-    return new Promise((resolve, reject) => {
-      const params = [];
-  
-      const validFilters = {
-        OrderDate: "DATE(o.createdAt)",
-        scheduleDate: "DATE(o.scheduleDate)",
-        toCollectionCenter: "DATE_SUB(o.scheduleDate, INTERVAL 2 DAY)",
-        toDispatchCenter: "DATE_SUB(o.scheduleDate, INTERVAL 1 DAY)"
-      };
-  
-      const dateFilterColumn = validFilters[filterType] || validFilters["OrderDate"];
-  
-      let whereClause = `
+    let whereClause = `
         WHERE o.deleteStatus IS NOT TRUE
         AND o.orderStatus != 'Cancelled'
         AND cv.varietyNameEnglish IS NOT NULL
       `;
-  
-      if (date) {
-        whereClause += ` AND ${dateFilterColumn} = ?`;
-        params.push(date);
-      }
-  
-      if (search) {
-        whereClause += ` AND (cv.varietyNameEnglish LIKE ? OR cg.cropNameEnglish LIKE ?)`;
-        const searchTerm = `%${search}%`;
-        params.push(searchTerm, searchTerm);
-      }
-  
-      const baseSelect = `
+
+    if (date) {
+      whereClause += ` AND ${dateFilterColumn} = ?`;
+      params.push(date);
+    }
+
+    if (search) {
+      whereClause += ` AND (cv.varietyNameEnglish LIKE ? OR cg.cropNameEnglish LIKE ?)`;
+      const searchTerm = `%${search}%`;
+      params.push(searchTerm, searchTerm);
+    }
+
+    const baseSelect = `
         FROM orders o
         LEFT JOIN (
           SELECT osi.orderId, mi.varietyId, SUM(osi.quantity) AS TotalQuantity
@@ -186,8 +176,8 @@ const {
         LEFT JOIN plant_care.cropvariety cv ON cv.id = item_qty.varietyId
         JOIN plant_care.cropgroup cg ON cv.cropGroupId = cg.id
       `;
-  
-      const dataSql = `
+
+    const dataSql = `
         SELECT 
           cv.varietyNameEnglish,
           cg.cropNameEnglish,
@@ -201,26 +191,128 @@ const {
         GROUP BY cv.varietyNameEnglish, ${dateFilterColumn}
         ORDER BY OrderDate DESC
       `;
-  
-      console.log('Executing Data Query...');
-      dash.query(dataSql, params, (dataErr, dataResults) => {
+
+    console.log("Executing Data Query...");
+    dash.query(dataSql, params, (dataErr, dataResults) => {
+      if (dataErr) {
+        console.error("Data query error:", dataErr);
+        return reject(dataErr);
+      }
+
+      resolve({
+        items: dataResults,
+        total: dataResults.length,
+      });
+    });
+  });
+};
+
+exports.getAllOrdersWithProcessInfo = (
+  page,
+  limit,
+  filterType,
+  date,
+  search
+) => {
+  return new Promise((resolve, reject) => {
+    const offset = (page - 1) * limit;
+    const params = [];
+    const countParams = [];
+
+    // Define valid filters
+    const validFilters = {
+      OrderDate: "DATE(o.createdAt)",
+      scheduleDate: "DATE(o.sheduleDate)",
+      processDate: "DATE(po.createdAt)",
+    };
+
+    const dateFilterColumn =
+      validFilters[filterType] || validFilters["OrderDate"];
+
+    let whereClause = ` WHERE 1=1 `; // Changed from deleteStatus check to always true condition
+    let joinClause = ` FROM orders o LEFT JOIN processorders po ON o.id = po.orderId `;
+
+    if (date) {
+      whereClause += ` AND ${dateFilterColumn} = ?`;
+      params.push(date);
+      countParams.push(date);
+    }
+
+    if (search) {
+      whereClause += ` AND (o.fullName LIKE ? OR o.phone1 LIKE ? OR po.invNo LIKE ? OR po.transactionId LIKE ?)`;
+      const searchTerm = `%${search}%`;
+      params.push(searchTerm, searchTerm, searchTerm, searchTerm);
+      countParams.push(searchTerm, searchTerm, searchTerm, searchTerm);
+    }
+
+    const countSql = `
+      SELECT COUNT(DISTINCT o.id) AS total
+      ${joinClause}
+      ${whereClause}
+    `;
+
+    const dataSql = `
+      SELECT 
+        o.id,
+        o.userId,
+        o.orderApp,
+        o.delivaryMethod,
+        o.centerId,
+        o.buildingType,
+        o.title,
+        o.fullName,
+        o.phonecode1,
+        o.phone1,
+        o.phonecode2,
+        o.phone2,
+        o.isCoupon,
+        o.couponValue,
+        o.total,
+        o.fullTotal,
+        o.discount,
+        o.sheduleType,
+        o.sheduleDate,
+        o.sheduleTime,
+        o.createdAt,
+        po.id AS processOrderId,
+        po.invNo,
+        po.transactionId,
+        po.paymentMethod,
+        po.isPaid,
+        po.amount,
+        po.status,
+        po.reportStatus,
+        po.createdAt AS processCreatedAt,
+        ${dateFilterColumn} AS filterDate
+      ${joinClause}
+      ${whereClause}
+      ORDER BY o.createdAt DESC
+      LIMIT ? OFFSET ?
+    `;
+
+    params.push(parseInt(limit), parseInt(offset));
+
+    console.log("Executing Count Query...");
+    marketPlace.query(countSql, countParams, (countErr, countResults) => {
+      if (countErr) {
+        console.error("Count query error:", countErr);
+        return reject(countErr);
+      }
+
+      const total = countResults[0]?.total || 0;
+
+      console.log("Executing Data Query...");
+      marketPlace.query(dataSql, params, (dataErr, dataResults) => {
         if (dataErr) {
           console.error("Data query error:", dataErr);
           return reject(dataErr);
         }
-  
+
         resolve({
           items: dataResults,
-          total: dataResults.length
+          total,
         });
       });
     });
-  };
-  
-  
-
-
-
-
-
-  
+  });
+};
