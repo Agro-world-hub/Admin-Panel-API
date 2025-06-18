@@ -179,6 +179,11 @@ router.get(
   marketPlaceEp.getMarketplaceUsers
 );
 
+router.delete(
+  "/marketplace-dltusers/:userId",
+  authMiddleware,
+  marketPlaceEp.deleteMarketplaceUser
+);
 router.get("/get-product-type", authMiddleware, marketPlaceEp.getProductType);
 
 router.post(

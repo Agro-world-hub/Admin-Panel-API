@@ -983,7 +983,7 @@ exports.getMarketplaceUsers = async (buyerType) => {
     const sql = `
       SELECT id, firstName, email, created_at, buyerType
       FROM marketplaceusers 
-      WHERE isMarketPlaceUser = 1 AND LOWER(buyerType) = LOWER(?)
+      WHERE isSubscribe = 1 AND LOWER(buyerType) = LOWER(?)
     `;
 
     marketPlace.query(sql, [buyerType], (err, results) => {
@@ -992,6 +992,26 @@ exports.getMarketplaceUsers = async (buyerType) => {
       } else {
         resolve(results);
       }
+    });
+  });
+};
+
+exports.deleteMarketplaceUser = async (userId) => {
+  return new Promise((resolve, reject) => {
+    const sql = `
+      UPDATE marketplaceusers 
+      SET isSubscribe = 0 
+      WHERE id = ? AND isSubscribe = 1
+    `;
+
+    marketPlace.query(sql, [userId], (err, result) => {
+      if (err) {
+        return reject(err);
+      }
+      if (result.affectedRows === 0) {
+        return reject(new Error('User not found or already deactivated'));
+      }
+      resolve({ message: 'User deactivated successfully' });
     });
   });
 };
