@@ -6,206 +6,339 @@ const {
   dash,
 } = require("../startup/database");
 
+
 exports.getRecievedOrdersQuantity = (page, limit, filterType, date, search) => {
   return new Promise((resolve, reject) => {
     const offset = (page - 1) * limit;
-    const params = [];
-    const countParams = [];
 
-    // Default to OrderDate if filterType not set
-    const validFilters = {
-      OrderDate: "DATE(o.createdAt)",
-      scheduleDate: "DATE(o.scheduleDate)",
-      toCollectionCenter: "DATE_SUB(o.scheduleDate, INTERVAL 2 DAY)",
-      toDispatchCenter: "DATE_SUB(o.scheduleDate, INTERVAL 1 DAY)",
-    };
+    // Base query
+    let baseJoinSql = `
+      FROM market_place.orderpackage op 
+      JOIN market_place.orders o ON op.orderId = o.id
+      JOIN market_place.orderadditionalitems oai ON oai.orderId = o.id
+      JOIN market_place.marketplaceitems mpi ON oai.productId = mpi.id
+      JOIN plant_care.cropvariety cv ON mpi.varietyId = cv.id
+      JOIN plant_care.cropgroup cg ON cv.cropGroupId = cg.id
+    `;
 
-    const dateFilterColumn =
-      validFilters[filterType] || validFilters["OrderDate"];
+    let whereSql = ` WHERE 1=1 `;
+    const queryParams = [];
 
-    let whereClause = `
-        WHERE o.deleteStatus IS NOT TRUE
-        AND o.orderStatus != 'Cancelled'
-        AND cv.varietyNameEnglish IS NOT NULL
-      `;
-
-    if (date) {
-      whereClause += ` AND ${dateFilterColumn} = ?`;
-      params.push(date);
-      countParams.push(date);
+    // Apply filterType + date
+    if (filterType && date) {
+      switch (filterType) {
+        case 'OrderDate':
+          whereSql += ` AND DATE(o.createdAt) = ?`;
+          queryParams.push(date);
+          break;
+        case 'scheduleDate':
+          whereSql += ` AND DATE(o.sheduleDate) = ?`;
+          queryParams.push(date);
+          break;
+        case 'toCollectionCenter':
+          whereSql += ` AND DATE(DATE_SUB(o.sheduleDate, INTERVAL 2 DAY)) = ?`;
+          queryParams.push(date);
+          break;
+        case 'toDispatchCenter':
+          whereSql += ` AND DATE(DATE_SUB(o.sheduleDate, INTERVAL 1 DAY)) = ?`;
+          queryParams.push(date);
+          break;
+      }
     }
 
+    // Apply search on crop and variety name
     if (search) {
-      whereClause += ` AND (cv.varietyNameEnglish LIKE ? OR cg.cropNameEnglish LIKE ?)`;
-      const searchTerm = `%${search}%`;
-      params.push(searchTerm, searchTerm);
-      countParams.push(searchTerm, searchTerm);
+      whereSql += ` AND (cv.varietyNameEnglish LIKE ? OR cg.cropNameEnglish LIKE ?)`;
+      const likeSearch = `%${search}%`;
+      queryParams.push(likeSearch, likeSearch);
     }
 
-    const baseSelect = `
-        FROM orders o
-        LEFT JOIN (
-            SELECT osi.orderId, mi.varietyId, SUM(osi.quantity) AS TotalQuantity
-            FROM orderselecteditems osi
-            JOIN market_place.marketplaceitems mi ON osi.mpItemId = mi.id
-            GROUP BY osi.orderId, mi.varietyId
-            UNION ALL
-            SELECT opi.orderId, mi.varietyId,
-                SUM(COALESCE(pd.quantity, 0) + COALESCE(mpi.modifiedQuantity, 0) - COALESCE(mmi.modifiedQuantity, 0)) AS TotalQuantity
-            FROM orderpackageitems opi
-            JOIN market_place.packagedetails pd ON opi.packageId = pd.packageId
-            JOIN market_place.marketplaceitems mi ON pd.mpItemId = mi.id
-            LEFT JOIN modifiedplusitems mpi ON mpi.orderPackageItemsId = opi.id AND mpi.packageDetailsId = pd.id
-            LEFT JOIN modifiedminitems mmi ON mmi.orderPackageItemsId = opi.id AND mmi.packageDetailsId = pd.id
-            GROUP BY opi.orderId, mi.varietyId
-            UNION ALL
-            SELECT opi.orderId, mi.varietyId, SUM(mpi.modifiedQuantity) AS TotalQuantity
-            FROM orderpackageitems opi
-            JOIN modifiedplusitems mpi ON mpi.orderPackageItemsId = opi.id AND mpi.packageDetailsId IS NULL
-            JOIN market_place.marketplaceitems mi ON mpi.packageDetailsId IS NULL AND mpi.id IS NOT NULL AND mi.id = mpi.id
-            GROUP BY opi.orderId, mi.varietyId
-        ) AS item_qty ON o.id = item_qty.orderId
-        LEFT JOIN plant_care.cropvariety cv ON cv.id = item_qty.varietyId
-        JOIN plant_care.cropgroup cg ON cv.cropGroupId = cg.id
-      `;
+    // Count Query
+    const countSql = `SELECT COUNT(*) AS total ${baseJoinSql} ${whereSql}`;
 
-    const countSql = `
-        SELECT COUNT(*) AS total
-        ${baseSelect}
-        ${whereClause}
-        GROUP BY cv.varietyNameEnglish, ${dateFilterColumn}, DATE(o.scheduleDate)
-      `;
+    // Data Query
+    let dataSql = `
+  SELECT 
+    o.createdAt, 
+    op.orderId, 
+    o.sheduleDate, 
+    oai.productId, 
+    ROUND(
+      CASE 
+        WHEN oai.unit = 'g' THEN oai.qty / 1000
+        ELSE oai.qty 
+      END, 3
+    ) AS quantity,
+    oai.unit,
+    cg.cropNameEnglish, 
+    cv.varietyNameEnglish,
+    DATE_SUB(o.sheduleDate, INTERVAL 2 DAY) AS toCollectionCentre,
+    DATE_SUB(o.sheduleDate, INTERVAL 1 DAY) AS toDispatchCenter
+  ${baseJoinSql}
+  ${whereSql}
+  ORDER BY o.createdAt DESC, cg.cropNameEnglish ASC, cv.varietyNameEnglish ASC
+  LIMIT ? OFFSET ?
+`;
 
-    const dataSql = `
-        SELECT 
-          cv.varietyNameEnglish,
-          cg.cropNameEnglish,
-          SUM(COALESCE(item_qty.TotalQuantity, 0)) AS TotalQuantity,
-          DATE(o.createdAt) AS OrderDate,
-          DATE(o.scheduleDate) AS scheduleDate,
-          DATE_SUB(o.scheduleDate, INTERVAL 2 DAY) AS toCollectionCenter,
-          DATE_SUB(o.scheduleDate, INTERVAL 1 DAY) AS toDispatchCenter
-        ${baseSelect}
-        ${whereClause}
-        GROUP BY cv.varietyNameEnglish, ${dateFilterColumn}, DATE(o.scheduleDate)
-        ORDER BY OrderDate DESC, cg.cropNameEnglish, cv.varietyNameEnglish
-        LIMIT ? OFFSET ?
-      `;
+    const dataParams = [...queryParams, Number(limit), Number(offset)];
 
-    params.push(parseInt(limit), parseInt(offset));
-
-    console.log("Executing Count Query...");
-    dash.query(countSql, countParams, (countErr, countResults) => {
+    // Execute count query
+    marketPlace.query(countSql, queryParams, (countErr, countResults) => {
       if (countErr) {
-        console.error("Count query error:", countErr);
+        console.error('Error in count query:', countErr);
         return reject(countErr);
       }
 
-      const total = countResults.length;
+      const total = countResults[0].total;
 
-      console.log("Executing Data Query...");
-      dash.query(dataSql, params, (dataErr, dataResults) => {
+      // Execute data query
+      marketPlace.query(dataSql, dataParams, (dataErr, dataResults) => {
         if (dataErr) {
-          console.error("Data query error:", dataErr);
+          console.error('Error in data query:', dataErr);
           return reject(dataErr);
         }
 
-        resolve({
-          items: dataResults,
-          total,
+        dataResults.forEach(item => {
+          item.quantity = parseFloat(item.quantity.toString()); // This removes trailing zeros
         });
+        
+        resolve({ items: dataResults, total });
       });
     });
   });
 };
+
+
+// if (searchText) {
+      //     const searchCondition = `
+      //         AND (
+      //             rfp.invNo LIKE ?
+      //             OR rfp.createdAt LIKE ?
+      //             OR cc.centerName LIKE ?
+      //             OR cc.RegCode LIKE ?
+      //             OR u.NICnumber LIKE ?
+      //         )
+      //     `;
+      //     countSql += searchCondition;
+      //     dataSql += searchCondition;
+      //     const searchValue = `%${searchText}%`;
+      //     countParams.push(searchValue, searchValue, searchValue, searchValue, searchValue);
+      //     dataParams.push(searchValue, searchValue, searchValue, searchValue, searchValue);
+      // }
+
+      // if (center) {
+      //     countSql += " AND co.centerId = ?";
+      //     dataSql += " AND co.centerId = ?";
+      //     countParams.push(center);
+      //     dataParams.push(center);
+      // }
+
+      // dataSql += ` GROUP BY 
+      //                 rfp.invNo, 
+      //                 rfp.createdAt,
+      //                 cc.RegCode,
+      //                 cc.centerName,
+      //                 co.firstNameEnglish,
+      //                 u.id,
+      //                 u.NICnumber,
+      //                 co.companyId`
+
+// exports.getRecievedOrdersQuantity = (page, limit, filterType, date, search) => {
+//   return new Promise((resolve, reject) => {
+//     const offset = (page - 1) * limit;
+//     const params = [];
+//     const countParams = [];
+
+//     // Default to OrderDate if filterType not set
+//     const validFilters = {
+//       OrderDate: "DATE(o.createdAt)",
+//       scheduleDate: "DATE(o.scheduleDate)",
+//       toCollectionCenter: "DATE_SUB(o.scheduleDate, INTERVAL 2 DAY)",
+//       toDispatchCenter: "DATE_SUB(o.scheduleDate, INTERVAL 1 DAY)",
+//     };
+
+//     const dateFilterColumn =
+//       validFilters[filterType] || validFilters["OrderDate"];
+
+//     let whereClause = `
+//         WHERE o.deleteStatus IS NOT TRUE
+//         AND o.orderStatus != 'Cancelled'
+//         AND cv.varietyNameEnglish IS NOT NULL
+//       `;
+
+//     if (date) {
+//       whereClause += ` AND ${dateFilterColumn} = ?`;
+//       params.push(date);
+//       countParams.push(date);
+//     }
+
+//     if (search) {
+//       whereClause += ` AND (cv.varietyNameEnglish LIKE ? OR cg.cropNameEnglish LIKE ?)`;
+//       const searchTerm = `%${search}%`;
+//       params.push(searchTerm, searchTerm);
+//       countParams.push(searchTerm, searchTerm);
+//     }
+
+//     const baseSelect = `
+//         FROM orders o
+//         LEFT JOIN (
+//             SELECT osi.orderId, mi.varietyId, SUM(osi.quantity) AS TotalQuantity
+//             FROM orderselecteditems osi
+//             JOIN market_place.marketplaceitems mi ON osi.mpItemId = mi.id
+//             GROUP BY osi.orderId, mi.varietyId
+//             UNION ALL
+//             SELECT opi.orderId, mi.varietyId,
+//                 SUM(COALESCE(pd.quantity, 0) + COALESCE(mpi.modifiedQuantity, 0) - COALESCE(mmi.modifiedQuantity, 0)) AS TotalQuantity
+//             FROM orderpackageitems opi
+//             JOIN market_place.packagedetails pd ON opi.packageId = pd.packageId
+//             JOIN market_place.marketplaceitems mi ON pd.mpItemId = mi.id
+//             LEFT JOIN modifiedplusitems mpi ON mpi.orderPackageItemsId = opi.id AND mpi.packageDetailsId = pd.id
+//             LEFT JOIN modifiedminitems mmi ON mmi.orderPackageItemsId = opi.id AND mmi.packageDetailsId = pd.id
+//             GROUP BY opi.orderId, mi.varietyId
+//             UNION ALL
+//             SELECT opi.orderId, mi.varietyId, SUM(mpi.modifiedQuantity) AS TotalQuantity
+//             FROM orderpackageitems opi
+//             JOIN modifiedplusitems mpi ON mpi.orderPackageItemsId = opi.id AND mpi.packageDetailsId IS NULL
+//             JOIN market_place.marketplaceitems mi ON mpi.packageDetailsId IS NULL AND mpi.id IS NOT NULL AND mi.id = mpi.id
+//             GROUP BY opi.orderId, mi.varietyId
+//         ) AS item_qty ON o.id = item_qty.orderId
+//         LEFT JOIN plant_care.cropvariety cv ON cv.id = item_qty.varietyId
+//         JOIN plant_care.cropgroup cg ON cv.cropGroupId = cg.id
+//       `;
+
+//     const countSql = `
+//         SELECT COUNT(*) AS total
+//         ${baseSelect}
+//         ${whereClause}
+//         GROUP BY cv.varietyNameEnglish, ${dateFilterColumn}, DATE(o.scheduleDate)
+//       `;
+
+//     const dataSql = `
+//         SELECT 
+//           cv.varietyNameEnglish,
+//           cg.cropNameEnglish,
+//           SUM(COALESCE(item_qty.TotalQuantity, 0)) AS TotalQuantity,
+//           DATE(o.createdAt) AS OrderDate,
+//           DATE(o.scheduleDate) AS scheduleDate,
+//           DATE_SUB(o.scheduleDate, INTERVAL 2 DAY) AS toCollectionCenter,
+//           DATE_SUB(o.scheduleDate, INTERVAL 1 DAY) AS toDispatchCenter
+//         ${baseSelect}
+//         ${whereClause}
+//         GROUP BY cv.varietyNameEnglish, ${dateFilterColumn}, DATE(o.scheduleDate)
+//         ORDER BY OrderDate DESC, cg.cropNameEnglish, cv.varietyNameEnglish
+//         LIMIT ? OFFSET ?
+//       `;
+
+//     params.push(parseInt(limit), parseInt(offset));
+
+//     console.log("Executing Count Query...");
+//     dash.query(countSql, countParams, (countErr, countResults) => {
+//       if (countErr) {
+//         console.error("Count query error:", countErr);
+//         return reject(countErr);
+//       }
+
+//       const total = countResults.length;
+
+//       console.log("Executing Data Query...");
+//       dash.query(dataSql, params, (dataErr, dataResults) => {
+//         if (dataErr) {
+//           console.error("Data query error:", dataErr);
+//           return reject(dataErr);
+//         }
+
+//         resolve({
+//           items: dataResults,
+//           total,
+//         });
+//       });
+//     });
+//   });
+// };
 
 exports.DownloadRecievedOrdersQuantity = (filterType, date, search) => {
   return new Promise((resolve, reject) => {
-    const params = [];
+    // Base join SQL
+    let baseJoinSql = `
+      FROM market_place.orderpackage op 
+      JOIN market_place.orders o ON op.orderId = o.id
+      JOIN market_place.orderadditionalitems oai ON oai.orderId = o.id
+      JOIN market_place.marketplaceitems mpi ON oai.productId = mpi.id
+      JOIN plant_care.cropvariety cv ON mpi.varietyId = cv.id
+      JOIN plant_care.cropgroup cg ON cv.cropGroupId = cg.id
+    `;
 
-    const validFilters = {
-      OrderDate: "DATE(o.createdAt)",
-      scheduleDate: "DATE(o.scheduleDate)",
-      toCollectionCenter: "DATE_SUB(o.scheduleDate, INTERVAL 2 DAY)",
-      toDispatchCenter: "DATE_SUB(o.scheduleDate, INTERVAL 1 DAY)",
-    };
+    // Where clause
+    let whereSql = ` WHERE 1=1 `;
+    const queryParams = [];
 
-    const dateFilterColumn =
-      validFilters[filterType] || validFilters["OrderDate"];
-
-    let whereClause = `
-        WHERE o.deleteStatus IS NOT TRUE
-        AND o.orderStatus != 'Cancelled'
-        AND cv.varietyNameEnglish IS NOT NULL
-      `;
-
-    if (date) {
-      whereClause += ` AND ${dateFilterColumn} = ?`;
-      params.push(date);
+    // Apply date filters
+    if (filterType && date) {
+      switch (filterType) {
+        case 'OrderDate':
+          whereSql += ` AND DATE(o.createdAt) = ?`;
+          queryParams.push(date);
+          break;
+        case 'scheduleDate':
+          whereSql += ` AND DATE(o.sheduleDate) = ?`;
+          queryParams.push(date);
+          break;
+        case 'toCollectionCenter':
+          whereSql += ` AND DATE(DATE_SUB(o.sheduleDate, INTERVAL 2 DAY)) = ?`;
+          queryParams.push(date);
+          break;
+        case 'toDispatchCenter':
+          whereSql += ` AND DATE(DATE_SUB(o.sheduleDate, INTERVAL 1 DAY)) = ?`;
+          queryParams.push(date);
+          break;
+      }
     }
 
+    // Apply search
     if (search) {
-      whereClause += ` AND (cv.varietyNameEnglish LIKE ? OR cg.cropNameEnglish LIKE ?)`;
-      const searchTerm = `%${search}%`;
-      params.push(searchTerm, searchTerm);
+      whereSql += ` AND (cv.varietyNameEnglish LIKE ? OR cg.cropNameEnglish LIKE ?)`;
+      const likeSearch = `%${search}%`;
+      queryParams.push(likeSearch, likeSearch);
     }
 
-    const baseSelect = `
-        FROM orders o
-        LEFT JOIN (
-          SELECT osi.orderId, mi.varietyId, SUM(osi.quantity) AS TotalQuantity
-          FROM orderselecteditems osi
-          JOIN market_place.marketplaceitems mi ON osi.mpItemId = mi.id
-          GROUP BY osi.orderId, mi.varietyId
-          UNION ALL
-          SELECT opi.orderId, mi.varietyId,
-              SUM(COALESCE(pd.quantity, 0) + COALESCE(mpi.modifiedQuantity, 0) - COALESCE(mmi.modifiedQuantity, 0)) AS TotalQuantity
-          FROM orderpackageitems opi
-          JOIN market_place.packagedetails pd ON opi.packageId = pd.packageId
-          JOIN market_place.marketplaceitems mi ON pd.mpItemId = mi.id
-          LEFT JOIN modifiedplusitems mpi ON mpi.orderPackageItemsId = opi.id AND mpi.packageDetailsId = pd.id
-          LEFT JOIN modifiedminitems mmi ON mmi.orderPackageItemsId = opi.id AND mmi.packageDetailsId = pd.id
-          GROUP BY opi.orderId, mi.varietyId
-          UNION ALL
-          SELECT opi.orderId, mi.varietyId, SUM(mpi.modifiedQuantity) AS TotalQuantity
-          FROM orderpackageitems opi
-          JOIN modifiedplusitems mpi ON mpi.orderPackageItemsId = opi.id AND mpi.packageDetailsId IS NULL
-          JOIN market_place.marketplaceitems mi ON mpi.packageDetailsId IS NULL AND mpi.id IS NOT NULL AND mi.id = mpi.id
-          GROUP BY opi.orderId, mi.varietyId
-        ) AS item_qty ON o.id = item_qty.orderId
-        LEFT JOIN plant_care.cropvariety cv ON cv.id = item_qty.varietyId
-        JOIN plant_care.cropgroup cg ON cv.cropGroupId = cg.id
-      `;
-
+    // Final data query without LIMIT/OFFSET and with ORDER BY
     const dataSql = `
-        SELECT 
-          cv.varietyNameEnglish,
-          cg.cropNameEnglish,
-          SUM(COALESCE(item_qty.TotalQuantity, 0)) AS TotalQuantity,
-          DATE(o.createdAt) AS OrderDate,
-          DATE(o.scheduleDate) AS scheduleDate,
-          DATE_SUB(o.scheduleDate, INTERVAL 2 DAY) AS toCollectionCenter,
-          DATE_SUB(o.scheduleDate, INTERVAL 1 DAY) AS toDispatchCenter
-        ${baseSelect}
-        ${whereClause}
-        GROUP BY cv.varietyNameEnglish, ${dateFilterColumn}
-        ORDER BY OrderDate DESC
-      `;
+      SELECT 
+        o.createdAt, 
+        o.sheduleDate AS scheduleDate,
+        oai.productId, 
+        ROUND(
+          CASE 
+            WHEN oai.unit = 'g' THEN oai.qty / 1000
+            ELSE oai.qty 
+          END, 3
+        ) AS quantity,
+        oai.unit,
+        cg.cropNameEnglish, 
+        cv.varietyNameEnglish,
+        DATE_SUB(o.sheduleDate, INTERVAL 2 DAY) AS toCollectionCenter,
+        DATE_SUB(o.sheduleDate, INTERVAL 1 DAY) AS toDispatchCenter
+      ${baseJoinSql}
+      ${whereSql}
+      ORDER BY o.createdAt DESC, cg.cropNameEnglish ASC, cv.varietyNameEnglish ASC
+    `;
 
-    console.log("Executing Data Query...");
-    dash.query(dataSql, params, (dataErr, dataResults) => {
-      if (dataErr) {
-        console.error("Data query error:", dataErr);
-        return reject(dataErr);
+    // Execute query
+    marketPlace.query(dataSql, queryParams, (err, results) => {
+      if (err) {
+        console.error("Error fetching data for Excel:", err);
+        return reject(err);
       }
 
-      resolve({
-        items: dataResults,
-        total: dataResults.length,
+      results.forEach(item => {
+        item.quantity = parseFloat(item.quantity.toString()); // This removes trailing zeros
       });
+      
+      resolve({ items: results });
     });
   });
 };
+
 
 exports.getAllOrdersWithProcessInfo = (
   page,

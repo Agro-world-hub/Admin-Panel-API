@@ -27,6 +27,7 @@ router.get(
 router.get("/download-order-quantity-report", async (req, res) => {
   try {
     const { filterType, date, search } = req.query;
+    console.log(filterType, date, search);
 
     // Fetch data from the database
     const data = await procumentDao.DownloadRecievedOrdersQuantity(
@@ -40,8 +41,8 @@ router.get("/download-order-quantity-report", async (req, res) => {
     const formattedData = items.map((item) => ({
       "Crop Group": item.cropNameEnglish,
       Variety: item.varietyNameEnglish,
-      "Total Quantity (Kg)": item.TotalQuantity,
-      "Order Date": item.OrderDate,
+      "Total Quantity (Kg)": item.quantity,
+      "Order Date": item.createdAt,
       "Schedule Date": item.scheduleDate,
       "To Collection Center": item.toCollectionCenter,
       "To Dispatch Center": item.toDispatchCenter,
