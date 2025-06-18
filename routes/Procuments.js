@@ -86,4 +86,24 @@ router.get("/download-order-quantity-report", async (req, res) => {
   }
 });
 
+router.get("/get-prduct-type", authMiddleware, ProcumentsEP.getAllProductTypes);
+
+router.get(
+  "/get-order-details/:id",
+  authMiddleware,
+  ProcumentsEP.getOrderDetailsById
+);
+
+router.post(
+  "/add-order-package-item",
+  authMiddleware,
+  ProcumentsEP.createOrderPackageItem
+);
+
+router.get(
+  "/get-marketplace-item/:id",
+  authMiddleware,
+  ProcumentsEP.getAllMarketplaceItems
+);
+
 module.exports = router;

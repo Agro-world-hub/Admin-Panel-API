@@ -76,3 +76,197 @@ exports.getAllOrdersWithProcessInfo = async (req, res) => {
     });
   }
 };
+
+exports.getAllProductTypes = async (req, res) => {
+  const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
+  console.log(fullUrl);
+  try {
+    const productTypes = await procumentDao.getAllProductTypes();
+    res.json(productTypes);
+  } catch (err) {
+    console.error("Error fetching product types:", err);
+    res.status(500).send("An error occurred while fetching product types.");
+  }
+};
+
+exports.getOrderDetailsById = async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const packageDetails = await procumentDao.getOrderDetailsById(id);
+
+    if (!packageDetails) {
+      return res.status(404).json({
+        success: false,
+        message: "Order details not found",
+      });
+    }
+
+    // Transform the data to group products by package
+    const transformedData = packageDetails.reduce((acc, item) => {
+      const existingPackage = acc.find(
+        (pkg) => pkg.packageId === item.packageId
+      );
+
+      if (existingPackage) {
+        existingPackage.productTypes.push(item.productType);
+      } else {
+        acc.push({
+          packageId: item.packageId,
+          displayName: item.displayName,
+          productPrice: item.productPrice,
+          invNo: item.invNo,
+          productTypes: [item.productType],
+        });
+      }
+      return acc;
+    }, []);
+
+    res.json({
+      success: true,
+      data: transformedData,
+    });
+  } catch (err) {
+    console.error("Error fetching order details:", err);
+
+    let statusCode = 500;
+    let message = "An error occurred while fetching order details.";
+
+    if (err.isJoi) {
+      statusCode = 400;
+      message = err.details[0].message;
+    } else if (
+      err.code === "ER_NO_SUCH_TABLE" ||
+      err.code === "ER_BAD_FIELD_ERROR"
+    ) {
+      statusCode = 500;
+      message = "Database configuration error";
+    }
+
+    const errorResponse = {
+      success: false,
+      message: message,
+    };
+
+    if (process.env.NODE_ENV === "development") {
+      errorResponse.error = err.stack;
+      errorResponse.details = err.message;
+    }
+
+    res.status(statusCode).json(errorResponse);
+  }
+};
+
+exports.createOrderPackageItem = async (req, res) => {
+  try {
+    const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
+    console.log("Request URL:", fullUrl);
+    console.log(req.body);
+
+    const orderPackageItem = {
+      orderPackageId: req.body.orderPackageId,
+      productType: req.body.productType,
+      productId: req.body.productId,
+      qty: req.body.qty,
+      price: req.body.price,
+    };
+
+    // Directly create the order package item
+    const result = await procumentDao.createOrderPackageItemDao(
+      orderPackageItem
+    );
+    console.log(result);
+
+    if (result.affectedRows === 0) {
+      return res.json({
+        message: "Order package item creation failed",
+        result: result,
+        status: false,
+      });
+    }
+
+    console.log("Order package item creation success");
+    res.status(201).json({
+      message: "Order package item created successfully",
+      result: result,
+      status: true,
+    });
+  } catch (err) {
+    if (err.isJoi) {
+      return res
+        .status(400)
+        .json({ error: err.details[0].message, status: false });
+    }
+
+    console.error("Error executing query:", err);
+    return res.status(500).json({
+      error: "An error occurred while creating order package item",
+      status: false,
+    });
+  }
+};
+
+exports.getAllMarketplaceItems = async (req, res) => {
+  try {
+    console.log("hello world");
+
+    const orderId = req.params.id;
+    const btype = await procumentDao.getOrderTypeDao(orderId);
+    const marketplaceItems = await procumentDao.getAllMarketplaceItems(
+      btype.buyerType
+    );
+
+    if (!marketplaceItems || marketplaceItems.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "No marketplace items found",
+      });
+    }
+
+    // Optional: Group items by category if needed
+    const itemsByCategory = marketplaceItems.reduce((acc, item) => {
+      if (!acc[item.category]) {
+        acc[item.category] = [];
+      }
+      acc[item.category].push(item);
+      return acc;
+    }, {});
+
+    res.json({
+      success: true,
+      data: {
+        items: marketplaceItems,
+        itemsByCategory, // Optional grouped data
+        count: marketplaceItems.length,
+      },
+    });
+  } catch (err) {
+    console.error("Error fetching marketplace items:", err);
+
+    let statusCode = 500;
+    let message = "An error occurred while fetching marketplace items.";
+
+    if (err.isJoi) {
+      statusCode = 400;
+      message = err.details[0].message;
+    } else if (
+      err.code === "ER_NO_SUCH_TABLE" ||
+      err.code === "ER_BAD_FIELD_ERROR"
+    ) {
+      statusCode = 500;
+      message = "Database configuration error";
+    }
+
+    const errorResponse = {
+      success: false,
+      message: message,
+    };
+
+    if (process.env.NODE_ENV === "development") {
+      errorResponse.error = err.stack;
+      errorResponse.details = err.message;
+    }
+
+    res.status(statusCode).json(errorResponse);
+  }
+};
