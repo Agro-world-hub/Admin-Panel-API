@@ -414,7 +414,7 @@ exports.createOrderPackageItemDao = async (orderPackageItem) => {
       orderPackageItem.qty,
       orderPackageItem.price,
     ];
-    dbConnection.query(sql, values, (err, results) => {
+    marketPlace.query(sql, values, (err, results) => {
       if (err) {
         reject(err);
       } else {
