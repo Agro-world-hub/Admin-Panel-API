@@ -207,6 +207,116 @@ exports.DownloadRecievedOrdersQuantity = (filterType, date, search) => {
   });
 };
 
+// exports.getAllOrdersWithProcessInfo = (
+//   page,
+//   limit,
+//   filterType,
+//   date,
+//   search
+// ) => {
+//   return new Promise((resolve, reject) => {
+//     const offset = (page - 1) * limit;
+//     const params = [];
+//     const countParams = [];
+
+//     // Define valid filters
+//     const validFilters = {
+//       OrderDate: "DATE(o.createdAt)",
+//       scheduleDate: "DATE(o.sheduleDate)",
+//       processDate: "DATE(po.createdAt)",
+//     };
+
+//     const dateFilterColumn =
+//       validFilters[filterType] || validFilters["OrderDate"];
+
+//     let whereClause = ` WHERE 1=1 `; // Changed from deleteStatus check to always true condition
+//     let joinClause = ` FROM orders o LEFT JOIN processorders po ON o.id = po.orderId `;
+
+//     if (date) {
+//       whereClause += ` AND ${dateFilterColumn} = ?`;
+//       params.push(date);
+//       countParams.push(date);
+//     }
+
+//     if (search) {
+//       whereClause += ` AND (o.fullName LIKE ? OR o.phone1 LIKE ? OR po.invNo LIKE ? OR po.transactionId LIKE ?)`;
+//       const searchTerm = `%${search}%`;
+//       params.push(searchTerm, searchTerm, searchTerm, searchTerm);
+//       countParams.push(searchTerm, searchTerm, searchTerm, searchTerm);
+//     }
+
+//     const countSql = `
+//       SELECT COUNT(DISTINCT o.id) AS total
+//       ${joinClause}
+//       ${whereClause}
+//     `;
+
+//     const dataSql = `
+//       SELECT
+//         o.id,
+//         o.userId,
+//         o.orderApp,
+//         o.delivaryMethod,
+//         o.centerId,
+//         o.buildingType,
+//         o.title,
+//         o.fullName,
+//         o.phonecode1,
+//         o.phone1,
+//         o.phonecode2,
+//         o.phone2,
+//         o.isCoupon,
+//         o.couponValue,
+//         o.total,
+//         o.fullTotal,
+//         o.discount,
+//         o.sheduleType,
+//         o.sheduleDate,
+//         o.sheduleTime,
+//         o.createdAt,
+//         po.id AS processOrderId,
+//         po.invNo,
+//         po.transactionId,
+//         po.paymentMethod,
+//         po.isPaid,
+//         po.amount,
+//         po.status,
+//         po.reportStatus,
+//         po.createdAt AS processCreatedAt,
+//         ${dateFilterColumn} AS filterDate
+//       ${joinClause}
+//       ${whereClause}
+//       ORDER BY o.createdAt DESC
+//       LIMIT ? OFFSET ?
+//     `;
+
+//     params.push(parseInt(limit), parseInt(offset));
+
+//     console.log("Executing Count Query...");
+//     marketPlace.query(countSql, countParams, (countErr, countResults) => {
+//       if (countErr) {
+//         console.error("Count query error:", countErr);
+//         return reject(countErr);
+//       }
+
+//       const total = countResults[0]?.total || 0;
+
+//       console.log("Executing Data Query...");
+//       marketPlace.query(dataSql, params, (dataErr, dataResults) => {
+//         if (dataErr) {
+//           console.error("Data query error:", dataErr);
+//           return reject(dataErr);
+//         }
+
+//         resolve({
+//           items: dataResults,
+//           total,
+//         });
+//       });
+//     });
+//   });
+// };
+
 exports.getAllOrdersWithProcessInfo = (
   page,
   limit,
@@ -229,8 +339,18 @@ exports.getAllOrdersWithProcessInfo = (
     const dateFilterColumn =
       validFilters[filterType] || validFilters["OrderDate"];
 
-    let whereClause = ` WHERE 1=1 `; // Changed from deleteStatus check to always true condition
-    let joinClause = ` FROM orders o LEFT JOIN processorders po ON o.id = po.orderId `;
+    let whereClause = ` WHERE 1=1 `;
+    let joinClause = ` FROM orders o 
+                       LEFT JOIN processorders po ON o.id = po.orderId 
+                       LEFT JOIN (
+                         SELECT orderId, packingStatus
+                         FROM orderpackage
+                         WHERE (orderId, id) IN (
+                           SELECT orderId, MAX(id) 
+                           FROM orderpackage 
+                           GROUP BY orderId
+                         )
+                       ) op ON o.id = op.orderId `;
 
     if (date) {
       whereClause += ` AND ${dateFilterColumn} = ?`;
@@ -253,27 +373,7 @@ exports.getAllOrdersWithProcessInfo = (
 
     const dataSql = `
       SELECT 
-        o.id,
-        o.userId,
-        o.orderApp,
-        o.delivaryMethod,
-        o.centerId,
-        o.buildingType,
-        o.title,
-        o.fullName,
-        o.phonecode1,
-        o.phone1,
-        o.phonecode2,
-        o.phone2,
-        o.isCoupon,
-        o.couponValue,
-        o.total,
-        o.fullTotal,
-        o.discount,
-        o.sheduleType,
-        o.sheduleDate,
-        o.sheduleTime,
-        o.createdAt,
+        o.*,
         po.id AS processOrderId,
         po.invNo,
         po.transactionId,
@@ -283,6 +383,7 @@ exports.getAllOrdersWithProcessInfo = (
         po.status,
         po.reportStatus,
         po.createdAt AS processCreatedAt,
+        op.packingStatus,
         ${dateFilterColumn} AS filterDate
       ${joinClause}
       ${whereClause}
@@ -316,7 +417,6 @@ exports.getAllOrdersWithProcessInfo = (
     });
   });
 };
-
 exports.getAllProductTypes = () => {
   return new Promise((resolve, reject) => {
     const sql = "SELECT typeName, shortCode FROM producttypes";
