@@ -163,53 +163,19 @@ exports.createOrderPackageItem = async (req, res) => {
     console.log("Request URL:", fullUrl);
     console.log("Request body:", req.body);
 
-    // Check if body is an array
-    if (Array.isArray(req.body)) {
-      const result = await procumentDao.createOrderPackageItemDao(req.body);
+    const data = req.body;
+    const count = data.length;
+    const results = []; // Array to store all results
 
-      if (result.errors && result.errors.length > 0) {
-        return res.status(207).json({
-          // 207 Multi-Status
-          message: "Some items failed to create",
-          successCount: result.successCount,
-          failedCount: result.failedCount,
-          results: result.results,
-          errors: result.errors,
-          status: false,
-        });
-      }
-
-      return res.status(201).json({
-        message: "All items created successfully",
-        result: result,
-        status: true,
-      });
-    }
-
-    // Handle single item
-    const orderPackageItem = {
-      orderPackageId: req.body.orderPackageId,
-      productType: req.body.productType,
-      productId: req.body.productId,
-      qty: req.body.qty,
-      price: req.body.price,
-    };
-
-    const result = await procumentDao.createOrderPackageItemDao([
-      orderPackageItem,
-    ]);
-
-    if (result.affectedRows === 0) {
-      return res.json({
-        message: "Order package item creation failed",
-        result: result,
-        status: false,
-      });
+    for (let i = 0; i < count; i++) {
+      let result = await procumentDao.createOrderPackageItemDao(data[i]);
+      console.log(result);
+      results.push(result); // Store each result
     }
 
     res.status(201).json({
       message: "Order package item created successfully",
-      result: result,
+      results: results, // Return all results
       status: true,
     });
   } catch (err) {
