@@ -680,7 +680,7 @@ exports.getCollectionOfficerProvinceReports = (province) => {
     const sql = `
       SELECT 
         cg.cropNameEnglish AS cropName,
-        c.province, 
+        cc.province, 
         SUM(fpc.gradeAquan) AS qtyA, 
         SUM(fpc.gradeBquan) AS qtyB, 
         SUM(fpc.gradeCquan) AS qtyC, 
