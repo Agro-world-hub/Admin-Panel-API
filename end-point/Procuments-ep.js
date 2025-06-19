@@ -161,8 +161,32 @@ exports.createOrderPackageItem = async (req, res) => {
   try {
     const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
     console.log("Request URL:", fullUrl);
-    console.log(req.body);
+    console.log("Request body:", req.body);
 
+    // Check if body is an array
+    if (Array.isArray(req.body)) {
+      const result = await procumentDao.createOrderPackageItemDao(req.body);
+
+      if (result.errors && result.errors.length > 0) {
+        return res.status(207).json({
+          // 207 Multi-Status
+          message: "Some items failed to create",
+          successCount: result.successCount,
+          failedCount: result.failedCount,
+          results: result.results,
+          errors: result.errors,
+          status: false,
+        });
+      }
+
+      return res.status(201).json({
+        message: "All items created successfully",
+        result: result,
+        status: true,
+      });
+    }
+
+    // Handle single item
     const orderPackageItem = {
       orderPackageId: req.body.orderPackageId,
       productType: req.body.productType,
@@ -171,11 +195,9 @@ exports.createOrderPackageItem = async (req, res) => {
       price: req.body.price,
     };
 
-    // Directly create the order package item
-    const result = await procumentDao.createOrderPackageItemDao(
-      orderPackageItem
-    );
-    console.log(result);
+    const result = await procumentDao.createOrderPackageItemDao([
+      orderPackageItem,
+    ]);
 
     if (result.affectedRows === 0) {
       return res.json({
@@ -185,22 +207,16 @@ exports.createOrderPackageItem = async (req, res) => {
       });
     }
 
-    console.log("Order package item creation success");
     res.status(201).json({
       message: "Order package item created successfully",
       result: result,
       status: true,
     });
   } catch (err) {
-    if (err.isJoi) {
-      return res
-        .status(400)
-        .json({ error: err.details[0].message, status: false });
-    }
-
     console.error("Error executing query:", err);
     return res.status(500).json({
-      error: "An error occurred while creating order package item",
+      error:
+        err.message || "An error occurred while creating order package item",
       status: false,
     });
   }

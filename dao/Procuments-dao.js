@@ -403,22 +403,170 @@ exports.getOrderDetailsById = (orderId) => {
   });
 };
 
-exports.createOrderPackageItemDao = async (orderPackageItem) => {
-  return new Promise((resolve, reject) => {
-    const sql =
-      "INSERT INTO orderpackageitems (orderPackageId, productType, productId, qty, price) VALUES (?, ?, ?, ?, ?)";
-    const values = [
-      orderPackageItem.orderPackageId,
-      orderPackageItem.productType,
-      orderPackageItem.productId,
-      orderPackageItem.qty,
-      orderPackageItem.price,
+exports.createOrderPackageItemDao = async (orderPackageItems) => {
+  // Debugging: Log raw input
+  console.log(
+    "Raw input received:",
+    JSON.stringify(orderPackageItems, null, 2)
+  );
+
+  // Convert single item to array for consistent processing
+  const itemsToInsert = Array.isArray(orderPackageItems)
+    ? orderPackageItems
+    : [orderPackageItems];
+
+  // Validate all items before starting transaction
+  const validateItem = (item, index) => {
+    const requiredFields = [
+      "orderPackageId",
+      "productType",
+      "productId",
+      "qty",
+      "price",
     ];
-    marketPlace.query(sql, values, (err, results) => {
+    const missingFields = requiredFields.filter((field) => {
+      const value = item[field];
+      return value === undefined || value === null || value === "";
+    });
+
+    if (missingFields.length > 0) {
+      throw new Error(
+        `Missing required fields in item ${index}: ${missingFields.join(", ")}`
+      );
+    }
+
+    // Validate numeric fields
+    if (isNaN(Number(item.qty)) || Number(item.qty) <= 0) {
+      throw new Error(
+        `Invalid quantity in item ${index}. Must be a positive number`
+      );
+    }
+
+    if (isNaN(Number(item.price)) || Number(item.price) < 0) {
+      throw new Error(
+        `Invalid price in item ${index}. Must be a non-negative number`
+      );
+    }
+  };
+
+  try {
+    // Pre-validate all items
+    itemsToInsert.forEach((item, index) => validateItem(item, index));
+  } catch (validationError) {
+    console.error("Pre-validation failed:", validationError);
+    throw validationError;
+  }
+
+  return new Promise(async (resolve, reject) => {
+    // Get a connection from the pool
+    marketPlace.getConnection(async (err, connection) => {
       if (err) {
-        reject(err);
-      } else {
-        resolve(results);
+        console.error("Error getting database connection:", err);
+        return reject(err);
+      }
+
+      try {
+        // Begin transaction
+        await new Promise((resolve, reject) => {
+          connection.beginTransaction((err) => {
+            if (err) return reject(err);
+            resolve();
+          });
+        });
+
+        const results = [];
+        const errors = [];
+
+        // Process each item sequentially
+        for (const [index, item] of itemsToInsert.entries()) {
+          try {
+            // Convert values to proper types
+            const values = [
+              Number(item.orderPackageId),
+              Number(item.productType),
+              Number(item.productId),
+              Number(item.qty),
+              Number(item.price),
+            ];
+
+            const sql = `
+              INSERT INTO orderpackageitems 
+              (orderPackageId, productType, productId, qty, price) 
+              VALUES (?, ?, ?, ?, ?)
+            `;
+
+            // Execute insert for current item
+            const result = await new Promise((resolve, reject) => {
+              connection.query(sql, values, (err, result) => {
+                if (err) return reject(err);
+                resolve(result);
+              });
+            });
+
+            results.push({
+              index,
+              item,
+              result,
+              status: "success",
+            });
+            console.log(`Item ${index} inserted successfully`);
+          } catch (itemError) {
+            console.error(`Error inserting item ${index}:`, itemError);
+            errors.push({
+              index,
+              item,
+              error: itemError.message,
+              status: "failed",
+            });
+            // Continue with next item even if one fails
+          }
+        }
+
+        // Check if any errors occurred
+        if (errors.length > 0) {
+          // Rollback transaction if any errors
+          await new Promise((resolve, reject) => {
+            connection.rollback(() => {
+              connection.release();
+              resolve();
+            });
+          });
+
+          return reject({
+            message: "Some items failed to insert",
+            successCount: results.length,
+            failedCount: errors.length,
+            results,
+            errors,
+            receivedData: itemsToInsert, // Include original data for debugging
+          });
+        }
+
+        // Commit transaction if all successful
+        await new Promise((resolve, reject) => {
+          connection.commit((err) => {
+            connection.release();
+            if (err) return reject(err);
+            resolve();
+          });
+        });
+
+        resolve({
+          message: "All items inserted successfully",
+          insertedCount: results.length,
+          results,
+          receivedData: itemsToInsert, // Include original data for reference
+        });
+      } catch (transactionError) {
+        // Rollback on any transaction error
+        connection.rollback(() => {
+          connection.release();
+          console.error("Transaction failed:", transactionError);
+          reject({
+            error: transactionError,
+            receivedData: itemsToInsert,
+          });
+        });
       }
     });
   });
