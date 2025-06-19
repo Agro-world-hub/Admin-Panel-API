@@ -22,6 +22,8 @@ exports.getRecievedOrdersQuantity = async (req, res) => {
 
     const { page, limit, filterType, date, search } = req.query;
 
+    console.log(page, limit)
+
     const reportData = await procumentDao.getRecievedOrdersQuantity(
       page,
       limit,
@@ -29,6 +31,8 @@ exports.getRecievedOrdersQuantity = async (req, res) => {
       date,
       search
     );
+
+    console.log(reportData);
     res.json(reportData);
   } catch (err) {
     console.error("Error fetching daily report:", err);

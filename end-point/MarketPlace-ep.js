@@ -880,6 +880,21 @@ exports.getMarketplaceUsers = async (req, res) => {
   }
 };
 
+exports.deleteMarketplaceUser = async (req, res) => {
+  const userId = req.params.userId;
+  const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
+  console.log("URL:", fullUrl);
+
+  try {
+    const result = await MarketPlaceDao.deleteMarketplaceUser(userId);
+    console.log("Successfully deactivated marketplace user");
+    return res.status(200).json({ status: true, message: result.message });
+  } catch (error) {
+    console.error("Error deactivating marketplace user:", error.message);
+    return res.status(400).json({ status: false, message: error.message });
+  }
+};
+
 exports.getNextBannerIndexRetail = async (req, res) => {
   try {
     const nextOrderNumber = await MarketPlaceDao.getNextBannerIndexRetail(); // Call the DAO function
