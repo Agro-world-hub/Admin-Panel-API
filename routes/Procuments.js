@@ -107,4 +107,10 @@ router.get(
   ProcumentsEP.getAllMarketplaceItems
 );
 
+router.get(
+  "/orders-process-info-completed",
+  authMiddleware,
+  ProcumentsEP.getAllOrdersWithProcessInfoCompleted
+);
+
 module.exports = router;
