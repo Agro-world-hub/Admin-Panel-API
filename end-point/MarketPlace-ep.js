@@ -1499,3 +1499,32 @@ exports.editDeliveryCharge = async (req, res) => {
     });
   }
 };
+
+// In your MarketPlace-ep.js file
+exports.checkPackageDisplayNameExists = async (req, res) => {
+  try {
+    const { displayName } = req.query;
+
+    if (!displayName) {
+      return res.status(400).json({
+        error: "Display name is required",
+        status: false,
+      });
+    }
+
+    const exists = await MarketPlaceDao.checkPackageDisplayNameExistsDao(
+      displayName
+    );
+
+    return res.status(200).json({
+      exists,
+      status: true,
+    });
+  } catch (err) {
+    console.error("Error checking display name:", err);
+    return res.status(500).json({
+      error: "An error occurred while checking display name",
+      status: false,
+    });
+  }
+};

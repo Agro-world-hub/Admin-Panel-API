@@ -236,4 +236,10 @@ router.post(
   marketPlaceEp.editDeliveryCharge
 );
 
+router.get(
+  "/check-package-name",
+  authMiddleware,
+  marketPlaceEp.checkPackageDisplayNameExists
+);
+
 module.exports = router;

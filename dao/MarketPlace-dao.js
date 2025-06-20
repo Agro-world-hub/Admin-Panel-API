@@ -1564,3 +1564,16 @@ exports.editDeliveryChargeDAO = async (data, id) => {
     });
   });
 };
+
+exports.checkPackageDisplayNameExistsDao = async (displayName) => {
+  return new Promise((resolve, reject) => {
+    const sql = "SELECT * FROM marketplacepackages WHERE displayName = ?";
+    marketPlace.query(sql, [displayName], (err, results) => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(results.length > 0); // true if exists
+      }
+    });
+  });
+};
