@@ -201,26 +201,63 @@ exports.createOrderPackageItem = async (req, res) => {
     console.log("Request URL:", fullUrl);
     console.log("Request body:", req.body);
 
-    const data = req.body;
-    const count = data.length;
-    const results = []; // Array to store all results
-
-    for (let i = 0; i < count; i++) {
-      let result = await procumentDao.createOrderPackageItemDao(data[i]);
-      console.log(result);
-      results.push(result); // Store each result
+    // Validate request body structure
+    if (
+      !req.body ||
+      !req.body.orderPackageId ||
+      !req.body.products ||
+      !Array.isArray(req.body.products)
+    ) {
+      return res.status(400).json({
+        error:
+          "Invalid request format. Expected { orderPackageId: number, products: array }",
+        status: false,
+      });
     }
 
+    const { orderPackageId, products } = req.body;
+
+    // Additional validation for products array
+    if (products.length === 0) {
+      return res.status(400).json({
+        error: "Products array cannot be empty",
+        status: false,
+      });
+    }
+
+    // Validate each product in the array
+    for (const product of products) {
+      if (
+        !product.productType ||
+        !product.productId ||
+        !product.qty ||
+        !product.price
+      ) {
+        return res.status(400).json({
+          error:
+            "Each product must have productType, productId, qty, and price",
+          status: false,
+        });
+      }
+    }
+
+    // Use batch insert
+    const result = await procumentDao.createOrderPackageItemDao(
+      orderPackageId,
+      products
+    );
+    console.log(result);
+
     res.status(201).json({
-      message: "Order package item created successfully",
-      results: results, // Return all results
+      message: "Order package items created successfully",
+      results: result,
       status: true,
     });
   } catch (err) {
     console.error("Error executing query:", err);
     return res.status(500).json({
       error:
-        err.message || "An error occurred while creating order package item",
+        err.message || "An error occurred while creating order package items",
       status: false,
     });
   }

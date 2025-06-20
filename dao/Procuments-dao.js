@@ -654,34 +654,39 @@ exports.getOrderDetailsById = (orderId) => {
   });
 };
 
-exports.createOrderPackageItemDao = (itemData) => {
+exports.createOrderPackageItemDao = (orderPackageId, products) => {
   return new Promise((resolve, reject) => {
     try {
+      // Validate inputs
+      if (!orderPackageId || !products || !Array.isArray(products)) {
+        throw new Error("Invalid input parameters");
+      }
+
+      // Create an array of value arrays for the batch insert
+      const values = products.map((product) => [
+        orderPackageId,
+        product.productType,
+        product.productId,
+        product.qty,
+        parseFloat(product.price),
+      ]);
+
       const sql = `
         INSERT INTO orderpackageitems (
           orderPackageId, productType, productId, qty, price
-        ) VALUES (?, ?, ?, ?, ?)
+        ) VALUES ?
       `;
 
-      // Database query
-      marketPlace.query(
-        sql,
-        [
-          itemData.orderPackageId,
-          itemData.productType,
-          itemData.productId,
-          itemData.qty,
-          parseFloat(itemData.price),
-        ],
-        (err, results) => {
-          if (err) {
-            console.log(err);
-            return reject(err);
-          }
-          resolve(results);
+      // Database query with batch insert
+      marketPlace.query(sql, [values], (err, results) => {
+        if (err) {
+          console.log("Database error:", err);
+          return reject(err);
         }
-      );
+        resolve(results);
+      });
     } catch (error) {
+      console.log("Error in createOrderPackageItemDao:", error);
       reject(error);
     }
   });
