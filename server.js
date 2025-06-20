@@ -131,8 +131,8 @@ app.use(BASE_PATH + '/api/dispatch', DispatchRoutes)
 
 app.use('/uploads', express.static('uploads'));
 
-app.get(BASE_PATH + '/test prod', (req, res) => {
-  res.send('Test route is working!');
+app.get(BASE_PATH + '/test', (req, res) => {
+  res.send('Test Prod route is working!');
   console.log('test route is working');
 });
 
