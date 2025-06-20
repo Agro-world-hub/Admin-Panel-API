@@ -27,6 +27,8 @@ exports.getPreMadePackages = async (req, res) => {
 
     const { page, limit, selectedStatus, date, search} = validatedQuery;
 
+    console.log({selectedStatus, date, search})
+
     const reportData = await DispatchDao.getPreMadePackages(
       page,
       limit,
@@ -34,6 +36,7 @@ exports.getPreMadePackages = async (req, res) => {
       date, 
       search
     );
+    console.log(reportData);
     res.json(reportData);
   } catch (err) {
     console.error("Error fetching daily report:", err);

@@ -9,6 +9,102 @@ const {
 
 
 
+// exports.getPreMadePackages = (page, limit, packageStatus, date, search) => {
+//   return new Promise((resolve, reject) => {
+//     const offset = (page - 1) * limit;
+
+//     let whereClause = ` WHERE 1=1`;
+//     const params = [];
+//     const countParams = [];
+
+//     if (packageStatus) {
+//       whereClause += ` AND o.packageStatus = ?`;
+//       params.push(packageStatus);
+//       countParams.push(packageStatus);
+//     }
+
+//     if (date) {
+//       whereClause += " AND DATE(o.scheduleDate) = ?";
+//       params.push(date);
+//       countParams.push(date);
+//     }
+
+//     if (search) {
+//       whereClause += ` AND (o.invNo LIKE ?)`;
+//       const searchPattern = `%${search}%`;
+//       params.push(searchPattern);
+//       countParams.push(searchPattern);
+//     }
+
+//     const countSql = `
+//         SELECT 
+//           COUNT(DISTINCT o.id) AS total
+//         FROM 
+//           orders o
+//         INNER JOIN orderpackageitems opi ON o.id = opi.orderId
+//         LEFT JOIN modifiedplusitems mpi ON opi.id = mpi.orderPackageItemsId
+//         LEFT JOIN modifiedminitems mmi ON opi.id = mmi.orderPackageItemsId
+//         INNER JOIN market_place.marketplacepackages mpp ON opi.packageId = mpp.id
+//         LEFT JOIN additionalitem ai ON opi.id = ai.orderPackageItemsId
+//         ${whereClause}
+//       `;
+
+//     const dataSql = `
+//         SELECT 
+//           o.id AS id,
+//           o.invNo AS invoiceNum,
+//           o.packageStatus AS packageStatus,
+//           o.addItemStatus AS addItemStatus,
+//           o.packItemStatus AS packItemStatus,
+//           opi.id AS orderPackageItemsId,
+//           mpp.displayName AS packageName,
+//           opi.packageSubTotal-IFNULL(SUM(ai.subtotal), 0) AS packagePrice,
+//           IFNULL(SUM(ai.subtotal), 0) AS additionalPrice,
+//           o.scheduleDate AS scheduleDate,
+//           o.fullSubTotal AS fullSubTotal,
+//           opi.packageSubTotal AS totalPrice
+//         FROM 
+//           orders o
+//         INNER JOIN orderpackageitems opi ON o.id = opi.orderId
+//         LEFT JOIN modifiedplusitems mpi ON opi.id = mpi.orderPackageItemsId
+//         LEFT JOIN modifiedminitems mmi ON opi.id = mmi.orderPackageItemsId
+//         INNER JOIN market_place.marketplacepackages mpp ON opi.packageId = mpp.id
+//         LEFT JOIN additionalitem ai ON opi.id = ai.orderPackageItemsId
+//         ${whereClause}
+//         GROUP BY o.id, o.invNo, o.packageStatus, mpp.displayName, opi.packageSubTotal, o.scheduleDate, o.fullSubTotal
+//         ORDER BY o.createdAt DESC
+//         LIMIT ? OFFSET ?
+//       `;
+
+//     // Add pagination parameters
+//     params.push(parseInt(limit), parseInt(offset));
+
+//     console.log('Executing Count Query...');
+//     dash.query(countSql, countParams, (countErr, countResults) => {
+//       if (countErr) {
+//         console.error("Error in count query:", countErr);
+//         return reject(countErr);
+//       }
+
+//       const total = countResults[0]?.total || 0;
+
+//       console.log('Executing Data Query...');
+//       dash.query(dataSql, params, (dataErr, dataResults) => {
+//         if (dataErr) {
+//           console.error("Error in data query:", dataErr);
+//           return reject(dataErr);
+//         }
+
+//         resolve({
+//           items: dataResults,
+//           total,
+//         });
+//       });
+//     });
+//   });
+// };
+
+
 exports.getPreMadePackages = (page, limit, packageStatus, date, search) => {
   return new Promise((resolve, reject) => {
     const offset = (page - 1) * limit;
@@ -18,65 +114,64 @@ exports.getPreMadePackages = (page, limit, packageStatus, date, search) => {
     const countParams = [];
 
     if (packageStatus) {
-      whereClause += ` AND o.packageStatus = ?`;
+      whereClause += ` AND op.packingStatus = ?`;
       params.push(packageStatus);
       countParams.push(packageStatus);
     }
 
     if (date) {
-      whereClause += " AND DATE(o.scheduleDate) = ?";
+      whereClause += " AND DATE(o.sheduleDate) = ?";
       params.push(date);
       countParams.push(date);
     }
 
     if (search) {
-      whereClause += ` AND (o.invNo LIKE ?)`;
+      whereClause += ` AND (po.invNo LIKE ?)`;
       const searchPattern = `%${search}%`;
       params.push(searchPattern);
       countParams.push(searchPattern);
     }
 
     const countSql = `
-        SELECT 
-          COUNT(DISTINCT o.id) AS total
-        FROM 
-          orders o
-        INNER JOIN orderpackageitems opi ON o.id = opi.orderId
-        LEFT JOIN modifiedplusitems mpi ON opi.id = mpi.orderPackageItemsId
-        LEFT JOIN modifiedminitems mmi ON opi.id = mmi.orderPackageItemsId
-        INNER JOIN market_place.marketplacepackages mpp ON opi.packageId = mpp.id
-        LEFT JOIN additionalitem ai ON opi.id = ai.orderPackageItemsId
-        ${whereClause}
-      `;
+      SELECT COUNT(DISTINCT o.id) as total
+      FROM market_place.orderpackage op 
+      JOIN market_place.marketplacepackages mpp ON op.packageId = mpp.id 
+      JOIN market_place.orders o ON op.orderId = o.id
+      LEFT JOIN market_place.orderadditionalitems oai ON oai.orderId = o.id
+      JOIN market_place.packagedetails pd ON pd.packageId = mpp.id
+      JOIN market_place.producttypes pt ON pt.id = pd.productTypeId
+      JOIN market_place.processorders po ON po.orderId = o.id
+      ${whereClause} AND o.isPackage = 1
+    `;
 
     const dataSql = `
-        SELECT 
-          o.id AS id,
-          o.invNo AS invoiceNum,
-          o.packageStatus AS packageStatus,
-          o.addItemStatus AS addItemStatus,
-          o.packItemStatus AS packItemStatus,
-          opi.id AS orderPackageItemsId,
-          mpp.displayName AS packageName,
-          opi.packageSubTotal-IFNULL(SUM(ai.subtotal), 0) AS packagePrice,
-          IFNULL(SUM(ai.subtotal), 0) AS additionalPrice,
-          o.scheduleDate AS scheduleDate,
-          o.fullSubTotal AS fullSubTotal,
-          opi.packageSubTotal AS totalPrice
-        FROM 
-          orders o
-        INNER JOIN orderpackageitems opi ON o.id = opi.orderId
-        LEFT JOIN modifiedplusitems mpi ON opi.id = mpi.orderPackageItemsId
-        LEFT JOIN modifiedminitems mmi ON opi.id = mmi.orderPackageItemsId
-        INNER JOIN market_place.marketplacepackages mpp ON opi.packageId = mpp.id
-        LEFT JOIN additionalitem ai ON opi.id = ai.orderPackageItemsId
-        ${whereClause}
-        GROUP BY o.id, o.invNo, o.packageStatus, mpp.displayName, opi.packageSubTotal, o.scheduleDate, o.fullSubTotal
-        ORDER BY o.createdAt DESC
-        LIMIT ? OFFSET ?
-      `;
+      SELECT 
+        o.id AS orderId,
+        MAX(mpp.displayName) AS displayName,
+        MAX(o.isPackage) AS isPackage,
+        MAX(op.id) AS orderPackageId,
+        MAX(op.createdAt) AS createdAt,
+        MAX(op.packingStatus) AS packingStatus,
+        MAX(o.sheduleDate) AS sheduleDate,
+        MAX(mpp.productPrice) AS productPrice,
+        MAX(pd.qty) AS qty,
+        MAX(pd.productTypeId) AS productTypeId,
+        MAX(pt.typeName) AS typeName,
+        MAX(po.invNo) AS invNo,
+        GROUP_CONCAT(DISTINCT oai.productId) AS additionalProductIdsString,
+        COALESCE(SUM(DISTINCT oai.price), 0) AS totalAdditionalItemsPrice
+      FROM market_place.orderpackage op 
+      JOIN market_place.marketplacepackages mpp ON op.packageId = mpp.id 
+      JOIN market_place.orders o ON op.orderId = o.id
+      LEFT JOIN market_place.orderadditionalitems oai ON oai.orderId = o.id
+      JOIN market_place.packagedetails pd ON pd.packageId = mpp.id
+      JOIN market_place.producttypes pt ON pt.id = pd.productTypeId
+      JOIN market_place.processorders po ON po.orderId = o.id
+      ${whereClause} AND o.isPackage = 1
+      GROUP BY o.id
+      LIMIT ? OFFSET ?
+    `;
 
-    // Add pagination parameters
     params.push(parseInt(limit), parseInt(offset));
 
     console.log('Executing Count Query...');
@@ -96,13 +191,49 @@ exports.getPreMadePackages = (page, limit, packageStatus, date, search) => {
         }
 
         resolve({
-          items: dataResults,
+          items: dataResults.map(item => ({
+            ...item,
+            totalAdditionalItemsPrice: parseFloat(item.totalAdditionalItemsPrice),
+            productPrice: parseFloat(item.productPrice),
+            fullTotal: parseFloat(item.totalAdditionalItemsPrice) + parseFloat(item.productPrice),
+            additionalProductIds: item.additionalProductIdsString 
+              ? item.additionalProductIdsString.split(',').filter(id => id !== '').map(id => parseInt(id))
+              : []
+          })),
           total,
         });
       });
     });
   });
 };
+
+
+// SELECT 
+//   o.id AS orderId,
+//   MAX(mpp.displayName) AS displayName,
+//   MAX(o.isPackage) AS isPackage,
+//   MAX(op.id) AS orderPackageId,
+//   MAX(op.createdAt) AS createdAt,
+//   MAX(op.packingStatus) AS packingStatus,
+//   MAX(o.sheduleDate) AS sheduleDate,
+//   MAX(mpp.productPrice) AS productPrice,
+//   MAX(pd.qty) AS qty,
+//   MAX(pd.productTypeId) AS productTypeId,
+//   MAX(pt.typeName) AS typeName,
+//   MAX(po.invNo) AS invNo,
+//   GROUP_CONCAT(DISTINCT oai.productId) AS additionalProductIdsString,
+//   GROUP_CONCAT(DISTINCT opi.productId) AS packageProductIdsString,  -- ✅ New column
+//   COALESCE(SUM(DISTINCT oai.price), 0) AS totalAdditionalItemsPrice
+// FROM market_place.orderpackage op 
+// JOIN market_place.marketplacepackages mpp ON op.packageId = mpp.id 
+// JOIN market_place.orders o ON op.orderId = o.id
+// LEFT JOIN market_place.orderadditionalitems oai ON oai.orderId = o.id
+// JOIN market_place.packagedetails pd ON pd.packageId = mpp.id
+// JOIN market_place.producttypes pt ON pt.id = pd.productTypeId
+// JOIN market_place.processorders po ON po.orderId = o.id
+// LEFT JOIN market_place.orderpackageitems opi ON op.id = opi.orderPackageId
+// WHERE o.isPackage = 1
+// GROUP BY o.id;
 
 
 
@@ -414,7 +545,7 @@ exports.updateIsPackedStatus = (packedItems) => {
 
                   // Process each order to determine both new packItemStatus and packageStatus
                   const orderUpdates = [];
-                  
+
                   for (const orderId in itemsByOrder) {
                     const itemStatuses = itemsByOrder[orderId];
                     const allPacked = itemStatuses.every(status => status === 1);
@@ -433,9 +564,9 @@ exports.updateIsPackedStatus = (packedItems) => {
                     // Get addItemStatus for this order
                     const orderInfo = orderInfoMap[orderId];
                     if (!orderInfo) continue;
-                    
+
                     const addItemStatus = orderInfo.addItemStatus;
-                    
+
                     // Check if this order has isAdditionalItems set to 1
                     const hasAdditionalItems = additionalItemsMap[orderId] === 1;
 
