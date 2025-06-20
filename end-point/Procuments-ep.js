@@ -143,46 +143,31 @@ exports.getAllProductTypes = async (req, res) => {
 
 exports.getOrderDetailsById = async (req, res) => {
   const { id } = req.params;
+  console.log(`[getOrderDetailsById] Fetching details for order ID: ${id}`);
 
   try {
-    const packageDetails = await procumentDao.getOrderDetailsById(id);
+    // The DAO now returns properly structured data
+    const orderDetails = await procumentDao.getOrderDetailsById(id);
 
-    if (!packageDetails) {
+    if (!orderDetails) {
+      console.log(`[getOrderDetailsById] No details found for order ID: ${id}`);
       return res.status(404).json({
         success: false,
         message: "Order details not found",
       });
     }
 
-    // Transform the data to group products by package
-    const transformedData = packageDetails.reduce((acc, item) => {
-      const existingPackage = acc.find(
-        (pkg) => pkg.packageId === item.packageId
-      );
-
-      if (existingPackage) {
-        existingPackage.productTypes.push(item.productType);
-      } else {
-        acc.push({
-          packageId: item.packageId,
-          displayName: item.displayName,
-          productPrice: item.productPrice,
-          invNo: item.invNo,
-          productTypes: [item.productType],
-        });
-      }
-      return acc;
-    }, []);
-
+    console.log(`[getOrderDetailsById] Successfully fetched order details`);
     res.json({
       success: true,
-      data: transformedData,
+      data: orderDetails, // DAO already returns the correct structure
     });
   } catch (err) {
-    console.error("Error fetching order details:", err);
+    console.error("[getOrderDetailsById] Error:", err);
 
+    // Enhanced error handling
     let statusCode = 500;
-    let message = "An error occurred while fetching order details.";
+    let message = "An error occurred while fetching order details";
 
     if (err.isJoi) {
       statusCode = 400;
@@ -193,17 +178,18 @@ exports.getOrderDetailsById = async (req, res) => {
     ) {
       statusCode = 500;
       message = "Database configuration error";
+    } else if (err.code === "ECONNREFUSED") {
+      message = "Database connection failed";
     }
 
     const errorResponse = {
       success: false,
       message: message,
+      ...(process.env.NODE_ENV === "development" && {
+        error: err.message,
+        stack: err.stack,
+      }),
     };
-
-    if (process.env.NODE_ENV === "development") {
-      errorResponse.error = err.stack;
-      errorResponse.details = err.message;
-    }
 
     res.status(statusCode).json(errorResponse);
   }

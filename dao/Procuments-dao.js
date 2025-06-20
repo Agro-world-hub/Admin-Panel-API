@@ -563,18 +563,18 @@ exports.getAllProductTypes = () => {
 };
 
 exports.getOrderDetailsById = (orderId) => {
-  console.log(orderId, "--oid----");
+  console.log(`[getOrderDetailsById] Fetching details for orderId: ${orderId}`);
 
   return new Promise((resolve, reject) => {
     const sql = `
       SELECT 
+        po.invNo,
         op.id AS packageId,
         mp.displayName,
         mp.productPrice,
         pt.id AS productTypeId,
         pt.typeName,
-        pt.shortCode,
-        po.invNo  -- Added invNo from processorders table
+        pt.shortCode
       FROM 
         processorders po
       JOIN 
@@ -589,50 +589,71 @@ exports.getOrderDetailsById = (orderId) => {
         producttypes pt ON pd.productTypeId = pt.id
       WHERE 
         po.orderId = ?
+      ORDER BY
+        op.id, pt.id
     `;
 
-    console.log(`[getOrderDetailsById] Executing SQL query:`, sql);
-    console.log(`[getOrderDetailsById] Query parameters:`, orderId);
+    console.log(
+      `[getOrderDetailsById] SQL Query:`,
+      sql.replace(/\s+/g, " ").trim()
+    );
 
     marketPlace.query(sql, [orderId], (err, results) => {
       if (err) {
-        console.error(
-          "[getOrderDetailsById] Error fetching order details:",
-          err
-        );
+        console.error(`[getOrderDetailsById] Database error:`, err);
         return reject(err);
       }
 
-      console.log(`[getOrderDetailsById] Query results:`, results);
+      console.log(`[getOrderDetailsById] Raw results:`, results);
 
       if (results.length === 0) {
         console.log(
-          `[getOrderDetailsById] No results found for orderId: ${orderId}`
+          `[getOrderDetailsById] No data found for orderId: ${orderId}`
         );
         return resolve(null);
       }
 
-      // Structure the simplified data
-      const packageDetails = results.map((row) => ({
-        packageId: row.packageId,
-        displayName: row.displayName,
-        productPrice: row.productPrice,
-        invNo: row.invNo, // Added invNo to the result object
-        productType: {
-          id: row.productTypeId,
-          typeName: row.typeName,
-          shortCode: row.shortCode,
-        },
-      }));
+      const invNo = results[0].invNo;
+      const packagesMap = new Map();
+
+      results.forEach((row) => {
+        if (!row.packageId) return;
+
+        if (!packagesMap.has(row.packageId)) {
+          packagesMap.set(row.packageId, {
+            packageId: row.packageId,
+            displayName: row.displayName,
+            productPrice: row.productPrice,
+            productTypes: [],
+          });
+        }
+
+        // Add productType if it exists
+        if (row.productTypeId) {
+          const packageEntry = packagesMap.get(row.packageId);
+          packageEntry.productTypes.push({
+            id: row.productTypeId,
+            typeName: row.typeName,
+            shortCode: row.shortCode,
+          });
+        }
+      });
+
+      // Convert to final structure
+      const response = {
+        invNo: invNo,
+        packages: Array.from(packagesMap.values()),
+      };
 
       console.log(
-        `[getOrderDetailsById] Structured package details:`,
-        packageDetails
+        `[getOrderDetailsById] Final structured data:`,
+        JSON.stringify(response, null, 2)
       );
-      resolve(packageDetails);
+      resolve(response);
     });
   });
 };
+
 exports.createOrderPackageItemDao = (itemData) => {
   return new Promise((resolve, reject) => {
     try {
