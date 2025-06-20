@@ -375,3 +375,34 @@ exports.getAllOrdersWithProcessInfoCompleted = async (req, res) => {
     });
   }
 };
+
+// In your controller file
+exports.updateOrderPackagePackingStatus = async (req, res) => {
+  try {
+    const { orderPackageId, status } = req.body;
+
+    if (!orderPackageId || !status) {
+      return res.status(400).json({
+        error: "orderPackageId and status are required",
+        status: false,
+      });
+    }
+
+    const result = await procumentDao.updateOrderPackagePackingStatusDao(
+      orderPackageId,
+      status
+    );
+
+    res.status(200).json({
+      message: "Packing status updated successfully",
+      results: result,
+      status: true,
+    });
+  } catch (err) {
+    console.error("Error updating packing status:", err);
+    return res.status(500).json({
+      error: err.message || "An error occurred while updating packing status",
+      status: false,
+    });
+  }
+};

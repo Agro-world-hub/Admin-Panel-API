@@ -113,4 +113,10 @@ router.get(
   ProcumentsEP.getAllOrdersWithProcessInfoCompleted
 );
 
+router.put(
+  "/update-order-package-status",
+  authMiddleware,
+  ProcumentsEP.updateOrderPackagePackingStatus
+);
+
 module.exports = router;

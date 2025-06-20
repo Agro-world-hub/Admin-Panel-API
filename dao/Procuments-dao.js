@@ -882,3 +882,27 @@ exports.getAllOrdersWithProcessInfoCompleted = (
     });
   });
 };
+
+// In your DAO file (procumentDao.js or similar)
+exports.updateOrderPackagePackingStatusDao = (orderPackageId, status) => {
+  return new Promise((resolve, reject) => {
+    try {
+      const sql = `
+        UPDATE orderpackage 
+        SET packingStatus = ?
+        WHERE id = ?
+      `;
+
+      marketPlace.query(sql, [status, orderPackageId], (err, results) => {
+        if (err) {
+          console.log("Database error:", err);
+          return reject(err);
+        }
+        resolve(results);
+      });
+    } catch (error) {
+      console.log("Error in updateOrderPackagePackingStatusDao:", error);
+      reject(error);
+    }
+  });
+};
