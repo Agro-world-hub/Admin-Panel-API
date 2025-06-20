@@ -1009,9 +1009,9 @@ exports.deleteMarketplaceUser = async (userId) => {
         return reject(err);
       }
       if (result.affectedRows === 0) {
-        return reject(new Error('User not found or already deactivated'));
+        return reject(new Error("User not found or already deactivated"));
       }
-      resolve({ message: 'User deactivated successfully' });
+      resolve({ message: "User deactivated successfully" });
     });
   });
 };
@@ -1237,7 +1237,8 @@ exports.viewProductTypeDao = async () => {
 
 exports.getProductType = async () => {
   return new Promise((resolve, reject) => {
-    const sql = "SELECT typeName, shortCode, id FROM producttypes";
+    const sql =
+      "SELECT typeName, shortCode, id FROM producttypes ORDER BY typeName ASC";
     marketPlace.query(sql, (err, results) => {
       if (err) {
         return reject(err);
@@ -1559,6 +1560,19 @@ exports.editDeliveryChargeDAO = async (data, id) => {
         reject(err);
       } else {
         resolve(results);
+      }
+    });
+  });
+};
+
+exports.checkPackageDisplayNameExistsDao = async (displayName) => {
+  return new Promise((resolve, reject) => {
+    const sql = "SELECT * FROM marketplacepackages WHERE displayName = ?";
+    marketPlace.query(sql, [displayName], (err, results) => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(results.length > 0); // true if exists
       }
     });
   });
