@@ -21,20 +21,44 @@ exports.getPreMadePackages = async (req, res) => {
   const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
   console.log(fullUrl);
   try {
-
     const validatedQuery = await DispatchVali.getPreMadePackages.validateAsync(req.query);
+    const { page, limit, selectedStatus, date, search } = validatedQuery;
 
-
-    const { page, limit, selectedStatus, date, search} = validatedQuery;
+    console.log({ selectedStatus, date, search });
 
     const reportData = await DispatchDao.getPreMadePackages(
       page,
       limit,
       selectedStatus,
-      date, 
+      date,
       search
     );
-    res.json(reportData);
+
+    // Add combinedStatus to each item in the response
+    const processedItems = reportData.items.map(item => {
+      let combinedStatus;
+      
+      if (item.additionalProductStatus === 'Pending' || item.packageProductStatus === 'Pending') {
+        combinedStatus = 'Pending';
+      } else if (item.additionalProductStatus === 'Opened' || item.packageProductStatus === 'Opened') {
+        combinedStatus = 'Opened';
+      } else {
+        combinedStatus = 'Completed';
+      }
+
+      return {
+        ...item,
+        combinedStatus
+      };
+    });
+
+    const finalResponse = {
+      items: processedItems,
+      total: reportData.total
+    };
+
+    console.log('premad', finalResponse);
+    res.json(finalResponse);
   } catch (err) {
     console.error("Error fetching daily report:", err);
     res.status(500).send("An error occurred while fetching the report.");
@@ -52,6 +76,8 @@ exports.getSelectedPackages = async (req, res) => {
   
   
       const { page, limit, selectedStatus, date, search} = validatedQuery;
+
+      console.log({ selectedStatus, date, search})
   
       const reportData = await DispatchDao.getSelectedPackages(
         page,
@@ -60,6 +86,7 @@ exports.getSelectedPackages = async (req, res) => {
         date, 
         search
       );
+      // console.log(reportData);
       res.json(reportData);
     } catch (err) {
       console.error("Error fetching daily report:", err);
