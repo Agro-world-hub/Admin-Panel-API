@@ -730,6 +730,90 @@ exports.replaceProductDataDao = (productId, quantity, totalPrice, id, previousPr
   });
 };
 
+exports.getAdditionalItems = (id) => {
+  return new Promise((resolve, reject) => {
+
+    const params = [id];
+
+    const dataSql = `
+    SELECT
+        po.id AS processOrderId,
+        o.id AS orderId,
+        o.isPackage,
+        oai.productId,
+        CAST(oai.qty AS DECIMAL(10,2)) AS quantity,
+        CAST(oai.price AS DECIMAL(10,2)) AS price,
+        oai.isPacked AS packedStatus,
+        mpi.displayName AS productName,
+        oai.unit AS unitType,
+        CAST(mpi.discountedPrice AS DECIMAL(10,2)) AS discountedPrice,
+        po.invNo
+      FROM market_place.processorders po
+      JOIN market_place.orders o ON o.id = po.orderId 
+
+      JOIN market_place.orderadditionalitems oai ON oai.orderId = o.id 
+      JOIN market_place.marketplaceitems mpi ON oai.productId = mpi.id 
+    WHERE po.id = ?
+`;
+
+
+
+    console.log('Executing Count Query...');
+
+    marketPlace.query(dataSql, params, (dataErr, dataResults) => {
+      if (dataErr) {
+        console.error("Error in data query:", dataErr);
+        return reject(dataErr);
+      }
+
+      resolve({
+        items: dataResults,
+        total: dataResults.length,
+      });
+    });
+  });
+};
+
+exports.updateAdditionalItemData = (additionalItems, id) => {
+  return new Promise((resolve, reject) => {
+    if (!Array.isArray(additionalItems) || additionalItems.length === 0) {
+      return reject("No items to update");
+    }
+
+    const updatePromises = additionalItems.map(item => {
+      const updateSql = `
+        UPDATE market_place.orderadditionalitems oai
+        JOIN market_place.orders o ON o.id = oai.orderId
+        JOIN market_place.processorders po ON po.orderId = o.id
+        SET 
+          oai.isPacked = ?
+        WHERE 
+          po.id = ? AND oai.productId = ?
+      `;
+
+      const params = [ item.packedStatus, id, item.productId];
+
+      return new Promise((resolveInner, rejectInner) => {
+        marketPlace.query(updateSql, params, (err, result) => {
+          if (err) {
+            console.error('Error updating item:', err);
+            return rejectInner(err);
+          }
+          resolveInner(result);
+        });
+      });
+    });
+
+    Promise.all(updatePromises)
+      .then(results => {
+        resolve({ message: 'All items updated successfully', results });
+      })
+      .catch(error => {
+        reject({ message: 'Error updating items', error });
+      });
+  });
+};
+
 
 exports.updateIsPackedStatus = (packedItems) => {
   return new Promise((resolve, reject) => {

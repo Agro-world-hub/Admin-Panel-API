@@ -55,6 +55,18 @@ router.get(
     DispatchEP.replaceProductData
   );
 
+  router.post(
+    "/update-additional-item-data",
+    authMiddleware,
+    DispatchEP.updateAdditionalItemData
+  );
+
+  router.get(
+    "/get-Additional-items",
+    authMiddleware,
+    DispatchEP.getAdditionalItems
+  );
+
   router.get(
     "/get-custom-pack-items/:id", 
     authMiddleware, 
