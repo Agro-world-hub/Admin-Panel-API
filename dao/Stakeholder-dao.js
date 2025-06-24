@@ -1,4 +1,4 @@
-const { admin, plantcare, collectionofficer, marketPlace, dash, } = require("../startup/database");
+const { admin, plantcare, collectionofficer, marketPlace } = require("../startup/database");
 const { Upload } = require("@aws-sdk/lib-storage");
 const Joi = require("joi");
 
@@ -216,7 +216,7 @@ exports.getActiveSalesAgents = () => {
     const sql = `
       SELECT COUNT(*) AS activeSalesAgents FROM salesagent WHERE status = 'active'
             `;
-    dash.query(sql, (err, results) => {
+    marketPlace.query(sql, (err, results) => {
       if (err) {
         return reject(err); // Reject promise if an error occurs
       }
@@ -234,7 +234,7 @@ exports.getNewSalesAgents = () => {
       SELECT COUNT(*) AS newSalesAgents FROM salesagent WHERE DATE(createdAt) = CURDATE() 
 
             `;
-    dash.query(sql, (err, results) => {
+    marketPlace.query(sql, (err, results) => {
       if (err) {
         return reject(err); // Reject promise if an error occurs
       }
@@ -251,7 +251,7 @@ exports.getAllSalesAgents = () => {
     const sql = `
       SELECT COUNT(*) AS totalSaleAgents FROM salesagent
     `;
-    dash.query(sql, (err, results) => {
+    marketPlace.query(sql, (err, results) => {
       if (err) {
         return reject(err); // Reject promise if an error occurs
       }
