@@ -412,7 +412,7 @@ exports.getOrderPackageItemsById = async (req, res) => {
   console.log(fullUrl);
 
   try {
-    const { orderId } = req.params; // Changed from orderPackageId to orderId to match DAO expectation
+    const { orderId } = req.params;
 
     if (!orderId) {
       return res.status(400).json({
@@ -440,11 +440,12 @@ exports.getOrderPackageItemsById = async (req, res) => {
           productPrice: pkg.productPrice,
           productTypes: pkg.productTypes.map((type) => ({
             id: type.id,
-            productType: type.typeName, // Changed from typeName to productType for consistency
-            productId: type.id, // Assuming productId is the same as itemId here
+            productTypeId: type.productTypeId, // Added productTypeId
+            productType: type.typeName,
+            productId: type.productId || type.id, // Use explicit productId if available, fallback to id
             qty: type.qty,
             price: type.price,
-            productDescription: type.displayName, // Using displayName as description
+            productDescription: type.displayName,
             shortCode: type.shortCode,
           })),
         })),

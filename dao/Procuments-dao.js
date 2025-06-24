@@ -927,6 +927,7 @@ exports.getOrderPackagesByOrderId = (orderId) => {
           opi.qty,
           opi.price,
           m.displayName as productDisplayName,
+          pt.id as productTypeId,
           pt.typeName,
           pt.shortCode
         FROM 
@@ -940,7 +941,7 @@ exports.getOrderPackagesByOrderId = (orderId) => {
         LEFT JOIN 
           marketplaceitems m ON opi.productId = m.id
         LEFT JOIN
-          producttypes pt ON m.id = pt.id
+          producttypes pt ON opi.productType = pt.id  -- Changed this join condition
         WHERE 
           po.orderId = ?
         ORDER BY
@@ -981,6 +982,7 @@ exports.getOrderPackagesByOrderId = (orderId) => {
           if (row.itemId) {
             currentPackage.productTypes.push({
               id: row.itemId,
+              productTypeId: row.productTypeId, // Added productTypeId here
               typeName: row.typeName,
               shortCode: row.shortCode,
               displayName: row.productDisplayName,
