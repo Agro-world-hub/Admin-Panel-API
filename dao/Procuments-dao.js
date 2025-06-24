@@ -906,3 +906,95 @@ exports.updateOrderPackagePackingStatusDao = (orderPackageId, status) => {
     }
   });
 };
+
+exports.getOrderPackagesByOrderId = (orderId) => {
+  return new Promise(async (resolve, reject) => {
+    try {
+      // Validate input
+      if (!orderId) {
+        throw new Error("Invalid orderId parameter");
+      }
+
+      const sql = `
+        SELECT 
+          po.invNo,
+          op.packageId,
+          mp.displayName,
+          mp.productPrice,
+          opi.id as itemId,
+          opi.productType,
+          opi.productId,
+          opi.qty,
+          opi.price,
+          m.displayName as productDisplayName,
+          pt.typeName,
+          pt.shortCode
+        FROM 
+          processorders po
+        JOIN 
+          orderpackage op ON po.orderId = op.orderId
+        JOIN 
+          marketplacepackages mp ON op.packageId = mp.id
+        LEFT JOIN 
+          orderpackageitems opi ON opi.orderPackageId = op.id
+        LEFT JOIN 
+          marketplaceitems m ON opi.productId = m.id
+        LEFT JOIN
+          producttypes pt ON m.id = pt.id
+        WHERE 
+          po.orderId = ?
+        ORDER BY
+          op.packageId, opi.id
+      `;
+
+      marketPlace.query(sql, [orderId], (err, results) => {
+        if (err) {
+          console.log("Database error:", err);
+          return reject(err);
+        }
+
+        if (results.length === 0) {
+          return resolve(null);
+        }
+
+        // Transform the flat results into the nested structure
+        const response = {
+          invNo: results[0].invNo,
+          packages: [],
+        };
+
+        let currentPackage = null;
+
+        for (const row of results) {
+          // If we encounter a new package, create a new package entry
+          if (!currentPackage || currentPackage.packageId !== row.packageId) {
+            currentPackage = {
+              packageId: row.packageId,
+              displayName: row.displayName,
+              productPrice: row.productPrice,
+              productTypes: [],
+            };
+            response.packages.push(currentPackage);
+          }
+
+          // Add product type information if it exists
+          if (row.itemId) {
+            currentPackage.productTypes.push({
+              id: row.itemId,
+              typeName: row.typeName,
+              shortCode: row.shortCode,
+              displayName: row.productDisplayName,
+              qty: row.qty,
+              price: row.price,
+            });
+          }
+        }
+
+        resolve(response);
+      });
+    } catch (error) {
+      console.log("Error in getOrderPackagesByOrderId:", error);
+      reject(error);
+    }
+  });
+};

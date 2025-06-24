@@ -119,4 +119,6 @@ router.put(
   ProcumentsEP.updateOrderPackagePackingStatus
 );
 
+router.get("/order-packages/:orderId", ProcumentsEP.getOrderPackageItemsById);
+
 module.exports = router;
