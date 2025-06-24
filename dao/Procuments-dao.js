@@ -998,3 +998,92 @@ exports.getOrderPackagesByOrderId = (orderId) => {
     }
   });
 };
+
+// exports.updateOrderPackageItemsDao = (orderPackageId, products) => {
+//   return new Promise((resolve, reject) => {
+//     try {
+//       // Prepare the update query
+//       const sql = `
+//         UPDATE orderpackageitems
+//         SET productType = ?,
+//             productId = ?,
+//             qty = ?,
+//             price = ?
+//         WHERE id = ? AND orderPackageId = ?
+//       `;
+
+//       // Execute updates for each product
+//       const updatePromises = products.map((product) => {
+//         return new Promise((resolveUpdate, rejectUpdate) => {
+//           marketPlace.query(
+//             sql,
+//             [
+//               product.productType,
+//               product.productId,
+//               product.qty,
+//               product.price,
+//               product.id,
+//               orderPackageId,
+//             ],
+//             (err, results) => {
+//               if (err) {
+//                 console.log("Database error in individual update:", err);
+//                 return rejectUpdate(err);
+//               }
+//               resolveUpdate(results);
+//             }
+//           );
+//         });
+//       });
+
+//       // Wait for all updates to complete
+//       Promise.all(updatePromises)
+//         .then(() => {
+//           resolve({
+//             success: true,
+//             message: `${products.length} items updated successfully`,
+//           });
+//         })
+//         .catch((error) => {
+//           console.log("Error in batch updates:", error);
+//           reject(error);
+//         });
+//     } catch (error) {
+//       console.log("Error in updateOrderPackageItemsDao:", error);
+//       reject(error);
+//     }
+//   });
+// };
+
+exports.updateOrderPackageItemsDao = async (product) => {
+  return new Promise((resolve, reject) => {
+    const sql = `
+        UPDATE orderpackageitems
+        SET productType = ?,
+             productId = ?,
+            qty = ?,
+            price = ?
+        WHERE id = ?
+      `;
+    marketPlace.query(
+      sql,
+      [
+        product.productType,
+        product.productId,
+        product.qty,
+        product.price,
+        product.id,
+      ],
+      (err, results) => {
+        if (err) {
+          console.log("Erro", err);
+
+          reject(err);
+        } else {
+          resolve(results[0]);
+          console.log("``````````result``````````", results[0]);
+        }
+      }
+    );
+  });
+};

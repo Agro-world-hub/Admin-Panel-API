@@ -121,4 +121,6 @@ router.put(
 
 router.get("/order-packages/:orderId", ProcumentsEP.getOrderPackageItemsById);
 
+router.put("/update-order-package-items", ProcumentsEP.updateOrderPackageItems);
+
 module.exports = router;
