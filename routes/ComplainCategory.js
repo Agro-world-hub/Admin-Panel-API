@@ -89,4 +89,16 @@ router.put(
   ComplainCategoryEP.sendComplainReply
 );
 
+router.get(
+  '/get-marketplace-complaint',
+  authMiddleware,
+   ComplainCategoryEP.getAllMarketplaceComplaints
+);
+
+router.get(
+  '/get-marketplace-complaint/:id',
+  authMiddleware,
+  ComplainCategoryEP.getMarketplaceComplaintById
+);
+
 module.exports = router;

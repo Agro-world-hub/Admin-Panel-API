@@ -338,3 +338,49 @@ exports.sendComplainReply = async (req, res) => {
       .json({ error: "An error occurred while creating Reply tasks" });
   }
 };
+
+
+exports.getAllMarketplaceComplaints = async (req, res) => {
+  const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
+  console.log(fullUrl);
+  try {
+    // Fetch all complaints from the marketplacecomplain table
+    const complaints = await ComplainCategoryDAO.getAllMarketplaceComplaints();
+
+    if (!complaints || complaints.length === 0) {
+      return res.status(404).json({ message: "No complaints found" });
+    }
+
+    res.status(200).json(complaints);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+exports.getMarketplaceComplaintById = async (req, res) => {
+  const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
+  console.log(fullUrl);
+  try {
+    // Extract complaintId from URL parameters
+    const { id } = req.params;
+
+    // Validate complaintId
+    if (!id || isNaN(id)) {
+      return res.status(400).json({ message: "Invalid complaint ID" });
+    }
+
+    // Fetch the specific complaint using the DAO function
+    const complaint = await ComplainCategoryDAO.getMarketplaceComplaintById(id);
+
+    // Check if complaint exists
+    if (!complaint || !complaint.status || !complaint.data) {
+      return res.status(404).json({ message: "No complaint found with the specified ID" });
+    }
+
+    res.status(200).json(complaint);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
