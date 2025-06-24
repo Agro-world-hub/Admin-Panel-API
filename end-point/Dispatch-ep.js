@@ -118,9 +118,11 @@ exports.getSelectedPackages = async (req, res) => {
   };
 
 
-  exports.updateIsPacked = async (req, res) => {
+  exports.updatePackageData = async (req, res) => {
+    const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
+    console.log(fullUrl);
     try {
-      const { packedItems } = req.body;
+      const { packedItems, id } = req.body;
   
       if (!Array.isArray(packedItems) || packedItems.length === 0) {
         return res.status(400).json({
@@ -129,9 +131,10 @@ exports.getSelectedPackages = async (req, res) => {
         });
       }
   
-      console.log('Updating isPacked status for items:', packedItems);
+      console.log('Updating isPacked status for items:', packedItems, id);
   
-      const updateResult = await DispatchDao.updateIsPackedStatus(packedItems);
+      const updateResult = await DispatchDao.updatePackageItemData(packedItems, id);
+      console.log(updateResult);
   
       res.json({
         success: true,
@@ -145,6 +148,49 @@ exports.getSelectedPackages = async (req, res) => {
       res.status(500).json({
         success: false,
         message: 'An error occurred while updating packed status'
+      });
+    }
+  };
+
+
+  exports.getAllProducts = async (req, res) => {
+    const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
+    console.log(fullUrl);
+    try {
+
+      const productData = await DispatchDao.getAllProductsDao();
+      console.log(productData)
+      res.json(productData);
+    } catch (err) {
+      console.error("Error fetching daily report:", err);
+      res.status(500).send("An error occurred while fetching the report.");
+    }
+  };
+
+
+  exports.replaceProductData = async (req, res) => {
+    const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
+    console.log(fullUrl);
+    try {
+      const { productId, quantity, totalPrice, id, previousProductId } = req.body;
+
+      console.log('replacing products:', productId, quantity, totalPrice, id, previousProductId);
+  
+      const updateResult = await DispatchDao.replaceProductDataDao(productId, quantity, totalPrice, id, previousProductId);
+      console.log(updateResult);
+  
+      res.json({
+        success: true,
+        message: `${updateResult.affectedRows} items updated`,
+        updatedItems: updateResult
+      });
+  
+    } catch (err) {
+      console.error("Error replacing product:", err);
+  
+      res.status(500).json({
+        success: false,
+        message: 'An error occurred while replacing product'
       });
     }
   };

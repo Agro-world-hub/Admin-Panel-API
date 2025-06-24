@@ -553,19 +553,32 @@ exports.getPackageItems = (id) => {
     const params = [id];
 
     const dataSql = `
-      SELECT fopl.id AS packageListId, fopl.orderId, fopl.quantity, fopl.price, fopl.isPacking, o.invNo, mpi.displayName, mpi.discountedPrice FROM 
-      dash.finalorderpackagelist fopl LEFT JOIN
-      dash.orders o ON fopl.orderId = o.id LEFT JOIN 
-      market_place.marketplaceitems mpi ON fopl.productId = mpi.id LEFT JOIN
-      plant_care.cropvariety cv ON mpi.varietyId = cv.id LEFT JOIN
-      plant_care.cropgroup cg ON cv.cropGroupId = cg.id
-      WHERE o.id = ?
-      `;
+  SELECT 
+    po.id AS processOrderId,
+    o.id AS orderId,
+    o.isPackage,
+    op.id AS orderPackageId,
+    opi.productId,
+    CAST(opi.qty AS DECIMAL(10,2)) AS quantity,
+    CAST(opi.price AS DECIMAL(10,2)) AS price,
+    opi.isPacked AS packedStatus,
+    mpi.displayName,
+    mpi.unitType,
+    CAST(mpi.discountedPrice AS DECIMAL(10,2)) AS discountedPrice,
+    po.invNo
+  FROM market_place.processorders po
+  JOIN market_place.orders o ON o.id = po.orderId 
+  JOIN market_place.orderpackage op ON op.orderId = o.id 
+  JOIN market_place.orderpackageitems opi ON opi.orderPackageId = op.id 
+  JOIN market_place.marketplaceitems mpi ON opi.productId = mpi.id 
+  WHERE po.id = ?
+`;
+
 
 
     console.log('Executing Count Query...');
 
-    dash.query(dataSql, params, (dataErr, dataResults) => {
+    marketPlace.query(dataSql, params, (dataErr, dataResults) => {
       if (dataErr) {
         console.error("Error in data query:", dataErr);
         return reject(dataErr);
@@ -623,6 +636,100 @@ exports.getPackageItems = (id) => {
 //     });
 //   });
 // };
+
+
+exports.updatePackageItemData = (packedItems, id) => {
+  return new Promise((resolve, reject) => {
+    if (!Array.isArray(packedItems) || packedItems.length === 0) {
+      return reject("No items to update");
+    }
+
+    const updatePromises = packedItems.map(item => {
+      const updateSql = `
+        UPDATE market_place.orderpackageitems opi
+        JOIN market_place.orderpackage op ON op.id = opi.orderPackageId
+        JOIN market_place.orders o ON o.id = op.orderId
+        JOIN market_place.processorders po ON po.orderId = o.id
+        SET 
+          opi.qty = ?,
+          opi.price = ?,
+          opi.isPacked = ?
+        WHERE 
+          po.id = ? AND opi.productId = ?
+      `;
+
+      const params = [item.quantity, item.price, item.packedStatus, id, item.productId];
+
+      return new Promise((resolveInner, rejectInner) => {
+        marketPlace.query(updateSql, params, (err, result) => {
+          if (err) {
+            console.error('Error updating item:', err);
+            return rejectInner(err);
+          }
+          resolveInner(result);
+        });
+      });
+    });
+
+    Promise.all(updatePromises)
+      .then(results => {
+        resolve({ message: 'All items updated successfully', results });
+      })
+      .catch(error => {
+        reject({ message: 'Error updating items', error });
+      });
+  });
+};
+
+exports.getAllProductsDao = () => {
+  return new Promise((resolve, reject) => {
+
+    const dataSql = `
+    SELECT mpi.id, mpi.displayName AS productName, mpi.discountedPrice FROM market_place.marketplaceitems mpi
+`;
+
+    marketPlace.query(dataSql, (dataErr, dataResults) => {
+      if (dataErr) {
+        console.error("Error in data query:", dataErr);
+        return reject(dataErr);
+      }
+
+      resolve({
+        items: dataResults,
+        total: dataResults.length,
+      });
+    });
+  });
+};
+
+
+exports.replaceProductDataDao = (productId, quantity, totalPrice, id, previousProductId) => {
+  return new Promise((resolve, reject) => {
+    const updateSql = `
+      UPDATE market_place.orderpackageitems opi
+      JOIN market_place.orderpackage op ON opi.orderPackageId = op.id
+      JOIN market_place.orders o ON op.orderId = o.id
+      JOIN market_place.processorders po ON po.orderId = o.id
+      SET 
+        opi.productId = ?, 
+        opi.qty = ?, 
+        opi.price = ?
+      WHERE 
+        po.id = ? AND opi.productId = ?
+    `;
+
+    const params = [productId, quantity, totalPrice, id, previousProductId];
+
+    marketPlace.query(updateSql, params, (err, result) => {
+      if (err) {
+        console.error('Error updating item:', err);
+        return reject({ message: 'Error updating item', error: err });
+      }
+      resolve({ message: 'Item updated successfully', result });
+    });
+  });
+};
+
 
 exports.updateIsPackedStatus = (packedItems) => {
   return new Promise((resolve, reject) => {
