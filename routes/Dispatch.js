@@ -38,9 +38,21 @@ router.get(
   );
 
   router.post(
-    "/update-is-packed",
+    "/update-package-data",
     authMiddleware,
-    DispatchEP.updateIsPacked
+    DispatchEP.updatePackageData
+  );
+
+  router.get(
+    "/get-all-products",
+    authMiddleware,
+    DispatchEP.getAllProducts
+  );
+
+  router.post(
+    "/replace-product-data",
+    authMiddleware,
+    DispatchEP.replaceProductData
   );
 
   router.get(
