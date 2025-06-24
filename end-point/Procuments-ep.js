@@ -22,6 +22,8 @@ exports.getRecievedOrdersQuantity = async (req, res) => {
 
     const { page, limit, filterType, date, search } = req.query;
 
+    console.log(page, limit);
+
     const reportData = await procumentDao.getRecievedOrdersQuantity(
       page,
       limit,
@@ -29,6 +31,8 @@ exports.getRecievedOrdersQuantity = async (req, res) => {
       date,
       search
     );
+
+    console.log(reportData);
     res.json(reportData);
   } catch (err) {
     console.error("Error fetching daily report:", err);
@@ -36,13 +40,52 @@ exports.getRecievedOrdersQuantity = async (req, res) => {
   }
 };
 
+// exports.getAllOrdersWithProcessInfo = async (req, res) => {
+//   const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
+//   console.log(fullUrl);
+//   try {
+//     // If you have validation, uncomment and use this:
+//     // const validatedQuery = await ordersValidate.getAllOrdersWithProcessInfo.validateAsync(req.query);
+
+//     const { page = 1, limit = 10, filterType, date, search } = req.query;
+
+//     const ordersData = await procumentDao.getAllOrdersWithProcessInfo(
+//       page,
+//       limit,
+//       filterType,
+//       date,
+//       search
+//     );
+
+//     res.json({
+//       success: true,
+//       data: ordersData.items,
+//       total: ordersData.total,
+//       currentPage: parseInt(page),
+//       totalPages: Math.ceil(ordersData.total / limit),
+//     });
+//   } catch (err) {
+//     console.error("Error fetching orders with process info:", err);
+
+//     // More detailed error response
+//     const statusCode = err.isJoi ? 400 : 500;
+//     const message = err.isJoi
+//       ? err.details[0].message
+//       : "An error occurred while fetching orders data.";
+
+//     res.status(statusCode).json({
+//       success: false,
+//       message: message,
+//       error: process.env.NODE_ENV === "development" ? err.stack : undefined,
+//     });
+//   }
+// };
+
 exports.getAllOrdersWithProcessInfo = async (req, res) => {
   const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
   console.log(fullUrl);
-  try {
-    // If you have validation, uncomment and use this:
-    // const validatedQuery = await ordersValidate.getAllOrdersWithProcessInfo.validateAsync(req.query);
 
+  try {
     const { page = 1, limit = 10, filterType, date, search } = req.query;
 
     const ordersData = await procumentDao.getAllOrdersWithProcessInfo(
@@ -55,15 +98,24 @@ exports.getAllOrdersWithProcessInfo = async (req, res) => {
 
     res.json({
       success: true,
-      data: ordersData.items,
+      data: ordersData.items, // Using the original data without transformation
       total: ordersData.total,
       currentPage: parseInt(page),
       totalPages: Math.ceil(ordersData.total / limit),
+      packingStatusSummary: {
+        packed: ordersData.items.filter((o) => o.packingStatus === "packed")
+          .length,
+        not_packed: ordersData.items.filter(
+          (o) => o.packingStatus === "not_packed"
+        ).length,
+        // Only count explicit "not_packed" statuses
+        no_status: ordersData.items.filter((o) => !o.packingStatus).length,
+        // Count records with null/undefined packingStatus separately
+      },
     });
   } catch (err) {
     console.error("Error fetching orders with process info:", err);
 
-    // More detailed error response
     const statusCode = err.isJoi ? 400 : 500;
     const message = err.isJoi
       ? err.details[0].message
@@ -73,6 +125,288 @@ exports.getAllOrdersWithProcessInfo = async (req, res) => {
       success: false,
       message: message,
       error: process.env.NODE_ENV === "development" ? err.stack : undefined,
+    });
+  }
+};
+
+exports.getAllProductTypes = async (req, res) => {
+  const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
+  console.log(fullUrl);
+  try {
+    const productTypes = await procumentDao.getAllProductTypes();
+    res.json(productTypes);
+  } catch (err) {
+    console.error("Error fetching product types:", err);
+    res.status(500).send("An error occurred while fetching product types.");
+  }
+};
+
+exports.getOrderDetailsById = async (req, res) => {
+  const { id } = req.params;
+  console.log(`[getOrderDetailsById] Fetching details for order ID: ${id}`);
+
+  try {
+    // The DAO now returns properly structured data
+    const orderDetails = await procumentDao.getOrderDetailsById(id);
+    const additionalItems = await procumentDao.getAllOrderAdditionalItemsDao(id);
+    console.log("additional items:",additionalItems);
+    
+
+    if (!orderDetails) {
+      console.log(`[getOrderDetailsById] No details found for order ID: ${id}`);
+      return res.status(404).json({
+        success: false,
+        message: "Order details not found",
+      });
+    }
+
+    console.log(`[getOrderDetailsById] Successfully fetched order details`);
+    res.json({
+      success: true,
+      data: orderDetails, 
+      additionalItems:additionalItems
+    });
+  } catch (err) {
+    console.error("[getOrderDetailsById] Error:", err);
+
+    // Enhanced error handling
+    let statusCode = 500;
+    let message = "An error occurred while fetching order details";
+
+    if (err.isJoi) {
+      statusCode = 400;
+      message = err.details[0].message;
+    } else if (
+      err.code === "ER_NO_SUCH_TABLE" ||
+      err.code === "ER_BAD_FIELD_ERROR"
+    ) {
+      statusCode = 500;
+      message = "Database configuration error";
+    } else if (err.code === "ECONNREFUSED") {
+      message = "Database connection failed";
+    }
+
+    const errorResponse = {
+      success: false,
+      message: message,
+      ...(process.env.NODE_ENV === "development" && {
+        error: err.message,
+        stack: err.stack,
+      }),
+    };
+
+    res.status(statusCode).json(errorResponse);
+  }
+};
+
+exports.createOrderPackageItem = async (req, res) => {
+  try {
+    const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
+    console.log("Request URL:", fullUrl);
+    console.log("Request body:", req.body);
+
+    // Validate request body structure
+    if (
+      !req.body ||
+      !req.body.orderPackageId ||
+      !req.body.products ||
+      !Array.isArray(req.body.products)
+    ) {
+      return res.status(400).json({
+        error:
+          "Invalid request format. Expected { orderPackageId: number, products: array }",
+        status: false,
+      });
+    }
+
+    const { orderPackageId, products } = req.body;
+
+    // Additional validation for products array
+    if (products.length === 0) {
+      return res.status(400).json({
+        error: "Products array cannot be empty",
+        status: false,
+      });
+    }
+
+    // Validate each product in the array
+    for (const product of products) {
+      if (
+        !product.productType ||
+        !product.productId ||
+        !product.qty ||
+        !product.price
+      ) {
+        return res.status(400).json({
+          error:
+            "Each product must have productType, productId, qty, and price",
+          status: false,
+        });
+      }
+    }
+
+    // Use batch insert
+    const result = await procumentDao.createOrderPackageItemDao(
+      orderPackageId,
+      products
+    );
+    console.log(result);
+
+    res.status(201).json({
+      message: "Order package items created successfully",
+      results: result,
+      status: true,
+    });
+  } catch (err) {
+    console.error("Error executing query:", err);
+    return res.status(500).json({
+      error:
+        err.message || "An error occurred while creating order package items",
+      status: false,
+    });
+  }
+};
+
+exports.getAllMarketplaceItems = async (req, res) => {
+  try {
+    console.log("hello world");
+
+    const orderId = req.params.id;
+    const btype = await procumentDao.getOrderTypeDao(orderId);
+    const marketplaceItems = await procumentDao.getAllMarketplaceItems(
+      btype.buyerType
+    );
+
+    if (!marketplaceItems || marketplaceItems.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "No marketplace items found",
+      });
+    }
+
+    // Optional: Group items by category if needed
+    const itemsByCategory = marketplaceItems.reduce((acc, item) => {
+      if (!acc[item.category]) {
+        acc[item.category] = [];
+      }
+      acc[item.category].push(item);
+      return acc;
+    }, {});
+
+    res.json({
+      success: true,
+      data: {
+        items: marketplaceItems,
+        itemsByCategory, // Optional grouped data
+        count: marketplaceItems.length,
+      },
+    });
+  } catch (err) {
+    console.error("Error fetching marketplace items:", err);
+
+    let statusCode = 500;
+    let message = "An error occurred while fetching marketplace items.";
+
+    if (err.isJoi) {
+      statusCode = 400;
+      message = err.details[0].message;
+    } else if (
+      err.code === "ER_NO_SUCH_TABLE" ||
+      err.code === "ER_BAD_FIELD_ERROR"
+    ) {
+      statusCode = 500;
+      message = "Database configuration error";
+    }
+
+    const errorResponse = {
+      success: false,
+      message: message,
+    };
+
+    if (process.env.NODE_ENV === "development") {
+      errorResponse.error = err.stack;
+      errorResponse.details = err.message;
+    }
+
+    res.status(statusCode).json(errorResponse);
+  }
+};
+
+exports.getAllOrdersWithProcessInfoCompleted = async (req, res) => {
+  const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
+  console.log(fullUrl);
+
+  try {
+    const { page = 1, limit = 10, filterType, date, search } = req.query;
+
+    const ordersData = await procumentDao.getAllOrdersWithProcessInfoCompleted(
+      page,
+      limit,
+      filterType,
+      date,
+      search
+    );
+
+    res.json({
+      success: true,
+      data: ordersData.items, // Using the original data without transformation
+      total: ordersData.total,
+      currentPage: parseInt(page),
+      totalPages: Math.ceil(ordersData.total / limit),
+      packingStatusSummary: {
+        packed: ordersData.items.filter((o) => o.packingStatus === "packed")
+          .length,
+        not_packed: ordersData.items.filter(
+          (o) => o.packingStatus === "not_packed"
+        ).length,
+        // Only count explicit "not_packed" statuses
+        no_status: ordersData.items.filter((o) => !o.packingStatus).length,
+        // Count records with null/undefined packingStatus separately
+      },
+    });
+  } catch (err) {
+    console.error("Error fetching orders with process info:", err);
+
+    const statusCode = err.isJoi ? 400 : 500;
+    const message = err.isJoi
+      ? err.details[0].message
+      : "An error occurred while fetching orders data.";
+
+    res.status(statusCode).json({
+      success: false,
+      message: message,
+      error: process.env.NODE_ENV === "development" ? err.stack : undefined,
+    });
+  }
+};
+
+// In your controller file
+exports.updateOrderPackagePackingStatus = async (req, res) => {
+  try {
+    const { orderPackageId, status } = req.body;
+
+    if (!orderPackageId || !status) {
+      return res.status(400).json({
+        error: "orderPackageId and status are required",
+        status: false,
+      });
+    }
+
+    const result = await procumentDao.updateOrderPackagePackingStatusDao(
+      orderPackageId,
+      status
+    );
+
+    res.status(200).json({
+      message: "Packing status updated successfully",
+      results: result,
+      status: true,
+    });
+  } catch (err) {
+    console.error("Error updating packing status:", err);
+    return res.status(500).json({
+      error: err.message || "An error occurred while updating packing status",
+      status: false,
     });
   }
 };
