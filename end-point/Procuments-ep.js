@@ -148,6 +148,9 @@ exports.getOrderDetailsById = async (req, res) => {
   try {
     // The DAO now returns properly structured data
     const orderDetails = await procumentDao.getOrderDetailsById(id);
+    const additionalItems = await procumentDao.getAllOrderAdditionalItemsDao(id);
+    console.log("additional items:",additionalItems);
+    
 
     if (!orderDetails) {
       console.log(`[getOrderDetailsById] No details found for order ID: ${id}`);
@@ -160,7 +163,8 @@ exports.getOrderDetailsById = async (req, res) => {
     console.log(`[getOrderDetailsById] Successfully fetched order details`);
     res.json({
       success: true,
-      data: orderDetails, // DAO already returns the correct structure
+      data: orderDetails, 
+      additionalItems:additionalItems
     });
   } catch (err) {
     console.error("[getOrderDetailsById] Error:", err);

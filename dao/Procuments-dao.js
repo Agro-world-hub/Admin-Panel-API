@@ -604,12 +604,12 @@ exports.getOrderDetailsById = (orderId) => {
         return reject(err);
       }
 
-      console.log(`[getOrderDetailsById] Raw results:`, results);
+      // console.log(`[getOrderDetailsById] Raw results:`, results);
 
       if (results.length === 0) {
-        console.log(
-          `[getOrderDetailsById] No data found for orderId: ${orderId}`
-        );
+        // console.log(
+        //   `[getOrderDetailsById] No data found for orderId: ${orderId}`
+        // );
         return resolve(null);
       }
 
@@ -645,10 +645,10 @@ exports.getOrderDetailsById = (orderId) => {
         packages: Array.from(packagesMap.values()),
       };
 
-      console.log(
-        `[getOrderDetailsById] Final structured data:`,
-        JSON.stringify(response, null, 2)
-      );
+      // console.log(
+      //   `[getOrderDetailsById] Final structured data:`,
+      //   JSON.stringify(response, null, 2)
+      // );
       resolve(response);
     });
   });
@@ -904,5 +904,27 @@ exports.updateOrderPackagePackingStatusDao = (orderPackageId, status) => {
       console.log("Error in updateOrderPackagePackingStatusDao:", error);
       reject(error);
     }
+  });
+};
+
+
+exports.getAllOrderAdditionalItemsDao = (id) => {
+  return new Promise((resolve, reject) => {
+    const sql = `
+      SELECT 
+        ORAD.id,
+        ORAD.unit,
+        MPI.displayName
+      FROM processorders PO, orders ORD, orderadditionalitems ORAD, marketplaceitems MPI
+      WHERE PO.id = ? AND PO.orderId = ORD.id AND ORAD.orderId = ORD.id AND ORAD.productId = MPI.id
+    `;
+
+    marketPlace.query(sql,[id], (err, results) => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(results);
+      }
+    });
   });
 };
