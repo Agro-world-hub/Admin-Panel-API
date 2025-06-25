@@ -101,4 +101,7 @@ router.get(
   ComplainCategoryEP.getMarketplaceComplaintById
 );
 
+
+router.put('/complaints/:id/reply',  authMiddleware,
+  ComplainCategoryEP.updateMarketplaceComplaintReply);
 module.exports = router;

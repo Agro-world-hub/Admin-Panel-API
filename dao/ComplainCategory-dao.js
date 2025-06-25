@@ -311,3 +311,33 @@ exports.getMarketplaceComplaintById = (complaintId) => {
     });
   });
 };
+
+exports.updateMarketplaceComplaintReply = (complaintId, reply) => {
+  return new Promise((resolve, reject) => {
+    const sql = `
+      UPDATE market_place.marcketplacecomplain
+      SET reply = ?
+      WHERE id = ?
+    `;
+    marketPlace.query(sql, [reply, complaintId], (err, results) => {
+      if (err) {
+        console.error('SQL error in updateMarketplaceComplaintReply:', err);
+        return reject({
+          status: false,
+          message: 'Database error during updating complaint reply.',
+          error: err.message
+        });
+      }
+      if (results.affectedRows === 0) {
+        return reject({
+          status: false,
+          message: 'No complaint found with the specified ID.'
+        });
+      }
+      resolve({
+        status: true,
+        message: 'Complaint reply updated successfully.'
+      });
+    });
+  });
+};
