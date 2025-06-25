@@ -148,9 +148,10 @@ exports.getOrderDetailsById = async (req, res) => {
   try {
     // The DAO now returns properly structured data
     const orderDetails = await procumentDao.getOrderDetailsById(id);
-    const additionalItems = await procumentDao.getAllOrderAdditionalItemsDao(id);
-    console.log("additional items:",additionalItems);
-    
+    const additionalItems = await procumentDao.getAllOrderAdditionalItemsDao(
+      id
+    );
+    console.log("additional items:", additionalItems);
 
     if (!orderDetails) {
       console.log(`[getOrderDetailsById] No details found for order ID: ${id}`);
@@ -163,8 +164,8 @@ exports.getOrderDetailsById = async (req, res) => {
     console.log(`[getOrderDetailsById] Successfully fetched order details`);
     res.json({
       success: true,
-      data: orderDetails, 
-      additionalItems:additionalItems
+      data: orderDetails,
+      additionalItems: additionalItems,
     });
   } catch (err) {
     console.error("[getOrderDetailsById] Error:", err);
@@ -510,6 +511,54 @@ exports.updateOrderPackageItems = async (req, res) => {
       error:
         err.message || "An error occurred while updating order package items",
       status: false,
+    });
+  }
+};
+
+exports.getAllOrdersWithProcessInfoDispatched = async (req, res) => {
+  const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
+  console.log(fullUrl);
+
+  try {
+    const { page = 1, limit = 10, filterType, date, search } = req.query;
+
+    const ordersData = await procumentDao.getAllOrdersWithProcessInfoDispatched(
+      page,
+      limit,
+      filterType,
+      date,
+      search
+    );
+
+    res.json({
+      success: true,
+      data: ordersData.items, // Using the original data without transformation
+      total: ordersData.total,
+      currentPage: parseInt(page),
+      totalPages: Math.ceil(ordersData.total / limit),
+      packingStatusSummary: {
+        packed: ordersData.items.filter((o) => o.packingStatus === "packed")
+          .length,
+        not_packed: ordersData.items.filter(
+          (o) => o.packingStatus === "not_packed"
+        ).length,
+        // Only count explicit "not_packed" statuses
+        no_status: ordersData.items.filter((o) => !o.packingStatus).length,
+        // Count records with null/undefined packingStatus separately
+      },
+    });
+  } catch (err) {
+    console.error("Error fetching orders with process info:", err);
+
+    const statusCode = err.isJoi ? 400 : 500;
+    const message = err.isJoi
+      ? err.details[0].message
+      : "An error occurred while fetching orders data.";
+
+    res.status(statusCode).json({
+      success: false,
+      message: message,
+      error: process.env.NODE_ENV === "development" ? err.stack : undefined,
     });
   }
 };

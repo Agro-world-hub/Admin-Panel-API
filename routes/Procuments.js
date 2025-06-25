@@ -123,4 +123,10 @@ router.get("/order-packages/:orderId", ProcumentsEP.getOrderPackageItemsById);
 
 router.put("/update-order-package-items", ProcumentsEP.updateOrderPackageItems);
 
+router.get(
+  "/orders-process-info-dispatched",
+  authMiddleware,
+  ProcumentsEP.getAllOrdersWithProcessInfoDispatched
+);
+
 module.exports = router;
