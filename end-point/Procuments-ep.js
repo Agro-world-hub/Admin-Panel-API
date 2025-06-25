@@ -410,3 +410,106 @@ exports.updateOrderPackagePackingStatus = async (req, res) => {
     });
   }
 };
+
+exports.getOrderPackageItemsById = async (req, res) => {
+  const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
+  console.log(fullUrl);
+
+  try {
+    const { orderId } = req.params;
+
+    if (!orderId) {
+      return res.status(400).json({
+        success: false,
+        message: "Order ID is required",
+      });
+    }
+
+    const orderPackages = await procumentDao.getOrderPackagesByOrderId(orderId);
+
+    if (!orderPackages) {
+      return res.status(404).json({
+        success: false,
+        message: "Order not found or contains no packages",
+      });
+    }
+
+    const formattedResponse = {
+      success: true,
+      data: {
+        invNo: orderPackages.invNo,
+        packages: orderPackages.packages.map((pkg) => ({
+          packageId: pkg.packageId,
+          displayName: pkg.displayName,
+          productPrice: pkg.productPrice,
+          productTypes: pkg.productTypes.map((type) => ({
+            id: type.id,
+            productTypeId: type.productTypeId, // Added productTypeId
+            productType: type.typeName,
+            productId: type.productId, // Use explicit productId if available, fallback to id
+            qty: type.qty,
+            price: type.price,
+            productDescription: type.displayName,
+            shortCode: type.shortCode,
+          })),
+        })),
+      },
+      message: "Order package items retrieved successfully",
+    };
+
+    res.json(formattedResponse);
+  } catch (err) {
+    console.error("Error fetching order package items:", err);
+    res.status(500).json({
+      success: false,
+      message: "An error occurred while fetching order package items",
+      error: process.env.NODE_ENV === "development" ? err.message : undefined,
+    });
+  }
+};
+
+exports.updateOrderPackageItems = async (req, res) => {
+  try {
+    const { orderPackageId, products } = req.body;
+    console.log("Request body:", req.body);
+    console.log("Products array:", products);
+
+    // Validate required fields
+    if (!orderPackageId || !products) {
+      return res.status(400).json({
+        error: "orderPackageId and products array are required",
+        status: false,
+      });
+    }
+
+    // Validate products array
+    if (!Array.isArray(products) || products.length === 0) {
+      return res.status(400).json({
+        error: "products must be a non-empty array",
+        status: false,
+      });
+    }
+
+    let result;
+
+    for (let i = 0; i < products.length; i++) {
+      result = await procumentDao.updateOrderPackageItemsDao(products[i]);
+      console.log("results", result);
+    }
+
+    console.log("Update result:", result);
+
+    res.status(200).json({
+      message: "Order package items updated successfully",
+      results: result,
+      status: true,
+    });
+  } catch (err) {
+    console.error("Error updating order package items:", err);
+    return res.status(500).json({
+      error:
+        err.message || "An error occurred while updating order package items",
+      status: false,
+    });
+  }
+};
