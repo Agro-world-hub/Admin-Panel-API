@@ -913,6 +913,7 @@ exports.getAllOrderAdditionalItemsDao = (id) => {
       SELECT 
         ORAD.id,
         ORAD.unit,
+        ORAD.qty,
         MPI.displayName
       FROM processorders PO, orders ORD, orderadditionalitems ORAD, marketplaceitems MPI
       WHERE PO.id = ? AND PO.orderId = ORD.id AND ORAD.orderId = ORD.id AND ORAD.productId = MPI.id
