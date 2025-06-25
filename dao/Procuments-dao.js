@@ -1006,7 +1006,7 @@ exports.updateOrderPackageItemsDao = async (product) => {
   return new Promise((resolve, reject) => {
     const sql = `
         UPDATE orderpackageitems
-        SET productType = ?,
+        SET 
              productId = ?,
             qty = ?,
             price = ?
@@ -1014,13 +1014,7 @@ exports.updateOrderPackageItemsDao = async (product) => {
       `;
     marketPlace.query(
       sql,
-      [
-        product.productType,
-        product.productId,
-        product.qty,
-        product.price,
-        product.id,
-      ],
+      [product.productId, product.qty, product.price, product.id],
       (err, results) => {
         if (err) {
           console.log("Erro", err);
