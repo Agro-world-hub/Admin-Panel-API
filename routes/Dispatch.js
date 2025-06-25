@@ -62,9 +62,22 @@ router.get(
   );
 
   router.get(
+    "/get-custom-additional-items",
+    authMiddleware,
+    DispatchEP.getCustomAdditionalItems
+  );
+
+
+  router.get(
     "/get-Additional-items",
     authMiddleware,
     DispatchEP.getAdditionalItems
+  );
+
+  router.post(
+    "/update-custom-additional-item-data",
+    authMiddleware,
+    DispatchEP.updateCustomAdditionalItemData
   );
 
   router.get(

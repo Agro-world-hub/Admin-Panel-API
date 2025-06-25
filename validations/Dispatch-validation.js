@@ -37,3 +37,8 @@ exports.geAdditionalItems = Joi.object({
   id: Joi.number().integer().required(),
   
 });
+
+exports.getCustomAdditionalItems = Joi.object({
+  id: Joi.number().integer().required(),
+  
+});
