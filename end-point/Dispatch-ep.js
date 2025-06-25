@@ -306,6 +306,61 @@ exports.updateCustomPackItems = async (req, res) => {
   }
 };
 
+exports.getCustomAdditionalItems = async (req, res) => {
+  const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
+  console.log(fullUrl);
+  try {
+
+    const validatedQuery = await DispatchVali.getCustomAdditionalItems.validateAsync(req.query);
+
+
+    const { id } = validatedQuery;
+    console.log(id);
+
+    const CustomAdditionalItemData = await DispatchDao.getCustomAdditionalItems(
+      id
+    );
+    console.log(CustomAdditionalItemData)
+    res.json(CustomAdditionalItemData);
+  } catch (err) {
+    console.error("Error fetching daily report:", err);
+    res.status(500).send("An error occurred while fetching the report.");
+  }
+};
+
+exports.updateCustomAdditionalItemData = async (req, res) => {
+  const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
+  console.log(fullUrl);
+  try {
+    const { customAdditionalItems, id } = req.body;
+
+    if (!Array.isArray(customAdditionalItems) || customAdditionalItems.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid or empty additional items array'
+      });
+    }
+
+    console.log('Updating isPacked status for additional items:', customAdditionalItems, id);
+
+    const updateResult = await DispatchDao.updateCustomAdditionalItemData(customAdditionalItems, id);
+    console.log(updateResult);
+    res.json({
+      success: true,
+      message: `${updateResult.affectedRows} items updated`,
+      updatedItems: customAdditionalItems
+    });
+
+  } catch (err) {
+    console.error("Error updating packed status:", err);
+
+    res.status(500).json({
+      success: false,
+      message: 'An error occurred while updating packed status'
+    });
+  }
+};
+
 
 
 
