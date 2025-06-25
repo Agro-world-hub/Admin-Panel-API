@@ -986,6 +986,7 @@ exports.getOrderPackagesByOrderId = (orderId) => {
               typeName: row.typeName,
               shortCode: row.shortCode,
               displayName: row.productDisplayName,
+              productId: row.productId,
               qty: row.qty,
               price: row.price,
             });

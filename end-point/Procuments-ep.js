@@ -442,7 +442,7 @@ exports.getOrderPackageItemsById = async (req, res) => {
             id: type.id,
             productTypeId: type.productTypeId, // Added productTypeId
             productType: type.typeName,
-            productId: type.productId || type.id, // Use explicit productId if available, fallback to id
+            productId: type.productId, // Use explicit productId if available, fallback to id
             qty: type.qty,
             price: type.price,
             productDescription: type.displayName,
@@ -486,23 +486,6 @@ exports.updateOrderPackageItems = async (req, res) => {
       });
     }
 
-    // Validate each product item
-    for (const product of products) {
-      console.log("Validating product:", product);
-      if (
-        !product.id ||
-        !product.productType ||
-        !product.productId ||
-        !product.qty ||
-        !product.price
-      ) {
-        return res.status(400).json({
-          error: `Invalid product data: ${JSON.stringify(product)}`,
-          status: false,
-        });
-      }
-    }
-
     let result;
 
     for (let i = 0; i < products.length; i++) {
@@ -511,13 +494,6 @@ exports.updateOrderPackageItems = async (req, res) => {
     }
 
     console.log("Update result:", result);
-
-    if (result.affectedRows === 0) {
-      return res.status(404).json({
-        error: "No order package found with the provided ID",
-        status: false,
-      });
-    }
 
     res.status(200).json({
       message: "Order package items updated successfully",
