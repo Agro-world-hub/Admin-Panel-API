@@ -594,7 +594,8 @@ exports.getAllMarketplacePackagesDAO = (searchText) => {
       sqlParams.push(`%${searchText}%`);
     }
 
-    sql += ` ORDER BY created_at DESC `;
+    // Order by status A-Z first, then by package name A-Z
+    sql += ` ORDER BY status ASC, displayName ASC `;
 
     marketPlace.query(sql, sqlParams, (err, results) => {
       if (err) {
