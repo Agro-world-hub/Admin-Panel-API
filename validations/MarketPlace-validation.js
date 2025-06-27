@@ -73,3 +73,10 @@ exports.getAllRetailOrderSchema = Joi.object({
   searchItem: Joi.string().optional(),
   formattedDate: Joi.string().optional(),
 });
+
+
+exports.getmarketplaceCustomerParamSchema = Joi.object({
+  page: Joi.number().integer().min(1).default(1),
+  limit: Joi.number().integer().min(1).max(100).default(10),
+  searchText: Joi.string().optional(),
+});

@@ -1578,3 +1578,123 @@ exports.checkPackageDisplayNameExistsDao = async (displayName) => {
     });
   });
 };
+
+
+exports.getAllRetailCustomersDao = (limit, offset, searchText) => {
+
+  return new Promise((resolve, reject) => {
+    let countParms = [];
+    let dataParms = [];
+    let countSql = `
+      SELECT 
+        COUNT(*) AS total
+      FROM marketplaceusers MP
+      WHERE 
+        MP.buyerType = 'Retail' 
+        AND MP.isMarketPlaceUser = 1   
+      `;
+    let dataSql = `
+      SELECT 
+        MP.id, 
+        MP.firstName,
+        MP.lastName,
+        MP.phoneCode,
+        MP.phoneNumber,
+        MP.cusId,
+        MP.email,
+        MP.created_at,
+        MP.buildingType,
+        H.houseNo,
+        H.streetName,
+        H.city,
+        A.buildingNo,
+        A.buildingName,
+        A.unitNo,
+        A.floorNo,
+        A.houseNo AS AparthouseNo,
+        A.streetName AS ApartstreetName,
+        A.city AS Apartcity,
+        (
+            SELECT COUNT(*)
+            FROM orders O
+            LEFT JOIN processorders PO ON O.id = PO.orderId
+            WHERE O.userId = MP.id
+        ) AS totalOrders
+      FROM marketplaceusers MP
+      LEFT JOIN house H ON MP.id = H.customerId AND MP.buildingType = 'House'
+      LEFT JOIN apartment A ON MP.id = A.customerId AND MP.buildingType = 'Apartment'
+      WHERE 
+        MP.buyerType = 'Retail' 
+        AND MP.isMarketPlaceUser = 1   
+      `;
+
+
+    console.log(searchText);
+
+    if (searchText) {
+      countSql += " AND (MP.firstName LIKE ? OR MP.lastName LIKE ? OR MP.phoneNumber LIKE ? OR MP.cusId LIKE ?) ";
+      dataSql += " AND (MP.firstName LIKE ? OR MP.lastName LIKE ? OR MP.phoneNumber LIKE ? OR MP.cusId LIKE ?) ";
+      const search = `%${searchText}%`;
+      countParms.push(search, search, search, search);
+      dataParms.push(search, search, search, search);
+    }
+
+
+    dataSql += ` LIMIT ? OFFSET ? `;
+    dataParms.push(limit);
+    dataParms.push(offset);
+
+    marketPlace.query(countSql, countParms, (countErr, countResults) => {
+      if (countErr) {
+        console.log(countErr);
+
+        reject(countErr);
+      } else {
+        marketPlace.query(dataSql, dataParms, (dataErr, dataResults) => {
+          if (dataErr) {
+            console.log(dataErr);
+
+            reject(dataErr);
+          } else {
+            // console.log(dataResults);
+
+            resolve({
+              total: countResults[0].total,
+              items: dataResults,
+            });
+          }
+        });
+      }
+    });
+  });
+};
+
+// exports.getAllRetailCustomersDao = async () => {
+//   return new Promise((resolve, reject) => {
+//     const sql = `
+//       SELECT
+//         MP.id,
+//         MP.firstName,
+//         MP.lastName,
+//         MP.phoneCode,
+//         MP.phoneNumber,
+//         (
+//             SELECT COUNT(*)
+//             FROM orders O
+//             LEFT JOIN processorders PO ON O.id = PO.orderId
+//             WHERE O.userId = MP.id
+//         ) AS totalOrders
+//       FROM marketplaceusers MP
+//       WHERE
+//         MP.buyerType = 'Retail'
+//         AND MP.isMarketPlaceUser = 1
+//       `;
+//     marketPlace.query(sql, (err, results) => {
+//       if (err) {
+//         reject(err);
+//       } else {
+//         resolve(results); // true if exists
+//       }
+//     });
+//   });
+// };
