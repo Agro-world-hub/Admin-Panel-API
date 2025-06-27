@@ -86,15 +86,17 @@ exports.getAllOrdersWithProcessInfo = async (req, res) => {
   console.log(fullUrl);
 
   try {
-    const { page = 1, limit = 10, filterType, date, search } = req.query;
+    const { page = 1, limit = 10, statusFilter, dateFilter, search } = req.query;
+    console.log(req.query);
+    
 
     const ordersData = await procumentDao.getAllOrdersWithProcessInfo(
       page,
       limit,
-      filterType,
-      date,
-      search
+      statusFilter,
+      dateFilter,
     );
+    // console.log("Orders Data:", ordersData);
 
     res.json({
       success: true,
