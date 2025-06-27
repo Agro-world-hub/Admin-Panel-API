@@ -86,15 +86,22 @@ exports.getAllOrdersWithProcessInfo = async (req, res) => {
   console.log(fullUrl);
 
   try {
-    const { page = 1, limit = 10, statusFilter, dateFilter, search } = req.query;
+    const {
+      page = 1,
+      limit = 10,
+      statusFilter,
+      dateFilter,
+      dateFilter1,
+      search,
+    } = req.query;
     console.log(req.query);
-    
 
     const ordersData = await procumentDao.getAllOrdersWithProcessInfo(
       page,
       limit,
       statusFilter,
       dateFilter,
+      dateFilter1
     );
     // console.log("Orders Data:", ordersData);
 
@@ -335,20 +342,68 @@ exports.getAllMarketplaceItems = async (req, res) => {
   }
 };
 
+// exports.getAllOrdersWithProcessInfoCompleted = async (req, res) => {
+//   const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
+//   console.log(fullUrl);
+
+//   try {
+//     const { page = 1, limit = 10, filterType, dateFilter, search } = req.query;
+//     console.log(req.query);
+
+//     const ordersData = await procumentDao.getAllOrdersWithProcessInfoCompleted(
+//       page,
+//       limit,
+//       filterType,
+//       dateFilter
+//     );
+
+//     res.json({
+//       success: true,
+//       data: ordersData.items, // Using the original data without transformation
+//       total: ordersData.total,
+//       currentPage: parseInt(page),
+//       totalPages: Math.ceil(ordersData.total / limit),
+//       packingStatusSummary: {
+//         packed: ordersData.items.filter((o) => o.packingStatus === "packed")
+//           .length,
+//         not_packed: ordersData.items.filter(
+//           (o) => o.packingStatus === "not_packed"
+//         ).length,
+//         // Only count explicit "not_packed" statuses
+//         no_status: ordersData.items.filter((o) => !o.packingStatus).length,
+//         // Count records with null/undefined packingStatus separately
+//       },
+//     });
+//   } catch (err) {
+//     console.error("Error fetching orders with process info:", err);
+
+//     const statusCode = err.isJoi ? 400 : 500;
+//     const message = err.isJoi
+//       ? err.details[0].message
+//       : "An error occurred while fetching orders data.";
+
+//     res.status(statusCode).json({
+//       success: false,
+//       message: message,
+//       error: process.env.NODE_ENV === "development" ? err.stack : undefined,
+//     });
+//   }
+// };
+
 exports.getAllOrdersWithProcessInfoCompleted = async (req, res) => {
   const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
   console.log(fullUrl);
 
   try {
-    const { page = 1, limit = 10, filterType, date, search } = req.query;
+    const { page = 1, limit = 10, statusFilter, dateFilter } = req.query;
+    console.log(req.query);
 
     const ordersData = await procumentDao.getAllOrdersWithProcessInfoCompleted(
       page,
       limit,
-      filterType,
-      date,
-      search
+      dateFilter
     );
+    // console.log("Orders Data:", ordersData);
 
     res.json({
       success: true,
