@@ -780,108 +780,6 @@ exports.getOrderTypeDao = async (id) => {
     });
   });
 };
-
-// exports.getAllOrdersWithProcessInfoCompleted = (
-//   page,
-//   limit,
-//   filterType,
-//   dateFilter,
-//   search
-// ) => {
-//   return new Promise((resolve, reject) => {
-//     const offset = (page - 1) * limit;
-//     const params = [];
-//     const countParams = [];
-
-//     // Define valid filters
-//     const validFilters = {
-//       OrderDate: "DATE(o.createdAt)",
-//       scheduleDate: "DATE(o.sheduleDate)",
-//       processDate: "DATE(po.createdAt)",
-//     };
-
-//     const dateFilterColumn =
-//       validFilters[filterType] || validFilters["OrderDate"];
-
-//     let whereClause = ` WHERE 1=1 `;
-//     let joinClause = ` FROM orders o
-//                        LEFT JOIN processorders po ON o.id = po.orderId
-//                        LEFT JOIN (
-//                          SELECT orderId, packingStatus
-//                          FROM orderpackage
-//                          WHERE (orderId, id) IN (
-//                            SELECT orderId, MAX(id)
-//                            FROM orderpackage
-//                            GROUP BY orderId
-//                          )
-//                        ) op ON o.id = op.orderId `;
-
-//     if (date) {
-//       whereClause += ` AND ${dateFilterColumn} = ?`;
-//       params.push(date);
-//       countParams.push(date);
-//     }
-
-//     if (search) {
-//       whereClause += ` AND (o.fullName LIKE ? OR o.phone1 LIKE ? OR po.invNo LIKE ? OR po.transactionId LIKE ?)`;
-//       const searchTerm = `%${search}%`;
-//       params.push(searchTerm, searchTerm, searchTerm, searchTerm);
-//       countParams.push(searchTerm, searchTerm, searchTerm, searchTerm);
-//     }
-
-//     const countSql = `
-//       SELECT COUNT(DISTINCT o.id) AS total
-//       ${joinClause}
-//       ${whereClause} AND packingStatus = 'Completed'
-//     `;
-
-//     const dataSql = `
-//       SELECT
-//         o.*,
-//         po.id AS processOrderId,
-//         po.invNo,
-//         po.transactionId,
-//         po.paymentMethod,
-//         po.isPaid,
-//         po.amount,
-//         po.status,
-//         po.reportStatus,
-//         po.createdAt AS processCreatedAt,
-//         op.packingStatus,
-//         ${dateFilterColumn} AS filterDate
-//       ${joinClause}
-//       ${whereClause}
-//       ORDER BY o.createdAt DESC
-//       LIMIT ? OFFSET ?
-//     `;
-
-//     params.push(parseInt(limit), parseInt(offset));
-
-//     console.log("Executing Count Query...");
-//     marketPlace.query(countSql, countParams, (countErr, countResults) => {
-//       if (countErr) {
-//         console.error("Count query error:", countErr);
-//         return reject(countErr);
-//       }
-
-//       const total = countResults[0]?.total || 0;
-
-//       console.log("Executing Data Query...");
-//       marketPlace.query(dataSql, params, (dataErr, dataResults) => {
-//         if (dataErr) {
-//           console.error("Data query error:", dataErr);
-//           return reject(dataErr);
-//         }
-
-//         resolve({
-//           items: dataResults,
-//           total,
-//         });
-//       });
-//     });
-//   });
-// };
-
 exports.getAllOrdersWithProcessInfoCompleted = (page, limit, dateFilter) => {
   return new Promise((resolve, reject) => {
     const offset = (page - 1) * limit;
@@ -1122,62 +1020,14 @@ exports.updateOrderPackageItemsDao = async (product) => {
   });
 };
 
-exports.getAllOrdersWithProcessInfoDispatched = (
-  page,
-  limit,
-  filterType,
-  date,
-  search
-) => {
+exports.getAllOrdersWithProcessInfoDispatched = (page, limit, dateFilter) => {
   return new Promise((resolve, reject) => {
     const offset = (page - 1) * limit;
     const params = [];
     const countParams = [];
 
-    // Define valid filters
-    const validFilters = {
-      OrderDate: "DATE(o.createdAt)",
-      scheduleDate: "DATE(o.sheduleDate)",
-      processDate: "DATE(po.createdAt)",
-    };
-
-    const dateFilterColumn =
-      validFilters[filterType] || validFilters["OrderDate"];
-
-    let whereClause = ` WHERE 1=1 `;
-    let joinClause = ` FROM orders o 
-                       LEFT JOIN processorders po ON o.id = po.orderId 
-                       LEFT JOIN (
-                         SELECT orderId, packingStatus
-                         FROM orderpackage
-                         WHERE (orderId, id) IN (
-                           SELECT orderId, MAX(id) 
-                           FROM orderpackage 
-                           GROUP BY orderId
-                         )
-                       ) op ON o.id = op.orderId `;
-
-    if (date) {
-      whereClause += ` AND ${dateFilterColumn} = ?`;
-      params.push(date);
-      countParams.push(date);
-    }
-
-    if (search) {
-      whereClause += ` AND (o.fullName LIKE ? OR o.phone1 LIKE ? OR po.invNo LIKE ? OR po.transactionId LIKE ?)`;
-      const searchTerm = `%${search}%`;
-      params.push(searchTerm, searchTerm, searchTerm, searchTerm);
-      countParams.push(searchTerm, searchTerm, searchTerm, searchTerm);
-    }
-
-    const countSql = `
-      SELECT COUNT(DISTINCT o.id) AS total
-      ${joinClause}
-      ${whereClause} AND packingStatus = 'Dispatch'
-    `;
-
-    const dataSql = `
-      SELECT 
+    let dataSql = `
+         SELECT 
         o.*,
         po.id AS processOrderId,
         po.invNo,
@@ -1188,17 +1038,36 @@ exports.getAllOrdersWithProcessInfoDispatched = (
         po.status,
         po.reportStatus,
         po.createdAt AS processCreatedAt,
-        op.packingStatus,
-        ${dateFilterColumn} AS filterDate
-      ${joinClause}
-      ${whereClause}
-      ORDER BY o.createdAt DESC
-      LIMIT ? OFFSET ?
-    `;
+        op.packingStatus
+        FROM processorders po, orders o, orderpackage op
+        WHERE packingStatus = 'Dispatch' AND po.orderId = o.id AND o.id = op.orderId 
+      `;
+    countSql = `
+      SELECT 
+        COUNT(po.id) AS total
+        FROM processorders po, orders o, orderpackage op
+        WHERE packingStatus = 'Dispatch' AND po.orderId = o.id AND o.id = op.orderId
+      `;
+
+    if (dateFilter) {
+      console.log("Date Filter:", dateFilter);
+
+      dataSql += ` AND DATE(o.sheduleDate) = ? `;
+      countSql += ` AND DATE(o.sheduleDate) = ? `;
+      params.push(dateFilter);
+      countParams.push(dateFilter);
+    }
+
+    dataSql += ` 
+                 ORDER BY op.createdAt DESC
+                 LIMIT ? OFFSET ?
+                `;
 
     params.push(parseInt(limit), parseInt(offset));
 
     console.log("Executing Count Query...");
+    // console.log(dataSql);
+
     marketPlace.query(countSql, countParams, (countErr, countResults) => {
       if (countErr) {
         console.error("Count query error:", countErr);
