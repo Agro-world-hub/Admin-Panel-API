@@ -242,4 +242,10 @@ router.get(
   marketPlaceEp.checkPackageDisplayNameExists
 );
 
+router.get(
+  "/get-all-retails-customers",
+  authMiddleware,
+  marketPlaceEp.getAllRetailCustomers
+);
+
 module.exports = router;
