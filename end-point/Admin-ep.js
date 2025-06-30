@@ -289,9 +289,7 @@ exports.createNews = async (req, res) => {
       status,
       publishDate,
       expireDate,
-    } = await ValidateSchema.createNewsSchema.validateAsync(req.body, {
-      abortEarly: false,
-    });
+    } = await ValidateSchema.createNewsSchema.validateAsync(req.body);
 
     if (!req.file) {
       return res.status(400).json({ error: "No file uploaded" });
