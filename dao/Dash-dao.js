@@ -328,7 +328,7 @@ const createSalesAgent = (officerData, profileImageUrl) => {
           officerData.accNumber,
           officerData.bankName,
           officerData.branchName,
-          imageUrl
+          imageUrl,
         ],
         (err, results) => {
           if (err) {
@@ -717,131 +717,99 @@ const getAllOrders = (
   date
 ) => {
   return new Promise((resolve, reject) => {
+    // Convert page and limit to numbers
+    page = parseInt(page, 10);
+    limit = parseInt(limit, 10);
     const offset = (page - 1) * limit;
 
-    let countSql = `
-          SELECT COUNT(*) as total
-          FROM processorders po, orders o
-          JOIN marketplaceusers c ON o.userId = c.id
-          JOIN salesagent sa ON c.salesAgent = sa.id
-      `;
+    // Use consistent JOIN syntax in both queries
+    let baseSql = `
+      FROM orders o
+      JOIN marketplaceusers c ON o.userId = c.id
+      JOIN salesagent sa ON c.salesAgent = sa.id
+      JOIN processorders po ON o.id = po.orderId
+    `;
 
+    let countSql = `SELECT COUNT(*) as total ${baseSql}`;
     let dataSql = `
-          SELECT
-              o.id,
-              po.InvNo AS invNo,
-              po.status AS orderStatus,
-              o.sheduleDate AS scheduleDate,
-              po.paymentMethod,
-              po.isPaid AS paymentStatus,
-              o.discount AS fullDiscount,
-              o.fullTotal,
-              o.delivaryMethod AS deliveryType,
-              o.createdAt,
-              c.cusId,
-              c.firstName,
-              c.lastName,
-              sa.empId
-          FROM orders o
-          JOIN marketplaceusers c ON o.userId = c.id
-          JOIN salesagent sa ON c.salesAgent = sa.id 
-          JOIN processorders po ON o.id = po.orderId
-      `;
+      SELECT
+        o.id,
+        po.InvNo AS invNo,
+        po.status AS orderStatus,
+        o.sheduleDate AS scheduleDate,
+        po.paymentMethod,
+        po.isPaid AS paymentStatus,
+        o.discount AS fullDiscount,
+        o.fullTotal,
+        o.delivaryMethod AS deliveryType,
+        o.createdAt,
+        c.cusId,
+        c.firstName,
+        c.lastName,
+        sa.empId
+      ${baseSql}
+    `;
 
-    const countParams = [];
-    const dataParams = [];
+    const params = [];
 
     let whereConditions = [];
 
     if (searchText) {
       whereConditions.push(`
-              (
-                  c.cusId LIKE ?
-                  OR c.firstName LIKE ?
-                  OR c.lastName LIKE ?
-                  OR po.invNo Like ?
-                  OR sa.empId LIKE ?
-                  OR o.delivaryMethod LIKE ?
-                  OR po.isPaid LIKE ?
-                  OR po.status LIKE ?
-                  OR po.paymentMethod LIKE ?
-                  
-              )
-          `);
+        (
+          c.cusId LIKE ?
+          OR c.firstName LIKE ?
+          OR c.lastName LIKE ?
+          OR po.invNo LIKE ?
+          OR sa.empId LIKE ?
+          OR o.delivaryMethod LIKE ?
+          OR po.isPaid LIKE ?
+          OR po.status LIKE ?
+          OR po.paymentMethod LIKE ?
+        )
+      `);
 
       const searchValue = `%${searchText}%`;
-      countParams.push(
-        searchValue,
-        searchValue,
-        searchValue,
-        searchValue,
-        searchValue,
-        searchValue,
-        searchValue,
-        searchValue,
-        searchValue
-      );
-      dataParams.push(
-        searchValue,
-        searchValue,
-        searchValue,
-        searchValue,
-        searchValue,
-        searchValue,
-        searchValue,
-        searchValue,
-        searchValue
-      );
+      // Add 9 parameters for the search
+      params.push(...Array(9).fill(searchValue));
     }
 
     if (orderStatus) {
-      console.log("Order Status:", orderStatus);
-      
-      whereConditions.push(` po.status = ? `);
-      countParams.push(orderStatus);
-      dataParams.push(orderStatus);
+      whereConditions.push(`po.status = ?`);
+      params.push(orderStatus);
     }
 
     if (paymentMethod) {
       whereConditions.push(`po.paymentMethod = ?`);
-      countParams.push(paymentMethod);
-      dataParams.push(paymentMethod);
+      params.push(paymentMethod);
     }
 
-    if (paymentStatus) {
-      console.log("----------",paymentStatus,"------------");
-      
+    if (paymentStatus !== undefined && paymentStatus !== "") {
       whereConditions.push(`po.isPaid = ?`);
-      countParams.push(+paymentStatus); // Convert string to number
-      dataParams.push(+paymentStatus);
+      params.push(Number(paymentStatus));
     }
 
     if (deliveryType) {
-      whereConditions.push(`o.deliveryType = ?`);
-      countParams.push(deliveryType);
-      dataParams.push(deliveryType);
+      whereConditions.push(`o.delivaryMethod = ?`);
+      params.push(deliveryType);
     }
 
     if (date) {
-      whereConditions.push(`o.sheduleDate = ?`);
-      countParams.push(date);
-      dataParams.push(date);
+      whereConditions.push(`DATE(o.sheduleDate) = DATE(?)`);
+      params.push(date);
     }
 
     // Append WHERE conditions if any exist
     if (whereConditions.length > 0) {
-      countSql += " WHERE " + whereConditions.join(" AND ");
-      dataSql += " WHERE " + whereConditions.join(" AND ");
+      const whereClause = " WHERE " + whereConditions.join(" AND ");
+      countSql += whereClause;
+      dataSql += whereClause;
     }
 
-    dataSql += " ORDER BY o.createdAt DESC";
+    dataSql += " ORDER BY o.createdAt DESC LIMIT ? OFFSET ?";
 
-    // Add pagination at the end, so LIMIT and OFFSET are always numbers
-    dataSql += " LIMIT ? OFFSET ?";
-    dataParams.push(parseInt(limit), parseInt(offset)); // Ensure they are integers
-
-    // Execute count query
-    marketPlace.query(countSql, countParams, (countErr, countResults) => {
+    // Execute count query first
+    marketPlace.query(countSql, params, (countErr, countResults) => {
       if (countErr) {
         console.error("Error in count query:", countErr);
         return reject(countErr);
@@ -849,14 +817,26 @@ const getAllOrders = (
 
       const total = countResults[0].total;
 
-      // Execute data query
-      marketPlace.query(dataSql, dataParams, (dataErr, dataResults) => {
+      // Only proceed with data query if there are results
+      if (total === 0 || offset >= total) {
+        return resolve({ items: [], total });
+      }
+
+      // Add pagination parameters (limit and offset)
+      const dataQueryParams = [...params, limit, offset];
+
+      marketPlace.query(dataSql, dataQueryParams, (dataErr, dataResults) => {
         if (dataErr) {
           console.error("Error in data query:", dataErr);
           return reject(dataErr);
         }
 
-        resolve({ items: dataResults, total });
+        resolve({
+          items: dataResults,
+          total,
+          currentPage: page,
+          totalPages: Math.ceil(total / limit),
+        });
       });
     });
   });
@@ -969,9 +949,6 @@ const GetAllSalesAgentComplainDAO = (
   });
 };
 
-
-
-
 const getComplainById = (id) => {
   return new Promise((resolve, reject) => {
     const sql = ` 
@@ -989,7 +966,6 @@ const getComplainById = (id) => {
     });
   });
 };
-
 
 const sendComplainReply = (complainId, reply) => {
   return new Promise((resolve, reject) => {
@@ -1048,5 +1024,5 @@ module.exports = {
   getSalesAgentEmailDao,
   getAllOrders,
   getComplainById,
-  sendComplainReply
+  sendComplainReply,
 };
