@@ -136,42 +136,42 @@ exports.getPreMadePackages = (page, limit, packageStatus, date, search) => {
       SELECT COUNT(DISTINCT po.id) as total
       FROM market_place.orderpackage op 
       JOIN market_place.marketplacepackages mpp ON op.packageId = mpp.id 
-      JOIN market_place.orders o ON op.orderId = o.id
+      JOIN market_place.processorders po ON op.orderId = po.id
+JOIN market_place.orders o ON po.orderId = o.id 
       LEFT JOIN market_place.orderadditionalitems oai ON oai.orderId = o.id
       JOIN market_place.packagedetails pd ON pd.packageId = mpp.id
       JOIN market_place.producttypes pt ON pt.id = pd.productTypeId
-      JOIN market_place.processorders po ON po.orderId = o.id
       LEFT JOIN market_place.orderpackageitems opi ON op.id = opi.orderPackageId
       ${whereClause} AND o.isPackage = 1
       
     `;
 
     const dataSql = `
-      SELECT 
-        po.id AS processOrderId,
-        o.id AS orderId,
-        MAX(mpp.displayName) AS displayName,
-        MAX(o.isPackage) AS isPackage,
-        MAX(op.id) AS orderPackageId,
-        MAX(op.createdAt) AS createdAt,
-        MAX(op.packingStatus) AS packingStatus,
-        MAX(o.sheduleDate) AS sheduleDate,
-        MAX(mpp.productPrice) AS productPrice,
-        MAX(pd.qty) AS qty,
-        MAX(pd.productTypeId) AS productTypeId,
-        MAX(pt.typeName) AS typeName,
-        MAX(po.invNo) AS invNo,
-        GROUP_CONCAT(DISTINCT CONCAT(oai.productId, ':', oai.isPacked)) AS additionalProductIdsString,
-        GROUP_CONCAT(DISTINCT CONCAT(opi.productId, ':', opi.isPacked)) AS packageProductIdsString,
-        COALESCE(SUM(DISTINCT oai.price), 0) AS totalAdditionalItemsPrice
-      FROM market_place.orderpackage op 
-      JOIN market_place.marketplacepackages mpp ON op.packageId = mpp.id 
-      JOIN market_place.orders o ON op.orderId = o.id
-      LEFT JOIN market_place.orderadditionalitems oai ON oai.orderId = o.id
-      JOIN market_place.packagedetails pd ON pd.packageId = mpp.id
-      JOIN market_place.producttypes pt ON pt.id = pd.productTypeId
-      JOIN market_place.processorders po ON po.orderId = o.id
-      LEFT JOIN market_place.orderpackageitems opi ON op.id = opi.orderPackageId
+    SELECT 
+    po.id AS processOrderId,
+    o.id AS orderId,
+    MAX(mpp.displayName) AS displayName,
+    MAX(o.isPackage) AS isPackage,
+    MAX(op.id) AS orderPackageId,
+    MAX(op.createdAt) AS createdAt,
+    MAX(op.packingStatus) AS packingStatus,
+    MAX(o.sheduleDate) AS sheduleDate,
+    MAX(mpp.productPrice) AS productPrice,
+    MAX(pd.qty) AS qty,
+    MAX(pd.productTypeId) AS productTypeId,
+    MAX(pt.typeName) AS typeName,
+    MAX(po.invNo) AS invNo,
+    GROUP_CONCAT(DISTINCT CONCAT(oai.productId, ':', oai.isPacked)) AS additionalProductIdsString,
+    GROUP_CONCAT(DISTINCT CONCAT(opi.productId, ':', opi.isPacked)) AS packageProductIdsString,
+    COALESCE(SUM(DISTINCT oai.price), 0) AS totalAdditionalItemsPrice
+  FROM market_place.orderpackage op 
+JOIN market_place.marketplacepackages mpp ON op.packageId = mpp.id 
+JOIN market_place.processorders po ON op.orderId = po.id
+JOIN market_place.orders o ON po.orderId = o.id 
+LEFT JOIN market_place.orderadditionalitems oai ON oai.orderId = o.id
+JOIN market_place.packagedetails pd ON pd.packageId = mpp.id
+JOIN market_place.producttypes pt ON pt.id = pd.productTypeId
+LEFT JOIN market_place.orderpackageitems opi ON op.id = opi.orderPackageId
       ${whereClause} AND o.isPackage = 1
       GROUP BY po.id, o.id
       LIMIT ? OFFSET ?
@@ -566,7 +566,7 @@ exports.getPackageItems = (id) => {
     po.invNo
   FROM market_place.processorders po
   JOIN market_place.orders o ON o.id = po.orderId 
-  JOIN market_place.orderpackage op ON op.orderId = o.id 
+  JOIN market_place.orderpackage op ON op.orderId = po.id 
   JOIN market_place.orderpackageitems opi ON opi.orderPackageId = op.id 
   JOIN market_place.marketplaceitems mpi ON opi.productId = mpi.id 
   WHERE po.id = ?
@@ -646,8 +646,9 @@ exports.updatePackageItemData = (packedItems, id) => {
       const updateSql = `
         UPDATE market_place.orderpackageitems opi
         JOIN market_place.orderpackage op ON op.id = opi.orderPackageId
-        JOIN market_place.orders o ON o.id = op.orderId
-        JOIN market_place.processorders po ON po.orderId = o.id
+        JOIN market_place.processorders po ON op.orderId = po.id
+        JOIN market_place.orders o ON o.id = po.orderId
+
         SET 
           opi.qty = ?,
           opi.price = ?,
@@ -706,8 +707,9 @@ exports.replaceProductDataDao = (productId, quantity, totalPrice, id, previousPr
     const updateSql = `
       UPDATE market_place.orderpackageitems opi
       JOIN market_place.orderpackage op ON opi.orderPackageId = op.id
-      JOIN market_place.orders o ON op.orderId = o.id
-      JOIN market_place.processorders po ON po.orderId = o.id
+      JOIN market_place.processorders po ON op.orderId = po.id
+      JOIN market_place.orders o ON po.orderId = o.id
+      
       SET 
         opi.productId = ?, 
         opi.qty = ?, 
