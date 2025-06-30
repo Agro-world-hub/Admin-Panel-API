@@ -23,35 +23,33 @@ const fileFilter = (req, file, cb) => {
 const upload = multer({
   storage: multer.memoryStorage(),
   fileFilter: function (req, file, cb) {
-    // Allowed extensions
-    const filetypes = /\.(csv|xlsx|xls)$/i;
-    const extname = filetypes.test(path.extname(file.originalname));
+    // Allowed Excel/CSV extensions
+    const excelFiletypes = /\.(csv|xlsx|xls)$/i;
+    const isExcel = excelFiletypes.test(path.extname(file.originalname));
 
-    // Allowed MIME types
-    const mimetypes = [
+    // Allowed Excel MIME types
+    const excelMimetypes = [
       "text/csv",
       "application/vnd.ms-excel",
       "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
       "application/octet-stream",
     ];
-    const mimetype = mimetypes.includes(file.mimetype);
 
-    console.log("File validation:", {
-      filename: file.originalname,
-      extname: path.extname(file.originalname),
-      mimetype: file.mimetype,
-      extValid: extname,
-      mimeValid: mimetype,
-    });
+    // Allowed image extensions
+    const imageFiletypes = /\.(jpg|jpeg|png|gif)$/i;
+    const isImage = imageFiletypes.test(path.extname(file.originalname));
 
-    if (extname && mimetype) {
+    // Allowed image MIME types
+    const imageMimetypes = ["image/jpeg", "image/png", "image/gif"];
+
+    const isValid =
+      (isExcel && excelMimetypes.includes(file.mimetype)) ||
+      (isImage && imageMimetypes.includes(file.mimetype));
+
+    if (isValid) {
       cb(null, true);
     } else {
-      cb(
-        new Error(
-          `Only Excel/CSV files are allowed. Detected: ${file.mimetype}`
-        )
-      );
+      cb(new Error("Only Excel/CSV or image files (JPG/PNG/GIF) are allowed."));
     }
   },
   limits: {
