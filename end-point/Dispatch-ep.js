@@ -69,7 +69,7 @@ exports.getPreMadePackages = async (req, res) => {
 
 exports.getSelectedPackages = async (req, res) => {
   const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
-  console.log(fullUrl);
+  // console.log(fullUrl);
   try {
 
     const validatedQuery = await DispatchVali.getPreMadePackages.validateAsync(req.query);
@@ -77,7 +77,7 @@ exports.getSelectedPackages = async (req, res) => {
 
     const { page, limit, selectedStatus, date, search } = validatedQuery;
 
-    console.log({ selectedStatus, date, search })
+    // console.log({ selectedStatus, date, search })
 
     const reportData = await DispatchDao.getSelectedPackages(
       page,
