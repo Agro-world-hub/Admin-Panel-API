@@ -417,3 +417,32 @@ exports.updateMarketplaceComplaintReply = async (req, res) => {
     res.status(500).json({ message: "Internal server error" });
   }
 };
+
+
+// Controller method
+exports.getComplaintCategoriesByAppId = async (req, res) => {
+  const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
+  console.log(fullUrl);
+
+  try {
+    // Validate appId from request params (assuming it comes as a string number)
+    const validatedQuery = await ComplainCategoryValidate.getCategoriesByAppIdSchema.validateAsync({
+      appId: req.params.appId,
+    });
+    const { appId } = validatedQuery;
+    console.log("Fetching complaint categories for appId:", appId);
+
+    // Call your DAO method which returns a Promise
+    const result = await ComplainCategoryDAO.getComplaintCategoryFromMarketplace(appId);
+
+    if (!result || result.length === 0) {
+      return res.status(404).json({ message: "No complaint categories found for this appId" });
+    }
+
+    // Return the categories
+    res.status(200).json({ categories: result });
+  } catch (err) {
+    console.error("[getComplaintCategoriesByAppId] Error:", err);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};

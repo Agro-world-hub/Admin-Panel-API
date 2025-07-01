@@ -43,3 +43,8 @@ exports.EditComplainCategorySchema = Joi.object({
     categorySinhala: Joi.string().required(),
     categoryTamil: Joi.string().required()
 });
+
+
+exports.getCategoriesByAppIdSchema = Joi.object({
+  appId: Joi.number().integer().required(),
+});
