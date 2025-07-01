@@ -266,7 +266,7 @@ exports.updateSalesAgentDetails = async (req, res) => {
   if (req.body.file) {
     await deleteFromS3(officerData.image);
     console.log(req.body.file);
-    
+
 
     const base64String = req.body.file.split(",")[1]; // Extract the Base64 content
     const mimeType = req.body.file.match(/data:(.*?);base64,/)[1]; // Extract MIME type
@@ -427,15 +427,9 @@ exports.getAllOrders = async (req, res) => {
 
   try {
     console.log('bla bla bla')
-    // Validate query parameters
-    // const validatedQuery =
-    //   await collectionofficerValidate.getAllCollectionOfficersSchema.validateAsync(
-    //     req.query
-    //   );
 
     const { page, limit, orderStatus, paymentMethod, paymentStatus, deliveryType, searchText, date } = req.query;
 
-    // const { page, limit, nic, company } = validatedQuery;
 
     // Call the DAO to get all collection officers
     const result = await DashDao.getAllOrders(
@@ -450,8 +444,8 @@ exports.getAllOrders = async (req, res) => {
 
     );
 
-    console.log({ page, limit });
-    console.log(result);
+    // console.log({ page, limit });
+    // console.log(result);
 
     return res.status(200).json(result);
   } catch (error) {
