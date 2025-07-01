@@ -341,3 +341,26 @@ exports.updateMarketplaceComplaintReply = (complaintId, reply) => {
     });
   });
 };
+
+exports.getComplaintCategoryFromMarketplace = (appId) => {
+  return new Promise((resolve, reject) => {
+    const sql = `
+      SELECT DISTINCT 
+        cc.id,
+        cc.categoryEnglish
+      FROM market_place.marcketplacecomplain mc
+      INNER JOIN agro_world_admin.complaincategory cc 
+        ON mc.complaicategoryId = cc.id
+      WHERE cc.appId = ?
+    `;
+
+    admin.query(sql, [appId], (err, results) => {
+      if (err) {
+        console.error('[getComplaintCategoryFromMarketplace] DB error:', err);
+        return reject(err);
+      }
+      resolve(results);
+    });
+  });
+};
+
