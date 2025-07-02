@@ -102,7 +102,8 @@ exports.getAllDistributionCentre = (
 
     if (searchItem) {
       const searchQuery = `%${searchItem}%`;
-      whereClause += " AND (C.regCode LIKE ? OR C.centerName LIKE ?)";
+      whereClause +=
+        " AND (dc.centerName LIKE ? OR c.companyNameEnglish LIKE ?)";
       searchParams.push(searchQuery, searchQuery);
     }
 
