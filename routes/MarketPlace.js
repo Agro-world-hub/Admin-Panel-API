@@ -254,4 +254,10 @@ router.get(
   marketPlaceEp.getOrderDetailsById
 );
 
+router.get(
+  "/get-marketplace-item/:id",
+  authMiddleware,
+  marketPlaceEp.getAllMarketplaceItems
+);
+
 module.exports = router;

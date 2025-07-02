@@ -1570,9 +1570,8 @@ exports.getOrderDetailsById = async (req, res) => {
 
     // Fetch order details from DAO
     const orderDetails = await MarketPlaceDao.getOrderDetailsById(id);
-    const marketPlaceItems = await MarketPlaceDao.getAllMarketplaceItems(id);
 
-    if (!orderDetails || marketPlaceItems.length === 0) {
+    if (!orderDetails) {
       console.log(`[getOrderDetailsById] No details found for order ID: ${id}`);
       return res.status(404).json({
         success: false,
@@ -1580,16 +1579,18 @@ exports.getOrderDetailsById = async (req, res) => {
       });
     }
 
-    // Transform the response to match actual DAO data structure
     const response = {
       success: true,
       data: {
+        invNo: orderDetails.invNo || null,
         packages: orderDetails.packages.map((pkg) => ({
           packageId: pkg.packageId,
           displayName: pkg.displayName,
-          productPrice: pkg.productPrice || null, // Added productPrice from DAO response
+          productPrice: pkg.productPrice || null,
           productTypes: pkg.productTypes.map((item) => ({
             id: item.id,
+            typeName: item.typeName,
+            shortCode: item.shortCode,
             qty: item.qty,
           })),
         })),
@@ -1612,5 +1613,70 @@ exports.getOrderDetailsById = async (req, res) => {
       message: message,
       ...(process.env.NODE_ENV === "development" && { error: err.message }),
     });
+  }
+};
+
+exports.getAllMarketplaceItems = async (req, res) => {
+  try {
+    console.log("hello world");
+
+    const orderId = req.params.id;
+    const btype = await MarketPlaceDao.getOrderTypeDao(orderId);
+    const marketplaceItems = await MarketPlaceDao.getAllMarketplaceItems(
+      btype.buyerType
+    );
+
+    if (!marketplaceItems || marketplaceItems.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "No marketplace items found",
+      });
+    }
+
+    // Optional: Group items by category if needed
+    const itemsByCategory = marketplaceItems.reduce((acc, item) => {
+      if (!acc[item.category]) {
+        acc[item.category] = [];
+      }
+      acc[item.category].push(item);
+      return acc;
+    }, {});
+
+    res.json({
+      success: true,
+      data: {
+        items: marketplaceItems,
+        itemsByCategory, // Optional grouped data
+        count: marketplaceItems.length,
+      },
+    });
+  } catch (err) {
+    console.error("Error fetching marketplace items:", err);
+
+    let statusCode = 500;
+    let message = "An error occurred while fetching marketplace items.";
+
+    if (err.isJoi) {
+      statusCode = 400;
+      message = err.details[0].message;
+    } else if (
+      err.code === "ER_NO_SUCH_TABLE" ||
+      err.code === "ER_BAD_FIELD_ERROR"
+    ) {
+      statusCode = 500;
+      message = "Database configuration error";
+    }
+
+    const errorResponse = {
+      success: false,
+      message: message,
+    };
+
+    if (process.env.NODE_ENV === "development") {
+      errorResponse.error = err.stack;
+      errorResponse.details = err.message;
+    }
+
+    res.status(statusCode).json(errorResponse);
   }
 };

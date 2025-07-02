@@ -1678,9 +1678,12 @@ exports.getOrderDetailsById = (orderId) => {
         mp.productPrice,
         pd.id AS packageItemId,
         pd.productTypeId,
+        pt.shortCode,
+        pt.typeName,
         pd.qty
       FROM marketplacepackages mp
       LEFT JOIN packagedetails pd ON mp.id = pd.packageId
+      LEFT JOIN producttypes pt ON pd.productTypeId = pt.id
       WHERE mp.id = ?
     `;
 
@@ -1701,7 +1704,6 @@ exports.getOrderDetailsById = (orderId) => {
       }
 
       try {
-        // invNo will be undefined as it's not selected in the query
         const invNo = undefined;
         const packagesMap = new Map();
 
@@ -1718,18 +1720,16 @@ exports.getOrderDetailsById = (orderId) => {
             });
           }
 
-          // Add productType if it exists
           if (row.productTypeId) {
             packagesMap.get(packageId).productTypes.push({
               id: row.productTypeId,
-              typeName: null, // Not available in query
-              shortCode: null, // Not available in query
+              typeName: row.typeName, // Now available from the query
+              shortCode: row.shortCode, // Now available from the query
               qty: row.qty,
             });
           }
         });
 
-        // Convert to final structure
         const response = {
           invNo: invNo,
           packages: Array.from(packagesMap.values()),
@@ -1812,6 +1812,26 @@ exports.getAllMarketplaceItems = (category) => {
         `[getAllMarketplaceItems] Successfully retrieved ${items.length} items`
       );
       resolve(items);
+    });
+  });
+};
+
+exports.getOrderTypeDao = async (id) => {
+  return new Promise((resolve, reject) => {
+    const sql = `
+      SELECT buyerType
+      FROM processorders POR, orders O, marketplaceusers U
+      WHERE POR.orderId = O.id AND O.userId = U.id
+    `;
+    marketPlace.query(sql, [id], (err, results) => {
+      if (err) {
+        console.log("Erro", err);
+
+        reject(err);
+      } else {
+        resolve(results[0]);
+        console.log("``````````result``````````", results[0]);
+      }
     });
   });
 };
