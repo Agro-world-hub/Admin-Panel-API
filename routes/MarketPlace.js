@@ -248,4 +248,10 @@ router.get(
   marketPlaceEp.getAllRetailCustomers
 );
 
+router.get(
+  "/get-order-details/:id",
+  authMiddleware,
+  marketPlaceEp.getOrderDetailsById
+);
+
 module.exports = router;

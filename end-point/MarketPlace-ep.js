@@ -1529,22 +1529,88 @@ exports.checkPackageDisplayNameExists = async (req, res) => {
   }
 };
 
-
 exports.getAllRetailCustomers = async (req, res) => {
   try {
-    const { page, limit, searchText } = await MarketPriceValidate.getmarketplaceCustomerParamSchema.validateAsync(req.query);
+    const { page, limit, searchText } =
+      await MarketPriceValidate.getmarketplaceCustomerParamSchema.validateAsync(
+        req.query
+      );
     const offset = (page - 1) * limit;
-    const { total, items } = await MarketPlaceDao.getAllRetailCustomersDao(limit, offset, searchText);
+    const { total, items } = await MarketPlaceDao.getAllRetailCustomersDao(
+      limit,
+      offset,
+      searchText
+    );
 
     return res.status(200).json({
       total,
-      items
+      items,
     });
   } catch (err) {
     console.error("Error checking display name:", err);
     return res.status(500).json({
       error: "An error occurred while checking display name",
       status: false,
+    });
+  }
+};
+
+exports.getOrderDetailsById = async (req, res) => {
+  const { id } = req.params;
+  console.log(`[getOrderDetailsById] Fetching details for order ID: ${id}`);
+
+  try {
+    // Validate order ID
+    if (!id || isNaN(Number(id))) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid order ID format",
+      });
+    }
+
+    // Fetch order details from DAO
+    const orderDetails = await MarketPlaceDao.getOrderDetailsById(id);
+    const marketPlaceItems = await MarketPlaceDao.getAllMarketplaceItems(id);
+
+    if (!orderDetails || marketPlaceItems.length === 0) {
+      console.log(`[getOrderDetailsById] No details found for order ID: ${id}`);
+      return res.status(404).json({
+        success: false,
+        message: "Order details not found",
+      });
+    }
+
+    // Transform the response to match actual DAO data structure
+    const response = {
+      success: true,
+      data: {
+        packages: orderDetails.packages.map((pkg) => ({
+          packageId: pkg.packageId,
+          displayName: pkg.displayName,
+          productPrice: pkg.productPrice || null, // Added productPrice from DAO response
+          productTypes: pkg.productTypes.map((item) => ({
+            id: item.id,
+            qty: item.qty,
+          })),
+        })),
+      },
+    };
+
+    console.log(`[getOrderDetailsById] Successfully fetched order details`);
+    res.json(response);
+  } catch (err) {
+    console.error("[getOrderDetailsById] Error:", err);
+
+    // Error handling
+    const statusCode = err.message.includes("Database error") ? 503 : 500;
+    const message = err.message.includes("Database error")
+      ? "Database service error"
+      : "An error occurred while fetching order details";
+
+    res.status(statusCode).json({
+      success: false,
+      message: message,
+      ...(process.env.NODE_ENV === "development" && { error: err.message }),
     });
   }
 };

@@ -1579,9 +1579,7 @@ exports.checkPackageDisplayNameExistsDao = async (displayName) => {
   });
 };
 
-
 exports.getAllRetailCustomersDao = (limit, offset, searchText) => {
-
   return new Promise((resolve, reject) => {
     let countParms = [];
     let dataParms = [];
@@ -1628,17 +1626,17 @@ exports.getAllRetailCustomersDao = (limit, offset, searchText) => {
         AND MP.isMarketPlaceUser = 1   
       `;
 
-
     console.log(searchText);
 
     if (searchText) {
-      countSql += " AND (MP.firstName LIKE ? OR MP.lastName LIKE ? OR MP.phoneNumber LIKE ? OR MP.cusId LIKE ?) ";
-      dataSql += " AND (MP.firstName LIKE ? OR MP.lastName LIKE ? OR MP.phoneNumber LIKE ? OR MP.cusId LIKE ?) ";
+      countSql +=
+        " AND (MP.firstName LIKE ? OR MP.lastName LIKE ? OR MP.phoneNumber LIKE ? OR MP.cusId LIKE ?) ";
+      dataSql +=
+        " AND (MP.firstName LIKE ? OR MP.lastName LIKE ? OR MP.phoneNumber LIKE ? OR MP.cusId LIKE ?) ";
       const search = `%${searchText}%`;
       countParms.push(search, search, search, search);
       dataParms.push(search, search, search, search);
     }
-
 
     dataSql += ` LIMIT ? OFFSET ? `;
     dataParms.push(limit);
@@ -1669,32 +1667,151 @@ exports.getAllRetailCustomersDao = (limit, offset, searchText) => {
   });
 };
 
-// exports.getAllRetailCustomersDao = async () => {
-//   return new Promise((resolve, reject) => {
-//     const sql = `
-//       SELECT
-//         MP.id,
-//         MP.firstName,
-//         MP.lastName,
-//         MP.phoneCode,
-//         MP.phoneNumber,
-//         (
-//             SELECT COUNT(*)
-//             FROM orders O
-//             LEFT JOIN processorders PO ON O.id = PO.orderId
-//             WHERE O.userId = MP.id
-//         ) AS totalOrders
-//       FROM marketplaceusers MP
-//       WHERE
-//         MP.buyerType = 'Retail'
-//         AND MP.isMarketPlaceUser = 1
-//       `;
-//     marketPlace.query(sql, (err, results) => {
-//       if (err) {
-//         reject(err);
-//       } else {
-//         resolve(results); // true if exists
-//       }
-//     });
-//   });
-// };
+exports.getOrderDetailsById = (orderId) => {
+  console.log(`[getOrderDetailsById] Fetching details for orderId: ${orderId}`);
+
+  return new Promise((resolve, reject) => {
+    const sql = `
+      SELECT
+        mp.id,
+        mp.displayName,
+        mp.productPrice,
+        pd.id AS packageItemId,
+        pd.productTypeId,
+        pd.qty
+      FROM marketplacepackages mp
+      LEFT JOIN packagedetails pd ON mp.id = pd.packageId
+      WHERE mp.id = ?
+    `;
+
+    console.log(
+      `[getOrderDetailsById] SQL Query:`,
+      sql.replace(/\s+/g, " ").trim()
+    );
+
+    marketPlace.query(sql, [orderId], (err, results) => {
+      if (err) {
+        console.error(`[getOrderDetailsById] Database error:`, err);
+        return reject(new Error(`Database error: ${err.message}`));
+      }
+
+      if (!results || results.length === 0) {
+        console.log(`[getOrderDetailsById] No order found with id: ${orderId}`);
+        return resolve(null);
+      }
+
+      try {
+        // invNo will be undefined as it's not selected in the query
+        const invNo = undefined;
+        const packagesMap = new Map();
+
+        results.forEach((row) => {
+          const packageId = row.id;
+          if (!packageId) return;
+
+          if (!packagesMap.has(packageId)) {
+            packagesMap.set(packageId, {
+              packageId: packageId,
+              displayName: row.displayName,
+              productPrice: row.productPrice || null,
+              productTypes: [],
+            });
+          }
+
+          // Add productType if it exists
+          if (row.productTypeId) {
+            packagesMap.get(packageId).productTypes.push({
+              id: row.productTypeId,
+              typeName: null, // Not available in query
+              shortCode: null, // Not available in query
+              qty: row.qty,
+            });
+          }
+        });
+
+        // Convert to final structure
+        const response = {
+          invNo: invNo,
+          packages: Array.from(packagesMap.values()),
+        };
+
+        console.log(`[getOrderDetailsById] Successfully fetched order details`);
+        resolve(response);
+      } catch (error) {
+        console.error(`[getOrderDetailsById] Processing error:`, error);
+        reject(new Error(`Failed to process order details: ${error.message}`));
+      }
+    });
+  });
+};
+
+exports.getAllMarketplaceItems = (category) => {
+  return new Promise((resolve, reject) => {
+    const sql = `
+      SELECT 
+        id,
+        varietyId,
+        displayName,
+        category,
+        normalPrice,
+        discountedPrice,
+        discount,
+        promo,
+        unitType,
+        startValue,
+        changeby,
+        displayType,
+        tags,
+        createdAt,
+        maxQuantity
+      FROM 
+        marketplaceitems
+        WHERE category = ?
+      ORDER BY 
+        createdAt DESC
+    `;
+
+    console.log(`[getAllMarketplaceItems] Executing SQL query:`, sql);
+
+    console.log("hello category", category);
+
+    marketPlace.query(sql, [category], (err, results) => {
+      if (err) {
+        console.error(
+          "[getAllMarketplaceItems] Error fetching all marketplace items:",
+          err
+        );
+        return reject(err);
+      }
+
+      console.log(
+        `[getAllMarketplaceItems] Query results count:`,
+        results.length
+      );
+
+      // Structure the data
+      const items = results.map((row) => ({
+        id: row.id,
+        varietyId: row.varietyId,
+        displayName: row.displayName,
+        category: row.category,
+        normalPrice: row.normalPrice,
+        discountedPrice: row.discountedPrice,
+        discount: row.discount,
+        promo: row.promo,
+        unitType: row.unitType,
+        startValue: row.startValue,
+        changeby: row.changeby,
+        displayType: row.displayType,
+        tags: row.tags ? row.tags.split(",") : [],
+        createdAt: row.createdAt,
+        maxQuantity: row.maxQuantity,
+      }));
+
+      console.log(
+        `[getAllMarketplaceItems] Successfully retrieved ${items.length} items`
+      );
+      resolve(items);
+    });
+  });
+};
