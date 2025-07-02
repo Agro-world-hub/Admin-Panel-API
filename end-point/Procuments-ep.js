@@ -151,12 +151,15 @@ exports.getAllProductTypes = async (req, res) => {
 };
 
 exports.getOrderDetailsById = async (req, res) => {
+  const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
+  console.log(fullUrl);
   const { id } = req.params;
   console.log(`[getOrderDetailsById] Fetching details for order ID: ${id}`);
 
   try {
     // The DAO now returns properly structured data
     const orderDetails = await procumentDao.getOrderDetailsById(id);
+    console.log('orderDetails', orderDetails);
     const additionalItems = await procumentDao.getAllOrderAdditionalItemsDao(
       id
     );

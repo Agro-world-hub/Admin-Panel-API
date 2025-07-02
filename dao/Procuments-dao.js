@@ -566,92 +566,175 @@ exports.getOrderDetailsById = (orderId) => {
 
   return new Promise((resolve, reject) => {
     const sql = `
-      SELECT 
-        po.invNo,
-        op.id AS packageId,
-        mp.displayName,
-        mp.productPrice,
-        pt.id AS productTypeId,
-        pt.typeName,
-        pt.shortCode
-      FROM 
-        processorders po
-      JOIN 
-        orders o ON po.orderId = o.id
-      LEFT JOIN 
-        orderpackage op ON o.id = op.orderId
-      LEFT JOIN 
-        marketplacepackages mp ON op.packageId = mp.id
-      LEFT JOIN 
-        packagedetails pd ON mp.id = pd.packageId
-      LEFT JOIN 
-        producttypes pt ON pd.productTypeId = pt.id
-      WHERE 
-        po.orderId = ?
-      ORDER BY
-        op.id, pt.id
+      
+    SELECT 
+    po.invNo,
+    po.id AS processOrderId,
+    o.id AS orderId,
+    mpp.id AS packageId,
+    mpp.displayName,
+    mpp.productPrice,
+    df.id AS definePkgId,
+    CAST(df.price AS DECIMAL(10,2)) AS definePkgPrice,
+    JSON_ARRAYAGG(
+        JSON_OBJECT(
+            'productTypeId', dfi.productType,
+            'productTypeShortCode', pt.shortCode,
+            'productId', dfi.productId,
+            'productName', mpi.displayName,
+            'qty', dfi.qty,
+            'price', dfi.price,
+            'dicountedPrice', mpi.discountedPrice 
+        )
+    ) AS items
+FROM 
+    market_place.processorders po
+JOIN 
+    market_place.orders o ON po.orderId = o.id
+LEFT JOIN 
+    market_place.orderpackage op ON po.id = op.orderId
+LEFT JOIN 
+    market_place.marketplacepackages mpp ON op.packageId = mpp.id
+LEFT JOIN 
+    market_place.definepackage df ON mpp.id = df.packageId
+LEFT JOIN
+    market_place.definepackageitems dfi ON df.id = dfi.definePackageId
+JOIN 
+    market_place.producttypes pt ON pt.id = dfi.productType
+JOIN 
+    market_place.marketplaceitems mpi ON mpi.id = dfi.productId
+WHERE 
+    o.id = ?
+GROUP BY 
+    po.invNo, po.id, o.id, mpp.id, mpp.displayName, mpp.productPrice, df.id
+
+
     `;
 
-    console.log(
-      `[getOrderDetailsById] SQL Query:`,
-      sql.replace(/\s+/g, " ").trim()
-    );
-
-    marketPlace.query(sql, [orderId], (err, results) => {
-      if (err) {
-        console.error(`[getOrderDetailsById] Database error:`, err);
-        return reject(err);
-      }
-
-      // console.log(`[getOrderDetailsById] Raw results:`, results);
-
-      if (results.length === 0) {
-        // console.log(
-        //   `[getOrderDetailsById] No data found for orderId: ${orderId}`
-        // );
-        return resolve(null);
-      }
-
-      const invNo = results[0].invNo;
-      const packagesMap = new Map();
-
-      results.forEach((row) => {
-        if (!row.packageId) return;
-
-        if (!packagesMap.has(row.packageId)) {
-          packagesMap.set(row.packageId, {
-            packageId: row.packageId,
-            displayName: row.displayName,
-            productPrice: row.productPrice,
-            productTypes: [],
-          });
+    try {
+      marketPlace.query(sql, [314], (err, results) => {
+        if (err) {
+          console.log("Database error:", err);
+          return reject(err);
         }
-
-        // Add productType if it exists
-        if (row.productTypeId) {
-          const packageEntry = packagesMap.get(row.packageId);
-          packageEntry.productTypes.push({
-            id: row.productTypeId,
-            typeName: row.typeName,
-            shortCode: row.shortCode,
-          });
-        }
+        resolve(results);
+        console.log('results', results );
       });
 
-      // Convert to final structure
-      const response = {
-        invNo: invNo,
-        packages: Array.from(packagesMap.values()),
-      };
-
-      // console.log(
-      //   `[getOrderDetailsById] Final structured data:`,
-      //   JSON.stringify(response, null, 2)
-      // );
-      resolve(response);
-    });
+    }catch (error) {
+      console.log("Error in createOrderPackageItemDao:", error);
+      reject(error);
+    }
+    
   });
 };
+
+// exports.getOrderDetailsById = (orderId) => {
+//   console.log(`[getOrderDetailsById] Fetching details for orderId: ${orderId}`);
+
+//   return new Promise((resolve, reject) => {
+//     const sql = `
+//       SELECT 
+//         po.invNo,
+//         op.id AS packageId,
+//         mpp.displayName,
+//         mpp.productPrice,
+//         pt.id AS productTypeId,
+//         pt.typeName,
+//         pt.shortCode
+//       FROM 
+//         processorders po
+//       JOIN 
+//         orders o ON po.orderId = o.id
+//       LEFT JOIN 
+//         orderpackage op ON po.id = op.orderId
+//       LEFT JOIN 
+//         marketplacepackages mp ON op.packageId = mp.id
+//       LEFT JOIN 
+//         packagedetails pd ON mp.id = pd.packageId
+//       LEFT JOIN 
+//         producttypes pt ON pd.productTypeId = pt.id
+//       WHERE 
+//         po.orderId = ?
+//       ORDER BY
+//         op.id, pt.id
+      
+      
+//     `;
+
+//     // LEFT JOIN 
+//       //   orderpackage op ON po.id = op.orderId
+//       // LEFT JOIN 
+//       //   marketplacepackages mpp ON op.packageId = mpp.id
+//       // LEFT JOIN 
+//       //   definepackage df ON mpp.id = df.packageId
+//       // LEFT JOIN
+//       //   definepackageitems dfi ON df.id = dfi.definePackageId
+//       // LEFT JOIN 
+//       //   producttype pt ON pd.productTypeId = pt.id
+//       // WHERE po.id = ?
+    
+
+//     console.log(
+//       `[getOrderDetailsById] SQL Query:`,
+//       sql.replace(/\s+/g, " ").trim()
+//     );
+
+//     marketPlace.query(sql, [orderId], (err, results) => {
+//       if (err) {
+//         console.error(`[getOrderDetailsById] Database error:`, err);
+//         return reject(err);
+//       }
+
+//       // console.log(`[getOrderDetailsById] Raw results:`, results);
+
+//       if (results.length === 0) {
+//         // console.log(
+//         //   `[getOrderDetailsById] No data found for orderId: ${orderId}`
+//         // );
+//         return resolve(null);
+//       }
+
+//       const invNo = results[0].invNo;
+//       const packagesMap = new Map();
+
+//       results.forEach((row) => {
+//         if (!row.packageId) return;
+
+//         if (!packagesMap.has(row.packageId)) {
+//           packagesMap.set(row.packageId, {
+//             packageId: row.packageId,
+//             displayName: row.displayName,
+//             productPrice: row.productPrice,
+//             productTypes: [],
+//           });
+//         }
+
+//         // Add productType if it exists
+//         if (row.productTypeId) {
+//           const packageEntry = packagesMap.get(row.packageId);
+//           packageEntry.productTypes.push({
+//             id: row.productTypeId,
+//             typeName: row.typeName,
+//             shortCode: row.shortCode,
+//           });
+//         }
+//       });
+
+//       // Convert to final structure
+//       const response = {
+//         invNo: invNo,
+//         packages: Array.from(packagesMap.values()),
+//       };
+
+//       // console.log(
+//       //   `[getOrderDetailsById] Final structured data:`,
+//       //   JSON.stringify(response, null, 2)
+//       // );
+//       resolve(response);
+//     });
+//   });
+// };
 
 exports.createOrderPackageItemDao = (orderPackageId, products) => {
   return new Promise((resolve, reject) => {
