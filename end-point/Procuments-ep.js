@@ -279,12 +279,14 @@ exports.createOrderPackageItem = async (req, res) => {
 
 exports.getAllMarketplaceItems = async (req, res) => {
   try {
-    console.log("hello world");
+    // console.log("hello world",req.params.id);
 
-    const orderId = req.params.id;
+    // const orderId = req.params.id;
+    const orderId = 309; // You shold pass processOrderId from frontend change it Ashan
     const btype = await procumentDao.getOrderTypeDao(orderId);
     const marketplaceItems = await procumentDao.getAllMarketplaceItems(
-      btype.buyerType
+      btype.buyerType,
+      btype.userId
     );
 
     if (!marketplaceItems || marketplaceItems.length === 0) {
@@ -295,19 +297,19 @@ exports.getAllMarketplaceItems = async (req, res) => {
     }
 
     // Optional: Group items by category if needed
-    const itemsByCategory = marketplaceItems.reduce((acc, item) => {
-      if (!acc[item.category]) {
-        acc[item.category] = [];
-      }
-      acc[item.category].push(item);
-      return acc;
-    }, {});
+    // const itemsByCategory = marketplaceItems.reduce((acc, item) => {
+    //   if (!acc[item.category]) {
+    //     acc[item.category] = [];
+    //   }
+    //   acc[item.category].push(item);
+    //   return acc;
+    // }, {});
 
     res.json({
       success: true,
       data: {
         items: marketplaceItems,
-        itemsByCategory, // Optional grouped data
+        // itemsByCategory, // Optional grouped data
         count: marketplaceItems.length,
       },
     });
