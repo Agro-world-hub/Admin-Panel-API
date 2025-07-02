@@ -1680,3 +1680,84 @@ exports.getAllMarketplaceItems = async (req, res) => {
     res.status(statusCode).json(errorResponse);
   }
 };
+
+exports.createDefinePackageWithItems = async (req, res) => {
+  try {
+    const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
+    console.log("Request URL:", fullUrl);
+    console.log("Request body:", req.body);
+
+    // Validate request body structure
+    if (
+      !req.body ||
+      !req.body.packageData ||
+      !req.body.packageItems ||
+      !Array.isArray(req.body.packageItems)
+    ) {
+      return res.status(400).json({
+        error:
+          "Invalid request format. Expected { packageData: object, packageItems: array }",
+        status: false,
+      });
+    }
+
+    const { packageData, packageItems } = req.body;
+
+    // Validate package data
+    if (!packageData.packageId || !packageData.price) {
+      return res.status(400).json({
+        error: "Package data must include packageId and price",
+        status: false,
+      });
+    }
+
+    // Validate package items array
+    if (packageItems.length === 0) {
+      return res.status(400).json({
+        error: "Package items array cannot be empty",
+        status: false,
+      });
+    }
+
+    // Validate each item in the array
+    for (const item of packageItems) {
+      if (!item.productType || !item.productId || !item.qty || !item.price) {
+        return res.status(400).json({
+          error:
+            "Each package item must have productType, productId, qty, and price",
+          status: false,
+        });
+      }
+    }
+
+    try {
+      // 1. Create the main package
+      const packageResult = await MarketPlaceDao.createDefinePackageDao(
+        packageData
+      );
+      const definePackageId = packageResult.insertId;
+
+      // 2. Create package items
+      const itemsResult = await MarketPlaceDao.createDefinePackageItemsDao(
+        definePackageId,
+        packageItems
+      );
+
+      res.status(201).json({
+        message: "Package and items created successfully",
+        packageId: definePackageId,
+        itemsCreated: itemsResult.affectedRows,
+        status: true,
+      });
+    } catch (err) {
+      throw err;
+    }
+  } catch (err) {
+    console.error("Error creating package with items:", err);
+    return res.status(500).json({
+      error:
+        err.message || "An error occurred while creating package with items",
+      status: false,
+    });
+  }
+};

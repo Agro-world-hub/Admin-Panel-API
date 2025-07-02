@@ -1835,3 +1835,72 @@ exports.getOrderTypeDao = async (id) => {
     });
   });
 };
+
+exports.createDefinePackageDao = (packageData) => {
+  return new Promise((resolve, reject) => {
+    try {
+      // Validate inputs
+      if (!packageData || !packageData.packageId || !packageData.price) {
+        throw new Error("Invalid input parameters");
+      }
+
+      const sql = `
+        INSERT INTO definepackage (
+          packageId, price
+        ) VALUES (?, ?)
+      `;
+
+      const values = [packageData.packageId, parseFloat(packageData.price)];
+
+      // Database query
+      marketPlace.query(sql, values, (err, results) => {
+        if (err) {
+          console.log("Database error:", err);
+          return reject(err);
+        }
+        resolve(results);
+      });
+    } catch (error) {
+      console.log("Error in createDefinePackageDao:", error);
+      reject(error);
+    }
+  });
+};
+
+exports.createDefinePackageItemsDao = (definePackageId, products) => {
+  return new Promise((resolve, reject) => {
+    try {
+      // Validate inputs
+      if (!definePackageId || !products || !Array.isArray(products)) {
+        throw new Error("Invalid input parameters");
+      }
+
+      // Create an array of value arrays for the batch insert
+      const values = products.map((product) => [
+        definePackageId,
+        product.productType,
+        product.productId,
+        product.qty,
+        parseFloat(product.price),
+      ]);
+
+      const sql = `
+        INSERT INTO definepackageitems (
+          definePackageId, productType, productId, qty, price
+        ) VALUES ?
+      `;
+
+      // Database query with batch insert
+      marketPlace.query(sql, [values], (err, results) => {
+        if (err) {
+          console.log("Database error:", err);
+          return reject(err);
+        }
+        resolve(results);
+      });
+    } catch (error) {
+      console.log("Error in createDefinePackageItemsDao:", error);
+      reject(error);
+    }
+  });
+};

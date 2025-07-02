@@ -260,4 +260,10 @@ router.get(
   marketPlaceEp.getAllMarketplaceItems
 );
 
+router.post(
+  "/create-package-with-items",
+  authMiddleware,
+  marketPlaceEp.createDefinePackageWithItems
+);
+
 module.exports = router;
