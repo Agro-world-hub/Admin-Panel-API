@@ -1761,3 +1761,35 @@ exports.createDefinePackageWithItems = async (req, res) => {
     });
   }
 };
+
+exports.getLatestPackageDateByPackageId = async (req, res) => {
+  const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
+  console.log("Request URL:", fullUrl);
+
+  try {
+    const packages = await MarketPlaceDao.getLatestPackageDateByPackageIdDAO();
+
+    console.log("Successfully fetched latest package data by packageId");
+    return res.status(200).json({
+      success: true,
+      message: "Latest package data retrieved successfully",
+      data: packages,
+    });
+  } catch (error) {
+    if (error.isJoi) {
+      // Handle validation error
+      return res.status(400).json({
+        success: false,
+        error: error.details[0].message,
+      });
+    }
+
+    console.error("Error fetching latest package data:", error);
+    return res.status(500).json({
+      success: false,
+      error: "An error occurred while fetching latest package data",
+      details:
+        process.env.NODE_ENV === "development" ? error.message : undefined,
+    });
+  }
+};

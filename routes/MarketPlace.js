@@ -266,4 +266,10 @@ router.post(
   marketPlaceEp.createDefinePackageWithItems
 );
 
+router.get(
+  "/get-latest-package-date/:id",
+  authMiddleware,
+  marketPlaceEp.getLatestPackageDateByPackageId
+);
+
 module.exports = router;

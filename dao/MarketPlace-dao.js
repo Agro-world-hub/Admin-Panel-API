@@ -1904,3 +1904,59 @@ exports.createDefinePackageItemsDao = (definePackageId, products) => {
     }
   });
 };
+
+exports.getLatestPackageDateByPackageIdDAO = () => {
+  return new Promise((resolve, reject) => {
+    const sql = `
+      SELECT 
+        dp1.id,
+        dp1.packageId,
+        dp1.price,
+        dp1.createdAt
+      FROM 
+        definepackage dp1
+      INNER JOIN (
+        SELECT 
+          packageId, 
+          MAX(createdAt) as latestCreatedAt
+        FROM 
+          definepackage
+        GROUP BY 
+          packageId
+      ) dp2 ON dp1.packageId = dp2.packageId AND dp1.createdAt = dp2.latestCreatedAt
+      ORDER BY dp1.packageId ASC
+    `;
+
+    // Assuming you're using the same 'marketPlace' database connection as in your example
+    marketPlace.query(sql, (err, results) => {
+      if (err) {
+        return reject(err);
+      }
+
+      // If you want to group the results by packageId (similar to your example)
+      const groupedData = {};
+
+      results.forEach((pkg) => {
+        const { packageId, id, price, createdAt } = pkg;
+
+        if (!groupedData[packageId]) {
+          groupedData[packageId] = {
+            packageId: packageId,
+            entries: [],
+          };
+        }
+
+        groupedData[packageId].entries.push({
+          id: id,
+          price: price,
+          createdAt: createdAt,
+        });
+      });
+
+      // Convert the grouped data object into an array
+      const formattedResult = Object.values(groupedData);
+
+      resolve(formattedResult);
+    });
+  });
+};
