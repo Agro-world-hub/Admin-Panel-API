@@ -144,7 +144,7 @@ app.use(BASE_PATH + '/api/distribution', DistributionRoutes)
 app.use("/uploads", express.static("uploads"));
 
 app.get(BASE_PATH + "/test", (req, res) => {
-  res.send("Test route is working!");
+  res.send("Test route is working 7/2!");
   console.log("test route is working");
 });
 
