@@ -2,8 +2,8 @@ const {
   admin,
   plantcare,
   collectionofficer,
-  marketPlace,
   dash,
+  marketPlace,
 } = require("../startup/database");
 const { Upload } = require("@aws-sdk/lib-storage");
 const Joi = require("joi");
@@ -62,7 +62,7 @@ const Joi = require("joi");
 //         dataParams.push(parseInt(limit), parseInt(offset));
 
 //         // Execute Count Query
-//         dash.query(countSql, countParams, (countErr, countResults) => {
+//         marketPlace.query(countSql, countParams, (countErr, countResults) => {
 //             if (countErr) {
 //                 console.error('Error in count query:', countErr);
 //                 return reject(countErr);
@@ -71,7 +71,7 @@ const Joi = require("joi");
 //             const total = countResults[0].total;
 
 //             // Execute Data Query
-//             dash.query(dataSql, dataParams, (dataErr, dataResults) => {
+//             marketPlace.query(dataSql, dataParams, (dataErr, dataResults) => {
 //                 if (dataErr) {
 //                     console.error('Error in data query:', dataErr);
 //                     return reject(dataErr);
@@ -149,7 +149,7 @@ exports.getAllSalesAgentsDao = (
     dataParams.push(parseInt(limit), parseInt(offset));
 
     // Execute Count Query
-    dash.query(countSql, countParams, (countErr, countResults) => {
+    marketPlace.query(countSql, countParams, (countErr, countResults) => {
       if (countErr) {
         console.error("Error in count query:", countErr);
         return reject(countErr);
@@ -158,7 +158,7 @@ exports.getAllSalesAgentsDao = (
       const total = countResults[0].total;
 
       // Execute Data Query
-      dash.query(dataSql, dataParams, (dataErr, dataResults) => {
+      marketPlace.query(dataSql, dataParams, (dataErr, dataResults) => {
         if (dataErr) {
           console.error("Error in data query:", dataErr);
           return reject(dataErr);
@@ -177,7 +177,7 @@ exports.saveTargetDao = (target, userId) => {
       
       `;
 
-    dash.query(sql, [target.targetValue, userId], (err, results) => {
+    marketPlace.query(sql, [target.targetValue, userId], (err, results) => {
       if (err) {
         return reject(err); // Reject if an error occurs
       }
@@ -190,7 +190,7 @@ exports.saveTargetDao = (target, userId) => {
 exports.getAllTargets = () => {
   return new Promise((resolve, reject) => {
     const sql = `SELECT * FROM target`;
-    dash.query(sql, (err, results) => {
+    marketPlace.query(sql, (err, results) => {
       if (err) {
         return reject(err);
       }
@@ -211,7 +211,7 @@ exports.restoreTargets = (targets) => {
     // Map data into the format MySQL expects
     const values = targets.map(target => [target.targetValue, target.createdBy, target.createdAt]);
 
-    dash.query(sql, [values], (err, results) => {
+    marketPlace.query(sql, [values], (err, results) => {
       if (err) {
         return reject(err);
       }
@@ -227,7 +227,7 @@ exports.restoreTargets = (targets) => {
 //         SELECT targetValue FROM target WHERE target.id = 1
 //       `;
 
-//         dash.query(sql, (err, results) => {
+//         marketPlace.query(sql, (err, results) => {
 //             if (err) {
 //                 return reject(err); // Reject if an error occurs
 //             }
@@ -243,7 +243,7 @@ exports.getTotalTargetDao = (date) => {
         SELECT targetValue FROM target 
       `;
 
-    dash.query(sql, (err, results) => {
+    marketPlace.query(sql, (err, results) => {
       if (err) {
         return reject(err); // Reject if an error occurs
       }
@@ -266,7 +266,7 @@ exports.removeTargetDao = () => {
         DELETE FROM target
     `;
 
-    dash.query(sql, (err, results) => {
+    marketPlace.query(sql, (err, results) => {
       if (err) {
         return reject(err); // Reject if an error occurs
       }

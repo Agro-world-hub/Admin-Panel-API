@@ -54,3 +54,29 @@ UpdatePackageSchema = Joi.object({
   discount: Joi.number().min(0).optional(),
   subtotal: Joi.number().min(0).optional(),
 });
+
+
+exports.createProductTypeSchema = Joi.object({
+  typeName: Joi.string().required(),
+  shortCode: Joi.string().required()
+});
+
+exports.getAllPackageSchema = Joi.object({
+  searchText: Joi.string().optional()
+});
+
+exports.getAllRetailOrderSchema = Joi.object({
+  page: Joi.number().integer().min(1).default(1),
+  limit: Joi.number().integer().min(1).max(100).default(10),
+  status: Joi.string().optional(),
+  method: Joi.string().optional(),
+  searchItem: Joi.string().optional(),
+  formattedDate: Joi.string().optional(),
+});
+
+
+exports.getmarketplaceCustomerParamSchema = Joi.object({
+  page: Joi.number().integer().min(1).default(1),
+  limit: Joi.number().integer().min(1).max(100).default(10),
+  searchText: Joi.string().optional(),
+});

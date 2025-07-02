@@ -189,8 +189,20 @@ exports.createSalesAgent = async (req, res) => {
       }
     }
 
+
+    //   if (req.body.file) {
+    //   const fileBuffer = req.body.file.buffer;
+    //   const fileName = req.body.file.originalname;
+
+    //   profileImageUrl = await uploadFileToS3(
+    //     fileBuffer,
+    //     fileName,
+    //     "users/profile-images"
+    //   );
+    // }
+
     // Save officer data (without image if no image is uploaded)
-    console.log('got to dao');
+    console.log('got to dao', profileImageUrl);
     const resultsPersonal =
       await DashDao.createSalesAgent(
         officerData,
@@ -245,17 +257,16 @@ exports.updateSalesAgentDetails = async (req, res) => {
 
   const officerData = JSON.parse(req.body.officerData);
   // const qrCode = await collectionofficerDao.getQrImage(id);
+  // const officerDataForImage = await DashDao.getSalesAgentDataById(id);
+  console.log(officerData);
+
 
   // let qrImageUrl;
 
-  let profileImageUrl = null;
-
   if (req.body.file) {
-    console.log("Recieved");
-    // qrImageUrl = qrCode.image;
-    // if (qrImageUrl) {
-    //   await deleteFromS3(qrImageUrl);
-    // }
+    await deleteFromS3(officerData.image);
+    console.log(req.body.file);
+
 
     const base64String = req.body.file.split(",")[1]; // Extract the Base64 content
     const mimeType = req.body.file.match(/data:(.*?);base64,/)[1]; // Extract MIME type
@@ -264,14 +275,11 @@ exports.updateSalesAgentDetails = async (req, res) => {
     const fileExtension = mimeType.split("/")[1]; // Extract file extension from MIME type
     const fileName = `${officerData.firstName}_${officerData.lastName}.${fileExtension}`;
 
-    profileImageUrl = await uploadFileToS3(
+    officerData.image = await uploadFileToS3(
       fileBuffer,
       fileName,
       "salesagent/image"
     );
-  } else {
-    // profileImageUrl = qrCode.image;
-    profileImageUrl = null;
   }
 
   const {
@@ -296,6 +304,7 @@ exports.updateSalesAgentDetails = async (req, res) => {
     accNumber,
     bankName,
     branchName,
+    image
   } = officerData;
   console.log(empId);
 
@@ -323,7 +332,7 @@ exports.updateSalesAgentDetails = async (req, res) => {
       accNumber,
       bankName,
       branchName,
-      profileImageUrl
+      image
     );
     res.json({ message: "Collection officer details updated successfully" });
   } catch (err) {
@@ -418,15 +427,9 @@ exports.getAllOrders = async (req, res) => {
 
   try {
     console.log('bla bla bla')
-    // Validate query parameters
-    // const validatedQuery =
-    //   await collectionofficerValidate.getAllCollectionOfficersSchema.validateAsync(
-    //     req.query
-    //   );
 
     const { page, limit, orderStatus, paymentMethod, paymentStatus, deliveryType, searchText, date } = req.query;
 
-    // const { page, limit, nic, company } = validatedQuery;
 
     // Call the DAO to get all collection officers
     const result = await DashDao.getAllOrders(
@@ -441,8 +444,8 @@ exports.getAllOrders = async (req, res) => {
 
     );
 
-    console.log({ page, limit });
-    console.log(result);
+    // console.log({ page, limit });
+    // console.log(result);
 
     return res.status(200).json(result);
   } catch (error) {

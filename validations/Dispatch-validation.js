@@ -32,3 +32,13 @@ exports.validateIsPackedUpdate = Joi.object({
   ids: Joi.array().items(Joi.number().integer().required()).required()
     .description('Array of numeric IDs to mark as packed'),
 });
+
+exports.geAdditionalItems = Joi.object({
+  id: Joi.number().integer().required(),
+  
+});
+
+exports.getCustomAdditionalItems = Joi.object({
+  id: Joi.number().integer().required(),
+  
+});

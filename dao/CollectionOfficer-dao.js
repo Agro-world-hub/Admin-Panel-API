@@ -369,7 +369,8 @@ exports.getAllCollectionOfficers = (
   companyid,
   role,
   centerStatus,
-  status
+  status,
+  centerId
 ) => {
   return new Promise((resolve, reject) => {
     const offset = (page - 1) * limit;
@@ -446,6 +447,13 @@ exports.getAllCollectionOfficers = (
       dataSql += " AND coff.jobRole = ?";
       countParams.push(role);
       dataParams.push(role);
+    }
+
+    if (centerId) {
+      countSql += " AND coff.centerId = ?";
+      dataSql += " AND coff.centerId = ?";
+      countParams.push(centerId);
+      dataParams.push(centerId);
     }
 
     // Apply search filters for NIC or related fields
@@ -670,18 +678,25 @@ exports.getFarmerPaymentsCropsByRegisteredFarmerId = (registeredFarmerId) => {
 exports.getCollectionOfficerProvinceReports = (province) => {
   return new Promise((resolve, reject) => {
     const sql = `
-            SELECT cg.cropNameEnglish AS cropName,
-             c.province, 
-             SUM(fpc.gradeAquan) AS qtyA, 
-             SUM(fpc.gradeBquan) AS qtyB, 
-             SUM(fpc.gradeCquan) AS qtyC, 
-             SUM(fpc.gradeAprice) AS priceA, 
-             SUM(fpc.gradeBprice) AS priceB, 
-             SUM(fpc.gradeCprice) AS priceC
-            FROM registeredfarmerpayments rp, collectionofficer c, plant_care.cropvariety cv , plant_care.cropgroup cg, farmerpaymentscrops fpc
-            WHERE rp.id = fpc.registerFarmerId AND rp.collectionOfficerId = c.id AND fpc.cropId = cv.id AND cv.cropGroupId = cg.id AND c.province = ? AND c.companyId = 1
-            GROUP BY cg.cropNameEnglish, c.province
-        `;
+      SELECT 
+        cg.cropNameEnglish AS cropName,
+        cc.province, 
+        SUM(fpc.gradeAquan) AS qtyA, 
+        SUM(fpc.gradeBquan) AS qtyB, 
+        SUM(fpc.gradeCquan) AS qtyC, 
+        SUM(fpc.gradeAprice) AS priceA, 
+        SUM(fpc.gradeBprice) AS priceB, 
+        SUM(fpc.gradeCprice) AS priceC
+      FROM registeredfarmerpayments rp
+      INNER JOIN collectionofficer c ON rp.collectionOfficerId = c.id
+      INNER JOIN farmerpaymentscrops fpc ON rp.id = fpc.registerFarmerId
+      INNER JOIN plant_care.cropvariety cv ON fpc.cropId = cv.id
+      INNER JOIN plant_care.cropgroup cg ON cv.cropGroupId = cg.id
+      INNER JOIN collectioncenter cc ON c.centerId = cc.id
+      WHERE cc.province = ? AND c.companyId = 1
+      GROUP BY cg.cropNameEnglish, cc.province
+    `;
+    
     collectionofficer.query(sql, [province], (err, results) => {
       if (err) {
         return reject(err);
@@ -690,6 +705,7 @@ exports.getCollectionOfficerProvinceReports = (province) => {
     });
   });
 };
+
 
 exports.getAllCompanyNamesDao = (district) => {
   return new Promise((resolve, reject) => {
@@ -1857,7 +1873,8 @@ exports.downloadPurchaseReport = (centerId, startDate, endDate, search) => {
         ub.bankName AS bankName,
         ub.branchName AS branchName,
         co.empId AS empId,
-        TIME(rfp.createdAt) AS createdAt
+        TIME(rfp.createdAt) AS createdAt,
+        DATE(rfp.createdAt) AS createdDate
       FROM 
         registeredfarmerpayments rfp
       LEFT JOIN 

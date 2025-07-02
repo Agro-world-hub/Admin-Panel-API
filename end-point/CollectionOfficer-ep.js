@@ -166,7 +166,7 @@ exports.getAllCollectionOfficers = async (req, res) => {
         req.query
       );
 
-    const { page, limit, centerStatus, status, nic, company, role } = validatedQuery;
+    const { page, limit, centerStatus, status, nic, company, role, centerId } = validatedQuery;
 
     console.log(centerStatus, status)
 
@@ -178,7 +178,8 @@ exports.getAllCollectionOfficers = async (req, res) => {
       company,
       role,
       centerStatus,
-      status
+      status,
+      centerId
     );
 
     console.log(result);
