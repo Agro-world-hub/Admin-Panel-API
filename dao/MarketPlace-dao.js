@@ -1579,9 +1579,7 @@ exports.checkPackageDisplayNameExistsDao = async (displayName) => {
   });
 };
 
-
 exports.getAllRetailCustomersDao = (limit, offset, searchText) => {
-
   return new Promise((resolve, reject) => {
     let countParms = [];
     let dataParms = [];
@@ -1628,17 +1626,17 @@ exports.getAllRetailCustomersDao = (limit, offset, searchText) => {
         AND MP.isMarketPlaceUser = 1   
       `;
 
-
     console.log(searchText);
 
     if (searchText) {
-      countSql += " AND (MP.firstName LIKE ? OR MP.lastName LIKE ? OR MP.phoneNumber LIKE ? OR MP.cusId LIKE ?) ";
-      dataSql += " AND (MP.firstName LIKE ? OR MP.lastName LIKE ? OR MP.phoneNumber LIKE ? OR MP.cusId LIKE ?) ";
+      countSql +=
+        " AND (MP.firstName LIKE ? OR MP.lastName LIKE ? OR MP.phoneNumber LIKE ? OR MP.cusId LIKE ?) ";
+      dataSql +=
+        " AND (MP.firstName LIKE ? OR MP.lastName LIKE ? OR MP.phoneNumber LIKE ? OR MP.cusId LIKE ?) ";
       const search = `%${searchText}%`;
       countParms.push(search, search, search, search);
       dataParms.push(search, search, search, search);
     }
-
 
     dataSql += ` LIMIT ? OFFSET ? `;
     dataParms.push(limit);
@@ -1669,32 +1667,296 @@ exports.getAllRetailCustomersDao = (limit, offset, searchText) => {
   });
 };
 
-// exports.getAllRetailCustomersDao = async () => {
-//   return new Promise((resolve, reject) => {
-//     const sql = `
-//       SELECT
-//         MP.id,
-//         MP.firstName,
-//         MP.lastName,
-//         MP.phoneCode,
-//         MP.phoneNumber,
-//         (
-//             SELECT COUNT(*)
-//             FROM orders O
-//             LEFT JOIN processorders PO ON O.id = PO.orderId
-//             WHERE O.userId = MP.id
-//         ) AS totalOrders
-//       FROM marketplaceusers MP
-//       WHERE
-//         MP.buyerType = 'Retail'
-//         AND MP.isMarketPlaceUser = 1
-//       `;
-//     marketPlace.query(sql, (err, results) => {
-//       if (err) {
-//         reject(err);
-//       } else {
-//         resolve(results); // true if exists
-//       }
-//     });
-//   });
-// };
+exports.getOrderDetailsById = (orderId) => {
+  console.log(`[getOrderDetailsById] Fetching details for orderId: ${orderId}`);
+
+  return new Promise((resolve, reject) => {
+    const sql = `
+      SELECT
+        mp.id,
+        mp.displayName,
+        mp.productPrice,
+        pd.id AS packageItemId,
+        pd.productTypeId,
+        pt.shortCode,
+        pt.typeName,
+        pd.qty
+      FROM marketplacepackages mp
+      LEFT JOIN packagedetails pd ON mp.id = pd.packageId
+      LEFT JOIN producttypes pt ON pd.productTypeId = pt.id
+      WHERE mp.id = ?
+    `;
+
+    console.log(
+      `[getOrderDetailsById] SQL Query:`,
+      sql.replace(/\s+/g, " ").trim()
+    );
+
+    marketPlace.query(sql, [orderId], (err, results) => {
+      if (err) {
+        console.error(`[getOrderDetailsById] Database error:`, err);
+        return reject(new Error(`Database error: ${err.message}`));
+      }
+
+      if (!results || results.length === 0) {
+        console.log(`[getOrderDetailsById] No order found with id: ${orderId}`);
+        return resolve(null);
+      }
+
+      try {
+        const invNo = undefined;
+        const packagesMap = new Map();
+
+        results.forEach((row) => {
+          const packageId = row.id;
+          if (!packageId) return;
+
+          if (!packagesMap.has(packageId)) {
+            packagesMap.set(packageId, {
+              packageId: packageId,
+              displayName: row.displayName,
+              productPrice: row.productPrice || null,
+              productTypes: [],
+            });
+          }
+
+          if (row.productTypeId) {
+            packagesMap.get(packageId).productTypes.push({
+              id: row.productTypeId,
+              typeName: row.typeName, // Now available from the query
+              shortCode: row.shortCode, // Now available from the query
+              qty: row.qty,
+            });
+          }
+        });
+
+        const response = {
+          invNo: invNo,
+          packages: Array.from(packagesMap.values()),
+        };
+
+        console.log(`[getOrderDetailsById] Successfully fetched order details`);
+        resolve(response);
+      } catch (error) {
+        console.error(`[getOrderDetailsById] Processing error:`, error);
+        reject(new Error(`Failed to process order details: ${error.message}`));
+      }
+    });
+  });
+};
+
+exports.getAllMarketplaceItems = (category) => {
+  return new Promise((resolve, reject) => {
+    const sql = `
+      SELECT 
+        id,
+        varietyId,
+        displayName,
+        category,
+        normalPrice,
+        discountedPrice,
+        discount,
+        promo,
+        unitType,
+        startValue,
+        changeby,
+        displayType,
+        tags,
+        createdAt,
+        maxQuantity
+      FROM 
+        marketplaceitems
+        WHERE category = ?
+      ORDER BY 
+        createdAt DESC
+    `;
+
+    console.log(`[getAllMarketplaceItems] Executing SQL query:`, sql);
+
+    console.log("hello category", category);
+
+    marketPlace.query(sql, [category], (err, results) => {
+      if (err) {
+        console.error(
+          "[getAllMarketplaceItems] Error fetching all marketplace items:",
+          err
+        );
+        return reject(err);
+      }
+
+      console.log(
+        `[getAllMarketplaceItems] Query results count:`,
+        results.length
+      );
+
+      // Structure the data
+      const items = results.map((row) => ({
+        id: row.id,
+        varietyId: row.varietyId,
+        displayName: row.displayName,
+        category: row.category,
+        normalPrice: row.normalPrice,
+        discountedPrice: row.discountedPrice,
+        discount: row.discount,
+        promo: row.promo,
+        unitType: row.unitType,
+        startValue: row.startValue,
+        changeby: row.changeby,
+        displayType: row.displayType,
+        tags: row.tags ? row.tags.split(",") : [],
+        createdAt: row.createdAt,
+        maxQuantity: row.maxQuantity,
+      }));
+
+      console.log(
+        `[getAllMarketplaceItems] Successfully retrieved ${items.length} items`
+      );
+      resolve(items);
+    });
+  });
+};
+
+exports.getOrderTypeDao = async (id) => {
+  return new Promise((resolve, reject) => {
+    const sql = `
+      SELECT buyerType
+      FROM processorders POR, orders O, marketplaceusers U
+      WHERE POR.orderId = O.id AND O.userId = U.id
+    `;
+    marketPlace.query(sql, [id], (err, results) => {
+      if (err) {
+        console.log("Erro", err);
+
+        reject(err);
+      } else {
+        resolve(results[0]);
+        console.log("``````````result``````````", results[0]);
+      }
+    });
+  });
+};
+
+exports.createDefinePackageDao = (packageData) => {
+  return new Promise((resolve, reject) => {
+    try {
+      // Validate inputs
+      if (!packageData || !packageData.packageId || !packageData.price) {
+        throw new Error("Invalid input parameters");
+      }
+
+      const sql = `
+        INSERT INTO definepackage (
+          packageId, price
+        ) VALUES (?, ?)
+      `;
+
+      const values = [packageData.packageId, parseFloat(packageData.price)];
+
+      // Database query
+      marketPlace.query(sql, values, (err, results) => {
+        if (err) {
+          console.log("Database error:", err);
+          return reject(err);
+        }
+        resolve(results);
+      });
+    } catch (error) {
+      console.log("Error in createDefinePackageDao:", error);
+      reject(error);
+    }
+  });
+};
+
+exports.createDefinePackageItemsDao = (definePackageId, products) => {
+  return new Promise((resolve, reject) => {
+    try {
+      // Validate inputs
+      if (!definePackageId || !products || !Array.isArray(products)) {
+        throw new Error("Invalid input parameters");
+      }
+
+      // Create an array of value arrays for the batch insert
+      const values = products.map((product) => [
+        definePackageId,
+        product.productType,
+        product.productId,
+        product.qty,
+        parseFloat(product.price),
+      ]);
+
+      const sql = `
+        INSERT INTO definepackageitems (
+          definePackageId, productType, productId, qty, price
+        ) VALUES ?
+      `;
+
+      // Database query with batch insert
+      marketPlace.query(sql, [values], (err, results) => {
+        if (err) {
+          console.log("Database error:", err);
+          return reject(err);
+        }
+        resolve(results);
+      });
+    } catch (error) {
+      console.log("Error in createDefinePackageItemsDao:", error);
+      reject(error);
+    }
+  });
+};
+
+exports.getLatestPackageDateByPackageIdDAO = () => {
+  return new Promise((resolve, reject) => {
+    const sql = `
+      SELECT 
+        dp1.id,
+        dp1.packageId,
+        dp1.price,
+        dp1.createdAt
+      FROM 
+        definepackage dp1
+      INNER JOIN (
+        SELECT 
+          packageId, 
+          MAX(createdAt) as latestCreatedAt
+        FROM 
+          definepackage
+        GROUP BY 
+          packageId
+      ) dp2 ON dp1.packageId = dp2.packageId AND dp1.createdAt = dp2.latestCreatedAt
+      ORDER BY dp1.packageId ASC
+    `;
+
+    // Assuming you're using the same 'marketPlace' database connection as in your example
+    marketPlace.query(sql, (err, results) => {
+      if (err) {
+        return reject(err);
+      }
+
+      // If you want to group the results by packageId (similar to your example)
+      const groupedData = {};
+
+      results.forEach((pkg) => {
+        const { packageId, id, price, createdAt } = pkg;
+
+        if (!groupedData[packageId]) {
+          groupedData[packageId] = {
+            packageId: packageId,
+            entries: [],
+          };
+        }
+
+        groupedData[packageId].entries.push({
+          id: id,
+          price: price,
+          createdAt: createdAt,
+        });
+      });
+
+      // Convert the grouped data object into an array
+      const formattedResult = Object.values(groupedData);
+
+      resolve(formattedResult);
+    });
+  });
+};
