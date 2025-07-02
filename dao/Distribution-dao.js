@@ -292,10 +292,11 @@ exports.getCompanyDAO = () => {
   return new Promise((resolve, reject) => {
     let sql = `
       SELECT 
-        c.companyNameEnglish
+      c.id,
+      c.companyNameEnglish
       FROM 
         company c
-      WHERE c.status = 'ACTIVE'
+      WHERE c.status = 1
       ORDER BY c.companyNameEnglish ASC
     `;
 

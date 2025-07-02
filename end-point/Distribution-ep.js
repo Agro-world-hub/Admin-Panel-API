@@ -161,20 +161,29 @@ exports.getAllDistributionCentreHead = async (req, res) => {
 
 exports.getCompanies = async (req, res) => {
   try {
-    const results = await DistributionDao.getCompanyDAO();
-    const companyNames = results.map((company) => company.companyNameEnglish);
+    const companies = await DistributionDao.getCompanyDAO();
 
-    console.log("Successfully retrieved company names");
+    if (!companies || companies.length === 0) {
+      console.warn("No active companies found");
+      return res.json({
+        success: true,
+        message: "No active companies found",
+        data: [],
+      });
+    }
+
+    // console.log(`Successfully retrieved ${companyNames.length} company names`);
     res.json({
       success: true,
       message: "Company names retrieved successfully",
-      data: companyNames, // Now just an array of strings
+      data: companies,
     });
   } catch (err) {
-    console.error("Error fetching company names:", err);
+    console.error("Error fetching company names:", err.message);
     res.status(500).json({
       success: false,
       error: "An error occurred while fetching company names",
+      details: process.env.NODE_ENV === "development" ? err.message : undefined,
     });
   }
 };
