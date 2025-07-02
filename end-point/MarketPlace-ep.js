@@ -1529,22 +1529,267 @@ exports.checkPackageDisplayNameExists = async (req, res) => {
   }
 };
 
-
 exports.getAllRetailCustomers = async (req, res) => {
   try {
-    const { page, limit, searchText } = await MarketPriceValidate.getmarketplaceCustomerParamSchema.validateAsync(req.query);
+    const { page, limit, searchText } =
+      await MarketPriceValidate.getmarketplaceCustomerParamSchema.validateAsync(
+        req.query
+      );
     const offset = (page - 1) * limit;
-    const { total, items } = await MarketPlaceDao.getAllRetailCustomersDao(limit, offset, searchText);
+    const { total, items } = await MarketPlaceDao.getAllRetailCustomersDao(
+      limit,
+      offset,
+      searchText
+    );
 
     return res.status(200).json({
       total,
-      items
+      items,
     });
   } catch (err) {
     console.error("Error checking display name:", err);
     return res.status(500).json({
       error: "An error occurred while checking display name",
       status: false,
+    });
+  }
+};
+
+exports.getOrderDetailsById = async (req, res) => {
+  const { id } = req.params;
+  console.log(`[getOrderDetailsById] Fetching details for order ID: ${id}`);
+
+  try {
+    // Validate order ID
+    if (!id || isNaN(Number(id))) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid order ID format",
+      });
+    }
+
+    // Fetch order details from DAO
+    const orderDetails = await MarketPlaceDao.getOrderDetailsById(id);
+
+    if (!orderDetails) {
+      console.log(`[getOrderDetailsById] No details found for order ID: ${id}`);
+      return res.status(404).json({
+        success: false,
+        message: "Order details not found",
+      });
+    }
+
+    const response = {
+      success: true,
+      data: {
+        invNo: orderDetails.invNo || null,
+        packages: orderDetails.packages.map((pkg) => ({
+          packageId: pkg.packageId,
+          displayName: pkg.displayName,
+          productPrice: pkg.productPrice || null,
+          productTypes: pkg.productTypes.map((item) => ({
+            id: item.id,
+            typeName: item.typeName,
+            shortCode: item.shortCode,
+            qty: item.qty,
+          })),
+        })),
+      },
+    };
+
+    console.log(`[getOrderDetailsById] Successfully fetched order details`);
+    res.json(response);
+  } catch (err) {
+    console.error("[getOrderDetailsById] Error:", err);
+
+    // Error handling
+    const statusCode = err.message.includes("Database error") ? 503 : 500;
+    const message = err.message.includes("Database error")
+      ? "Database service error"
+      : "An error occurred while fetching order details";
+
+    res.status(statusCode).json({
+      success: false,
+      message: message,
+      ...(process.env.NODE_ENV === "development" && { error: err.message }),
+    });
+  }
+};
+
+exports.getAllMarketplaceItems = async (req, res) => {
+  try {
+    console.log("hello world");
+
+    const orderId = req.params.id;
+    const btype = await MarketPlaceDao.getOrderTypeDao(orderId);
+    const marketplaceItems = await MarketPlaceDao.getAllMarketplaceItems(
+      btype.buyerType
+    );
+
+    if (!marketplaceItems || marketplaceItems.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "No marketplace items found",
+      });
+    }
+
+    // Optional: Group items by category if needed
+    const itemsByCategory = marketplaceItems.reduce((acc, item) => {
+      if (!acc[item.category]) {
+        acc[item.category] = [];
+      }
+      acc[item.category].push(item);
+      return acc;
+    }, {});
+
+    res.json({
+      success: true,
+      data: {
+        items: marketplaceItems,
+        itemsByCategory, // Optional grouped data
+        count: marketplaceItems.length,
+      },
+    });
+  } catch (err) {
+    console.error("Error fetching marketplace items:", err);
+
+    let statusCode = 500;
+    let message = "An error occurred while fetching marketplace items.";
+
+    if (err.isJoi) {
+      statusCode = 400;
+      message = err.details[0].message;
+    } else if (
+      err.code === "ER_NO_SUCH_TABLE" ||
+      err.code === "ER_BAD_FIELD_ERROR"
+    ) {
+      statusCode = 500;
+      message = "Database configuration error";
+    }
+
+    const errorResponse = {
+      success: false,
+      message: message,
+    };
+
+    if (process.env.NODE_ENV === "development") {
+      errorResponse.error = err.stack;
+      errorResponse.details = err.message;
+    }
+
+    res.status(statusCode).json(errorResponse);
+  }
+};
+
+exports.createDefinePackageWithItems = async (req, res) => {
+  try {
+    const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
+    console.log("Request URL:", fullUrl);
+    console.log("Request body:", req.body);
+
+    // Validate request body structure
+    if (
+      !req.body ||
+      !req.body.packageData ||
+      !req.body.packageItems ||
+      !Array.isArray(req.body.packageItems)
+    ) {
+      return res.status(400).json({
+        error:
+          "Invalid request format. Expected { packageData: object, packageItems: array }",
+        status: false,
+      });
+    }
+
+    const { packageData, packageItems } = req.body;
+
+    // Validate package data
+    if (!packageData.packageId || !packageData.price) {
+      return res.status(400).json({
+        error: "Package data must include packageId and price",
+        status: false,
+      });
+    }
+
+    // Validate package items array
+    if (packageItems.length === 0) {
+      return res.status(400).json({
+        error: "Package items array cannot be empty",
+        status: false,
+      });
+    }
+
+    // Validate each item in the array
+    for (const item of packageItems) {
+      if (!item.productType || !item.productId || !item.qty || !item.price) {
+        return res.status(400).json({
+          error:
+            "Each package item must have productType, productId, qty, and price",
+          status: false,
+        });
+      }
+    }
+
+    try {
+      // 1. Create the main package
+      const packageResult = await MarketPlaceDao.createDefinePackageDao(
+        packageData
+      );
+      const definePackageId = packageResult.insertId;
+
+      // 2. Create package items
+      const itemsResult = await MarketPlaceDao.createDefinePackageItemsDao(
+        definePackageId,
+        packageItems
+      );
+
+      res.status(201).json({
+        message: "Package and items created successfully",
+        packageId: definePackageId,
+        itemsCreated: itemsResult.affectedRows,
+        status: true,
+      });
+    } catch (err) {
+      throw err;
+    }
+  } catch (err) {
+    console.error("Error creating package with items:", err);
+    return res.status(500).json({
+      error:
+        err.message || "An error occurred while creating package with items",
+      status: false,
+    });
+  }
+};
+
+exports.getLatestPackageDateByPackageId = async (req, res) => {
+  const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
+  console.log("Request URL:", fullUrl);
+
+  try {
+    const packages = await MarketPlaceDao.getLatestPackageDateByPackageIdDAO();
+
+    console.log("Successfully fetched latest package data by packageId");
+    return res.status(200).json({
+      success: true,
+      message: "Latest package data retrieved successfully",
+      data: packages,
+    });
+  } catch (error) {
+    if (error.isJoi) {
+      // Handle validation error
+      return res.status(400).json({
+        success: false,
+        error: error.details[0].message,
+      });
+    }
+
+    console.error("Error fetching latest package data:", error);
+    return res.status(500).json({
+      success: false,
+      error: "An error occurred while fetching latest package data",
+      details:
+        process.env.NODE_ENV === "development" ? error.message : undefined,
     });
   }
 };

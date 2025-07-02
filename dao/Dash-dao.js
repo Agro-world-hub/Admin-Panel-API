@@ -481,7 +481,7 @@ const SendGeneratedPasswordDao = async (email, password, empId, firstName) => {
     // Create a buffer to hold the PDF in memory
     const pdfBuffer = [];
     doc.on("data", pdfBuffer.push.bind(pdfBuffer));
-    doc.on("end", () => {});
+    doc.on("end", () => { });
 
     const watermarkPath = "./assets/bg.png";
     doc.opacity(0.2).image(watermarkPath, 100, 300, { width: 400 }).opacity(1);
@@ -770,23 +770,31 @@ const getAllOrders = (
       `);
 
       const searchValue = `%${searchText}%`;
-      // Add 9 parameters for the search
       params.push(...Array(9).fill(searchValue));
     }
 
+
     if (orderStatus) {
+      console.log("Order Status:", orderStatus);
+      
       whereConditions.push(`po.status = ?`);
       params.push(orderStatus);
     }
 
     if (paymentMethod) {
-      whereConditions.push(`po.paymentMethod = ?`);
-      params.push(paymentMethod);
+      if (paymentMethod === "Online Payment") {
+        whereConditions.push(`po.paymentMethod = ?`);
+        params.push("Card");
+      } else if (paymentMethod === "Pay By Cash") {
+        whereConditions.push(`po.paymentMethod = ?`);
+        params.push("Cash");
+      }
+
     }
 
     if (paymentStatus !== undefined && paymentStatus !== "") {
       whereConditions.push(`po.isPaid = ?`);
-      params.push(Number(paymentStatus));
+      params.push(parseInt(paymentStatus));
     }
 
     if (deliveryType) {

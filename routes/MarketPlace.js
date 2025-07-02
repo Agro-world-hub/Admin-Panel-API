@@ -248,4 +248,28 @@ router.get(
   marketPlaceEp.getAllRetailCustomers
 );
 
+router.get(
+  "/get-order-details/:id",
+  authMiddleware,
+  marketPlaceEp.getOrderDetailsById
+);
+
+router.get(
+  "/get-marketplace-item/:id",
+  authMiddleware,
+  marketPlaceEp.getAllMarketplaceItems
+);
+
+router.post(
+  "/create-package-with-items",
+  authMiddleware,
+  marketPlaceEp.createDefinePackageWithItems
+);
+
+router.get(
+  "/get-latest-package-date/:id",
+  authMiddleware,
+  marketPlaceEp.getLatestPackageDateByPackageId
+);
+
 module.exports = router;

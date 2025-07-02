@@ -474,13 +474,13 @@ exports.getAllOrdersWithProcessInfo = (
         po.createdAt AS processCreatedAt,
         op.packingStatus
         FROM processorders po, orders o, orderpackage op
-        WHERE packingStatus = 'Todo' AND po.orderId = o.id AND o.id = op.orderId 
+        WHERE op.packingStatus = 'Todo' AND po.orderId = o.id AND po.id = op.orderId 
       `;
     countSql = `
       SELECT 
         COUNT(po.id) AS total
         FROM processorders po, orders o, orderpackage op
-        WHERE packingStatus = 'Todo' AND po.orderId = o.id AND o.id = op.orderId
+        WHERE op.packingStatus = 'Todo' AND po.orderId = o.id AND po.id = op.orderId
       `;
     if (statusFilter) {
       if (statusFilter === "Paid") {
@@ -691,37 +691,30 @@ exports.createOrderPackageItemDao = (orderPackageId, products) => {
   });
 };
 
-exports.getAllMarketplaceItems = (category) => {
+exports.getAllMarketplaceItems = (category, userId) => {
   return new Promise((resolve, reject) => {
     const sql = `
       SELECT 
-        id,
-        varietyId,
-        displayName,
-        category,
-        normalPrice,
-        discountedPrice,
-        discount,
-        promo,
-        unitType,
-        startValue,
-        changeby,
-        displayType,
-        tags,
-        createdAt,
-        maxQuantity
-      FROM 
-        marketplaceitems
-        WHERE category = ?
+        MPI.id,
+        MPI.varietyId,
+        MPI.displayName,
+        MPI.category,
+        MPI.normalPrice,
+        MPI.discountedPrice,
+        MPI.discount,
+        MPI.unitType,
+        MPI.startValue,
+        MPI.changeby,
+        XL.id AS isExcluded
+      FROM marketplaceitems MPI
+      LEFT JOIN excludelist XL ON MPI.id = XL.mpItemId AND XL.userId = ?
+      WHERE category = ?
       ORDER BY 
-        createdAt DESC
+        MPI.displayName
     `;
 
-    console.log(`[getAllMarketplaceItems] Executing SQL query:`, sql);
 
-    console.log("hello category", category);
-
-    marketPlace.query(sql, [category], (err, results) => {
+    marketPlace.query(sql, [userId, category], (err, results) => {
       if (err) {
         console.error(
           "[getAllMarketplaceItems] Error fetching all marketplace items:",
@@ -729,11 +722,6 @@ exports.getAllMarketplaceItems = (category) => {
         );
         return reject(err);
       }
-
-      console.log(
-        `[getAllMarketplaceItems] Query results count:`,
-        results.length
-      );
 
       // Structure the data
       const items = results.map((row) => ({
@@ -748,15 +736,12 @@ exports.getAllMarketplaceItems = (category) => {
         unitType: row.unitType,
         startValue: row.startValue,
         changeby: row.changeby,
-        displayType: row.displayType,
-        tags: row.tags ? row.tags.split(",") : [],
-        createdAt: row.createdAt,
-        maxQuantity: row.maxQuantity,
+        isExcluded: row.isExcluded === null ? true : false,
+        
       }));
 
-      console.log(
-        `[getAllMarketplaceItems] Successfully retrieved ${items.length} items`
-      );
+      console.log(items);
+      
       resolve(items);
     });
   });
@@ -764,9 +749,9 @@ exports.getAllMarketplaceItems = (category) => {
 exports.getOrderTypeDao = async (id) => {
   return new Promise((resolve, reject) => {
     const sql = `
-      SELECT buyerType
+      SELECT O.userId, U.buyerType
       FROM processorders POR, orders O, marketplaceusers U
-      WHERE POR.orderId = O.id AND O.userId = U.id
+      WHERE POR.id = ? AND POR.orderId = O.id AND O.userId = U.id
     `;
     marketPlace.query(sql, [id], (err, results) => {
       if (err) {
@@ -774,8 +759,8 @@ exports.getOrderTypeDao = async (id) => {
 
         reject(err);
       } else {
-        resolve(results[0]);
         console.log("``````````result``````````", results[0]);
+        resolve(results[0]);
       }
     });
   });
