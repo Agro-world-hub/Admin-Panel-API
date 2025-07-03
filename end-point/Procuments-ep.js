@@ -282,10 +282,12 @@ exports.createOrderPackageItem = async (req, res) => {
 
 exports.getAllMarketplaceItems = async (req, res) => {
   try {
-    // console.log("hello world",req.params.id);
+    console.log("hello world",req.params.id);
+
+    console.log('params', req.params.id);
 
     // const orderId = req.params.id;
-    const orderId = 309; // You shold pass processOrderId from frontend change it Ashan
+    const orderId = req.params.id; // You shold pass processOrderId from frontend change it Ashan
     const btype = await procumentDao.getOrderTypeDao(orderId);
     const marketplaceItems = await procumentDao.getAllMarketplaceItems(
       btype.buyerType,
