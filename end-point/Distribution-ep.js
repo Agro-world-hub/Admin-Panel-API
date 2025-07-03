@@ -161,20 +161,29 @@ exports.getAllDistributionCentreHead = async (req, res) => {
 
 exports.getCompanies = async (req, res) => {
   try {
-    const results = await DistributionDao.getCompanyDAO();
-    const companyNames = results.map((company) => company.companyNameEnglish);
+    const companies = await DistributionDao.getCompanyDAO();
 
-    console.log("Successfully retrieved company names");
+    if (!companies || companies.length === 0) {
+      console.warn("No active companies found");
+      return res.json({
+        success: true,
+        message: "No active companies found",
+        data: [],
+      });
+    }
+
+    // console.log(`Successfully retrieved ${companyNames.length} company names`);
     res.json({
       success: true,
       message: "Company names retrieved successfully",
-      data: companyNames, // Now just an array of strings
+      data: companies,
     });
   } catch (err) {
-    console.error("Error fetching company names:", err);
+    console.error("Error fetching company names:", err.message);
     res.status(500).json({
       success: false,
       error: "An error occurred while fetching company names",
+      details: process.env.NODE_ENV === "development" ? err.message : undefined,
     });
   }
 };
@@ -450,6 +459,59 @@ exports.updateCollectionOfficerDetails = async (req, res) => {
     res.status(500).json({
       success: false,
       error: "An error occurred while updating distribution head details",
+    });
+  }
+};
+
+exports.getDistributionCentreById = async (req, res) => {
+  const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
+  console.log(fullUrl);
+
+  try {
+    // Directly get the ID from params (without validation)
+    const { id } = req.params;
+
+    // Basic check if ID exists
+    if (!id) {
+      return res
+        .status(400)
+        .json({ error: "Distribution centre ID is required" });
+    }
+
+    const distributionCentre = await DistributionDao.getDistributionCentreById(
+      id
+    );
+
+    if (!distributionCentre) {
+      return res.status(404).json({ error: "Distribution centre not found" });
+    }
+
+    // Format the response to include company information
+    const response = {
+      id: distributionCentre.id,
+      centerName: distributionCentre.centerName,
+      officerName: distributionCentre.officerName,
+      code1: distributionCentre.code1,
+      contact01: distributionCentre.contact01,
+      code2: distributionCentre.code2,
+      contact02: distributionCentre.contact02,
+      city: distributionCentre.city,
+      district: distributionCentre.district,
+      province: distributionCentre.province,
+      country: distributionCentre.country,
+      longitude: distributionCentre.longitude,
+      latitude: distributionCentre.latitude,
+      email: distributionCentre.email,
+      createdAt: distributionCentre.createdAt,
+      company: distributionCentre.companyNameEnglish,
+    };
+
+    console.log("Fetched distribution centre:", response);
+    res.json(response);
+  } catch (err) {
+    console.error("Error fetching distribution centre:", err);
+    res.status(500).json({
+      error: "An error occurred while fetching the distribution centre.",
     });
   }
 };

@@ -102,7 +102,8 @@ exports.getAllDistributionCentre = (
 
     if (searchItem) {
       const searchQuery = `%${searchItem}%`;
-      whereClause += " AND (C.regCode LIKE ? OR C.centerName LIKE ?)";
+      whereClause +=
+        " AND (dc.centerName LIKE ? OR c.companyNameEnglish LIKE ?)";
       searchParams.push(searchQuery, searchQuery);
     }
 
@@ -292,10 +293,11 @@ exports.getCompanyDAO = () => {
   return new Promise((resolve, reject) => {
     let sql = `
       SELECT 
-        c.companyNameEnglish
+      c.id,
+      c.companyNameEnglish
       FROM 
         company c
-      WHERE c.status = 'ACTIVE'
+      WHERE c.status = 1
       ORDER BY c.companyNameEnglish ASC
     `;
 
@@ -552,6 +554,46 @@ exports.UpdateDistributionHeadDao = (id, updateData) => {
       console.log("Collection Officer details updated successfully");
       console.log("Affected rows:", results.affectedRows);
       resolve(results);
+    });
+  });
+};
+
+exports.getDistributionCentreById = (id) => {
+  return new Promise((resolve, reject) => {
+    const sql = `
+      SELECT 
+        dc.id,
+        dc.centerName,
+        dc.officerName,
+        dc.code1,
+        dc.contact01,
+        dc.code2,
+        dc.contact02,
+        dc.city,
+        dc.district,
+        dc.province,
+        dc.country,
+        dc.longitude,
+        dc.latitude,
+        dc.email,
+        dc.createdAt,
+        c.companyNameEnglish
+      FROM distributedcenter dc
+      LEFT JOIN distributedcompanycenter dcc ON dc.id = dcc.centerId
+      LEFT JOIN company c ON dcc.companyId = c.id
+      WHERE dc.id = ?
+    `;
+
+    collectionofficer.query(sql, [id], (err, results) => {
+      if (err) {
+        return reject(err);
+      }
+
+      if (results.length === 0) {
+        return resolve(null);
+      }
+
+      resolve(results[0]);
     });
   });
 };

@@ -84,4 +84,10 @@ router.put(
   distributionEp.updateCollectionOfficerDetails
 );
 
+router.get(
+  "/get-distribution-centre/:id",
+  authMiddleware,
+  distributionEp.getDistributionCentreById
+);
+
 module.exports = router;
