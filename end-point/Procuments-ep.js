@@ -574,3 +574,61 @@ exports.getAllOrdersWithProcessInfoDispatched = async (req, res) => {
     });
   }
 };
+
+exports.updateDefinePackageData = async (req, res) => {
+  const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
+  console.log(fullUrl);
+  try {
+    const { definePackageItems } = req.body;
+
+    if (!Array.isArray(definePackageItems) || definePackageItems.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid or empty definePackageItems array'
+      });
+    }
+
+    console.log('items:', definePackageItems);
+
+    const formattedData = {
+      processOrderId: definePackageItems[0].processOrderId,
+      packages: definePackageItems.map(pkg => {
+        const {
+          itemId,
+          definePkgId,
+          displayName,
+          definePkgPrice,
+          productPrice,
+          items
+        } = pkg;
+    
+        return {
+          definePkgId,
+          displayName,
+          definePkgPrice,
+          productPrice,
+          items
+        };
+      })
+    };
+    
+    
+
+    const updateResult = await procumentDao.updateDefinePackageItemData(formattedData);
+    console.log(formattedData);
+
+    res.json({
+      success: true,
+      message: `${formattedData.affectedRows} items updated`,
+      updatedItems: updateResult
+    });
+
+  } catch (err) {
+    console.error("Error updating packed status:", err);
+
+    res.status(500).json({
+      success: false,
+      message: 'An error occurred while updating packed status'
+    });
+  }
+};

@@ -578,6 +578,7 @@ exports.getOrderDetailsById = (orderId) => {
     CAST(df.price AS DECIMAL(10,2)) AS definePkgPrice,
     JSON_ARRAYAGG(
         JSON_OBJECT(
+            'itemId', dfi.id,
             'productTypeId', dfi.productType,
             'productTypeShortCode', pt.shortCode,
             'productId', dfi.productId,
@@ -1174,3 +1175,70 @@ exports.getAllOrdersWithProcessInfoDispatched = (page, limit, dateFilter) => {
     });
   });
 };
+
+exports.updateDefinePackageItemData = (formattedData) => {
+  return new Promise((resolve, reject) => {
+    const { packages } = formattedData;
+
+    if (!Array.isArray(packages) || packages.length === 0) {
+      return reject("No packages to update");
+    }
+
+    const updatePromises = [];
+
+    packages.forEach(pkg => {
+      const { definePkgId, definePkgPrice, items } = pkg;
+
+      // 1. Update the price in definepackage table
+      const updateDefinePackageSQL = `
+        UPDATE market_place.definepackage
+        SET price = ?
+        WHERE id = ?
+      `;
+      updatePromises.push(new Promise((resolveInner, rejectInner) => {
+        marketPlace.query(updateDefinePackageSQL, [definePkgPrice, definePkgId], (err, result) => {
+          if (err) {
+            console.error('Error updating definepackage:', err);
+            return rejectInner(err);
+          }
+          resolveInner(result);
+        });
+      }));
+
+      // 2. Update each item in definepackageitems
+      items.forEach(item => {
+        const updateItemSQL = `
+          UPDATE market_place.definepackageitems
+          SET productId = ?, qty = ?, price = ?
+          WHERE id = ?
+        `;
+        const itemParams = [item.productId, item.qty, item.price, item.itemId];
+
+        updatePromises.push(new Promise((resolveInner, rejectInner) => {
+          marketPlace.query(updateItemSQL, itemParams, (err, result) => {
+            if (err) {
+              console.error(`Error updating itemId ${item.itemId}:`, err);
+              return rejectInner(err);
+            }
+            resolveInner(result);
+          });
+        }));
+      });
+    });
+
+    Promise.all(updatePromises)
+      .then(results => {
+        resolve({
+          message: 'All definepackage and item updates successful',
+          affectedRows: results.reduce((total, result) => total + (result.affectedRows || 0), 0)
+        });
+      })
+      .catch(error => {
+        reject({
+          message: 'One or more updates failed',
+          error
+        });
+      });
+  });
+};
+

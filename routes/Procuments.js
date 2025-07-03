@@ -129,4 +129,10 @@ router.get(
   ProcumentsEP.getAllOrdersWithProcessInfoDispatched
 );
 
+router.post(
+  "/update-define-package-data",
+  authMiddleware,
+  ProcumentsEP.updateDefinePackageData
+);
+
 module.exports = router;
