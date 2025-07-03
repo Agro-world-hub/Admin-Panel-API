@@ -454,3 +454,43 @@ exports.updateCollectionOfficerDetails = async (req, res) => {
     });
   }
 };
+
+exports.deleteDistributedCenter = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    if (!id) {
+      return res.status(400).json({
+        success: false,
+        message: "Distribution Head ID is required",
+      });
+    }
+
+    const result = await DistributionDao.deleteDistributedCenterDao(parseInt(id));
+    console.log("Delete result",result);
+    
+
+    if (result.affectedRows === 0) {
+      return res.json({
+        success: false,
+        message: "Distribution Center Delete faild",
+      });
+    }
+
+    console.log("Successfully updated Distribution Head details");
+    res.json({
+      success: true,
+      message: "Distribution Deleted successfully",
+      data: {
+        id: id,
+        affectedRows: result.affectedRows,
+      },
+    });
+  } catch (err) {
+    console.error("Error updating distribution head details:", err);
+    res.status(500).json({
+      success: false,
+      error: "An error occurred while updating distribution head details",
+    });
+  }
+};

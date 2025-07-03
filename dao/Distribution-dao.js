@@ -565,3 +565,21 @@ exports.UpdateDistributionHeadDao = (id, updateData) => {
     });
   });
 };
+
+
+exports.deleteDistributedCenterDao = (id) => {
+  return new Promise((resolve, reject) => {
+    let sql = `
+      DELETE FROM distributedcenter
+      WHERE id = ?
+    `;
+    collectionofficer.query(sql,[id], (err, results) => {
+      if (err) {
+        return reject(err);
+      }
+      console.log("Collection Officer details updated successfully");
+      console.log("Affected rows:", results.affectedRows);
+      resolve(results);
+    });
+  });
+};

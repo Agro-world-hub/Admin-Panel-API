@@ -84,4 +84,10 @@ router.put(
   distributionEp.updateCollectionOfficerDetails
 );
 
+router.delete(
+  "/delete-distributed-center/:id",
+  authMiddleware,
+  distributionEp.deleteDistributedCenter
+);
+
 module.exports = router;
