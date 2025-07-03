@@ -573,7 +573,7 @@ exports.getOrderDetailsById = (orderId) => {
     o.id AS orderId,
     mpp.id AS packageId,
     mpp.displayName,
-    mpp.productPrice,
+    CAST(mpp.productPrice AS DECIMAL(10,2)) AS productPrice,
     df.id AS definePkgId,
     CAST(df.price AS DECIMAL(10,2)) AS definePkgPrice,
     JSON_ARRAYAGG(
@@ -613,13 +613,20 @@ GROUP BY
     `;
 
     try {
-      marketPlace.query(sql, [314], (err, results) => {
+      marketPlace.query(sql, [orderId], (err, results) => {
         if (err) {
           console.log("Database error:", err);
           return reject(err);
         }
-        resolve(results);
-        console.log('results', results );
+      
+        // Convert string to float for both prices
+        const parsedResults = results.map(row => ({
+          ...row,
+          productPrice: parseFloat(row.productPrice),
+          definePkgPrice: parseFloat(row.definePkgPrice)
+        }));
+      
+        resolve(parsedResults);
       });
 
     }catch (error) {
@@ -820,7 +827,7 @@ exports.getAllMarketplaceItems = (category, userId) => {
         unitType: row.unitType,
         startValue: row.startValue,
         changeby: row.changeby,
-        isExcluded: row.isExcluded === null ? true : false,
+        isExcluded: row.isExcluded === null ? false : true,
         
       }));
 
