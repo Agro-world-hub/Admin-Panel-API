@@ -62,7 +62,7 @@ router.get(
 
 router.get(
   "/get-company",
-  // authMiddleware,
+  authMiddleware,
   distributionEp.getCompany
 );
 
@@ -88,6 +88,12 @@ router.get(
   "/get-distribution-centre/:id",
   authMiddleware,
   distributionEp.getDistributionCentreById
+);
+
+router.delete(
+  "/delete-distributed-center/:id",
+  authMiddleware,
+  distributionEp.deleteDistributedCenter
 );
 
 module.exports = router;
