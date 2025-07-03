@@ -71,10 +71,14 @@ exports.getAllDistributionCentre = (
   district,
   province,
   company,
-  searchItem
+  searchItem,
+  centerType
 ) => {
   return new Promise((resolve, reject) => {
-    let countSql = "SELECT COUNT(*) as total FROM distributedcenter dc";
+    let countSql = `
+      SELECT COUNT(*) as total FROM collection_officer.distributedcenter dc
+      LEFT JOIN collection_officer.distributedcompanycenter dcc ON dc.id = dcc.centerId
+    `;
     let sql = `
         SELECT 
             dc.id,
@@ -91,14 +95,19 @@ exports.getAllDistributionCentre = (
             dc.longitude,
             dc.latitude,
             c.companyNameEnglish AS companyName
-            
             FROM collection_officer.distributedcenter dc
             LEFT JOIN collection_officer.distributedcompanycenter dcc ON dc.id = dcc.centerId
             JOIN collection_officer.company c ON dcc.companyId = c.id
       `;
 
-    let whereClause = " WHERE 1=1";
+    let whereClause = " WHERE 1=1 ";
     const searchParams = [];
+
+    if (centerType === 'polygon') {
+      whereClause += " AND dcc.companyId = 1 ";
+    } else {
+      whereClause += " AND dcc.companyId != 1 ";
+    }
 
     if (searchItem) {
       const searchQuery = `%${searchItem}%`;
@@ -139,6 +148,7 @@ exports.getAllDistributionCentre = (
           if (dataErr) {
             return reject(dataErr);
           }
+          console.log(sql, "SQL Query executed successfully");
 
           resolve({
             total: total,

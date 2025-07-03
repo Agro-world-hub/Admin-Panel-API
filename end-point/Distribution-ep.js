@@ -49,7 +49,7 @@ exports.getAllDistributionCentre = async (req, res) => {
   const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
   console.log(fullUrl);
   try {
-    const { page, limit, district, province, company, searchItem } =
+    const { page, limit, district, province, company, searchItem, centerType } =
       await DistributionValidation.getAllDistributionCentreSchema.validateAsync(
         req.query
       );
@@ -62,7 +62,8 @@ exports.getAllDistributionCentre = async (req, res) => {
       district,
       province,
       company,
-      searchItem
+      searchItem,
+      centerType
     );
 
     console.log(items);

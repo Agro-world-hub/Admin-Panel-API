@@ -62,7 +62,7 @@ router.get(
 
 router.get(
   "/get-company",
-  // authMiddleware,
+  authMiddleware,
   distributionEp.getCompany
 );
 
