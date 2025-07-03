@@ -151,12 +151,15 @@ exports.getAllProductTypes = async (req, res) => {
 };
 
 exports.getOrderDetailsById = async (req, res) => {
+  const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
+  console.log(fullUrl);
   const { id } = req.params;
   console.log(`[getOrderDetailsById] Fetching details for order ID: ${id}`);
 
   try {
     // The DAO now returns properly structured data
     const orderDetails = await procumentDao.getOrderDetailsById(id);
+    console.log('orderDetails', orderDetails);
     const additionalItems = await procumentDao.getAllOrderAdditionalItemsDao(
       id
     );
@@ -570,6 +573,64 @@ exports.getAllOrdersWithProcessInfoDispatched = async (req, res) => {
       success: false,
       message: message,
       error: process.env.NODE_ENV === "development" ? err.stack : undefined,
+    });
+  }
+};
+
+exports.updateDefinePackageData = async (req, res) => {
+  const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
+  console.log(fullUrl);
+  try {
+    const { definePackageItems } = req.body;
+
+    if (!Array.isArray(definePackageItems) || definePackageItems.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid or empty definePackageItems array'
+      });
+    }
+
+    console.log('items:', definePackageItems);
+
+    const formattedData = {
+      processOrderId: definePackageItems[0].processOrderId,
+      packages: definePackageItems.map(pkg => {
+        const {
+          itemId,
+          definePkgId,
+          displayName,
+          definePkgPrice,
+          productPrice,
+          items
+        } = pkg;
+    
+        return {
+          definePkgId,
+          displayName,
+          definePkgPrice,
+          productPrice,
+          items
+        };
+      })
+    };
+    
+    
+
+    const updateResult = await procumentDao.updateDefinePackageItemData(formattedData);
+    console.log(formattedData);
+
+    res.json({
+      success: true,
+      message: `${formattedData.affectedRows} items updated`,
+      updatedItems: updateResult
+    });
+
+  } catch (err) {
+    console.error("Error updating packed status:", err);
+
+    res.status(500).json({
+      success: false,
+      message: 'An error occurred while updating packed status'
     });
   }
 };
