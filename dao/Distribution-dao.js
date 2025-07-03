@@ -557,3 +557,43 @@ exports.UpdateDistributionHeadDao = (id, updateData) => {
     });
   });
 };
+
+exports.getDistributionCentreById = (id) => {
+  return new Promise((resolve, reject) => {
+    const sql = `
+      SELECT 
+        dc.id,
+        dc.centerName,
+        dc.officerName,
+        dc.code1,
+        dc.contact01,
+        dc.code2,
+        dc.contact02,
+        dc.city,
+        dc.district,
+        dc.province,
+        dc.country,
+        dc.longitude,
+        dc.latitude,
+        dc.email,
+        dc.createdAt,
+        c.companyNameEnglish
+      FROM distributedcenter dc
+      LEFT JOIN distributedcompanycenter dcc ON dc.id = dcc.centerId
+      LEFT JOIN company c ON dcc.companyId = c.id
+      WHERE dc.id = ?
+    `;
+
+    collectionofficer.query(sql, [id], (err, results) => {
+      if (err) {
+        return reject(err);
+      }
+
+      if (results.length === 0) {
+        return resolve(null);
+      }
+
+      resolve(results[0]);
+    });
+  });
+};

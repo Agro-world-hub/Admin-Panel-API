@@ -462,3 +462,56 @@ exports.updateCollectionOfficerDetails = async (req, res) => {
     });
   }
 };
+
+exports.getDistributionCentreById = async (req, res) => {
+  const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
+  console.log(fullUrl);
+
+  try {
+    // Directly get the ID from params (without validation)
+    const { id } = req.params;
+
+    // Basic check if ID exists
+    if (!id) {
+      return res
+        .status(400)
+        .json({ error: "Distribution centre ID is required" });
+    }
+
+    const distributionCentre = await DistributionDao.getDistributionCentreById(
+      id
+    );
+
+    if (!distributionCentre) {
+      return res.status(404).json({ error: "Distribution centre not found" });
+    }
+
+    // Format the response to include company information
+    const response = {
+      id: distributionCentre.id,
+      centerName: distributionCentre.centerName,
+      officerName: distributionCentre.officerName,
+      code1: distributionCentre.code1,
+      contact01: distributionCentre.contact01,
+      code2: distributionCentre.code2,
+      contact02: distributionCentre.contact02,
+      city: distributionCentre.city,
+      district: distributionCentre.district,
+      province: distributionCentre.province,
+      country: distributionCentre.country,
+      longitude: distributionCentre.longitude,
+      latitude: distributionCentre.latitude,
+      email: distributionCentre.email,
+      createdAt: distributionCentre.createdAt,
+      company: distributionCentre.companyNameEnglish,
+    };
+
+    console.log("Fetched distribution centre:", response);
+    res.json(response);
+  } catch (err) {
+    console.error("Error fetching distribution centre:", err);
+    res.status(500).json({
+      error: "An error occurred while fetching the distribution centre.",
+    });
+  }
+};
