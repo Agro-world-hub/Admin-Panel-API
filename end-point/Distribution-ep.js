@@ -528,9 +528,10 @@ exports.deleteDistributedCenter = async (req, res) => {
       });
     }
 
-    const result = await DistributionDao.deleteDistributedCenterDao(parseInt(id));
-    console.log("Delete result",result);
-    
+    const result = await DistributionDao.deleteDistributedCenterDao(
+      parseInt(id)
+    );
+    console.log("Delete result", result);
 
     if (result.affectedRows === 0) {
       return res.json({
@@ -554,5 +555,110 @@ exports.deleteDistributedCenter = async (req, res) => {
       success: false,
       error: "An error occurred while updating distribution head details",
     });
+  }
+};
+
+exports.updateDistributionCentreDetails = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const updateData = req.body;
+
+    console.log("Received update request for ID:", id);
+    console.log("Update data:", updateData);
+
+    // Validate required fields
+    if (!id) {
+      console.log("Validation failed: Missing ID");
+      return res.status(400).json({
+        success: false,
+        error: "Distribution Centre ID is required",
+      });
+    }
+
+    if (!updateData || Object.keys(updateData).length === 0) {
+      console.log("Validation failed: Missing update data");
+      return res.status(400).json({
+        success: false,
+        error: "Update data is required",
+      });
+    }
+
+    // Validate required fields for distribution center
+    const requiredFields = [
+      "centerName",
+      "officerName",
+      "city",
+      "province",
+      "country",
+    ];
+    const missingFields = requiredFields.filter((field) => !updateData[field]);
+
+    if (missingFields.length > 0) {
+      console.log("Validation failed: Missing required fields:", missingFields);
+      return res.status(400).json({
+        success: false,
+        error: `Missing required fields: ${missingFields.join(", ")}`,
+      });
+    }
+
+    // Update the distribution center
+    console.log("Calling DAO to update distribution center");
+    const updatedCentre = await DistributionDao.updateDistributionCentreById(
+      id,
+      updateData
+    );
+
+    if (!updatedCentre) {
+      console.log(
+        "Update failed: Distribution Centre not found or no changes made"
+      );
+      return res.status(404).json({
+        success: false,
+        error: "Distribution Centre not found or no changes made",
+      });
+    }
+
+    console.log("Successfully updated Distribution Centre details");
+    res.json({
+      success: true,
+      message: "Distribution Centre details updated successfully",
+      data: updatedCentre,
+    });
+  } catch (err) {
+    console.error("Error updating distribution centre details:", err);
+    res.status(500).json({
+      success: false,
+      error: "An error occurred while updating distribution centre details",
+      details: process.env.NODE_ENV === "development" ? err.message : undefined,
+    });
+  }
+};
+
+exports.deleteDistributionCenter = async (req, res) => {
+  const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
+  console.log(fullUrl);
+
+  try {
+    const { id } = req.params;
+
+    const results = await DistributionDao.DeleteDistributionCenter(id);
+
+    console.log("Successfully Deleted Distribution Center");
+    if (results.affectedRows > 0) {
+      res.status(200).json({ results: results, status: true });
+    } else {
+      res.json({ results: results, status: false });
+    }
+  } catch (error) {
+    if (error.isJoi) {
+      return res
+        .status(400)
+        .json({ error: error.details[0].message, status: false });
+    }
+
+    console.error("Error deleting Distribution Center:", error);
+    return res
+      .status(500)
+      .json({ error: "An error occurred while deleting Distribution Center" });
   }
 };

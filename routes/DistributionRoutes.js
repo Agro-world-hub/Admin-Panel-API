@@ -60,11 +60,7 @@ router.get(
   distributionEp.getAllDistributedCentersByCompany
 );
 
-router.get(
-  "/get-company",
-  authMiddleware,
-  distributionEp.getCompany
-);
+router.get("/get-company", authMiddleware, distributionEp.getCompany);
 
 router.delete(
   "/delete-officer/:id",
@@ -94,6 +90,18 @@ router.delete(
   "/delete-distributed-center/:id",
   authMiddleware,
   distributionEp.deleteDistributedCenter
+);
+
+router.put(
+  "/update-distribution-centre/:id",
+  authMiddleware,
+  distributionEp.updateDistributionCentreDetails
+);
+
+router.delete(
+  "/delete-distribution-centre/:id",
+  authMiddleware,
+  distributionEp.deleteDistributionCenter
 );
 
 module.exports = router;
