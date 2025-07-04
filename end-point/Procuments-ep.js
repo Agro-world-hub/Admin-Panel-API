@@ -173,11 +173,17 @@ exports.getOrderDetailsById = async (req, res) => {
       });
     }
 
+    const btype = await procumentDao.getOrderTypeDao(id);
+    const excludeList = await procumentDao.getExcludeListDao(btype.userId);
+    
+
+
     console.log(`[getOrderDetailsById] Successfully fetched order details`);
     res.json({
       success: true,
       data: orderDetails,
       additionalItems: additionalItems,
+      excludeList:excludeList
     });
   } catch (err) {
     console.error("[getOrderDetailsById] Error:", err);

@@ -1234,3 +1234,25 @@ exports.updateDefinePackageItemData = (formattedData) => {
   });
 };
 
+
+
+exports.getExcludeListDao = async (id) => {
+  return new Promise((resolve, reject) => {
+    const sql = `
+      SELECT 
+        MPI.id,
+        MPI.displayName
+      FROM excludelist XL, marketplaceitems MPI
+      WHERE XL.userId = ? AND XL.mpItemId = MPI.id
+    `;
+    marketPlace.query(sql, [id], (err, results) => {
+      if (err) {
+        console.log("Erro", err);
+
+        reject(err);
+      } else {
+        resolve(results);
+      }
+    });
+  });
+};
