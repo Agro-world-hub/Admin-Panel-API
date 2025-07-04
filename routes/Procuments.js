@@ -135,4 +135,10 @@ router.post(
   ProcumentsEP.updateDefinePackageData
 );
 
+router.get(
+  "/get-excluded-items/:orderId",
+  authMiddleware,
+  ProcumentsEP.getExcludedItems
+);
+
 module.exports = router;

@@ -360,13 +360,17 @@ exports.getAllOrdersWithProcessInfoCompleted = async (req, res) => {
   console.log(fullUrl);
 
   try {
-    const { page = 1, limit = 10, statusFilter, dateFilter } = req.query;
+    const { page = 1, limit = 10, statusFilter, dateFilter, searchTerm } = req.query;
     console.log(req.query);
+
+    console.log('searchTerm', searchTerm)
 
     const ordersData = await procumentDao.getAllOrdersWithProcessInfoCompleted(
       page,
       limit,
-      dateFilter
+      dateFilter,
+      searchTerm
+      
     );
     // console.log("Orders Data:", ordersData);
 
@@ -406,7 +410,9 @@ exports.getAllOrdersWithProcessInfoCompleted = async (req, res) => {
 // In your controller file
 exports.updateOrderPackagePackingStatus = async (req, res) => {
   try {
-    const { orderPackageId, status } = req.body;
+    const { orderPackageId, orderId, status } = req.body;
+
+    console.log('orderId', orderId)
 
     if (!orderPackageId || !status) {
       return res.status(400).json({
@@ -417,6 +423,7 @@ exports.updateOrderPackagePackingStatus = async (req, res) => {
 
     const result = await procumentDao.updateOrderPackagePackingStatusDao(
       orderPackageId,
+      orderId,
       status
     );
 
@@ -441,6 +448,8 @@ exports.getOrderPackageItemsById = async (req, res) => {
   try {
     const { orderId } = req.params;
 
+    console.log('orderId', orderId)
+
     if (!orderId) {
       return res.status(400).json({
         success: false,
@@ -449,6 +458,8 @@ exports.getOrderPackageItemsById = async (req, res) => {
     }
 
     const orderPackages = await procumentDao.getOrderPackagesByOrderId(orderId);
+
+    console.log('orderPackages', orderPackages)
 
     if (!orderPackages) {
       return res.status(404).json({
@@ -542,13 +553,16 @@ exports.getAllOrdersWithProcessInfoDispatched = async (req, res) => {
   console.log(fullUrl);
 
   try {
-    const { page = 1, limit = 10, statusFilter, dateFilter } = req.query;
+    const { page = 1, limit = 10, statusFilter, dateFilter, searchTerm } = req.query;
     console.log(req.query);
+
+    console.log('datefilte', dateFilter, 'searchTerm', searchTerm)
 
     const ordersData = await procumentDao.getAllOrdersWithProcessInfoDispatched(
       page,
       limit,
-      dateFilter
+      dateFilter,
+      searchTerm
     );
     // console.log("Orders Data:", ordersData);
 
@@ -605,7 +619,8 @@ exports.updateDefinePackageData = async (req, res) => {
       packages: definePackageItems.map(pkg => {
         const {
           itemId,
-          definePkgId,
+          orderpkgId,
+          packageId,
           displayName,
           definePkgPrice,
           productPrice,
@@ -613,7 +628,8 @@ exports.updateDefinePackageData = async (req, res) => {
         } = pkg;
     
         return {
-          definePkgId,
+          orderpkgId,
+          packageId,
           displayName,
           definePkgPrice,
           productPrice,
@@ -621,6 +637,8 @@ exports.updateDefinePackageData = async (req, res) => {
         };
       })
     };
+
+    console.log(formattedData);
     
     
 
@@ -639,6 +657,37 @@ exports.updateDefinePackageData = async (req, res) => {
     res.status(500).json({
       success: false,
       message: 'An error occurred while updating packed status'
+    });
+  }
+};
+
+exports.getExcludedItems = async (req, res) => {
+  const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
+  console.log(fullUrl);
+
+  try {
+    const orderId = req.params.orderId; // ✅ correct usage
+    console.log('orderId', orderId);
+
+    const btype = await procumentDao.getOrderTypeDao(orderId);
+    const excludeList = await procumentDao.getExcludeListDao(btype.userId);
+
+    console.log('excludeList', excludeList);
+
+    if (!excludeList) {
+      return res.status(404).json({
+        success: false,
+        message: "Excluded items not found",
+      });
+    }
+
+    res.json(excludeList);
+  } catch (err) {
+    console.error("Error fetching order package items:", err);
+    res.status(500).json({
+      success: false,
+      message: "An error occurred while fetching order package items",
+      error: process.env.NODE_ENV === "development" ? err.message : undefined,
     });
   }
 };
