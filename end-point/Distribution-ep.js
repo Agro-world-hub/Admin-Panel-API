@@ -515,3 +515,79 @@ exports.getDistributionCentreById = async (req, res) => {
     });
   }
 };
+
+exports.updateDistributionCentreDetails = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const updateData = req.body;
+
+    console.log("Received update request for ID:", id);
+    console.log("Update data:", updateData);
+
+    // Validate required fields
+    if (!id) {
+      console.log("Validation failed: Missing ID");
+      return res.status(400).json({
+        success: false,
+        error: "Distribution Centre ID is required",
+      });
+    }
+
+    if (!updateData || Object.keys(updateData).length === 0) {
+      console.log("Validation failed: Missing update data");
+      return res.status(400).json({
+        success: false,
+        error: "Update data is required",
+      });
+    }
+
+    // Validate required fields for distribution center
+    const requiredFields = [
+      "centerName",
+      "officerName",
+      "city",
+      "province",
+      "country",
+    ];
+    const missingFields = requiredFields.filter((field) => !updateData[field]);
+
+    if (missingFields.length > 0) {
+      console.log("Validation failed: Missing required fields:", missingFields);
+      return res.status(400).json({
+        success: false,
+        error: `Missing required fields: ${missingFields.join(", ")}`,
+      });
+    }
+
+    // Update the distribution center
+    console.log("Calling DAO to update distribution center");
+    const updatedCentre = await DistributionDao.updateDistributionCentreById(
+      id,
+      updateData
+    );
+
+    if (!updatedCentre) {
+      console.log(
+        "Update failed: Distribution Centre not found or no changes made"
+      );
+      return res.status(404).json({
+        success: false,
+        error: "Distribution Centre not found or no changes made",
+      });
+    }
+
+    console.log("Successfully updated Distribution Centre details");
+    res.json({
+      success: true,
+      message: "Distribution Centre details updated successfully",
+      data: updatedCentre,
+    });
+  } catch (err) {
+    console.error("Error updating distribution centre details:", err);
+    res.status(500).json({
+      success: false,
+      error: "An error occurred while updating distribution centre details",
+      details: process.env.NODE_ENV === "development" ? err.message : undefined,
+    });
+  }
+};

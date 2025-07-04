@@ -597,3 +597,131 @@ exports.getDistributionCentreById = (id) => {
     });
   });
 };
+
+exports.updateDistributionCentreById = (id, updateData) => {
+  return new Promise((resolve, reject) => {
+    console.log("Starting update for distribution center ID:", id);
+    console.log("Update data received:", updateData);
+
+    // Extract fields from updateData
+    const {
+      centerName,
+      officerName,
+      code1,
+      contact01,
+      code2,
+      contact02,
+      city,
+      district,
+      province,
+      country,
+      longitude,
+      latitude,
+      email,
+      companyNameEnglish,
+      companyId,
+    } = updateData;
+
+    // Update distribution center SQL
+    const updateCenterSql = `
+      UPDATE distributedcenter 
+      SET 
+        centerName = ?,
+        officerName = ?,
+        code1 = ?,
+        contact01 = ?,
+        code2 = ?,
+        contact02 = ?,
+        city = ?,
+        district = ?,
+        province = ?,
+        country = ?,
+        longitude = ?,
+        latitude = ?,
+        email = ?
+      WHERE id = ?
+    `;
+
+    const centerParams = [
+      centerName,
+      officerName,
+      code1,
+      contact01,
+      code2,
+      contact02,
+      city,
+      district,
+      province,
+      country,
+      longitude,
+      latitude,
+      email,
+      id,
+    ];
+
+    console.log("Executing center update with:", updateCenterSql, centerParams);
+
+    // Execute distribution center update
+    collectionofficer.query(
+      updateCenterSql,
+      centerParams,
+      (err, centerResults) => {
+        if (err) {
+          console.error("Error updating distribution center:", err);
+          return reject(err);
+        }
+
+        console.log("Center update results:", centerResults);
+
+        if (centerResults.affectedRows === 0) {
+          console.log("No rows affected in center update");
+          return resolve(null);
+        }
+
+        // Update company if information is provided
+        if (companyNameEnglish && companyId) {
+          const updateCompanySql = `
+          UPDATE company
+          SET companyNameEnglish = ?
+          WHERE id = ?
+        `;
+
+          console.log("Executing company update with:", updateCompanySql, [
+            companyNameEnglish,
+            companyId,
+          ]);
+
+          collectionofficer.query(
+            updateCompanySql,
+            [companyNameEnglish, companyId],
+            (err, companyResults) => {
+              if (err) {
+                console.error("Error updating company:", err);
+                return reject(err);
+              }
+
+              console.log("Company update results:", companyResults);
+
+              if (companyResults.affectedRows === 0) {
+                console.log("No rows affected in company update");
+                return resolve(null);
+              }
+
+              console.log("Updates completed successfully");
+              exports
+                .getDistributionCentreById(id)
+                .then((updatedCenter) => resolve(updatedCenter))
+                .catch((error) => reject(error));
+            }
+          );
+        } else {
+          console.log("No company update needed");
+          exports
+            .getDistributionCentreById(id)
+            .then((updatedCenter) => resolve(updatedCenter))
+            .catch((error) => reject(error));
+        }
+      }
+    );
+  });
+};
