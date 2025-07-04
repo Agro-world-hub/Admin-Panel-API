@@ -1984,6 +1984,7 @@ exports.getAllWholesaleCustomersDao = (limit, offset, searchText) => {
         MP.email,
         MP.created_at,
         MP.buildingType,
+        MP.companyName,
         H.houseNo,
         H.streetName,
         H.city,
