@@ -725,3 +725,18 @@ exports.updateDistributionCentreById = (id, updateData) => {
     );
   });
 };
+
+exports.DeleteDistributionCenter = (id) => {
+  return new Promise((resolve, reject) => {
+    const sql = `
+            DELETE FROM distributedcenter
+            WHERE id = ?
+        `;
+    collectionofficer.query(sql, [parseInt(id)], (err, results) => {
+      if (err) {
+        return reject(err);
+      }
+      resolve(results);
+    });
+  });
+};
