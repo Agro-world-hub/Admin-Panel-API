@@ -1793,3 +1793,29 @@ exports.getLatestPackageDateByPackageId = async (req, res) => {
     });
   }
 };
+
+exports.getAllWholesaleCustomers = async (req, res) => {
+  try {
+    const { page, limit, searchText } =
+      await MarketPriceValidate.getmarketplaceCustomerParamSchema.validateAsync(
+        req.query
+      );
+    const offset = (page - 1) * limit;
+    const { total, items } = await MarketPlaceDao.getAllWholesaleCustomersDao(
+      limit,
+      offset,
+      searchText
+    );
+
+    return res.status(200).json({
+      total,
+      items,
+    });
+  } catch (err) {
+    console.error("Error checking display name:", err);
+    return res.status(500).json({
+      error: "An error occurred while checking display name",
+      status: false,
+    });
+  }
+};

@@ -272,4 +272,10 @@ router.get(
   marketPlaceEp.getLatestPackageDateByPackageId
 );
 
+router.get(
+  "/get-all-wholesale-customers",
+  authMiddleware,
+  marketPlaceEp.getAllWholesaleCustomers
+);
+
 module.exports = router;
