@@ -1819,3 +1819,65 @@ exports.getAllWholesaleCustomers = async (req, res) => {
     });
   }
 };
+
+exports.getUserOrders = async (req, res) => {
+  try {
+    console.log("Fetching user orders...");
+
+    const userId = req.params.userId;
+    const userOrders = await MarketPlaceDao.getUserOrdersDao(userId);
+
+    if (!userOrders || userOrders.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "No orders found for this user",
+      });
+    }
+
+    // Optional: Group orders by schedule type if needed
+    const ordersByScheduleType = userOrders.reduce((acc, order) => {
+      if (!acc[order.sheduleType]) {
+        acc[order.sheduleType] = [];
+      }
+      acc[order.sheduleType].push(order);
+      return acc;
+    }, {});
+
+    res.json({
+      success: true,
+      data: {
+        orders: userOrders,
+        ordersByScheduleType, // Optional grouped data
+        count: userOrders.length,
+      },
+    });
+  } catch (err) {
+    console.error("Error fetching user orders:", err);
+
+    let statusCode = 500;
+    let message = "An error occurred while fetching user orders.";
+
+    if (err.isJoi) {
+      statusCode = 400;
+      message = err.details[0].message;
+    } else if (
+      err.code === "ER_NO_SUCH_TABLE" ||
+      err.code === "ER_BAD_FIELD_ERROR"
+    ) {
+      statusCode = 500;
+      message = "Database configuration error";
+    }
+
+    const errorResponse = {
+      success: false,
+      message: message,
+    };
+
+    if (process.env.NODE_ENV === "development") {
+      errorResponse.error = err.stack;
+      errorResponse.details = err.message;
+    }
+
+    res.status(statusCode).json(errorResponse);
+  }
+};

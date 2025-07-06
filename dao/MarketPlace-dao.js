@@ -2049,3 +2049,22 @@ exports.getAllWholesaleCustomersDao = (limit, offset, searchText) => {
     });
   });
 };
+
+exports.getUserOrdersDao = async (userId) => {
+  return new Promise((resolve, reject) => {
+    const sql = `
+      SELECT P.id, P.invNo, O.sheduleType, O.sheduleDate, P.paymentMethod, P.isPaid, O.fullTotal
+      FROM processorders P, marketplaceusers M, orders O
+      WHERE O.userId = ? AND P.status = 'Ordered' AND P.orderId = O.id
+    `;
+    marketPlace.query(sql, [userId], (err, results) => {
+      if (err) {
+        console.log("Error", err);
+        reject(err);
+      } else {
+        resolve(results);
+        console.log("``````````result``````````", results);
+      }
+    });
+  });
+};
