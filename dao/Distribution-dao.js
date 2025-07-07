@@ -83,7 +83,6 @@ exports.getAllDistributionCentre = (
         SELECT 
             dc.id,
             dc.centerName,
-            dc.officerName,
             dc.code1,
             dc.contact01,
             dc.code2,
@@ -98,15 +97,16 @@ exports.getAllDistributionCentre = (
             FROM collection_officer.distributedcenter dc
             LEFT JOIN collection_officer.distributedcompanycenter dcc ON dc.id = dcc.centerId
             JOIN collection_officer.company c ON dcc.companyId = c.id
+            
       `;
 
     let whereClause = " WHERE 1=1 ";
     const searchParams = [];
 
     if (centerType === "polygon") {
-      whereClause += " AND dcc.companyId = 1 ";
+      whereClause += " AND dcc.companyId = 1 AND c.isDistributed = 1 ";
     } else {
-      whereClause += " AND dcc.companyId != 1 ";
+      whereClause += " AND dcc.companyId != 1 AND c.isDistributed = 1 ";
     }
 
     if (searchItem) {
