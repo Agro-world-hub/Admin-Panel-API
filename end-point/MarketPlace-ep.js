@@ -1825,35 +1825,75 @@ exports.getUserOrders = async (req, res) => {
     console.log("Fetching user orders...");
 
     const userId = req.params.userId;
-    const userOrders = await MarketPlaceDao.getUserOrdersDao(userId);
+    const statusFilter = req.query.status || "Ordered"; // Default to 'Ordered' if no status provided
+
+    // // Validate status filter against possible values
+    // const validStatuses = [
+    //   "Ordered",
+    //   "Assinged",
+    //   "Processing",
+    //   "Delivered",
+    //   "Cancelled",
+    //   "Faild",
+    //   "On the way",
+    // ];
+    // if (!validStatuses.includes(statusFilter)) {
+    //   return res.status(400).json({
+    //     success: false,
+    //     message: "Invalid status filter",
+    //     validStatuses: validStatuses,
+    //   });
+    // }
+
+    // console.log(
+    //   `Fetching orders for userId: ${userId} with status: ${statusFilter}`
+    // );
+
+    const userOrders = await MarketPlaceDao.getUserOrdersDao(
+      parseInt(userId),
+      statusFilter
+    );
+    console.log(userOrders);
 
     if (!userOrders || userOrders.length === 0) {
       return res.status(404).json({
         success: false,
-        message: "No orders found for this user",
+        message: `No ${statusFilter.toLowerCase()} orders found for this user`,
+        statusFilter: statusFilter,
       });
     }
 
-    // Optional: Group orders by schedule type if needed
+    // Group orders by schedule type
     const ordersByScheduleType = userOrders.reduce((acc, order) => {
-      if (!acc[order.sheduleType]) {
-        acc[order.sheduleType] = [];
+      const scheduleType = order.sheduleType || "unscheduled"; // Handle possible undefined
+      if (!acc[scheduleType]) {
+        acc[scheduleType] = [];
       }
-      acc[order.sheduleType].push(order);
+      acc[scheduleType].push(order);
       return acc;
     }, {});
 
-    res.json({
+    // Format response data
+    const responseData = {
       success: true,
       data: {
         orders: userOrders,
-        ordersByScheduleType, // Optional grouped data
+        ordersByScheduleType,
         count: userOrders.length,
+        statusFilter: statusFilter,
       },
-    });
+      metadata: {
+        userId: userId,
+        orderStatus: statusFilter,
+        retrievedAt: new Date().toISOString(),
+      },
+    };
+
+    res.json(responseData);
   } catch (err) {
     console.error("Error fetching user orders:", err);
 
+    // Enhanced error handling
     let statusCode = 500;
     let message = "An error occurred while fetching user orders.";
 
@@ -1866,17 +1906,19 @@ exports.getUserOrders = async (req, res) => {
     ) {
       statusCode = 500;
       message = "Database configuration error";
+    } else if (err.code === "ER_ACCESS_DENIED_ERROR") {
+      statusCode = 503;
+      message = "Database service unavailable";
     }
 
     const errorResponse = {
       success: false,
       message: message,
+      ...(process.env.NODE_ENV === "development" && {
+        error: err.stack,
+        details: err.message,
+      }),
     };
-
-    if (process.env.NODE_ENV === "development") {
-      errorResponse.error = err.stack;
-      errorResponse.details = err.message;
-    }
 
     res.status(statusCode).json(errorResponse);
   }
