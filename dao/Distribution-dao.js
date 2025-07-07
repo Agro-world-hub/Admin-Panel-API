@@ -78,6 +78,7 @@ exports.getAllDistributionCentre = (
     let countSql = `
       SELECT COUNT(*) as total FROM collection_officer.distributedcenter dc
       LEFT JOIN collection_officer.distributedcompanycenter dcc ON dc.id = dcc.centerId
+      JOIN collection_officer.company c ON dcc.companyId = c.id
     `;
     let sql = `
         SELECT 
@@ -164,48 +165,41 @@ exports.getAllDistributionCentre = (
 exports.getAllCompanyDAO = (companyId, centerId) => {
   return new Promise((resolve, reject) => {
     let sql = `
-      SELECT 
-        dcc.id,
-        dcc.companyId,
-        dcc.centerId,
-        c.companyNameEnglish,
-        c.email AS companyEmail,
-        c.logo,
-        c.status,
-        c.favicon,
-        c.foName,
-        dc.code1,
-        dc.contact01,
-        dc.code2,
-        dc.contact02,
-        dc.centerName,
-        dc.OfficerName AS centerOfficerName,
-        (
-          SELECT COUNT(*) 
-          FROM distributedcompanycenter dcc2 
-          WHERE dcc2.companyId = c.id
-        ) AS ownedCentersCount,
-        (
-          SELECT COUNT(*) 
-          FROM collectionofficer co 
-          WHERE co.companyId = c.id 
-          AND co.centerId = dc.id 
-          AND co.jobRole = 'Distribution Center Manager'
-        ) AS managerCount,
-         (
-          SELECT COUNT(*) 
-          FROM collectionofficer co 
-          WHERE co.companyId = c.id 
-          AND co.centerId = dc.id 
-          AND co.jobRole = 'Distribution Officer'
-        ) AS officerCount
-      FROM 
-        distributedcompanycenter dcc
-      LEFT JOIN 
-        company c ON dcc.companyId = c.id
-      LEFT JOIN 
-        distributedcenter dc ON dcc.centerId = dc.id
-      WHERE 1=1
+    SELECT 
+  
+    c.companyNameEnglish,
+    c.email AS companyEmail,
+    c.logo,
+    c.status,
+    c.favicon,
+    c.foName,
+    dc.code1,
+    dc.contact01,
+    dc.code2,
+    dc.contact02,
+    dc.centerName,
+    (
+      SELECT COUNT(*) 
+      FROM collection_officer.distributedcompanycenter dcc2 
+      WHERE dcc2.companyId = c.id
+    ) AS ownedCentersCount,
+    (
+      SELECT COUNT(*) 
+      FROM collection_officer.collectionofficer co
+      WHERE co.companyId = c.id 
+      AND co.distributedCenterId = dc.id 
+      AND co.jobRole = 'Distribution Center Manager'
+    ) AS managerCount,
+     (
+      SELECT COUNT(*) 
+      FROM collection_officer.collectionofficer co
+      WHERE co.companyId = c.id 
+      AND co.distributedCenterId = dc.id 
+      AND co.jobRole = 'Distribution Officer'
+    ) AS officerCount
+  FROM 
+    collection_officer.company c,  collection_officer.distributedcenter dc 
+  WHERE c.isDistributed = 1
     `;
     const params = [];
 
@@ -219,7 +213,7 @@ exports.getAllCompanyDAO = (companyId, centerId) => {
       params.push(centerId);
     }
 
-    sql += " ORDER BY dcc.id ASC";
+    // sql += " ORDER BY dcc.id ASC";
 
     collectionofficer.query(sql, params, (err, results) => {
       if (err) {
@@ -307,7 +301,7 @@ exports.getCompanyDAO = () => {
       c.companyNameEnglish
       FROM 
         company c
-      WHERE c.status = 1
+      WHERE c.status = 1 AND c.isDistributed = true
       ORDER BY c.companyNameEnglish ASC
     `;
 
@@ -329,8 +323,8 @@ exports.getCompanyDetails = () => {
         c.companyNameEnglish, c.id
       FROM 
         company c
-      WHERE c.status = 1
-      ORDER BY c.companyNameEnglish ASC
+      WHERE c.status = 1 AND c.isDistributed = true
+      ORDER BY c.companyNameEnglish ASC 
     `;
 
     collectionofficer.query(sql, (err, results) => {
