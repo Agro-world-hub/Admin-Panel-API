@@ -104,9 +104,9 @@ exports.getAllDistributionCentre = (
     const searchParams = [];
 
     if (centerType === "polygon") {
-      whereClause += " AND dcc.companyId = 1 ";
+      whereClause += " AND dcc.companyId = 1 AND c.isDistributed = 1 ";
     } else {
-      whereClause += " AND dcc.companyId != 1";
+      whereClause += " AND dcc.companyId != 1 AND c.isDistributed = 1 ";
     }
 
     if (searchItem) {
