@@ -129,4 +129,16 @@ router.get(
   ProcumentsEP.getAllOrdersWithProcessInfoDispatched
 );
 
+router.post(
+  "/update-define-package-data",
+  authMiddleware,
+  ProcumentsEP.updateDefinePackageData
+);
+
+router.get(
+  "/get-excluded-items/:orderId",
+  authMiddleware,
+  ProcumentsEP.getExcludedItems
+);
+
 module.exports = router;

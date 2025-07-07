@@ -71,10 +71,14 @@ exports.getAllDistributionCentre = (
   district,
   province,
   company,
-  searchItem
+  searchItem,
+  centerType
 ) => {
   return new Promise((resolve, reject) => {
-    let countSql = "SELECT COUNT(*) as total FROM distributedcenter dc";
+    let countSql = `
+      SELECT COUNT(*) as total FROM collection_officer.distributedcenter dc
+      LEFT JOIN collection_officer.distributedcompanycenter dcc ON dc.id = dcc.centerId
+    `;
     let sql = `
         SELECT 
             dc.id,
@@ -91,18 +95,24 @@ exports.getAllDistributionCentre = (
             dc.longitude,
             dc.latitude,
             c.companyNameEnglish AS companyName
-            
             FROM collection_officer.distributedcenter dc
             LEFT JOIN collection_officer.distributedcompanycenter dcc ON dc.id = dcc.centerId
             JOIN collection_officer.company c ON dcc.companyId = c.id
       `;
 
-    let whereClause = " WHERE 1=1";
+    let whereClause = " WHERE 1=1 ";
     const searchParams = [];
+
+    if (centerType === "polygon") {
+      whereClause += " AND dcc.companyId = 1 ";
+    } else {
+      whereClause += " AND dcc.companyId != 1 ";
+    }
 
     if (searchItem) {
       const searchQuery = `%${searchItem}%`;
-      whereClause += " AND (C.regCode LIKE ? OR C.centerName LIKE ?)";
+      whereClause +=
+        " AND (dc.centerName LIKE ? OR c.companyNameEnglish LIKE ?)";
       searchParams.push(searchQuery, searchQuery);
     }
 
@@ -139,6 +149,7 @@ exports.getAllDistributionCentre = (
           if (dataErr) {
             return reject(dataErr);
           }
+          console.log(sql, "SQL Query executed successfully");
 
           resolve({
             total: total,
@@ -292,10 +303,11 @@ exports.getCompanyDAO = () => {
   return new Promise((resolve, reject) => {
     let sql = `
       SELECT 
-        c.companyNameEnglish
+      c.id,
+      c.companyNameEnglish
       FROM 
         company c
-      WHERE c.status = 'ACTIVE'
+      WHERE c.status = 1
       ORDER BY c.companyNameEnglish ASC
     `;
 
@@ -551,6 +563,206 @@ exports.UpdateDistributionHeadDao = (id, updateData) => {
       }
       console.log("Collection Officer details updated successfully");
       console.log("Affected rows:", results.affectedRows);
+      resolve(results);
+    });
+  });
+};
+
+exports.getDistributionCentreById = (id) => {
+  return new Promise((resolve, reject) => {
+    const sql = `
+      SELECT 
+        dc.id,
+        dc.centerName,
+        dc.officerName,
+        dc.code1,
+        dc.contact01,
+        dc.code2,
+        dc.contact02,
+        dc.city,
+        dc.district,
+        dc.province,
+        dc.country,
+        dc.longitude,
+        dc.latitude,
+        dc.email,
+        dc.createdAt,
+        c.companyNameEnglish
+      FROM distributedcenter dc
+      LEFT JOIN distributedcompanycenter dcc ON dc.id = dcc.centerId
+      LEFT JOIN company c ON dcc.companyId = c.id
+      WHERE dc.id = ?
+    `;
+
+    collectionofficer.query(sql, [id], (err, results) => {
+      if (err) {
+        return reject(err);
+      }
+
+      if (results.length === 0) {
+        return resolve(null);
+      }
+
+      resolve(results[0]);
+    });
+  });
+};
+
+exports.deleteDistributedCenterDao = (id) => {
+  return new Promise((resolve, reject) => {
+    let sql = `
+      DELETE FROM distributedcenter
+      WHERE id = ?
+    `;
+    collectionofficer.query(sql, [id], (err, results) => {
+      if (err) {
+        return reject(err);
+      }
+      console.log("Collection Officer details updated successfully");
+      console.log("Affected rows:", results.affectedRows);
+      resolve(results);
+    });
+  });
+};
+
+exports.updateDistributionCentreById = (id, updateData) => {
+  return new Promise((resolve, reject) => {
+    console.log("Starting update for distribution center ID:", id);
+    console.log("Update data received:", updateData);
+
+    // Extract fields from updateData
+    const {
+      centerName,
+      officerName,
+      code1,
+      contact01,
+      code2,
+      contact02,
+      city,
+      district,
+      province,
+      country,
+      longitude,
+      latitude,
+      email,
+      companyNameEnglish,
+      companyId,
+    } = updateData;
+
+    // Update distribution center SQL
+    const updateCenterSql = `
+      UPDATE distributedcenter 
+      SET 
+        centerName = ?,
+        officerName = ?,
+        code1 = ?,
+        contact01 = ?,
+        code2 = ?,
+        contact02 = ?,
+        city = ?,
+        district = ?,
+        province = ?,
+        country = ?,
+        longitude = ?,
+        latitude = ?,
+        email = ?
+      WHERE id = ?
+    `;
+
+    const centerParams = [
+      centerName,
+      officerName,
+      code1,
+      contact01,
+      code2,
+      contact02,
+      city,
+      district,
+      province,
+      country,
+      longitude,
+      latitude,
+      email,
+      id,
+    ];
+
+    console.log("Executing center update with:", updateCenterSql, centerParams);
+
+    // Execute distribution center update
+    collectionofficer.query(
+      updateCenterSql,
+      centerParams,
+      (err, centerResults) => {
+        if (err) {
+          console.error("Error updating distribution center:", err);
+          return reject(err);
+        }
+
+        console.log("Center update results:", centerResults);
+
+        if (centerResults.affectedRows === 0) {
+          console.log("No rows affected in center update");
+          return resolve(null);
+        }
+
+        // Update company if information is provided
+        if (companyNameEnglish && companyId) {
+          const updateCompanySql = `
+          UPDATE company
+          SET companyNameEnglish = ?
+          WHERE id = ?
+        `;
+
+          console.log("Executing company update with:", updateCompanySql, [
+            companyNameEnglish,
+            companyId,
+          ]);
+
+          collectionofficer.query(
+            updateCompanySql,
+            [companyNameEnglish, companyId],
+            (err, companyResults) => {
+              if (err) {
+                console.error("Error updating company:", err);
+                return reject(err);
+              }
+
+              console.log("Company update results:", companyResults);
+
+              if (companyResults.affectedRows === 0) {
+                console.log("No rows affected in company update");
+                return resolve(null);
+              }
+
+              console.log("Updates completed successfully");
+              exports
+                .getDistributionCentreById(id)
+                .then((updatedCenter) => resolve(updatedCenter))
+                .catch((error) => reject(error));
+            }
+          );
+        } else {
+          console.log("No company update needed");
+          exports
+            .getDistributionCentreById(id)
+            .then((updatedCenter) => resolve(updatedCenter))
+            .catch((error) => reject(error));
+        }
+      }
+    );
+  });
+};
+
+exports.DeleteDistributionCenter = (id) => {
+  return new Promise((resolve, reject) => {
+    const sql = `
+            DELETE FROM distributedcenter
+            WHERE id = ?
+        `;
+    collectionofficer.query(sql, [parseInt(id)], (err, results) => {
+      if (err) {
+        return reject(err);
+      }
       resolve(results);
     });
   });
