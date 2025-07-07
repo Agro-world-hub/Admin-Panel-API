@@ -278,4 +278,10 @@ router.get(
   marketPlaceEp.getAllWholesaleCustomers
 );
 
+router.get(
+  "/get-user-orders/:userId",
+  authMiddleware,
+  marketPlaceEp.getUserOrders
+);
+
 module.exports = router;
