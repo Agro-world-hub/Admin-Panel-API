@@ -469,7 +469,6 @@ exports.getDistributionCentreById = async (req, res) => {
   console.log(fullUrl);
 
   try {
-    // Directly get the ID from params (without validation)
     const { id } = req.params;
 
     // Basic check if ID exists

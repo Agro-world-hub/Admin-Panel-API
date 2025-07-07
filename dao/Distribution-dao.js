@@ -104,9 +104,9 @@ exports.getAllDistributionCentre = (
     const searchParams = [];
 
     if (centerType === "polygon") {
-      whereClause += " AND dcc.companyId = 1 AND c.isDistributed = 1 ";
+      whereClause += " AND dcc.companyId = 1 ";
     } else {
-      whereClause += " AND dcc.companyId != 1 AND c.isDistributed = 1 ";
+      whereClause += " AND dcc.companyId != 1";
     }
 
     if (searchItem) {
@@ -574,7 +574,7 @@ exports.getDistributionCentreById = (id) => {
       SELECT 
         dc.id,
         dc.centerName,
-        dc.officerName,
+        dc.regCode,
         dc.code1,
         dc.contact01,
         dc.code2,
