@@ -20,6 +20,7 @@ exports.getDistributionCenterDetailsSchema = Joi.object({
 exports.getAllDistributionCentreSchema = Joi.object({
   page: Joi.number().integer().min(1).default(1),
   limit: Joi.number().integer().min(1).max(100).default(10),
+  company: Joi.string().optional(),
   district: Joi.string().optional(),
   province: Joi.string().optional(),
   searchItem: Joi.string().optional(),
