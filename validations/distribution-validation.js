@@ -3,7 +3,6 @@ const Joi = require('joi');
 exports.getDistributionCenterDetailsSchema = Joi.object({
   name: Joi.string().required(),
   company: Joi.number().integer().required(),
-  officerInCharge: Joi.string().required(),
   contact1: Joi.string().required(),
   contact1Code: Joi.string().required(),
   contact2: Joi.string().optional().allow(null, ''), // optional
@@ -14,7 +13,8 @@ exports.getDistributionCenterDetailsSchema = Joi.object({
   country: Joi.string().required(),
   province: Joi.string().required(),
   district: Joi.string().required(),
-  city: Joi.string().required()
+  city: Joi.string().required(),
+  regCode: Joi.string().required()
 });
 
 exports.getAllDistributionCentreSchema = Joi.object({

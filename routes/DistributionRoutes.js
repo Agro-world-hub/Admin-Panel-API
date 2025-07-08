@@ -104,4 +104,6 @@ router.delete(
   distributionEp.deleteDistributionCenter
 );
 
+router.post("/generate-regcode", distributionEp.generateRegCode);
+
 module.exports = router;
