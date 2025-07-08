@@ -3,6 +3,8 @@ const uploadFileToS3 = require("../middlewares/s3upload");
 const DistributionValidation = require("../validations/distribution-validation");
 
 exports.createDistributionCenter = async (req, res) => {
+  const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
+  console.log(fullUrl);
   try {
     // Validate input with Joi
     const data =
@@ -504,6 +506,7 @@ exports.getDistributionCentreById = async (req, res) => {
       email: distributionCentre.email,
       createdAt: distributionCentre.createdAt,
       company: distributionCentre.companyNameEnglish,
+      regCode: distributionCentre.regCode,
     };
 
     console.log("Fetched distribution centre:", response);
@@ -585,7 +588,6 @@ exports.updateDistributionCentreDetails = async (req, res) => {
     // Validate required fields for distribution center
     const requiredFields = [
       "centerName",
-      "officerName",
       "city",
       "province",
       "country",
@@ -660,4 +662,24 @@ exports.deleteDistributionCenter = async (req, res) => {
       .status(500)
       .json({ error: "An error occurred while deleting Distribution Center" });
   }
+};
+
+exports.generateRegCode = (req, res) => {
+  const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
+  console.log("Request URL:", fullUrl);
+  const { province, district, city } = req.body;
+
+  // Call DAO to generate the regCode
+  DistributionDao.generateRegCode(
+    province,
+    district,
+    city,
+    (err, regCode) => {
+      if (err) {
+        return res.status(500).json({ error: "Error generating regCode" });
+      }
+
+      res.json({ regCode });
+    }
+  );
 };

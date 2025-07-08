@@ -12,13 +12,12 @@ exports.createDistributionCenter = (data) => {
   return new Promise((resolve, reject) => {
     const sql1 = `
       INSERT INTO distributedcenter 
-      (centerName, OfficerName, contact01, code1, contact02, code2, latitude, longitude, email, country, province, district, city)
+      (centerName, contact01, code1, contact02, code2, latitude, longitude, email, country, province, district, city, regCode)
       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `;
 
     const values1 = [
       data.name,
-      data.officerInCharge,
       data.contact1,
       data.contact1Code,
       data.contact2,
@@ -30,6 +29,7 @@ exports.createDistributionCenter = (data) => {
       data.province,
       data.district,
       data.city,
+      data.regCode
     ];
 
     // First insert into distributedcenter
@@ -627,7 +627,6 @@ exports.updateDistributionCentreById = (id, updateData) => {
     // Extract fields from updateData
     const {
       centerName,
-      officerName,
       code1,
       contact01,
       code2,
@@ -641,6 +640,7 @@ exports.updateDistributionCentreById = (id, updateData) => {
       email,
       companyNameEnglish,
       companyId,
+      regCode,
     } = updateData;
 
     // Update distribution center SQL
@@ -648,7 +648,6 @@ exports.updateDistributionCentreById = (id, updateData) => {
       UPDATE distributedcenter 
       SET 
         centerName = ?,
-        officerName = ?,
         code1 = ?,
         contact01 = ?,
         code2 = ?,
@@ -659,13 +658,13 @@ exports.updateDistributionCentreById = (id, updateData) => {
         country = ?,
         longitude = ?,
         latitude = ?,
-        email = ?
+        email = ?,
+        regCode = ?
       WHERE id = ?
     `;
 
     const centerParams = [
       centerName,
-      officerName,
       code1,
       contact01,
       code2,
@@ -677,6 +676,7 @@ exports.updateDistributionCentreById = (id, updateData) => {
       longitude,
       latitude,
       email,
+      regCode,
       id,
     ];
 
@@ -759,5 +759,37 @@ exports.DeleteDistributionCenter = (id) => {
       }
       resolve(results);
     });
+  });
+};
+
+exports.generateRegCode = (province, district, city, callback) => {
+  // Generate the prefix based on province and district
+  const prefix =
+    province.slice(0, 2).toUpperCase() +
+    district.slice(0, 1).toUpperCase() +
+    city.slice(0, 1).toUpperCase();
+
+  // SQL query to get the latest regCode
+  const query = `SELECT regCode FROM distributedcenter WHERE regCode LIKE ? ORDER BY regCode DESC LIMIT 1`;
+
+  // Execute the query
+  collectionofficer.execute(query, [`${prefix}-%`], (err, results) => {
+    if (err) {
+      console.error("Error executing query:", err);
+      return callback(err);
+    }
+
+    let newRegCode = `${prefix}-01`; // Default to 01 if no regCode found
+
+    if (results.length > 0) {
+      // Get the last regCode and extract the number
+      const lastRegCode = results[0].regCode;
+      const lastNumber = parseInt(lastRegCode.split("-")[1]);
+      const newNumber = lastNumber + 1;
+      newRegCode = `${prefix}-${String(newNumber).padStart(2, "0")}`;
+    }
+
+    // Return the new regCode
+    callback(null, newRegCode);
   });
 };
