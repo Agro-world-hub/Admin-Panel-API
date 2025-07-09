@@ -637,6 +637,8 @@ exports.getMarketplacePackageById = async (req, res) => {
     const serviceFee = parseFloat(firstRow.serviceFee) || 0;
 
     const total = productPrice + packingFee + serviceFee;
+    const packageItems = await MarketPlaceDao.getPackageEachItemsDao(id);
+
 
     const packageData = {
       displayName: firstRow.displayName,
@@ -650,13 +652,11 @@ exports.getMarketplacePackageById = async (req, res) => {
         firstRow.image && !firstRow.image.startsWith("http")
           ? `${req.protocol}://${req.get("host")}/${firstRow.image}`
           : firstRow.image,
-      quantities: {},
+      packageItems
     };
 
-    // Build quantities map
-    resultRows.forEach((row) => {
-      packageData.quantities[row.productTypeId] = row.qty;
-    });
+
+
     console.log(packageData);
 
     res.json(packageData);

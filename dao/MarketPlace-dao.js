@@ -729,13 +729,12 @@ exports.getMarketplacePackageByIdDAO = async (id) => {
     const sql = `
       SELECT 
         mpp.id, mpp.displayName, mpp.image, mpp.status, mpp.description, 
-        mpp.productPrice, mpp.packingFee, mpp.serviceFee, 
-        pd.qty, pt.id AS productTypeId
+        mpp.productPrice, mpp.packingFee, mpp.serviceFee
       FROM market_place.marketplacepackages mpp
-      JOIN market_place.packagedetails pd ON mpp.id = pd.packageId
-      JOIN market_place.producttypes pt ON pd.productTypeId = pt.id
       WHERE mpp.id = ?;
     `;
+    // JOIN market_place.packagedetails pd ON mpp.id = pd.packageId
+    //   JOIN market_place.producttypes pt ON pd.productTypeId = pt.id
 
     marketPlace.query(sql, [id], (err, results) => {
       if (err) {
@@ -2058,6 +2057,29 @@ exports.getUserOrdersDao = async (userId, status) => {
         resolve(results);
         console.log("``````````result``````````", results);
       }
+    });
+  });
+};
+
+
+
+exports.getPackageEachItemsDao = async (id) => {
+  return new Promise((resolve, reject) => {
+    const sql = `
+      SELECT 
+        PD.id,
+        PT.id AS productTypeId,
+        PT.typeName,
+        COALESCE(PD.qty, 0) AS qty
+      FROM producttypes PT
+      LEFT JOIN packagedetails PD ON PT.id = PD.productTypeId
+      AND PD.packageId = ?
+    `;
+    marketPlace.query(sql,[id], (err, results) => {
+      if (err) {
+        return reject(err);
+      }
+      resolve(results);
     });
   });
 };
