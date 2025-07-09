@@ -249,7 +249,7 @@ router.get(
 );
 
 router.get(
-  "/get-order-details/:id",
+  "/get-define-package-details/:id",
   authMiddleware,
   marketPlaceEp.getOrderDetailsById
 );
@@ -266,16 +266,17 @@ router.post(
   marketPlaceEp.createDefinePackageWithItems
 );
 
-router.get(
-  "/get-latest-package-date/:id",
-  authMiddleware,
-  marketPlaceEp.getLatestPackageDateByPackageId
-);
 
 router.get(
   "/get-all-wholesale-customers",
   authMiddleware,
   marketPlaceEp.getAllWholesaleCustomers
+);
+
+router.get(
+  "/get-user-orders/:userId",
+  authMiddleware,
+  marketPlaceEp.getUserOrders
 );
 
 module.exports = router;

@@ -889,7 +889,7 @@ exports.createCompany = async (
 
 exports.GetAllCompanyList = () => {
   return new Promise((resolve, reject) => {
-    const sql = "SELECT id, companyNameEnglish FROM company";
+    const sql = "SELECT id, companyNameEnglish FROM company WHERE company.isCollection = true";
     collectionofficer.query(sql, (err, results) => {
       if (err) {
         return reject(err);
@@ -998,6 +998,7 @@ exports.getAllCompanyDAO = (search) => {
         collectionofficer co 
       ON 
         c.id = co.companyId
+      WHERE c.isCollection = true
     `;
     const params = [];
 

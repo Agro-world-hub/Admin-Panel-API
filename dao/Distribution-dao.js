@@ -12,13 +12,12 @@ exports.createDistributionCenter = (data) => {
   return new Promise((resolve, reject) => {
     const sql1 = `
       INSERT INTO distributedcenter 
-      (centerName, OfficerName, contact01, code1, contact02, code2, latitude, longitude, email, country, province, district, city)
+      (centerName, contact01, code1, contact02, code2, latitude, longitude, email, country, province, district, city, regCode)
       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `;
 
     const values1 = [
       data.name,
-      data.officerInCharge,
       data.contact1,
       data.contact1Code,
       data.contact2,
@@ -30,6 +29,7 @@ exports.createDistributionCenter = (data) => {
       data.province,
       data.district,
       data.city,
+      data.regCode
     ];
 
     // First insert into distributedcenter
@@ -78,12 +78,12 @@ exports.getAllDistributionCentre = (
     let countSql = `
       SELECT COUNT(*) as total FROM collection_officer.distributedcenter dc
       LEFT JOIN collection_officer.distributedcompanycenter dcc ON dc.id = dcc.centerId
+      JOIN collection_officer.company c ON dcc.companyId = c.id
     `;
     let sql = `
         SELECT 
             dc.id,
             dc.centerName,
-            dc.officerName,
             dc.code1,
             dc.contact01,
             dc.code2,
@@ -98,15 +98,16 @@ exports.getAllDistributionCentre = (
             FROM collection_officer.distributedcenter dc
             LEFT JOIN collection_officer.distributedcompanycenter dcc ON dc.id = dcc.centerId
             JOIN collection_officer.company c ON dcc.companyId = c.id
+            
       `;
 
     let whereClause = " WHERE 1=1 ";
     const searchParams = [];
 
     if (centerType === "polygon") {
-      whereClause += " AND dcc.companyId = 1 ";
+      whereClause += " AND dcc.companyId = 1 AND c.isDistributed = 1 ";
     } else {
-      whereClause += " AND dcc.companyId != 1 ";
+      whereClause += " AND dcc.companyId != 1 AND c.isDistributed = 1 ";
     }
 
     if (searchItem) {
@@ -164,48 +165,41 @@ exports.getAllDistributionCentre = (
 exports.getAllCompanyDAO = (companyId, centerId) => {
   return new Promise((resolve, reject) => {
     let sql = `
-      SELECT 
-        dcc.id,
-        dcc.companyId,
-        dcc.centerId,
-        c.companyNameEnglish,
-        c.email AS companyEmail,
-        c.logo,
-        c.status,
-        c.favicon,
-        c.foName,
-        dc.code1,
-        dc.contact01,
-        dc.code2,
-        dc.contact02,
-        dc.centerName,
-        dc.OfficerName AS centerOfficerName,
-        (
-          SELECT COUNT(*) 
-          FROM distributedcompanycenter dcc2 
-          WHERE dcc2.companyId = c.id
-        ) AS ownedCentersCount,
-        (
-          SELECT COUNT(*) 
-          FROM collectionofficer co 
-          WHERE co.companyId = c.id 
-          AND co.centerId = dc.id 
-          AND co.jobRole = 'Distribution Center Manager'
-        ) AS managerCount,
-         (
-          SELECT COUNT(*) 
-          FROM collectionofficer co 
-          WHERE co.companyId = c.id 
-          AND co.centerId = dc.id 
-          AND co.jobRole = 'Distribution Officer'
-        ) AS officerCount
-      FROM 
-        distributedcompanycenter dcc
-      LEFT JOIN 
-        company c ON dcc.companyId = c.id
-      LEFT JOIN 
-        distributedcenter dc ON dcc.centerId = dc.id
-      WHERE 1=1
+    SELECT 
+  
+    c.companyNameEnglish,
+    c.email AS companyEmail,
+    c.logo,
+    c.status,
+    c.favicon,
+    c.foName,
+    dc.code1,
+    dc.contact01,
+    dc.code2,
+    dc.contact02,
+    dc.centerName,
+    (
+      SELECT COUNT(*) 
+      FROM collection_officer.distributedcompanycenter dcc2 
+      WHERE dcc2.companyId = c.id
+    ) AS ownedCentersCount,
+    (
+      SELECT COUNT(*) 
+      FROM collection_officer.collectionofficer co
+      WHERE co.companyId = c.id 
+      AND co.distributedCenterId = dc.id 
+      AND co.jobRole = 'Distribution Center Manager'
+    ) AS managerCount,
+     (
+      SELECT COUNT(*) 
+      FROM collection_officer.collectionofficer co
+      WHERE co.companyId = c.id 
+      AND co.distributedCenterId = dc.id 
+      AND co.jobRole = 'Distribution Officer'
+    ) AS officerCount
+  FROM 
+    collection_officer.company c,  collection_officer.distributedcenter dc 
+  WHERE c.isDistributed = 1
     `;
     const params = [];
 
@@ -219,7 +213,7 @@ exports.getAllCompanyDAO = (companyId, centerId) => {
       params.push(centerId);
     }
 
-    sql += " ORDER BY dcc.id ASC";
+    // sql += " ORDER BY dcc.id ASC";
 
     collectionofficer.query(sql, params, (err, results) => {
       if (err) {
@@ -307,7 +301,7 @@ exports.getCompanyDAO = () => {
       c.companyNameEnglish
       FROM 
         company c
-      WHERE c.status = 1
+      WHERE c.status = 1 AND c.isDistributed = true
       ORDER BY c.companyNameEnglish ASC
     `;
 
@@ -329,8 +323,8 @@ exports.getCompanyDetails = () => {
         c.companyNameEnglish, c.id
       FROM 
         company c
-      WHERE c.status = 1
-      ORDER BY c.companyNameEnglish ASC
+      WHERE c.status = 1 AND c.isDistributed = true
+      ORDER BY c.companyNameEnglish ASC 
     `;
 
     collectionofficer.query(sql, (err, results) => {
@@ -574,7 +568,7 @@ exports.getDistributionCentreById = (id) => {
       SELECT 
         dc.id,
         dc.centerName,
-        dc.officerName,
+        dc.regCode,
         dc.code1,
         dc.contact01,
         dc.code2,
@@ -633,7 +627,6 @@ exports.updateDistributionCentreById = (id, updateData) => {
     // Extract fields from updateData
     const {
       centerName,
-      officerName,
       code1,
       contact01,
       code2,
@@ -647,6 +640,7 @@ exports.updateDistributionCentreById = (id, updateData) => {
       email,
       companyNameEnglish,
       companyId,
+      regCode,
     } = updateData;
 
     // Update distribution center SQL
@@ -654,7 +648,6 @@ exports.updateDistributionCentreById = (id, updateData) => {
       UPDATE distributedcenter 
       SET 
         centerName = ?,
-        officerName = ?,
         code1 = ?,
         contact01 = ?,
         code2 = ?,
@@ -665,13 +658,13 @@ exports.updateDistributionCentreById = (id, updateData) => {
         country = ?,
         longitude = ?,
         latitude = ?,
-        email = ?
+        email = ?,
+        regCode = ?
       WHERE id = ?
     `;
 
     const centerParams = [
       centerName,
-      officerName,
       code1,
       contact01,
       code2,
@@ -683,6 +676,7 @@ exports.updateDistributionCentreById = (id, updateData) => {
       longitude,
       latitude,
       email,
+      regCode,
       id,
     ];
 
@@ -765,5 +759,37 @@ exports.DeleteDistributionCenter = (id) => {
       }
       resolve(results);
     });
+  });
+};
+
+exports.generateRegCode = (province, district, city, callback) => {
+  // Generate the prefix based on province and district
+  const prefix =
+    province.slice(0, 2).toUpperCase() +
+    district.slice(0, 1).toUpperCase() +
+    city.slice(0, 1).toUpperCase();
+
+  // SQL query to get the latest regCode
+  const query = `SELECT regCode FROM distributedcenter WHERE regCode LIKE ? ORDER BY regCode DESC LIMIT 1`;
+
+  // Execute the query
+  collectionofficer.execute(query, [`${prefix}-%`], (err, results) => {
+    if (err) {
+      console.error("Error executing query:", err);
+      return callback(err);
+    }
+
+    let newRegCode = `${prefix}-01`; // Default to 01 if no regCode found
+
+    if (results.length > 0) {
+      // Get the last regCode and extract the number
+      const lastRegCode = results[0].regCode;
+      const lastNumber = parseInt(lastRegCode.split("-")[1]);
+      const newNumber = lastNumber + 1;
+      newRegCode = `${prefix}-${String(newNumber).padStart(2, "0")}`;
+    }
+
+    // Return the new regCode
+    callback(null, newRegCode);
   });
 };
