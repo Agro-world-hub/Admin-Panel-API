@@ -268,7 +268,6 @@ router.post(
   marketPlaceEp.createDefinePackageWithItems
 );
 
-
 router.get(
   "/get-all-wholesale-customers",
   authMiddleware,
@@ -284,5 +283,11 @@ router.get(
 router.get("/get-coupen/:coupenId", authMiddleware, marketPlaceEp.getCoupen);
 
 router.post("/update-coupen", authMiddleware, marketPlaceEp.updateCoupen);
+
+router.get(
+  "/invoice/:processOrderId",
+  authMiddleware,
+  marketPlaceEp.getInvoiceDetails
+);
 
 module.exports = router;

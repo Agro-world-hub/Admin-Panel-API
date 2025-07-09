@@ -639,7 +639,6 @@ exports.getMarketplacePackageById = async (req, res) => {
     const total = productPrice + packingFee + serviceFee;
     const packageItems = await MarketPlaceDao.getPackageEachItemsDao(id);
 
-
     const packageData = {
       displayName: firstRow.displayName,
       status: firstRow.status || "Enabled",
@@ -652,10 +651,8 @@ exports.getMarketplacePackageById = async (req, res) => {
         firstRow.image && !firstRow.image.startsWith("http")
           ? `${req.protocol}://${req.get("host")}/${firstRow.image}`
           : firstRow.image,
-      packageItems
+      packageItems,
     };
-
-
 
     console.log(packageData);
 
@@ -1200,17 +1197,19 @@ exports.editPackage = async (req, res) => {
 
     let profileImageUrl = null;
 
-     const exists = await MarketPlaceDao.checkPackageDisplayNameExistsDao(
+    const exists = await MarketPlaceDao.checkPackageDisplayNameExistsDao(
       package.displayName,
       id
     );
-    
-    if(exists){
-      return res.json({status:false, message:'Display name allready exist!'})
+
+    if (exists) {
+      return res.json({
+        status: false,
+        message: "Display name allready exist!",
+      });
     }
 
-    console.log("Exist :",exists);
-    
+    console.log("Exist :", exists);
 
     // Check if a new image file was uploaded
     if (req.body.file) {
@@ -1771,7 +1770,6 @@ exports.createDefinePackageWithItems = async (req, res) => {
   }
 };
 
-
 exports.getAllWholesaleCustomers = async (req, res) => {
   try {
     const { page, limit, searchText } =
@@ -1803,29 +1801,7 @@ exports.getUserOrders = async (req, res) => {
     console.log("Fetching user orders...");
 
     const userId = req.params.userId;
-    const statusFilter = req.query.status || "Ordered"; // Default to 'Ordered' if no status provided
-
-    // // Validate status filter against possible values
-    // const validStatuses = [
-    //   "Ordered",
-    //   "Assinged",
-    //   "Processing",
-    //   "Delivered",
-    //   "Cancelled",
-    //   "Faild",
-    //   "On the way",
-    // ];
-    // if (!validStatuses.includes(statusFilter)) {
-    //   return res.status(400).json({
-    //     success: false,
-    //     message: "Invalid status filter",
-    //     validStatuses: validStatuses,
-    //   });
-    // }
-
-    // console.log(
-    //   `Fetching orders for userId: ${userId} with status: ${statusFilter}`
-    // );
+    const statusFilter = req.query.status || "Ordered";
 
     const userOrders = await MarketPlaceDao.getUserOrdersDao(
       parseInt(userId),
@@ -1908,13 +1884,12 @@ exports.getCoupen = async (req, res) => {
     console.log("Request URL:", fullUrl);
     // console.log(req.body);
 
-    const validatedParams = await MarketPriceValidate.getCoupenValidation.validateAsync(req.params);
-    const coupenId = validatedParams.coupenId
+    const validatedParams =
+      await MarketPriceValidate.getCoupenValidation.validateAsync(req.params);
+    const coupenId = validatedParams.coupenId;
 
     // const coupenId = req.params.coupenId
-    console.log('coupenId is', coupenId);
-
-
+    console.log("coupenId is", coupenId);
 
     const result = await MarketPlaceDao.getCoupenDAO(coupenId);
     console.log("coupen creation success", result);
@@ -1968,6 +1943,98 @@ exports.updateCoupen = async (req, res) => {
     return res.status(500).json({
       error: "An error occurred while creating marcket product",
       status: false,
+    });
+  }
+};
+
+exports.getInvoiceDetails = async (req, res) => {
+  const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
+  console.log("Request URL:", fullUrl);
+
+  try {
+    const { processOrderId } = req.params;
+    const userId = req.user.id;
+
+    // Validate input
+    if (!processOrderId) {
+      return res.status(400).json({
+        success: false,
+        error: "Process order ID is required",
+      });
+    }
+
+    // First get the invoice details
+    const invoiceDetails = await MarketPlaceDao.getInvoiceDetailsDAO(
+      processOrderId
+    );
+
+    if (!invoiceDetails) {
+      return res.status(404).json({
+        success: false,
+        error: "Invoice not found",
+      });
+    }
+
+    // Then get the other details in parallel
+    const [familyPackItems, additionalItems, billingDetails] =
+      await Promise.all([
+        MarketPlaceDao.getFamilyPackItemsDAO(invoiceDetails.orderId),
+        MarketPlaceDao.getAdditionalItemsDAO(processOrderId),
+        MarketPlaceDao.getBillingDetailsDAO(processOrderId),
+      ]);
+
+    // Get pickup center details if delivery method is pickup
+    let pickupCenterDetails = null;
+    if (invoiceDetails.deliveryMethod === "PICKUP" && invoiceDetails.centerId) {
+      pickupCenterDetails = await MarketPlaceDao.getPickupCenterDetailsDAO(
+        invoiceDetails.centerId
+      );
+    }
+
+    // Get package details for each family pack item
+    const packageDetailsPromises = familyPackItems.map((item) =>
+      MarketPlaceDao.getPackageDetailsDAO(item.packageId)
+    );
+    const packageDetails = await Promise.all(packageDetailsPromises);
+
+    // Combine package details with family pack items
+    const familyPackItemsWithDetails = familyPackItems.map((item, index) => ({
+      ...item,
+      packageDetails: packageDetails[index],
+    }));
+
+    // Construct the complete response
+    const response = {
+      invoice: invoiceDetails,
+      items: {
+        familyPacks: familyPackItemsWithDetails,
+        additionalItems: additionalItems,
+      },
+      billing: billingDetails,
+      pickupCenter: pickupCenterDetails,
+    };
+
+    console.log("Successfully fetched invoice details");
+    return res.status(200).json({
+      success: true,
+      message: "Invoice details retrieved successfully",
+      data: response,
+    });
+  } catch (error) {
+    if (error.isJoi) {
+      // Handle validation error
+      return res.status(400).json({
+        success: false,
+        error: error.details[0].message,
+      });
+    }
+
+    console.error("Error fetching invoice details:", error);
+    return res.status(500).json({
+      success: false,
+      error: "An error occurred while fetching invoice details",
+      details:
+        process.env.NODE_ENV === "development" ? error.message : undefined,
     });
   }
 };
