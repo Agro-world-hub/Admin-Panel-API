@@ -1901,3 +1901,73 @@ exports.getUserOrders = async (req, res) => {
     res.status(statusCode).json(errorResponse);
   }
 };
+
+exports.getCoupen = async (req, res) => {
+  try {
+    const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
+    console.log("Request URL:", fullUrl);
+    // console.log(req.body);
+
+    const validatedParams = await MarketPriceValidate.getCoupenValidation.validateAsync(req.params);
+    const coupenId = validatedParams.coupenId
+
+    // const coupenId = req.params.coupenId
+    console.log('coupenId is', coupenId);
+
+
+
+    const result = await MarketPlaceDao.getCoupenDAO(coupenId);
+    console.log("coupen creation success", result);
+    return res.status(201).json({
+      message: "coupen created successfully",
+      result: result,
+      status: true,
+    });
+  } catch (err) {
+    if (err.isJoi) {
+      // Validation error
+      return res
+        .status(400)
+        .json({ error: err.details[0].message, status: false });
+    }
+
+    console.error("Error executing query:", err);
+    return res.status(500).json({
+      error: "An error occurred while creating marcket product",
+      status: false,
+    });
+  }
+};
+
+exports.updateCoupen = async (req, res) => {
+  try {
+    const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
+    console.log("Request URL:", fullUrl);
+    console.log(req.body);
+
+    const coupen =
+      await MarketPriceValidate.updateCoupenValidation.validateAsync(req.body);
+    console.log(coupen);
+
+    const result = await MarketPlaceDao.updateCoupenDAO(coupen);
+    console.log("coupen creation success");
+    return res.status(201).json({
+      message: "coupen created successfully",
+      result: result,
+      status: true,
+    });
+  } catch (err) {
+    if (err.isJoi) {
+      // Validation error
+      return res
+        .status(400)
+        .json({ error: err.details[0].message, status: false });
+    }
+
+    console.error("Error executing query:", err);
+    return res.status(500).json({
+      error: "An error occurred while creating marcket product",
+      status: false,
+    });
+  }
+};
