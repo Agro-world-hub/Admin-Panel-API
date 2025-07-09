@@ -1200,6 +1200,18 @@ exports.editPackage = async (req, res) => {
 
     let profileImageUrl = null;
 
+     const exists = await MarketPlaceDao.checkPackageDisplayNameExistsDao(
+      package.displayName,
+      id
+    );
+    
+    if(exists){
+      return res.json({status:false, message:'Display name allready exist!'})
+    }
+
+    console.log("Exist :",exists);
+    
+
     // Check if a new image file was uploaded
     if (req.body.file) {
       // Delete old image from S3 if it exists

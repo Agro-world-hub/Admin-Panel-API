@@ -1575,10 +1575,16 @@ exports.editDeliveryChargeDAO = async (data, id) => {
   });
 };
 
-exports.checkPackageDisplayNameExistsDao = async (displayName) => {
+exports.checkPackageDisplayNameExistsDao = async (displayName, id) => {
   return new Promise((resolve, reject) => {
-    const sql = "SELECT * FROM marketplacepackages WHERE displayName = ?";
-    marketPlace.query(sql, [displayName], (err, results) => {
+    let  sql = " SELECT * FROM marketplacepackages WHERE displayName = ? ";
+    const sqlParams = [displayName]
+
+    if(id){
+      sql += " AND id != ? "
+      sqlParams.push(id);
+    }
+    marketPlace.query(sql, sqlParams, (err, results) => {
       if (err) {
         reject(err);
       } else {
