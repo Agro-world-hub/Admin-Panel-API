@@ -2094,7 +2094,7 @@ exports.getUserOrdersDao = async (userId, status) => {
   });
 };
 
-exports.getInvoiceDetailsDAO = (processOrderId, userId) => {
+exports.getInvoiceDetailsDAO = (processOrderId) => {
   return new Promise((resolve, reject) => {
     const sql = `
       SELECT 
@@ -2110,10 +2110,10 @@ exports.getInvoiceDetailsDAO = (processOrderId, userId) => {
         o.total AS grandTotal
       FROM orders o
       LEFT JOIN processorders po ON o.id = po.orderId
-      WHERE po.id = ? AND o.userId = ?
+      WHERE po.id = ?
     `;
 
-    marketPlace.query(sql, [processOrderId, userId], (err, results) => {
+    marketPlace.query(sql, [processOrderId], (err, results) => {
       if (err) {
         return reject(err);
       }

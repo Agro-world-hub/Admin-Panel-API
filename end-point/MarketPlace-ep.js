@@ -1825,29 +1825,7 @@ exports.getUserOrders = async (req, res) => {
     console.log("Fetching user orders...");
 
     const userId = req.params.userId;
-    const statusFilter = req.query.status || "Ordered"; // Default to 'Ordered' if no status provided
-
-    // // Validate status filter against possible values
-    // const validStatuses = [
-    //   "Ordered",
-    //   "Assinged",
-    //   "Processing",
-    //   "Delivered",
-    //   "Cancelled",
-    //   "Faild",
-    //   "On the way",
-    // ];
-    // if (!validStatuses.includes(statusFilter)) {
-    //   return res.status(400).json({
-    //     success: false,
-    //     message: "Invalid status filter",
-    //     validStatuses: validStatuses,
-    //   });
-    // }
-
-    // console.log(
-    //   `Fetching orders for userId: ${userId} with status: ${statusFilter}`
-    // );
+    const statusFilter = req.query.status || "Ordered";
 
     const userOrders = await MarketPlaceDao.getUserOrdersDao(
       parseInt(userId),
@@ -1930,24 +1908,20 @@ exports.getInvoiceDetails = async (req, res) => {
 
   try {
     const { processOrderId } = req.params;
-    const userId = req.user.id; // Assuming user ID is available in req.user
+    const userId = req.user.id;
 
     // Validate input
-    if (!processOrderId || !userId) {
+    if (!processOrderId) {
       return res.status(400).json({
         success: false,
-        error: "Process order ID and user ID are required",
+        error: "Process order ID is required",
       });
     }
 
-    // Get all invoice details in parallel
-    const [invoiceDetails, familyPackItems, additionalItems, billingDetails] =
-      await Promise.all([
-        MarketPlaceDao.getInvoiceDetailsDAO(processOrderId, userId),
-        MarketPlaceDao.getFamilyPackItemsDAO(invoiceDetails?.orderId),
-        MarketPlaceDao.getAdditionalItemsDAO(processOrderId),
-        MarketPlaceDao.getBillingDetailsDAO(processOrderId, userId),
-      ]);
+    // First get the invoice details
+    const invoiceDetails = await MarketPlaceDao.getInvoiceDetailsDAO(
+      processOrderId
+    );
 
     if (!invoiceDetails) {
       return res.status(404).json({
@@ -1955,6 +1929,14 @@ exports.getInvoiceDetails = async (req, res) => {
         error: "Invoice not found",
       });
     }
+
+    // Then get the other details in parallel
+    const [familyPackItems, additionalItems, billingDetails] =
+      await Promise.all([
+        MarketPlaceDao.getFamilyPackItemsDAO(invoiceDetails.orderId),
+        MarketPlaceDao.getAdditionalItemsDAO(processOrderId),
+        MarketPlaceDao.getBillingDetailsDAO(processOrderId),
+      ]);
 
     // Get pickup center details if delivery method is pickup
     let pickupCenterDetails = null;
