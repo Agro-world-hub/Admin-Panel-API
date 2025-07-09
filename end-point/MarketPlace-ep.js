@@ -1923,3 +1923,91 @@ exports.getUserOrders = async (req, res) => {
     res.status(statusCode).json(errorResponse);
   }
 };
+
+exports.getInvoiceDetails = async (req, res) => {
+  const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
+  console.log("Request URL:", fullUrl);
+
+  try {
+    const { processOrderId } = req.params;
+    const userId = req.user.id; // Assuming user ID is available in req.user
+
+    // Validate input
+    if (!processOrderId || !userId) {
+      return res.status(400).json({
+        success: false,
+        error: "Process order ID and user ID are required",
+      });
+    }
+
+    // Get all invoice details in parallel
+    const [invoiceDetails, familyPackItems, additionalItems, billingDetails] =
+      await Promise.all([
+        MarketPlaceDao.getInvoiceDetailsDAO(processOrderId, userId),
+        MarketPlaceDao.getFamilyPackItemsDAO(invoiceDetails?.orderId),
+        MarketPlaceDao.getAdditionalItemsDAO(processOrderId),
+        MarketPlaceDao.getBillingDetailsDAO(processOrderId, userId),
+      ]);
+
+    if (!invoiceDetails) {
+      return res.status(404).json({
+        success: false,
+        error: "Invoice not found",
+      });
+    }
+
+    // Get pickup center details if delivery method is pickup
+    let pickupCenterDetails = null;
+    if (invoiceDetails.deliveryMethod === "PICKUP" && invoiceDetails.centerId) {
+      pickupCenterDetails = await MarketPlaceDao.getPickupCenterDetailsDAO(
+        invoiceDetails.centerId
+      );
+    }
+
+    // Get package details for each family pack item
+    const packageDetailsPromises = familyPackItems.map((item) =>
+      MarketPlaceDao.getPackageDetailsDAO(item.packageId)
+    );
+    const packageDetails = await Promise.all(packageDetailsPromises);
+
+    // Combine package details with family pack items
+    const familyPackItemsWithDetails = familyPackItems.map((item, index) => ({
+      ...item,
+      packageDetails: packageDetails[index],
+    }));
+
+    // Construct the complete response
+    const response = {
+      invoice: invoiceDetails,
+      items: {
+        familyPacks: familyPackItemsWithDetails,
+        additionalItems: additionalItems,
+      },
+      billing: billingDetails,
+      pickupCenter: pickupCenterDetails,
+    };
+
+    console.log("Successfully fetched invoice details");
+    return res.status(200).json({
+      success: true,
+      message: "Invoice details retrieved successfully",
+      data: response,
+    });
+  } catch (error) {
+    if (error.isJoi) {
+      // Handle validation error
+      return res.status(400).json({
+        success: false,
+        error: error.details[0].message,
+      });
+    }
+
+    console.error("Error fetching invoice details:", error);
+    return res.status(500).json({
+      success: false,
+      error: "An error occurred while fetching invoice details",
+      details:
+        process.env.NODE_ENV === "development" ? error.message : undefined,
+    });
+  }
+};

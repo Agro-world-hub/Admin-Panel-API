@@ -284,4 +284,6 @@ router.get(
   marketPlaceEp.getUserOrders
 );
 
+router.get("/invoice/:userId", authMiddleware, marketPlaceEp.getInvoiceDetails);
+
 module.exports = router;
