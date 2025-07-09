@@ -299,10 +299,11 @@ exports.getAllCoupenDAO = (limit, offset, status, types, searchText) => {
     }
 
     if (searchText) {
-      countSql += " AND code = ? ";
-      dataSql += ` AND code = ? `;
-      countParms.push(searchText);
-      dataParms.push(searchText);
+      countSql += " AND code LIKE ? ";
+      dataSql += " AND code LIKE ? ";
+      const searchPattern = `%${searchText}%`;
+      countParms.push(searchPattern);
+      dataParms.push(searchPattern);
     }
 
     if (types) {
@@ -2093,3 +2094,66 @@ exports.getUserOrdersDao = async (userId, status) => {
     });
   });
 };
+
+exports.getCoupenDAO = async (coupenId) => {
+  return new Promise((resolve, reject) => {
+    const sql =
+      "SELECT coupon.id, coupon.code, coupon.type, CAST(coupon.percentage AS DECIMAL(10,2)) AS percentage, coupon.status, coupon.checkLimit, CAST(coupon.priceLimit AS DECIMAL(10,2)) AS priceLimit, CAST(coupon.fixDiscount AS DECIMAL(10,2)) AS fixDiscount, coupon.startDate, coupon.endDate FROM market_place.coupon WHERE coupon.id = ?";
+
+    marketPlace.query(sql, [coupenId], (err, results) => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(
+          results.map((row) => ({
+            ...row,
+            percentage: row.percentage !== null ? parseFloat(row.percentage) : null,
+            priceLimit: row.priceLimit !== null ? parseFloat(row.priceLimit) : null,
+            fixDiscount: row.fixDiscount !== null ? parseFloat(row.fixDiscount) : null,
+          }))
+        );
+      }
+    });
+  });
+};
+
+exports.updateCoupenDAO = async (coupen) => {
+  return new Promise((resolve, reject) => {
+    const sql = `
+      UPDATE coupon 
+      SET 
+        code = ?, 
+        type = ?, 
+        percentage = ?, 
+        status = ?, 
+        checkLimit = ?, 
+        priceLimit = ?, 
+        fixDiscount = ?, 
+        startDate = ?, 
+        endDate = ?
+      WHERE id = ?
+    `;
+
+    const values = [
+      coupen.code,
+      coupen.type,
+      coupen.percentage,
+      coupen.status,
+      coupen.checkLimit,
+      coupen.priceLimit,
+      coupen.fixDiscount,
+      coupen.startDate,
+      coupen.endDate,
+      coupen.id, 
+    ];
+
+    marketPlace.query(sql, values, (err, results) => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(results.affectedRows); // you can return affected rows or true
+      }
+    });
+  });
+};
+

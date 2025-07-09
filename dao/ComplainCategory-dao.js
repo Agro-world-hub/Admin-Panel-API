@@ -316,10 +316,10 @@ exports.updateMarketplaceComplaintReply = (complaintId, reply) => {
   return new Promise((resolve, reject) => {
     const sql = `
       UPDATE market_place.marcketplacecomplain
-      SET reply = ?
+      SET reply = ?, status = ?
       WHERE id = ?
     `;
-    marketPlace.query(sql, [reply, complaintId], (err, results) => {
+    marketPlace.query(sql, [reply, "Closed", complaintId, ], (err, results) => {
       if (err) {
         console.error('SQL error in updateMarketplaceComplaintReply:', err);
         return reject({

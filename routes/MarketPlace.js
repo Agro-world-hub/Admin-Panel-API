@@ -39,6 +39,8 @@ router.delete(
 
 router.post("/create-coupen", authMiddleware, marketPlaceEp.createCoupen);
 
+router.post("/update-coupen", authMiddleware, marketPlaceEp.updateCoupen);
+
 router.get("/get-all-coupen", authMiddleware, marketPlaceEp.getAllCoupen);
 
 router.delete(
@@ -283,5 +285,9 @@ router.get(
   authMiddleware,
   marketPlaceEp.getUserOrders
 );
+
+router.get("/get-coupen/:coupenId", authMiddleware, marketPlaceEp.getCoupen);
+
+router.post("/update-coupen", authMiddleware, marketPlaceEp.updateCoupen);
 
 module.exports = router;
