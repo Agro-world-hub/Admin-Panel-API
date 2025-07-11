@@ -290,4 +290,10 @@ router.get(
   marketPlaceEp.getInvoiceDetails
 );
 
+router.get(
+  "/get-all-wholesale-orders",
+  authMiddleware,
+  marketPlaceEp.getAllWholesaleOrders
+);
+
 module.exports = router;

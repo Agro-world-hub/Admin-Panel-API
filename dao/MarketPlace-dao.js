@@ -1310,6 +1310,73 @@ exports.editPackageDetailsDAO = async (data, packageId) => {
   });
 };
 
+// exports.getAllRetailOrderDetails = (
+//   limit,
+//   offset,
+//   status,
+//   method,
+//   searchItem,
+//   formattedDate
+// ) => {
+//   return new Promise((resolve, reject) => {
+//     let countSql =
+//       "SELECT COUNT(*) as total FROM market_place.orders o LEFT JOIN market_place.processorders po ON o.id = po.orderId";
+//     let sql = `
+//     SELECT o.id, o.fullName AS customerName, o.delivaryMethod AS method, po.amount, po.invNo, po.status, o.createdAt AS orderdDate FROM market_place.orders o
+//     LEFT JOIN market_place.processorders po ON o.id = po.orderId
+//     `;
+
+//     let whereClause = " WHERE 1=1";
+//     const searchParams = [];
+
+//     if (searchItem) {
+//       // Turn "ap" into "%a%p%" to match "apple"
+//       const searchQuery = `%${searchItem.split("").join("%")}%`;
+//       whereClause += " AND (po.invNo LIKE ? OR o.fullName LIKE ?)";
+//       searchParams.push(searchQuery, searchQuery);
+//     }
+
+//     if (status) {
+//       whereClause += " AND po.status = ?";
+//       searchParams.push(status);
+//     }
+
+//     if (method) {
+//       whereClause += " AND o.delivaryMethod = ?";
+//       searchParams.push(method);
+//     }
+
+//     if (formattedDate) {
+//       whereClause += " AND DATE(o.createdAt) = ?";
+//       searchParams.push(formattedDate);
+//     }
+
+//     // Add where clause to both count and main SQL
+//     countSql += whereClause;
+//     sql += whereClause + " ORDER BY o.createdAt ASC LIMIT ? OFFSET ?";
+//     const dataParams = [...searchParams, limit, offset];
+
+//     marketPlace.query(countSql, searchParams, (countErr, countResults) => {
+//       if (countErr) {
+//         return reject(countErr);
+//       }
+
+//       const total = countResults[0].total;
+
+//       marketPlace.query(sql, dataParams, (dataErr, dataResults) => {
+//         if (dataErr) {
+//           return reject(dataErr);
+//         }
+
+//         resolve({
+//           total: total,
+//           items: dataResults,
+//         });
+//       });
+//     });
+//   });
+// };
+
 exports.getAllRetailOrderDetails = (
   limit,
   offset,
@@ -1319,18 +1386,29 @@ exports.getAllRetailOrderDetails = (
   formattedDate
 ) => {
   return new Promise((resolve, reject) => {
-    let countSql =
-      "SELECT COUNT(*) as total FROM market_place.orders o LEFT JOIN market_place.processorders po ON o.id = po.orderId";
+    let countSql = `
+      SELECT COUNT(*) as total 
+      FROM market_place.orders o 
+      LEFT JOIN market_place.processorders po ON o.id = po.orderId
+      LEFT JOIN market_place.marketplaceusers mu ON o.userId = mu.id
+    `;
+
     let sql = `
-    SELECT o.id, o.fullName AS customerName, o.delivaryMethod AS method, po.amount, po.invNo, po.status, o.createdAt AS orderdDate FROM market_place.orders o
-    LEFT JOIN market_place.processorders po ON o.id = po.orderId
+      SELECT o.id, o.fullName AS customerName, o.delivaryMethod AS method, 
+             po.amount, po.invNo, po.status, o.createdAt AS orderdDate 
+      FROM market_place.orders o
+      LEFT JOIN market_place.processorders po ON o.id = po.orderId
+      LEFT JOIN market_place.marketplaceusers mu ON o.userId = mu.id
     `;
 
     let whereClause = " WHERE 1=1";
     const searchParams = [];
 
+    // Add the new conditions
+    whereClause += " AND mu.buyerType = 'Retail'";
+    whereClause += " AND o.orderApp = 'Marketplace'";
+
     if (searchItem) {
-      // Turn "ap" into "%a%p%" to match "apple"
       const searchQuery = `%${searchItem.split("").join("%")}%`;
       whereClause += " AND (po.invNo LIKE ? OR o.fullName LIKE ?)";
       searchParams.push(searchQuery, searchQuery);
@@ -1351,7 +1429,6 @@ exports.getAllRetailOrderDetails = (
       searchParams.push(formattedDate);
     }
 
-    // Add where clause to both count and main SQL
     countSql += whereClause;
     sql += whereClause + " ORDER BY o.createdAt ASC LIMIT ? OFFSET ?";
     const dataParams = [...searchParams, limit, offset];
@@ -2238,6 +2315,83 @@ exports.getPackageDetailsDAO = (packageId) => {
         return reject(err);
       }
       resolve(results);
+    });
+  });
+};
+
+exports.getAllWholesaleOrderDetails = (
+  limit,
+  offset,
+  status,
+  method,
+  searchItem,
+  formattedDate
+) => {
+  return new Promise((resolve, reject) => {
+    let countSql = `
+      SELECT COUNT(*) as total 
+      FROM market_place.orders o 
+      LEFT JOIN market_place.processorders po ON o.id = po.orderId
+      LEFT JOIN market_place.marketplaceusers mu ON o.userId = mu.id
+    `;
+
+    let sql = `
+      SELECT o.id, o.fullName AS customerName, o.delivaryMethod AS method, 
+             po.amount, po.invNo, po.status, o.createdAt AS orderdDate 
+      FROM market_place.orders o
+      LEFT JOIN market_place.processorders po ON o.id = po.orderId
+      LEFT JOIN market_place.marketplaceusers mu ON o.userId = mu.id
+    `;
+
+    let whereClause = " WHERE 1=1";
+    const searchParams = [];
+
+    // Add the new conditions
+    whereClause += " AND mu.buyerType = 'Wholesale'";
+    whereClause += " AND o.orderApp = 'Marketplace'";
+
+    if (searchItem) {
+      const searchQuery = `%${searchItem.split("").join("%")}%`;
+      whereClause += " AND (po.invNo LIKE ? OR o.fullName LIKE ?)";
+      searchParams.push(searchQuery, searchQuery);
+    }
+
+    if (status) {
+      whereClause += " AND po.status = ?";
+      searchParams.push(status);
+    }
+
+    if (method) {
+      whereClause += " AND o.delivaryMethod = ?";
+      searchParams.push(method);
+    }
+
+    if (formattedDate) {
+      whereClause += " AND DATE(o.createdAt) = ?";
+      searchParams.push(formattedDate);
+    }
+
+    countSql += whereClause;
+    sql += whereClause + " ORDER BY o.createdAt ASC LIMIT ? OFFSET ?";
+    const dataParams = [...searchParams, limit, offset];
+
+    marketPlace.query(countSql, searchParams, (countErr, countResults) => {
+      if (countErr) {
+        return reject(countErr);
+      }
+
+      const total = countResults[0].total;
+
+      marketPlace.query(sql, dataParams, (dataErr, dataResults) => {
+        if (dataErr) {
+          return reject(dataErr);
+        }
+
+        resolve({
+          total: total,
+          items: dataResults,
+        });
+      });
     });
   });
 };

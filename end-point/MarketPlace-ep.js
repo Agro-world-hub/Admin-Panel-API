@@ -1993,3 +1993,42 @@ exports.getInvoiceDetails = async (req, res) => {
     });
   }
 };
+
+exports.getAllWholesaleOrders = async (req, res) => {
+  const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
+  console.log(fullUrl);
+  try {
+    const { page, limit, status, method, searchItem, formattedDate } =
+      await MarketPriceValidate.getAllRetailOrderSchema.validateAsync(
+        req.query
+      );
+
+    const offset = (page - 1) * limit;
+
+    const { total, items } = await MarketPlaceDao.getAllWholesaleOrderDetails(
+      limit,
+      offset,
+      status,
+      method,
+      searchItem,
+      formattedDate
+    );
+
+    console.log(items);
+
+    console.log(page);
+    console.log(limit);
+    console.log(searchItem);
+    res.json({
+      items,
+      total,
+    });
+  } catch (err) {
+    if (err.isJoi) {
+      // Validation error
+      return res.status(400).json({ error: err.details[0].message });
+    }
+    console.error("Error executing query:", err);
+    res.status(500).send("An error occurred while fetching data.");
+  }
+};
