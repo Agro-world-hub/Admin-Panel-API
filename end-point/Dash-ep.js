@@ -140,6 +140,16 @@ exports.createSalesAgent = async (req, res) => {
   try {
     const officerData = JSON.parse(req.body.officerData);
 
+    console.log(officerData);
+
+    const isExistingPhone1 = await DashDao.checkPhoneExist(
+      officerData.phoneNumber1
+    );
+
+    const isExistingPhone2 = await DashDao.checkPhoneExist(
+      officerData.phoneNumber2
+    );
+
     const isExistingNIC = await DashDao.checkNICExist(
       officerData.nic
     );
@@ -156,6 +166,18 @@ exports.createSalesAgent = async (req, res) => {
     if (isExistingEmail) {
       return res.status(500).json({
         error: "Email already exists",
+      });
+    }
+
+    if (isExistingPhone1) {
+      return res.status(500).json({
+        error: "Phone number 01 already exists",
+      });
+    }
+
+    if (isExistingPhone2) {
+      return res.status(500).json({
+        error: "Phone number 02 already exists",
       });
     }
 
@@ -259,6 +281,45 @@ exports.updateSalesAgentDetails = async (req, res) => {
   // const qrCode = await collectionofficerDao.getQrImage(id);
   // const officerDataForImage = await DashDao.getSalesAgentDataById(id);
   console.log(officerData);
+
+  const isExistingPhone1 = await DashDao.checkPhoneExistSaEdit(
+    officerData.phoneNumber1, id
+  );
+
+  const isExistingPhone2 = await DashDao.checkPhoneExistSaEdit(
+    officerData.phoneNumber2, id
+  );
+
+  const isExistingNIC = await DashDao.checkNICExistSaEdit(
+    officerData.nic, id
+  );
+  const isExistingEmail = await DashDao.checkEmailExistSaEdit(
+    officerData.email, id
+  );
+
+  if (isExistingNIC) {
+    return res.status(500).json({
+      error: "NIC already exists",
+    });
+  }
+
+  if (isExistingEmail) {
+    return res.status(500).json({
+      error: "Email already exists",
+    });
+  }
+
+  if (isExistingPhone1) {
+    return res.status(500).json({
+      error: "Phone number 01 already exists",
+    });
+  }
+
+  if (isExistingPhone2) {
+    return res.status(500).json({
+      error: "Phone number 02 already exists",
+    });
+  }
 
 
   // let qrImageUrl;

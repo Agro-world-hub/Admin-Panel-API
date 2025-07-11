@@ -80,3 +80,21 @@ exports.getmarketplaceCustomerParamSchema = Joi.object({
   limit: Joi.number().integer().min(1).max(100).default(10),
   searchText: Joi.string().optional(),
 });
+
+exports.getCoupenValidation = Joi.object({
+  coupenId: Joi.number().min(0).required(),
+});
+
+exports.updateCoupenValidation = Joi.object({
+  id: Joi.number().required(),
+  code: Joi.string().required(),
+  type: Joi.string().required(),
+  percentage: Joi.number().min(0).max(100).optional(),
+  status: Joi.string().required(),
+  checkLimit: Joi.boolean().truthy(1).falsy(0).required(),
+  startDate: Joi.date().required(),
+  endDate: Joi.date().required(),
+  priceLimit: Joi.number().min(0).optional().allow(null),
+  fixDiscount: Joi.number().min(0).optional().allow(null),
+});
+
