@@ -19,7 +19,7 @@ router.get(
 
 router.get(
   "/get-all-companies",
-  // authMiddleware,
+  authMiddleware,
   distributionEp.getAllCompanies
 );
 

@@ -96,6 +96,12 @@ router.get(
 );
 
 router.get(
+  '/get-marketplace-complaintWholesale',
+  authMiddleware,
+   ComplainCategoryEP.getAllMarketplaceComplaintsWholesale
+);
+
+router.get(
   '/get-marketplace-complaint/:id',
   authMiddleware,
   ComplainCategoryEP.getMarketplaceComplaintById

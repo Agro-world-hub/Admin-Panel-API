@@ -358,6 +358,24 @@ exports.getAllMarketplaceComplaints = async (req, res) => {
   }
 };
 
+exports.getAllMarketplaceComplaintsWholesale = async (req, res) => {
+  const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
+  console.log(fullUrl);
+  try {
+    // Fetch all complaints from the marketplacecomplain table
+    const complaints = await ComplainCategoryDAO.getAllMarketplaceComplaintsWholesale();
+
+    if (!complaints || complaints.length === 0) {
+      return res.status(404).json({ message: "No complaints found" });
+    }
+
+    res.status(200).json(complaints);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
+
 exports.getMarketplaceComplaintById = async (req, res) => {
   const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
   console.log(fullUrl);
