@@ -166,7 +166,7 @@ exports.getAllCompanyDAO = (companyId, centerId) => {
   return new Promise((resolve, reject) => {
     let sql = `
     SELECT 
-  
+    c.id AS companyId,
     c.companyNameEnglish,
     c.email AS companyEmail,
     c.logo,
