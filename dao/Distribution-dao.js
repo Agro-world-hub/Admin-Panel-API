@@ -29,7 +29,7 @@ exports.createDistributionCenter = (data) => {
       data.province,
       data.district,
       data.city,
-      data.regCode
+      data.regCode,
     ];
 
     // First insert into distributedcenter
@@ -166,7 +166,7 @@ exports.getAllCompanyDAO = (companyId, centerId) => {
   return new Promise((resolve, reject) => {
     let sql = `
     SELECT 
-  
+    c.id AS companyId,
     c.companyNameEnglish,
     c.email AS companyEmail,
     c.logo,
