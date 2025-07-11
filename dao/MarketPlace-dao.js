@@ -299,10 +299,11 @@ exports.getAllCoupenDAO = (limit, offset, status, types, searchText) => {
     }
 
     if (searchText) {
-      countSql += " AND code = ? ";
-      dataSql += ` AND code = ? `;
-      countParms.push(searchText);
-      dataParms.push(searchText);
+      countSql += " AND code LIKE ? ";
+      dataSql += " AND code LIKE ? ";
+      const searchPattern = `%${searchText}%`;
+      countParms.push(searchPattern);
+      dataParms.push(searchPattern);
     }
 
     if (types) {
@@ -729,13 +730,12 @@ exports.getMarketplacePackageByIdDAO = async (id) => {
     const sql = `
       SELECT 
         mpp.id, mpp.displayName, mpp.image, mpp.status, mpp.description, 
-        mpp.productPrice, mpp.packingFee, mpp.serviceFee, 
-        pd.qty, pt.id AS productTypeId
+        mpp.productPrice, mpp.packingFee, mpp.serviceFee
       FROM market_place.marketplacepackages mpp
-      JOIN market_place.packagedetails pd ON mpp.id = pd.packageId
-      JOIN market_place.producttypes pt ON pd.productTypeId = pt.id
       WHERE mpp.id = ?;
     `;
+    // JOIN market_place.packagedetails pd ON mpp.id = pd.packageId
+    //   JOIN market_place.producttypes pt ON pd.productTypeId = pt.id
 
     marketPlace.query(sql, [id], (err, results) => {
       if (err) {
@@ -1281,8 +1281,11 @@ exports.editPackageDAO = async (data, profileImageUrl, id) => {
       data.serviceFee,
       profileImageUrl,
       data.description,
-      id, // Used in WHERE clause
+      parseFloat(id), // Used in WHERE clause
     ];
+
+    console.log("Main package:", values);
+
 
     marketPlace.query(sql, values, (err, results) => {
       if (err) {
@@ -1295,18 +1298,17 @@ exports.editPackageDAO = async (data, profileImageUrl, id) => {
   });
 };
 
-exports.editPackageDetailsDAO = async (data, packageId) => {
+exports.editPackageDetailsDAO = async (data) => {
   return new Promise((resolve, reject) => {
     const sql = `
       UPDATE packagedetails 
       SET qty = ? 
-      WHERE packageId = ? AND productTypeId = ?
+      WHERE id = ?
     `;
 
     const values = [
-      data.qty, // Set new quantity
-      packageId, // Match package ID
-      data.productTypeId, // Match product type ID
+      data.qty,
+      data.id
     ];
 
     marketPlace.query(sql, values, (err, results) => {
@@ -1319,6 +1321,73 @@ exports.editPackageDetailsDAO = async (data, packageId) => {
   });
 };
 
+// exports.getAllRetailOrderDetails = (
+//   limit,
+//   offset,
+//   status,
+//   method,
+//   searchItem,
+//   formattedDate
+// ) => {
+//   return new Promise((resolve, reject) => {
+//     let countSql =
+//       "SELECT COUNT(*) as total FROM market_place.orders o LEFT JOIN market_place.processorders po ON o.id = po.orderId";
+//     let sql = `
+//     SELECT o.id, o.fullName AS customerName, o.delivaryMethod AS method, po.amount, po.invNo, po.status, o.createdAt AS orderdDate FROM market_place.orders o
+//     LEFT JOIN market_place.processorders po ON o.id = po.orderId
+//     `;
+
+//     let whereClause = " WHERE 1=1";
+//     const searchParams = [];
+
+//     if (searchItem) {
+//       // Turn "ap" into "%a%p%" to match "apple"
+//       const searchQuery = `%${searchItem.split("").join("%")}%`;
+//       whereClause += " AND (po.invNo LIKE ? OR o.fullName LIKE ?)";
+//       searchParams.push(searchQuery, searchQuery);
+//     }
+
+//     if (status) {
+//       whereClause += " AND po.status = ?";
+//       searchParams.push(status);
+//     }
+
+//     if (method) {
+//       whereClause += " AND o.delivaryMethod = ?";
+//       searchParams.push(method);
+//     }
+
+//     if (formattedDate) {
+//       whereClause += " AND DATE(o.createdAt) = ?";
+//       searchParams.push(formattedDate);
+//     }
+
+//     // Add where clause to both count and main SQL
+//     countSql += whereClause;
+//     sql += whereClause + " ORDER BY o.createdAt ASC LIMIT ? OFFSET ?";
+//     const dataParams = [...searchParams, limit, offset];
+
+//     marketPlace.query(countSql, searchParams, (countErr, countResults) => {
+//       if (countErr) {
+//         return reject(countErr);
+//       }
+
+//       const total = countResults[0].total;
+
+//       marketPlace.query(sql, dataParams, (dataErr, dataResults) => {
+//         if (dataErr) {
+//           return reject(dataErr);
+//         }
+
+//         resolve({
+//           total: total,
+//           items: dataResults,
+//         });
+//       });
+//     });
+//   });
+// };
+
 exports.getAllRetailOrderDetails = (
   limit,
   offset,
@@ -1328,18 +1397,29 @@ exports.getAllRetailOrderDetails = (
   formattedDate
 ) => {
   return new Promise((resolve, reject) => {
-    let countSql =
-      "SELECT COUNT(*) as total FROM market_place.orders o LEFT JOIN market_place.processorders po ON o.id = po.orderId";
+    let countSql = `
+      SELECT COUNT(*) as total 
+      FROM market_place.orders o 
+      LEFT JOIN market_place.processorders po ON o.id = po.orderId
+      LEFT JOIN market_place.marketplaceusers mu ON o.userId = mu.id
+    `;
+
     let sql = `
-    SELECT o.id, o.fullName AS customerName, o.delivaryMethod AS method, po.amount, po.invNo, po.status, o.createdAt AS orderdDate FROM market_place.orders o
-    LEFT JOIN market_place.processorders po ON o.id = po.orderId
+      SELECT o.id, o.fullName AS customerName, o.delivaryMethod AS method, 
+             po.amount, po.invNo, po.status, o.createdAt AS orderdDate 
+      FROM market_place.orders o
+      LEFT JOIN market_place.processorders po ON o.id = po.orderId
+      LEFT JOIN market_place.marketplaceusers mu ON o.userId = mu.id
     `;
 
     let whereClause = " WHERE 1=1";
     const searchParams = [];
 
+    // Add the new conditions
+    whereClause += " AND mu.buyerType = 'Retail'";
+    whereClause += " AND o.orderApp = 'Marketplace'";
+
     if (searchItem) {
-      // Turn "ap" into "%a%p%" to match "apple"
       const searchQuery = `%${searchItem.split("").join("%")}%`;
       whereClause += " AND (po.invNo LIKE ? OR o.fullName LIKE ?)";
       searchParams.push(searchQuery, searchQuery);
@@ -1360,7 +1440,6 @@ exports.getAllRetailOrderDetails = (
       searchParams.push(formattedDate);
     }
 
-    // Add where clause to both count and main SQL
     countSql += whereClause;
     sql += whereClause + " ORDER BY o.createdAt ASC LIMIT ? OFFSET ?";
     const dataParams = [...searchParams, limit, offset];
@@ -1575,10 +1654,16 @@ exports.editDeliveryChargeDAO = async (data, id) => {
   });
 };
 
-exports.checkPackageDisplayNameExistsDao = async (displayName) => {
+exports.checkPackageDisplayNameExistsDao = async (displayName, id) => {
   return new Promise((resolve, reject) => {
-    const sql = "SELECT * FROM marketplacepackages WHERE displayName = ?";
-    marketPlace.query(sql, [displayName], (err, results) => {
+    let sql = " SELECT * FROM marketplacepackages WHERE displayName = ? ";
+    const sqlParams = [displayName];
+
+    if (id) {
+      sql += " AND id != ? ";
+      sqlParams.push(id);
+    }
+    marketPlace.query(sql, sqlParams, (err, results) => {
       if (err) {
         reject(err);
       } else {
@@ -1922,7 +2007,6 @@ exports.createDefinePackageItemsDao = (definePackageId, products) => {
   });
 };
 
-
 exports.getAllWholesaleCustomersDao = (limit, offset, searchText) => {
   return new Promise((resolve, reject) => {
     let countParms = [];
@@ -2051,6 +2135,362 @@ exports.getUserOrdersDao = async (userId, status) => {
       } else {
         resolve(results);
         console.log("``````````result``````````", results);
+      }
+    });
+  });
+};
+
+exports.getInvoiceDetailsDAO = (processOrderId) => {
+  return new Promise((resolve, reject) => {
+    const sql = `
+      SELECT 
+        o.id AS orderId,
+        o.centerId,
+        o.delivaryMethod AS deliveryMethod,
+        o.discount AS orderDiscount,
+        o.createdAt AS invoiceDate,
+        o.sheduleDate AS scheduledDate,
+        o.buildingType,
+        po.invNo AS invoiceNumber,
+        po.paymentMethod AS paymentMethod,
+        o.total AS grandTotal
+      FROM orders o
+      LEFT JOIN processorders po ON o.id = po.orderId
+      WHERE po.id = ?
+    `;
+
+    marketPlace.query(sql, [processOrderId], (err, results) => {
+      if (err) {
+        return reject(err);
+      }
+      resolve(results[0] || null);
+    });
+  });
+};
+
+exports.getFamilyPackItemsDAO = (orderId) => {
+  return new Promise((resolve, reject) => {
+    const sql = `
+      SELECT 
+        op.id,
+        mp.id AS packageId,
+        mp.displayName AS name,
+        mp.productPrice AS unitPrice,
+        1 AS quantity,
+        mp.productPrice AS amount
+      FROM orderpackage op
+      JOIN marketplacepackages mp ON op.packageId = mp.id
+      WHERE op.orderId = ?
+    `;
+
+    marketPlace.query(sql, [orderId], (err, results) => {
+      if (err) {
+        return reject(err);
+      }
+      resolve(results);
+    });
+  });
+};
+
+exports.getAdditionalItemsDAO = (processOrderId) => {
+  return new Promise((resolve, reject) => {
+    const sql = `
+      SELECT
+        oai.id,
+        mi.displayName AS name,
+        oai.unit, 
+        oai.price AS unitPrice,
+        oai.qty AS quantity,
+        (oai.price * oai.qty) AS amount,
+        oai.discount AS itemDiscount,
+        pc.image AS image
+      FROM orderadditionalitems oai
+      JOIN marketplaceitems mi ON oai.productId = mi.id
+      JOIN (
+        SELECT cropGroupId, MIN(image) AS image
+        FROM plant_care.cropvariety
+        GROUP BY cropGroupId
+      ) pc ON mi.varietyId = pc.cropGroupId
+      WHERE oai.orderId = (SELECT orderId FROM processorders WHERE id = ?)
+    `;
+
+    marketPlace.query(sql, [processOrderId], (err, results) => {
+      if (err) {
+        return reject(err);
+      }
+      resolve(results);
+    });
+  });
+};
+
+exports.getBillingDetailsDAO = (processOrderId, userId) => {
+  return new Promise((resolve, reject) => {
+    const sql = `
+      SELECT 
+        o.title,
+        o.fullName,
+        o.phoneCode1,
+        o.phone1,
+        o.buildingType,
+        COALESCE(oh.houseNo, oa.houseNo) AS houseNo,
+        COALESCE(oh.streetName, oa.streetName) AS street,
+        COALESCE(oh.city, oa.city) AS city
+      FROM orders o
+      LEFT JOIN orderhouse oh ON o.id = oh.orderId
+      LEFT JOIN orderapartment oa ON o.id = oa.orderId
+      WHERE o.id = (SELECT orderId FROM processorders WHERE id = ?) AND o.userId = ?
+      LIMIT 1
+    `;
+
+    marketPlace.query(sql, [processOrderId, userId], (err, results) => {
+      if (err) {
+        return reject(err);
+      }
+      resolve(results[0] || null);
+    });
+  });
+};
+
+exports.getPickupCenterDetailsDAO = (centerId) => {
+  return new Promise((resolve, reject) => {
+    const sql = `
+      SELECT * FROM collection_officer.distributedcenter WHERE id = ?
+    `;
+
+    marketPlace.query(sql, [centerId], (err, results) => {
+      if (err) {
+        return reject(err);
+      }
+      resolve(results[0] || null);
+    });
+  });
+};
+
+exports.getPackageDetailsDAO = (packageId) => {
+  return new Promise((resolve, reject) => {
+    const sql = `
+      SELECT 
+        pd.packageId,
+        pt.id AS productTypeId,
+        pt.typeName,
+        pd.qty
+      FROM packagedetails pd
+      JOIN producttypes pt ON pd.productTypeId = pt.id
+      WHERE pd.packageId = ?
+    `;
+
+    marketPlace.query(sql, [packageId], (err, results) => {
+      if (err) {
+        return reject(err);
+      }
+      resolve(results);
+    });
+  });
+};
+
+exports.getCoupenDAO = async (coupenId) => {
+  return new Promise((resolve, reject) => {
+    const sql =
+      "SELECT coupon.id, coupon.code, coupon.type, CAST(coupon.percentage AS DECIMAL(10,2)) AS percentage, coupon.status, coupon.checkLimit, CAST(coupon.priceLimit AS DECIMAL(10,2)) AS priceLimit, CAST(coupon.fixDiscount AS DECIMAL(10,2)) AS fixDiscount, coupon.startDate, coupon.endDate FROM market_place.coupon WHERE coupon.id = ?";
+
+    marketPlace.query(sql, [coupenId], (err, results) => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(
+          results.map((row) => ({
+            ...row,
+            percentage:
+              row.percentage !== null ? parseFloat(row.percentage) : null,
+            priceLimit:
+              row.priceLimit !== null ? parseFloat(row.priceLimit) : null,
+            fixDiscount:
+              row.fixDiscount !== null ? parseFloat(row.fixDiscount) : null,
+          }))
+        );
+      }
+    });
+  });
+};
+
+exports.updateCoupenDAO = async (coupen) => {
+  return new Promise((resolve, reject) => {
+    const sql = `
+      UPDATE coupon 
+      SET 
+        code = ?, 
+        type = ?, 
+        percentage = ?, 
+        status = ?, 
+        checkLimit = ?, 
+        priceLimit = ?, 
+        fixDiscount = ?, 
+        startDate = ?, 
+        endDate = ?
+      WHERE id = ?
+    `;
+
+    const values = [
+      coupen.code,
+      coupen.type,
+      coupen.percentage,
+      coupen.status,
+      coupen.checkLimit,
+      coupen.priceLimit,
+      coupen.fixDiscount,
+      coupen.startDate,
+      coupen.endDate,
+      coupen.id,
+    ];
+
+    marketPlace.query(sql, values, (err, results) => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(results.affectedRows); // you can return affected rows or true
+      }
+    });
+  });
+};
+
+exports.getPackageEachItemsDao = async (id) => {
+  return new Promise((resolve, reject) => {
+    const sql = `
+      SELECT 
+        PD.id,
+        PT.id AS productTypeId,
+        PT.typeName,
+        COALESCE(PD.qty, 0) AS qty
+      FROM producttypes PT
+      LEFT JOIN packagedetails PD ON PT.id = PD.productTypeId
+      AND PD.packageId = ?
+    `;
+    marketPlace.query(sql, [id], (err, results) => {
+      if (err) {
+        return reject(err);
+      }
+      resolve(results);
+    });
+  });
+};
+
+exports.getAllWholesaleOrderDetails = (
+  limit,
+  offset,
+  status,
+  method,
+  searchItem,
+  formattedDate
+) => {
+  return new Promise((resolve, reject) => {
+    let countSql = `
+      SELECT COUNT(*) as total 
+      FROM market_place.orders o 
+      LEFT JOIN market_place.processorders po ON o.id = po.orderId
+      LEFT JOIN market_place.marketplaceusers mu ON o.userId = mu.id
+    `;
+
+    let sql = `
+      SELECT o.id, o.fullName AS customerName, o.delivaryMethod AS method, 
+             po.amount, po.invNo, po.status, o.createdAt AS orderdDate 
+      FROM market_place.orders o
+      LEFT JOIN market_place.processorders po ON o.id = po.orderId
+      LEFT JOIN market_place.marketplaceusers mu ON o.userId = mu.id
+    `;
+
+    let whereClause = " WHERE 1=1";
+    const searchParams = [];
+
+    // Add the new conditions
+    whereClause += " AND mu.buyerType = 'Wholesale'";
+    whereClause += " AND o.orderApp = 'Marketplace'";
+
+    if (searchItem) {
+      const searchQuery = `%${searchItem.split("").join("%")}%`;
+      whereClause += " AND (po.invNo LIKE ? OR o.fullName LIKE ?)";
+      searchParams.push(searchQuery, searchQuery);
+    }
+
+    if (status) {
+      whereClause += " AND po.status = ?";
+      searchParams.push(status);
+    }
+
+    if (method) {
+      whereClause += " AND o.delivaryMethod = ?";
+      searchParams.push(method);
+    }
+
+    if (formattedDate) {
+      whereClause += " AND DATE(o.createdAt) = ?";
+      searchParams.push(formattedDate);
+    }
+
+    countSql += whereClause;
+    sql += whereClause + " ORDER BY o.createdAt ASC LIMIT ? OFFSET ?";
+    const dataParams = [...searchParams, limit, offset];
+
+    marketPlace.query(countSql, searchParams, (countErr, countResults) => {
+      if (countErr) {
+        return reject(countErr);
+      }
+
+      const total = countResults[0].total;
+
+      marketPlace.query(sql, dataParams, (dataErr, dataResults) => {
+        if (dataErr) {
+          return reject(dataErr);
+        }
+
+        resolve({
+          total: total,
+          items: dataResults,
+        });
+      });
+    });
+  });
+};
+
+
+exports.deletePackageDetailsItemsDao = async (data) => {
+  return new Promise((resolve, reject) => {
+    const sql = `
+      DELETE FROM packagedetails 
+      WHERE id = ?
+    `;
+
+    const values = [
+      data.id
+    ];
+
+    marketPlace.query(sql, values, (err, results) => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(results);
+      }
+    });
+  });
+};
+
+exports.insertNewPackageDetailsItemsDao = async (id, data) => {
+  return new Promise((resolve, reject) => {
+    const sql = `
+      INSERT INTO packagedetails(packageId, productTypeId, qty)
+      VALUES(?, ?, ?)
+    `;
+
+    const values = [
+      id,
+      data.productTypeId,
+      data.qty
+    ];
+
+    marketPlace.query(sql, values, (err, results) => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(results);
       }
     });
   });

@@ -29,7 +29,7 @@ exports.createDistributionCenter = (data) => {
       data.province,
       data.district,
       data.city,
-      data.regCode
+      data.regCode,
     ];
 
     // First insert into distributedcenter
@@ -105,9 +105,9 @@ exports.getAllDistributionCentre = (
     const searchParams = [];
 
     if (centerType === "polygon") {
-      whereClause += " AND dcc.companyId = 1 AND c.isDistributed = 1 ";
+      whereClause += " AND dcc.companyId = 2 AND c.isDistributed = 1 ";
     } else {
-      whereClause += " AND dcc.companyId != 1 AND c.isDistributed = 1 ";
+      whereClause += " AND dcc.companyId != 2 AND c.isDistributed = 1 ";
     }
 
     if (searchItem) {
@@ -168,7 +168,7 @@ exports.getAllCompanyDAO = (searchTerm, centerId) => {
   return new Promise((resolve, reject) => {
     let sql = `
       SELECT 
-        c.id,
+        c.id,  c.id AS companyId,
         c.companyNameEnglish,
         c.email AS companyEmail,
         c.logo,

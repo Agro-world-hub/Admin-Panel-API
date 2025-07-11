@@ -56,7 +56,10 @@ exports.getAllDistributionCentre = async (req, res) => {
         req.query
       );
 
+
     const offset = (page - 1) * limit;
+
+    console.log({ page, limit, district, province, company, searchItem, centerType })
 
     const { total, items } = await DistributionDao.getAllDistributionCentre(
       limit,
