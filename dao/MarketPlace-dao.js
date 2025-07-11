@@ -1281,8 +1281,11 @@ exports.editPackageDAO = async (data, profileImageUrl, id) => {
       data.serviceFee,
       profileImageUrl,
       data.description,
-      id, // Used in WHERE clause
+      parseFloat(id), // Used in WHERE clause
     ];
+
+    console.log("Main package:", values);
+
 
     marketPlace.query(sql, values, (err, results) => {
       if (err) {
@@ -1295,18 +1298,17 @@ exports.editPackageDAO = async (data, profileImageUrl, id) => {
   });
 };
 
-exports.editPackageDetailsDAO = async (data, packageId) => {
+exports.editPackageDetailsDAO = async (data) => {
   return new Promise((resolve, reject) => {
     const sql = `
       UPDATE packagedetails 
       SET qty = ? 
-      WHERE packageId = ? AND productTypeId = ?
+      WHERE id = ?
     `;
 
     const values = [
-      data.qty, // Set new quantity
-      packageId, // Match package ID
-      data.productTypeId, // Match product type ID
+      data.qty,
+      data.id
     ];
 
     marketPlace.query(sql, values, (err, results) => {
@@ -2445,6 +2447,51 @@ exports.getAllWholesaleOrderDetails = (
           items: dataResults,
         });
       });
+    });
+  });
+};
+
+
+exports.deletePackageDetailsItemsDao = async (data) => {
+  return new Promise((resolve, reject) => {
+    const sql = `
+      DELETE FROM packagedetails 
+      WHERE id = ?
+    `;
+
+    const values = [
+      data.id
+    ];
+
+    marketPlace.query(sql, values, (err, results) => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(results);
+      }
+    });
+  });
+};
+
+exports.insertNewPackageDetailsItemsDao = async (id, data) => {
+  return new Promise((resolve, reject) => {
+    const sql = `
+      INSERT INTO packagedetails(packageId, productTypeId, qty)
+      VALUES(?, ?, ?)
+    `;
+
+    const values = [
+      id,
+      data.productTypeId,
+      data.qty
+    ];
+
+    marketPlace.query(sql, values, (err, results) => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(results);
+      }
     });
   });
 };

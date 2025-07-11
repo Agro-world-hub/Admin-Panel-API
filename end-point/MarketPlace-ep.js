@@ -1190,10 +1190,13 @@ exports.editPackage = async (req, res) => {
     console.log("Request URL:", fullUrl);
 
     const package = JSON.parse(req.body.package);
+    const packageItems = package.packageItems
     const id = req.params.id;
     console.log(id);
     console.log(package);
     console.log(req.body.file);
+    console.log("packageItems---->", packageItems);
+
 
     let profileImageUrl = null;
 
@@ -1259,29 +1262,24 @@ exports.editPackage = async (req, res) => {
       });
     }
 
-    // Update package details
-    try {
-      const quantities = package.quantities; // object like { '2': 2, '3': 0 }
-
-      for (const [productTypeId, qty] of Object.entries(quantities)) {
-        // Skip if quantity is 0 or less
-        if (qty <= 0) continue;
-
-        // Construct item data for DAO
-        const itemData = {
-          productTypeId: parseInt(productTypeId),
-          qty: parseInt(qty),
-        };
-
-        await MarketPlaceDao.editPackageDetailsDAO(itemData, id);
+    for (let i = 0; i < packageItems.length; i++) {
+      if (packageItems[i].id !== null && packageItems[i].qty !== 0) {
+        await MarketPlaceDao.editPackageDetailsDAO(packageItems[i]);
       }
-    } catch (err) {
-      console.error("Error updating package details:", err);
-      return res.status(500).json({
-        error: "Error updating package details",
-        status: false,
-      });
+
+      if (packageItems[i].id !== null && packageItems[i].qty === 0) {
+        await MarketPlaceDao.deletePackageDetailsItemsDao(packageItems[i]);
+      }
+
+      if (packageItems[i].id === null && packageItems[i].qty !== 0) {
+        await MarketPlaceDao.insertNewPackageDetailsItemsDao(id, packageItems[i]);
+      }
     }
+
+    //     await MarketPlaceDao.editPackageDetailsDAO(itemData, id);
+    //     await MarketPlaceDao.deletePackageDetailsItemsDao(itemData, id);
+    //     await MarketPlaceDao.insertNewPackageDetailsItemsDao(itemData, id);
+
 
     return res.status(200).json({
       message: "Package updated successfully",
