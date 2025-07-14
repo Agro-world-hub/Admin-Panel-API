@@ -578,7 +578,7 @@ exports.updateMarketProductDao = async (product, id) => {
   });
 };
 
-exports.getAllMarketplacePackagesDAO = (searchText) => {
+exports.getAllMarketplacePackagesDAO = (searchText, date) => {
   return new Promise((resolve, reject) => {
     const sqlParams = [];
     let sql = `
@@ -608,9 +608,29 @@ exports.getAllMarketplacePackagesDAO = (searchText) => {
       FROM marketplacepackages MP
     `;
 
+    // Array to hold WHERE conditions
+    const whereConditions = [];
+
     if (searchText) {
-      sql += ` WHERE displayName LIKE ? `;
+      whereConditions.push(`displayName LIKE ?`);
       sqlParams.push(`%${searchText}%`);
+    }
+
+    if (date) {
+      // Assuming date is in YYYY-MM-DD format
+      whereConditions.push(`(
+        SELECT DP.createdAt
+        FROM definepackage DP
+        WHERE DP.packageId = MP.id
+        ORDER BY DP.createdAt DESC
+        LIMIT 1
+      ) >= ?`);
+      sqlParams.push(`${date} 00:00:00`);
+    }
+
+    // Combine WHERE conditions if any exist
+    if (whereConditions.length > 0) {
+      sql += ` WHERE ` + whereConditions.join(" AND ");
     }
 
     // Order by status A-Z first, then by package name A-Z
@@ -624,7 +644,7 @@ exports.getAllMarketplacePackagesDAO = (searchText) => {
       // Group packages by status
       const groupedData = {};
       console.log(results);
-      
+
       results.forEach((pkg) => {
         const {
           status,
@@ -659,7 +679,7 @@ exports.getAllMarketplacePackagesDAO = (searchText) => {
           discount: discount,
           subtotal: subtotal,
           defineDate: defineDate,
-          adminUser:adminUser,
+          adminUser: adminUser,
           createdAt: created_at,
         });
       });
@@ -1300,7 +1320,6 @@ exports.editPackageDAO = async (data, profileImageUrl, id) => {
 
     console.log("Main package:", values);
 
-
     marketPlace.query(sql, values, (err, results) => {
       if (err) {
         console.log(err);
@@ -1320,10 +1339,7 @@ exports.editPackageDetailsDAO = async (data) => {
       WHERE id = ?
     `;
 
-    const values = [
-      data.qty,
-      data.id
-    ];
+    const values = [data.qty, data.id];
 
     marketPlace.query(sql, values, (err, results) => {
       if (err) {
@@ -2465,7 +2481,6 @@ exports.getAllWholesaleOrderDetails = (
   });
 };
 
-
 exports.deletePackageDetailsItemsDao = async (data) => {
   return new Promise((resolve, reject) => {
     const sql = `
@@ -2473,9 +2488,7 @@ exports.deletePackageDetailsItemsDao = async (data) => {
       WHERE id = ?
     `;
 
-    const values = [
-      data.id
-    ];
+    const values = [data.id];
 
     marketPlace.query(sql, values, (err, results) => {
       if (err) {
@@ -2494,11 +2507,7 @@ exports.insertNewPackageDetailsItemsDao = async (id, data) => {
       VALUES(?, ?, ?)
     `;
 
-    const values = [
-      id,
-      data.productTypeId,
-      data.qty
-    ];
+    const values = [id, data.productTypeId, data.qty];
 
     marketPlace.query(sql, values, (err, results) => {
       if (err) {
