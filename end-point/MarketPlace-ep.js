@@ -1692,6 +1692,7 @@ exports.createDefinePackageWithItems = async (req, res) => {
     const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
     console.log("Request URL:", fullUrl);
     console.log("Request body:", req.body);
+    const userId = req.user.userId
 
     // Validate request body structure
     if (
@@ -1739,7 +1740,8 @@ exports.createDefinePackageWithItems = async (req, res) => {
     try {
       // 1. Create the main package
       const packageResult = await MarketPlaceDao.createDefinePackageDao(
-        packageData
+        packageData,
+        userId
       );
       const definePackageId = packageResult.insertId;
 

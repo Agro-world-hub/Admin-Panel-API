@@ -1952,7 +1952,7 @@ exports.getOrderTypeDao = async (id) => {
   });
 };
 
-exports.createDefinePackageDao = (packageData) => {
+exports.createDefinePackageDao = (packageData, userId) => {
   return new Promise((resolve, reject) => {
     try {
       // Validate inputs
@@ -1962,11 +1962,11 @@ exports.createDefinePackageDao = (packageData) => {
 
       const sql = `
         INSERT INTO definepackage (
-          packageId, price
-        ) VALUES (?, ?)
+          packageId, price, adminId
+        ) VALUES (?, ?, ?)
       `;
 
-      const values = [packageData.packageId, parseFloat(packageData.price)];
+      const values = [packageData.packageId, parseFloat(packageData.price), parseInt(userId)];
 
       // Database query
       marketPlace.query(sql, values, (err, results) => {
