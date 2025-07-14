@@ -593,7 +593,18 @@ exports.getAllMarketplacePackagesDAO = (searchText) => {
           WHERE DP.packageId = MP.id
           ORDER BY DP.createdAt DESC
           LIMIT 1
-        ) AS defineDate
+        ) AS defineDate,
+        (
+          SELECT U.userName
+          FROM agro_world_admin.adminusers U
+          WHERE U.id = (
+            SELECT DP.adminId
+            FROM definepackage DP
+            WHERE DP.packageId = MP.id
+            ORDER BY DP.createdAt DESC
+            LIMIT 1
+          )
+        ) AS adminUser
       FROM marketplacepackages MP
     `;
 
@@ -612,7 +623,8 @@ exports.getAllMarketplacePackagesDAO = (searchText) => {
 
       // Group packages by status
       const groupedData = {};
-
+      console.log(results);
+      
       results.forEach((pkg) => {
         const {
           status,
@@ -624,6 +636,7 @@ exports.getAllMarketplacePackagesDAO = (searchText) => {
           discount,
           subtotal,
           defineDate,
+          adminUser,
           created_at,
         } = pkg;
 
@@ -646,6 +659,7 @@ exports.getAllMarketplacePackagesDAO = (searchText) => {
           discount: discount,
           subtotal: subtotal,
           defineDate: defineDate,
+          adminUser:adminUser,
           createdAt: created_at,
         });
       });
