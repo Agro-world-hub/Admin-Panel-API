@@ -500,17 +500,59 @@ exports.editMarketProduct = async (req, res) => {
   }
 };
 
+// exports.getAllMarketplacePackages = async (req, res) => {
+//   const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
+//   console.log("Request URL:", fullUrl);
+
+//   try {
+//     const { searchText } =
+//       await MarketPriceValidate.getAllPackageSchema.validateAsync(req.query);
+//     console.log("Search Text:", searchText);
+
+//     const packages = await MarketPlaceDao.getAllMarketplacePackagesDAO(
+//       searchText
+//     );
+
+//     console.log("Successfully fetched marketplace packages");
+//     return res.status(200).json({
+//       success: true,
+//       message: "Marketplace packages retrieved successfully",
+//       data: packages,
+//     });
+//   } catch (error) {
+//     if (error.isJoi) {
+//       // Handle validation error
+//       return res.status(400).json({
+//         success: false,
+//         error: error.details[0].message,
+//       });
+//     }
+
+//     console.error("Error fetching marketplace packages:", error);
+//     return res.status(500).json({
+//       success: false,
+//       error: "An error occurred while fetching marketplace packages",
+//       details:
+//         process.env.NODE_ENV === "development" ? error.message : undefined,
+//     });
+//   }
+// };
+
 exports.getAllMarketplacePackages = async (req, res) => {
   const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
   console.log("Request URL:", fullUrl);
 
   try {
-    const { searchText } =
+    // Validate query parameters including date
+    const { searchText, date } =
       await MarketPriceValidate.getAllPackageSchema.validateAsync(req.query);
     console.log("Search Text:", searchText);
+    console.log("Date Filter:", date);
 
+    // Pass both searchText and date to the DAO
     const packages = await MarketPlaceDao.getAllMarketplacePackagesDAO(
-      searchText
+      searchText,
+      date
     );
 
     console.log("Successfully fetched marketplace packages");
@@ -1190,13 +1232,12 @@ exports.editPackage = async (req, res) => {
     console.log("Request URL:", fullUrl);
 
     const package = JSON.parse(req.body.package);
-    const packageItems = package.packageItems
+    const packageItems = package.packageItems;
     const id = req.params.id;
     console.log(id);
     console.log(package);
     console.log(req.body.file);
     console.log("packageItems---->", packageItems);
-
 
     let profileImageUrl = null;
 
@@ -1272,14 +1313,16 @@ exports.editPackage = async (req, res) => {
       }
 
       if (packageItems[i].id === null && packageItems[i].qty !== 0) {
-        await MarketPlaceDao.insertNewPackageDetailsItemsDao(id, packageItems[i]);
+        await MarketPlaceDao.insertNewPackageDetailsItemsDao(
+          id,
+          packageItems[i]
+        );
       }
     }
 
     //     await MarketPlaceDao.editPackageDetailsDAO(itemData, id);
     //     await MarketPlaceDao.deletePackageDetailsItemsDao(itemData, id);
     //     await MarketPlaceDao.insertNewPackageDetailsItemsDao(itemData, id);
-
 
     return res.status(200).json({
       message: "Package updated successfully",
