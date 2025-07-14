@@ -551,7 +551,11 @@ exports.createCompany = async (req, res) => {
   try {
     const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
     console.log("Request URL:", fullUrl);
+    const companyType = req.query.type
+    console.log('companyType:',companyType);
     console.log(req.body);
+    
+    
 
     // Validate the request body
     const {
@@ -599,7 +603,8 @@ exports.createCompany = async (req, res) => {
       foConNum,
       foEmail,
       logo,
-      favicon
+      favicon,
+      companyType
     );
 
     console.log("company creation success");
