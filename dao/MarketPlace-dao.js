@@ -578,86 +578,6 @@ exports.updateMarketProductDao = async (product, id) => {
   });
 };
 
-// exports.getAllMarketplacePackagesDAO = (searchText, date) => {
-//   return new Promise((resolve, reject) => {
-//     const sqlParams = [];
-//     let sql = `
-//       SELECT
-//         MP.id,
-//         MP.displayName,
-//         (MP.productPrice + MP.packingFee + MP.serviceFee) AS total,
-//         MP.status,
-//         (
-//           SELECT DP.createdAt
-//           FROM definepackage DP
-//           WHERE DP.packageId = MP.id
-//           ORDER BY DP.createdAt DESC
-//           LIMIT 1
-//         ) AS defineDate
-//       FROM marketplacepackages MP
-//     `;
-
-//     if (searchText) {
-//       sql += ` WHERE displayName LIKE ? `;
-//       sqlParams.push(`%${searchText}%`);
-//     }
-
-//     // Order by status A-Z first, then by package name A-Z
-//     sql += ` ORDER BY status ASC, displayName ASC `;
-
-//     marketPlace.query(sql, sqlParams, (err, results) => {
-//       if (err) {
-//         return reject(err);
-//       }
-
-//       // Group packages by status
-//       const groupedData = {};
-
-//       results.forEach((pkg) => {
-//         const {
-//           status,
-//           id,
-//           displayName,
-//           image,
-//           description,
-//           total,
-//           discount,
-//           subtotal,
-//           defineDate,
-//           created_at,
-//         } = pkg;
-
-//         // Initialize the status group if it doesn't exist
-//         if (!groupedData[status]) {
-//           groupedData[status] = {
-//             status: status,
-//             packages: [],
-//           };
-//         }
-
-//         // Add the package to its status group
-//         groupedData[status].packages.push({
-//           id: id,
-//           displayName: displayName,
-//           image: image,
-//           description: description,
-//           total: total,
-//           status: status,
-//           discount: discount,
-//           subtotal: subtotal,
-//           defineDate: defineDate,
-//           createdAt: created_at,
-//         });
-//       });
-
-//       // Convert the grouped data object into an array
-//       const formattedResult = Object.values(groupedData);
-
-//       resolve(formattedResult);
-//     });
-//   });
-// };
-
 exports.getAllMarketplacePackagesDAO = (searchText, date) => {
   return new Promise((resolve, reject) => {
     const sqlParams = [];
@@ -724,7 +644,7 @@ exports.getAllMarketplacePackagesDAO = (searchText, date) => {
       // Group packages by status
       const groupedData = {};
       console.log(results);
-      
+
       results.forEach((pkg) => {
         const {
           status,
@@ -759,7 +679,7 @@ exports.getAllMarketplacePackagesDAO = (searchText, date) => {
           discount: discount,
           subtotal: subtotal,
           defineDate: defineDate,
-          adminUser:adminUser,
+          adminUser: adminUser,
           createdAt: created_at,
         });
       });
