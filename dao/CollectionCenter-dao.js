@@ -577,9 +577,9 @@ exports.getAllCenterPage = (limit, offset, district, province, searchItem) => {
             ...center,
             companies: center.companies
               ? center.companies.split("; ").map((company) => {
-                  const [id, name] = company.split(":");
-                  return { id: parseInt(id, 10), companyNameEnglish: name };
-                })
+                const [id, name] = company.split(":");
+                return { id: parseInt(id, 10), companyNameEnglish: name };
+              })
               : [],
           }));
 
@@ -848,11 +848,19 @@ exports.createCompany = async (
   foConNum,
   foEmail,
   logo,
-  favicon
+  favicon,
+  companyType
 ) => {
   return new Promise((resolve, reject) => {
-    const sql =
-      "INSERT INTO company (regNumber, companyNameEnglish, companyNameSinhala, companyNameTamil, email, oicName, oicEmail, oicConCode1, oicConNum1, oicConCode2, oicConNum2, accHolderName, accNumber, bankName, branchName, foName, foConCode, foConNum, foEmail, logo, favicon, isCollection) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?, 1)";
+    let sql;
+    if (companyType === 'distribution') {
+      sql =
+        "INSERT INTO company (regNumber, companyNameEnglish, companyNameSinhala, companyNameTamil, email, oicName, oicEmail, oicConCode1, oicConNum1, oicConCode2, oicConNum2, accHolderName, accNumber, bankName, branchName, foName, foConCode, foConNum, foEmail, logo, favicon, isDistributed) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?, 1)";
+    } else {
+      sql =
+        "INSERT INTO company (regNumber, companyNameEnglish, companyNameSinhala, companyNameTamil, email, oicName, oicEmail, oicConCode1, oicConNum1, oicConCode2, oicConNum2, accHolderName, accNumber, bankName, branchName, foName, foConCode, foConNum, foEmail, logo, favicon, isCollection) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?, 1)";
+
+    }
     const values = [
       regNumber,
       companyNameEnglish,
@@ -1664,9 +1672,9 @@ exports.getAllCenterPageAW = (
             ...center,
             companies: center.companies
               ? center.companies.split("; ").map((company) => {
-                  const [id, name] = company.split(":");
-                  return { id: parseInt(id, 10), companyNameEnglish: name };
-                })
+                const [id, name] = company.split(":");
+                return { id: parseInt(id, 10), companyNameEnglish: name };
+              })
               : [],
           }));
 

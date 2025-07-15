@@ -175,11 +175,10 @@ exports.getAllCompanyDAO = (searchTerm, centerId) => {
         c.status,
         c.favicon,
         c.foName,
-        dc.code1,
-        dc.contact01,
-        dc.code2,
-        dc.contact02,
-        dc.centerName,
+        c.oicConCode1 AS code1,
+        c.oicConNum1 AS contact01,
+        c.oicConCode2 AS code2,
+        c.oicConNum2 AS contact02,
         (
           SELECT COUNT(*) 
           FROM collection_officer.distributedcompanycenter dcc2 
@@ -189,20 +188,18 @@ exports.getAllCompanyDAO = (searchTerm, centerId) => {
           SELECT COUNT(*) 
           FROM collection_officer.collectionofficer co
           WHERE co.companyId = c.id 
-          AND co.distributedCenterId = dc.id 
+          AND co.companyId = c.id 
           AND co.jobRole = 'Distribution Center Manager'
         ) AS managerCount,
         (
           SELECT COUNT(*) 
           FROM collection_officer.collectionofficer co
           WHERE co.companyId = c.id 
-          AND co.distributedCenterId = dc.id 
+          AND co.companyId = c.id 
           AND co.jobRole = 'Distribution Officer'
         ) AS officerCount
       FROM 
         collection_officer.company c
-        JOIN collection_officer.distributedcompanycenter dcc ON dcc.companyId = c.id
-        JOIN collection_officer.distributedcenter dc ON dc.id = dcc.centerId
       WHERE 
         c.isDistributed = 1
     `;
