@@ -779,10 +779,16 @@ exports.getAllOngoingCultivations = async (req, res) => {
         req.query
       );
 
+    console.log('queryParams', queryParams)
+
     const page = queryParams.page;
     const limit = queryParams.limit;
     const offset = (page - 1) * limit;
     const searchNIC = queryParams.nic || "";
+
+    console.log('page', page, 'limit', limit, 'searchNIC', searchNIC)
+
+
 
     // Call DAO to fetch the cultivations
     const { total, items } = await adminDao.getAllOngoingCultivations(
@@ -790,6 +796,8 @@ exports.getAllOngoingCultivations = async (req, res) => {
       limit,
       offset
     );
+
+    console.log('items', items)
 
     console.log("Successfully fetched ongoing cultivations");
     res.json({
