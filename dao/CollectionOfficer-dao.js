@@ -1890,7 +1890,21 @@ exports.downloadPurchaseReport = (centerId, startDate, endDate, search) => {
       LEFT JOIN 
         plant_care.userbankdetails ub ON us.id = ub.userId
       ${whereClause}
-      GROUP BY rfp.id
+      GROUP BY 
+      rfp.id,
+      invNo,
+      cc.regCode,
+      cc.centerName,
+      us.firstName,
+      us.lastName,
+      us.NICnumber,
+      us.phoneNumber,
+      ub.accHolderName,
+      ub.accNumber,
+      ub.bankName,
+      ub.branchName,
+      co.empId,
+      rfp.createdAt
     `;
 
     console.log("Executing Count Query...");

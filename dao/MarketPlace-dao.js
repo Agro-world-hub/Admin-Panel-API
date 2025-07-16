@@ -1269,7 +1269,7 @@ exports.createProductTypesDao = async (data) => {
 
 exports.viewProductTypeDao = async () => {
   return new Promise((resolve, reject) => {
-    const sql = "SELECT * FROM producttypes";
+    const sql = "SELECT * FROM producttypes ORDER BY typeName";
     marketPlace.query(sql, (err, results) => {
       if (err) {
         return reject(err);
