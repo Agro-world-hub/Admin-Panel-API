@@ -576,10 +576,20 @@ exports.getAllOngoingCultivations = (searchItem, limit, offset) => {
     const params = [];
 
     if (searchItem) {
-      countSql +=
-        " AND U.NICnumber LIKE ? OR U.firstName LIKE ? OR U.lastName LIKE ?";
-      dataSql +=
-        " AND U.NICnumber LIKE ? OR U.firstName LIKE ? OR U.lastName LIKE ?";
+      countSql += `
+        AND (
+          U.NICnumber LIKE ? OR 
+          U.firstName LIKE ? OR 
+          U.lastName LIKE ?
+        )
+      `;
+      dataSql += `
+        AND (
+          U.NICnumber LIKE ? OR 
+          U.firstName LIKE ? OR 
+          U.lastName LIKE ?
+        )
+      `;
       const searchQuery = `%${searchItem}%`;
       params.push(searchQuery, searchQuery, searchQuery);
     }

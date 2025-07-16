@@ -146,6 +146,8 @@ exports.getAllComplains = async (req, res) => {
       rpstatus
     );
 
+    console.log('results', results)
+
     console.log("Successfully retrieved all collection center");
     res.json({ results, total });
   } catch (err) {

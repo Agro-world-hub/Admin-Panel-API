@@ -59,7 +59,7 @@ exports.createRoleFeature = async (role_id, position_id, feature_id) => {
   });
 };
 
-exports.createCategory = async (category_id) => {
+exports.createCategoryDao = async (category_id) => {
   return new Promise((resolve, reject) => {
     const sql = "INSERT INTO featurecategory (category) VALUES (?)";
     const values = [category_id];
@@ -68,14 +68,14 @@ exports.createCategory = async (category_id) => {
       if (err) {
         reject(err);
       } else {
-        resolve({ id: results.insertId }); 
+        resolve({ id: results.insertId });
       }
     });
   });
 };
 
 
-exports.createFeature= async (category_id, feature) => {
+exports.createFeature = async (category_id, feature) => {
   return new Promise((resolve, reject) => {
     const sql = "INSERT INTO features (name, category) VALUES (?, ?)";
     const values = [feature, category_id];
@@ -144,7 +144,7 @@ exports.editFeatureName = (data) => {
                   WHERE id = ?
               `;
 
-    admin.query(sql,[data.name, data.id], (err, results) => {
+    admin.query(sql, [data.name, data.id], (err, results) => {
       if (err) {
         return reject(err); // Reject promise if an error occurs
       }
@@ -163,12 +163,36 @@ exports.editCategoryName = (data) => {
                   WHERE id = ?
               `;
 
-    admin.query(sql,[data.name, data.id], (err, results) => {
+    admin.query(sql, [data.name, data.id], (err, results) => {
       if (err) {
         return reject(err); // Reject promise if an error occurs
       }
 
       resolve(results); // No need to wrap in arrays, return results directly
+    });
+  });
+};
+
+
+exports.CheckFeatureDao = async (name) => {
+  return new Promise((resolve, reject) => {
+    const sql = `
+      SELECT *
+      FROM features
+      WHERE name = ?
+    `
+    const values = [name];
+
+    admin.query(sql, values, (err, results) => {
+      if (err) {
+        console.log(err);
+
+        reject(err);
+      } else {
+        console.log(results);
+
+        resolve(results);
+      }
     });
   });
 };
