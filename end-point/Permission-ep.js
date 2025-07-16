@@ -155,6 +155,15 @@ exports.createCategory = async (req, res) => {
 
     let createFeature;
 
+    const checkFeature = await PermissionsDao.CheckFeatureDao(feature);
+    console.log("checkFeature", checkFeature);
+    console.log('----------------------------------------------------------');
+
+
+    if (checkFeature.length > 0) {
+      return res.json({ status: false, message: "You already added this feature to the list" })
+    }
+
     if (newCategory) {
       if (!newCategory.trim()) {
         return res.status(400).json({
@@ -163,15 +172,8 @@ exports.createCategory = async (req, res) => {
       }
 
       console.log('----------------------------------------------------------');
-      
-      const checkFeature = await PermissionsDao.CheckFeatureDao(feature);
-      console.log("checkFeature", checkFeature);
-      console.log('----------------------------------------------------------');
 
 
-      if (checkFeature.length > 0) {
-        return res.json({ status: false, message: "You already added this feature to the list" })
-      }
 
       const createdCategory = await PermissionsDao.createCategoryDao(newCategory);
 

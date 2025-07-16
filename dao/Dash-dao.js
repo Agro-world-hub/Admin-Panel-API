@@ -1086,6 +1086,51 @@ const checkEmailExistSaEdit = (email, id) => {
   });
 };
 
+const getUserOrdersDao = async (userId, status) => {
+  return new Promise((resolve, reject) => {
+    let sql = `
+      SELECT DISTINCT
+        P.id,
+        P.invNo,
+        O.sheduleType,
+        O.sheduleDate,
+        P.paymentMethod,
+        P.isPaid,
+        O.fullTotal,
+        O.isPackage
+      FROM processorders P
+      JOIN orders O ON P.orderId = O.id
+      WHERE O.userId = ? 
+    `;
+
+    console.log(status, "-------");
+
+    if (status === "Assinged") {
+      sql += " AND P.status = 'Ordered'";
+    } else if (status === "Processing") {
+      sql += " AND P.status = 'Processing'";
+    } else if (status === "Delivered") {
+      sql += " AND P.status = 'Delivered'";
+    } else if (status === "Cancelled") {
+      sql += " AND P.status = 'Cancelled'";
+    } else if (status === "Faild") {
+      sql += " AND P.status 'Faild'";
+    } else if (status === "On the way") {
+      sql += " AND P.status 'Faild'";
+    }
+
+    marketPlace.query(sql, [userId, status], (err, results) => {
+      if (err) {
+        console.log("Error", err);
+        reject(err);
+      } else {
+        resolve(results);
+        console.log("``````````result``````````", results);
+      }
+    });
+  });
+};
+
 
 
 module.exports = {
@@ -1108,5 +1153,6 @@ module.exports = {
   sendComplainReply,
   checkPhoneExistSaEdit,
   checkNICExistSaEdit,
-  checkEmailExistSaEdit
+  checkEmailExistSaEdit,
+  getUserOrdersDao
 };
