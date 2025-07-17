@@ -104,6 +104,9 @@ exports.createCollectionOfficer = async (req, res) => {
     }
 
     let profileImageUrl = null; // Default to null if no image is provided
+    const lastId = await collectionofficerDao.getCCIDforCreateEmpIdDao(officerData.jobRole);
+    console.log("LastId",lastId);
+    
 
     // Check if an image file is provided
     if (req.body.file) {
@@ -133,7 +136,8 @@ exports.createCollectionOfficer = async (req, res) => {
     const resultsPersonal =
       await collectionofficerDao.createCollectionOfficerPersonal(
         officerData,
-        profileImageUrl
+        profileImageUrl,
+        lastId
       );
 
     console.log("Collection Officer created successfully");
