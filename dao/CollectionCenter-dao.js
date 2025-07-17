@@ -415,8 +415,8 @@ exports.GetAllCenterComplainDAO = (
         AND (oc.refNo LIKE ? OR co.empId LIKE ? OR coc.regCode LIKE ?)
       `;
       const searchQuery = `%${searchText}%`;
-      Sqlparams.push(searchQuery, searchQuery);
-      Counterparams.push(searchQuery, searchQuery);
+      Sqlparams.push(searchQuery, searchQuery, searchQuery);
+      Counterparams.push(searchQuery, searchQuery, searchQuery);
     }
 
     if (rpstatus) {
@@ -1277,7 +1277,7 @@ exports.getReseantCollectionDao = (centerId) => {
           JOIN collectionofficer COF ON RFP.collectionOfficerId = COF.id
           JOIN plant_care.cropvariety CV ON FPC.cropId = CV.id
           JOIN plant_care.cropgroup CG ON CV.cropGroupId = CG.id
-          WHERE DATE(RFP.createdAt) = '2024-12-31' 
+          WHERE DATE(RFP.createdAt) = '2025-06-11' 
           AND COF.centerId = ?
           GROUP BY CG.cropNameEnglish, CV.varietyNameEnglish, DATE(RFP.createdAt)
           ORDER BY DATE(RFP.createdAt)

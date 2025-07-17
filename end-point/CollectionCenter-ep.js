@@ -176,6 +176,8 @@ exports.getAllCenterComplains = async (req, res) => {
       rpstatus,
     } = req.query;
 
+    console.log('searchText', searchText)
+
     const { results, total } =
       await CollectionCenterDao.GetAllCenterComplainDAO(
         page,
@@ -189,6 +191,7 @@ exports.getAllCenterComplains = async (req, res) => {
       );
 
     console.log("Successfully retrieved all collection center");
+    console.log('results', results)
     res.json({ results, total });
   } catch (err) {
     if (err.isJoi) {
@@ -942,6 +945,7 @@ exports.getCenterDashbord = async (req, res) => {
     const resentCollection = await CollectionCenterDao.getReseantCollectionDao(
       id
     );
+    console.log('resentCollection', resentCollection)
     const totExpences = await CollectionCenterDao.getTotExpencesDao(id);
     const difExpences = await CollectionCenterDao.differenceBetweenExpences(id);
 

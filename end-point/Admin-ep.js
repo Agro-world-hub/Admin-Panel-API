@@ -2160,6 +2160,7 @@ exports.getReplyCountByChatId = async (req, res) => {
 
 exports.addNewTaskU = async (req, res) => {
   const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
+  console.log(fullUrl);
   console.log("Request URL:", fullUrl);
   console.log("Add new task data:", req.body);
 
