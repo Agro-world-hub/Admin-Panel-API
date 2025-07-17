@@ -506,7 +506,7 @@ exports.getAllOrders = async (req, res) => {
     );
 
     // console.log({ page, limit });
-    // console.log(result);
+    console.log('result', result);
 
     return res.status(200).json(result);
   } catch (error) {
