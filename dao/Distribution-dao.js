@@ -162,8 +162,6 @@ exports.getAllDistributionCentre = (
   });
 };
 
-
-
 exports.getAllCompanyDAO = (searchTerm, centerId) => {
   return new Promise((resolve, reject) => {
     let sql = `
@@ -225,7 +223,6 @@ exports.getAllCompanyDAO = (searchTerm, centerId) => {
     });
   });
 };
-
 
 exports.deleteCompanyById = async (id) => {
   return new Promise((resolve, reject) => {
