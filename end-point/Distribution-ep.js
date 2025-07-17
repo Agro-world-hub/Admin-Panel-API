@@ -3,6 +3,8 @@ const uploadFileToS3 = require("../middlewares/s3upload");
 const DistributionValidation = require("../validations/distribution-validation");
 
 exports.createDistributionCenter = async (req, res) => {
+  const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
+  console.log(fullUrl);
   try {
     // Validate input with Joi
     const data =
@@ -49,12 +51,15 @@ exports.getAllDistributionCentre = async (req, res) => {
   const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
   console.log(fullUrl);
   try {
-    const { page, limit, district, province, company, searchItem } =
+    const { page, limit, district, province, company, searchItem, centerType } =
       await DistributionValidation.getAllDistributionCentreSchema.validateAsync(
         req.query
       );
 
+
     const offset = (page - 1) * limit;
+
+    console.log({ page, limit, district, province, company, searchItem, centerType })
 
     const { total, items } = await DistributionDao.getAllDistributionCentre(
       limit,
@@ -62,7 +67,8 @@ exports.getAllDistributionCentre = async (req, res) => {
       district,
       province,
       company,
-      searchItem
+      searchItem,
+      centerType
     );
 
     console.log(items);
@@ -161,20 +167,29 @@ exports.getAllDistributionCentreHead = async (req, res) => {
 
 exports.getCompanies = async (req, res) => {
   try {
-    const results = await DistributionDao.getCompanyDAO();
-    const companyNames = results.map((company) => company.companyNameEnglish);
+    const companies = await DistributionDao.getCompanyDAO();
 
-    console.log("Successfully retrieved company names");
+    if (!companies || companies.length === 0) {
+      console.warn("No active companies found");
+      return res.json({
+        success: true,
+        message: "No active companies found",
+        data: [],
+      });
+    }
+
+    // console.log(`Successfully retrieved ${companyNames.length} company names`);
     res.json({
       success: true,
       message: "Company names retrieved successfully",
-      data: companyNames, // Now just an array of strings
+      data: companies,
     });
   } catch (err) {
-    console.error("Error fetching company names:", err);
+    console.error("Error fetching company names:", err.message);
     res.status(500).json({
       success: false,
       error: "An error occurred while fetching company names",
+      details: process.env.NODE_ENV === "development" ? err.message : undefined,
     });
   }
 };
@@ -452,4 +467,222 @@ exports.updateCollectionOfficerDetails = async (req, res) => {
       error: "An error occurred while updating distribution head details",
     });
   }
+};
+
+exports.getDistributionCentreById = async (req, res) => {
+  const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
+  console.log(fullUrl);
+
+  try {
+    const { id } = req.params;
+
+    // Basic check if ID exists
+    if (!id) {
+      return res
+        .status(400)
+        .json({ error: "Distribution centre ID is required" });
+    }
+
+    const distributionCentre = await DistributionDao.getDistributionCentreById(
+      id
+    );
+
+    if (!distributionCentre) {
+      return res.status(404).json({ error: "Distribution centre not found" });
+    }
+
+    // Format the response to include company information
+    const response = {
+      id: distributionCentre.id,
+      centerName: distributionCentre.centerName,
+      officerName: distributionCentre.officerName,
+      code1: distributionCentre.code1,
+      contact01: distributionCentre.contact01,
+      code2: distributionCentre.code2,
+      contact02: distributionCentre.contact02,
+      city: distributionCentre.city,
+      district: distributionCentre.district,
+      province: distributionCentre.province,
+      country: distributionCentre.country,
+      longitude: distributionCentre.longitude,
+      latitude: distributionCentre.latitude,
+      email: distributionCentre.email,
+      createdAt: distributionCentre.createdAt,
+      company: distributionCentre.companyNameEnglish,
+      regCode: distributionCentre.regCode,
+    };
+
+    console.log("Fetched distribution centre:", response);
+    res.json(response);
+  } catch (err) {
+    console.error("Error fetching distribution centre:", err);
+    res.status(500).json({
+      error: "An error occurred while fetching the distribution centre.",
+    });
+  }
+};
+
+exports.deleteDistributedCenter = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    if (!id) {
+      return res.status(400).json({
+        success: false,
+        message: "Distribution Head ID is required",
+      });
+    }
+
+    const result = await DistributionDao.deleteDistributedCenterDao(
+      parseInt(id)
+    );
+    console.log("Delete result", result);
+
+    if (result.affectedRows === 0) {
+      return res.json({
+        success: false,
+        message: "Distribution Center Delete faild",
+      });
+    }
+
+    console.log("Successfully updated Distribution Head details");
+    res.json({
+      success: true,
+      message: "Distribution Deleted successfully",
+      data: {
+        id: id,
+        affectedRows: result.affectedRows,
+      },
+    });
+  } catch (err) {
+    console.error("Error updating distribution head details:", err);
+    res.status(500).json({
+      success: false,
+      error: "An error occurred while updating distribution head details",
+    });
+  }
+};
+
+exports.updateDistributionCentreDetails = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const updateData = req.body;
+
+    console.log("Received update request for ID:", id);
+    console.log("Update data:", updateData);
+
+    // Validate required fields
+    if (!id) {
+      console.log("Validation failed: Missing ID");
+      return res.status(400).json({
+        success: false,
+        error: "Distribution Centre ID is required",
+      });
+    }
+
+    if (!updateData || Object.keys(updateData).length === 0) {
+      console.log("Validation failed: Missing update data");
+      return res.status(400).json({
+        success: false,
+        error: "Update data is required",
+      });
+    }
+
+    // Validate required fields for distribution center
+    const requiredFields = [
+      "centerName",
+      "city",
+      "province",
+      "country",
+    ];
+    const missingFields = requiredFields.filter((field) => !updateData[field]);
+
+    if (missingFields.length > 0) {
+      console.log("Validation failed: Missing required fields:", missingFields);
+      return res.status(400).json({
+        success: false,
+        error: `Missing required fields: ${missingFields.join(", ")}`,
+      });
+    }
+
+    // Update the distribution center
+    console.log("Calling DAO to update distribution center");
+    const updatedCentre = await DistributionDao.updateDistributionCentreById(
+      id,
+      updateData
+    );
+
+    if (!updatedCentre) {
+      console.log(
+        "Update failed: Distribution Centre not found or no changes made"
+      );
+      return res.status(404).json({
+        success: false,
+        error: "Distribution Centre not found or no changes made",
+      });
+    }
+
+    console.log("Successfully updated Distribution Centre details");
+    res.json({
+      success: true,
+      message: "Distribution Centre details updated successfully",
+      data: updatedCentre,
+    });
+  } catch (err) {
+    console.error("Error updating distribution centre details:", err);
+    res.status(500).json({
+      success: false,
+      error: "An error occurred while updating distribution centre details",
+      details: process.env.NODE_ENV === "development" ? err.message : undefined,
+    });
+  }
+};
+
+exports.deleteDistributionCenter = async (req, res) => {
+  const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
+  console.log(fullUrl);
+
+  try {
+    const { id } = req.params;
+
+    const results = await DistributionDao.DeleteDistributionCenter(id);
+
+    console.log("Successfully Deleted Distribution Center");
+    if (results.affectedRows > 0) {
+      res.status(200).json({ results: results, status: true });
+    } else {
+      res.json({ results: results, status: false });
+    }
+  } catch (error) {
+    if (error.isJoi) {
+      return res
+        .status(400)
+        .json({ error: error.details[0].message, status: false });
+    }
+
+    console.error("Error deleting Distribution Center:", error);
+    return res
+      .status(500)
+      .json({ error: "An error occurred while deleting Distribution Center" });
+  }
+};
+
+exports.generateRegCode = (req, res) => {
+  const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
+  console.log("Request URL:", fullUrl);
+  const { province, district, city } = req.body;
+
+  // Call DAO to generate the regCode
+  DistributionDao.generateRegCode(
+    province,
+    district,
+    city,
+    (err, regCode) => {
+      if (err) {
+        return res.status(500).json({ error: "Error generating regCode" });
+      }
+
+      res.json({ regCode });
+    }
+  );
 };

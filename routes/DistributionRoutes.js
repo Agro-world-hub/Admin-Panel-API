@@ -19,7 +19,7 @@ router.get(
 
 router.get(
   "/get-all-companies",
-  // authMiddleware,
+  authMiddleware,
   distributionEp.getAllCompanies
 );
 
@@ -60,11 +60,7 @@ router.get(
   distributionEp.getAllDistributedCentersByCompany
 );
 
-router.get(
-  "/get-company",
-  // authMiddleware,
-  distributionEp.getCompany
-);
+router.get("/get-company", authMiddleware, distributionEp.getCompany);
 
 router.delete(
   "/delete-officer/:id",
@@ -83,5 +79,31 @@ router.put(
   authMiddleware,
   distributionEp.updateCollectionOfficerDetails
 );
+
+router.get(
+  "/get-distribution-centre/:id",
+  authMiddleware,
+  distributionEp.getDistributionCentreById
+);
+
+router.delete(
+  "/delete-distributed-center/:id",
+  authMiddleware,
+  distributionEp.deleteDistributedCenter
+);
+
+router.put(
+  "/update-distribution-centre/:id",
+  authMiddleware,
+  distributionEp.updateDistributionCentreDetails
+);
+
+router.delete(
+  "/delete-distribution-centre/:id",
+  authMiddleware,
+  distributionEp.deleteDistributionCenter
+);
+
+router.post("/generate-regcode", distributionEp.generateRegCode);
 
 module.exports = router;

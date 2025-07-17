@@ -576,10 +576,20 @@ exports.getAllOngoingCultivations = (searchItem, limit, offset) => {
     const params = [];
 
     if (searchItem) {
-      countSql +=
-        " AND U.NICnumber LIKE ? OR U.firstName LIKE ? OR U.lastName LIKE ?";
-      dataSql +=
-        " AND U.NICnumber LIKE ? OR U.firstName LIKE ? OR U.lastName LIKE ?";
+      countSql += `
+        AND (
+          U.NICnumber LIKE ? OR 
+          U.firstName LIKE ? OR 
+          U.lastName LIKE ?
+        )
+      `;
+      dataSql += `
+        AND (
+          U.NICnumber LIKE ? OR 
+          U.firstName LIKE ? OR 
+          U.lastName LIKE ?
+        )
+      `;
       const searchQuery = `%${searchItem}%`;
       params.push(searchQuery, searchQuery, searchQuery);
     }
@@ -1960,7 +1970,7 @@ exports.addNewTaskDaoU = (task, indexId, userId, cropId, onCulscropID) => {
 
   return new Promise((resolve, reject) => {
     const sql =
-      "INSERT INTO slavecropcalendardays (userId, onCulscropID, cropCalendarId, taskIndex, startingDate, taskTypeEnglish, taskTypeSinhala, taskTypeTamil, taskCategoryEnglish, taskCategorySinhala, taskCategoryTamil, taskEnglish, taskSinhala, taskTamil, taskDescriptionEnglish, taskDescriptionSinhala, taskDescriptionTamil, reqImages, imageLink, videoLinkEnglish, videoLinkSinhala, videoLinkTamil, status) VALUES (?,?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?, ?)";
+      "INSERT INTO slavecropcalendardays (userId, onCulscropID, cropCalendarId, taskIndex, days, taskTypeEnglish, taskTypeSinhala, taskTypeTamil, taskCategoryEnglish, taskCategorySinhala, taskCategoryTamil, taskEnglish, taskSinhala, taskTamil, taskDescriptionEnglish, taskDescriptionSinhala, taskDescriptionTamil, reqImages, imageLink, videoLinkEnglish, videoLinkSinhala, videoLinkTamil, status) VALUES (?,?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?, ?)";
 
     const values = [
       userId,

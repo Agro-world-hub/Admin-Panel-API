@@ -260,6 +260,48 @@ exports.getAllMarketplaceComplaints = () => {
   });
 };
 
+exports.getAllMarketplaceComplaintsWholesale = () => {
+  return new Promise((resolve, reject) => {
+    const sql = `
+      SELECT 
+        mc.id,
+        mc.userId,
+        mc.complaicategoryId,
+        mc.complain,
+        mc.reply,
+        mc.status,
+        mc.createdAt,
+        mu.firstName,
+        mu.lastName,
+        mu.phonecode AS phonecode,
+        mu.phoneNumber AS phone,
+        CONCAT(mu.phonecode, '-', mu.phoneNumber) AS ContactNumber,
+        mc.refId AS refNo,
+        cc.categoryEnglish
+      FROM market_place.marcketplacecomplain mc
+      LEFT JOIN market_place.marketplaceusers mu ON mc.userId = mu.id
+      LEFT JOIN agro_world_admin.complaincategory cc ON mc.complaicategoryId = cc.id
+      LEFT JOIN agro_world_admin.systemapplications sa ON cc.appId = sa.id
+      WHERE sa.id = 3
+        AND mu.BuyerType = 'wholesale'
+    `;
+    marketPlace.query(sql, (err, results) => {
+      if (err) {
+        console.error('SQL error in getAllMarketplaceComplaints:', err);
+        return reject({
+          status: false,
+          message: 'Database error during fetching marketplace complaints.',
+          error: err.message
+        });
+      }
+      resolve({
+        status: true,
+        data: results,
+      });
+    });
+  });
+};
+
 
 exports.getMarketplaceComplaintById = (complaintId) => {
   return new Promise((resolve, reject) => {
@@ -316,10 +358,10 @@ exports.updateMarketplaceComplaintReply = (complaintId, reply) => {
   return new Promise((resolve, reject) => {
     const sql = `
       UPDATE market_place.marcketplacecomplain
-      SET reply = ?
+      SET reply = ?, status = ?
       WHERE id = ?
     `;
-    marketPlace.query(sql, [reply, complaintId], (err, results) => {
+    marketPlace.query(sql, [reply, "Closed", complaintId, ], (err, results) => {
       if (err) {
         console.error('SQL error in updateMarketplaceComplaintReply:', err);
         return reject({

@@ -500,17 +500,59 @@ exports.editMarketProduct = async (req, res) => {
   }
 };
 
+// exports.getAllMarketplacePackages = async (req, res) => {
+//   const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
+//   console.log("Request URL:", fullUrl);
+
+//   try {
+//     const { searchText } =
+//       await MarketPriceValidate.getAllPackageSchema.validateAsync(req.query);
+//     console.log("Search Text:", searchText);
+
+//     const packages = await MarketPlaceDao.getAllMarketplacePackagesDAO(
+//       searchText
+//     );
+
+//     console.log("Successfully fetched marketplace packages");
+//     return res.status(200).json({
+//       success: true,
+//       message: "Marketplace packages retrieved successfully",
+//       data: packages,
+//     });
+//   } catch (error) {
+//     if (error.isJoi) {
+//       // Handle validation error
+//       return res.status(400).json({
+//         success: false,
+//         error: error.details[0].message,
+//       });
+//     }
+
+//     console.error("Error fetching marketplace packages:", error);
+//     return res.status(500).json({
+//       success: false,
+//       error: "An error occurred while fetching marketplace packages",
+//       details:
+//         process.env.NODE_ENV === "development" ? error.message : undefined,
+//     });
+//   }
+// };
+
 exports.getAllMarketplacePackages = async (req, res) => {
   const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
   console.log("Request URL:", fullUrl);
 
   try {
-    const { searchText } =
+    // Validate query parameters including date
+    const { searchText, date } =
       await MarketPriceValidate.getAllPackageSchema.validateAsync(req.query);
     console.log("Search Text:", searchText);
+    console.log("Date Filter:", date);
 
+    // Pass both searchText and date to the DAO
     const packages = await MarketPlaceDao.getAllMarketplacePackagesDAO(
-      searchText
+      searchText,
+      date
     );
 
     console.log("Successfully fetched marketplace packages");
@@ -637,6 +679,7 @@ exports.getMarketplacePackageById = async (req, res) => {
     const serviceFee = parseFloat(firstRow.serviceFee) || 0;
 
     const total = productPrice + packingFee + serviceFee;
+    const packageItems = await MarketPlaceDao.getPackageEachItemsDao(id);
 
     const packageData = {
       displayName: firstRow.displayName,
@@ -650,13 +693,9 @@ exports.getMarketplacePackageById = async (req, res) => {
         firstRow.image && !firstRow.image.startsWith("http")
           ? `${req.protocol}://${req.get("host")}/${firstRow.image}`
           : firstRow.image,
-      quantities: {},
+      packageItems,
     };
 
-    // Build quantities map
-    resultRows.forEach((row) => {
-      packageData.quantities[row.productTypeId] = row.qty;
-    });
     console.log(packageData);
 
     res.json(packageData);
@@ -1193,12 +1232,28 @@ exports.editPackage = async (req, res) => {
     console.log("Request URL:", fullUrl);
 
     const package = JSON.parse(req.body.package);
+    const packageItems = package.packageItems;
     const id = req.params.id;
     console.log(id);
     console.log(package);
     console.log(req.body.file);
+    console.log("packageItems---->", packageItems);
 
     let profileImageUrl = null;
+
+    const exists = await MarketPlaceDao.checkPackageDisplayNameExistsDao(
+      package.displayName,
+      id
+    );
+
+    if (exists) {
+      return res.json({
+        status: false,
+        message: "Display name allready exist!",
+      });
+    }
+
+    console.log("Exist :", exists);
 
     // Check if a new image file was uploaded
     if (req.body.file) {
@@ -1248,29 +1303,26 @@ exports.editPackage = async (req, res) => {
       });
     }
 
-    // Update package details
-    try {
-      const quantities = package.quantities; // object like { '2': 2, '3': 0 }
-
-      for (const [productTypeId, qty] of Object.entries(quantities)) {
-        // Skip if quantity is 0 or less
-        if (qty <= 0) continue;
-
-        // Construct item data for DAO
-        const itemData = {
-          productTypeId: parseInt(productTypeId),
-          qty: parseInt(qty),
-        };
-
-        await MarketPlaceDao.editPackageDetailsDAO(itemData, id);
+    for (let i = 0; i < packageItems.length; i++) {
+      if (packageItems[i].id !== null && packageItems[i].qty !== 0) {
+        await MarketPlaceDao.editPackageDetailsDAO(packageItems[i]);
       }
-    } catch (err) {
-      console.error("Error updating package details:", err);
-      return res.status(500).json({
-        error: "Error updating package details",
-        status: false,
-      });
+
+      if (packageItems[i].id !== null && packageItems[i].qty === 0) {
+        await MarketPlaceDao.deletePackageDetailsItemsDao(packageItems[i]);
+      }
+
+      if (packageItems[i].id === null && packageItems[i].qty !== 0) {
+        await MarketPlaceDao.insertNewPackageDetailsItemsDao(
+          id,
+          packageItems[i]
+        );
+      }
     }
+
+    //     await MarketPlaceDao.editPackageDetailsDAO(itemData, id);
+    //     await MarketPlaceDao.deletePackageDetailsItemsDao(itemData, id);
+    //     await MarketPlaceDao.insertNewPackageDetailsItemsDao(itemData, id);
 
     return res.status(200).json({
       message: "Package updated successfully",
@@ -1620,11 +1672,8 @@ exports.getAllMarketplaceItems = async (req, res) => {
   try {
     console.log("hello world");
 
-    const orderId = req.params.id;
-    const btype = await MarketPlaceDao.getOrderTypeDao(orderId);
-    const marketplaceItems = await MarketPlaceDao.getAllMarketplaceItems(
-      btype.buyerType
-    );
+    // const btype = await MarketPlaceDao.getOrderTypeDao();
+    const marketplaceItems = await MarketPlaceDao.getAllMarketplaceItems();
 
     if (!marketplaceItems || marketplaceItems.length === 0) {
       return res.status(404).json({
@@ -1686,6 +1735,7 @@ exports.createDefinePackageWithItems = async (req, res) => {
     const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
     console.log("Request URL:", fullUrl);
     console.log("Request body:", req.body);
+    const userId = req.user.userId
 
     // Validate request body structure
     if (
@@ -1733,7 +1783,8 @@ exports.createDefinePackageWithItems = async (req, res) => {
     try {
       // 1. Create the main package
       const packageResult = await MarketPlaceDao.createDefinePackageDao(
-        packageData
+        packageData,
+        userId
       );
       const definePackageId = packageResult.insertId;
 
@@ -1762,18 +1813,255 @@ exports.createDefinePackageWithItems = async (req, res) => {
   }
 };
 
-exports.getLatestPackageDateByPackageId = async (req, res) => {
+exports.getAllWholesaleCustomers = async (req, res) => {
+  try {
+    const { page, limit, searchText } =
+      await MarketPriceValidate.getmarketplaceCustomerParamSchema.validateAsync(
+        req.query
+      );
+    const offset = (page - 1) * limit;
+    const { total, items } = await MarketPlaceDao.getAllWholesaleCustomersDao(
+      limit,
+      offset,
+      searchText
+    );
+
+    return res.status(200).json({
+      total,
+      items,
+    });
+  } catch (err) {
+    console.error("Error checking display name:", err);
+    return res.status(500).json({
+      error: "An error occurred while checking display name",
+      status: false,
+    });
+  }
+};
+
+exports.getUserOrders = async (req, res) => {
+  try {
+    console.log("Fetching user orders...");
+
+    const userId = req.params.userId;
+    const statusFilter = req.query.status || "Ordered";
+
+    const userOrders = await MarketPlaceDao.getUserOrdersDao(
+      parseInt(userId),
+      statusFilter
+    );
+    console.log(userOrders);
+
+    if (!userOrders || userOrders.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: `No ${statusFilter.toLowerCase()} orders found for this user`,
+        statusFilter: statusFilter,
+      });
+    }
+
+    // Group orders by schedule type
+    const ordersByScheduleType = userOrders.reduce((acc, order) => {
+      const scheduleType = order.sheduleType || "unscheduled"; // Handle possible undefined
+      if (!acc[scheduleType]) {
+        acc[scheduleType] = [];
+      }
+      acc[scheduleType].push(order);
+      return acc;
+    }, {});
+
+    // Format response data
+    const responseData = {
+      success: true,
+      data: {
+        orders: userOrders,
+        ordersByScheduleType,
+        count: userOrders.length,
+        statusFilter: statusFilter,
+      },
+      metadata: {
+        userId: userId,
+        orderStatus: statusFilter,
+        retrievedAt: new Date().toISOString(),
+      },
+    };
+
+    res.json(responseData);
+  } catch (err) {
+    console.error("Error fetching user orders:", err);
+
+    // Enhanced error handling
+    let statusCode = 500;
+    let message = "An error occurred while fetching user orders.";
+
+    if (err.isJoi) {
+      statusCode = 400;
+      message = err.details[0].message;
+    } else if (
+      err.code === "ER_NO_SUCH_TABLE" ||
+      err.code === "ER_BAD_FIELD_ERROR"
+    ) {
+      statusCode = 500;
+      message = "Database configuration error";
+    } else if (err.code === "ER_ACCESS_DENIED_ERROR") {
+      statusCode = 503;
+      message = "Database service unavailable";
+    }
+
+    const errorResponse = {
+      success: false,
+      message: message,
+      ...(process.env.NODE_ENV === "development" && {
+        error: err.stack,
+        details: err.message,
+      }),
+    };
+
+    res.status(statusCode).json(errorResponse);
+  }
+};
+
+exports.getCoupen = async (req, res) => {
+  try {
+    const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
+    console.log("Request URL:", fullUrl);
+    // console.log(req.body);
+
+    const validatedParams =
+      await MarketPriceValidate.getCoupenValidation.validateAsync(req.params);
+    const coupenId = validatedParams.coupenId;
+
+    // const coupenId = req.params.coupenId
+    console.log("coupenId is", coupenId);
+
+    const result = await MarketPlaceDao.getCoupenDAO(coupenId);
+    console.log("coupen creation success", result);
+    return res.status(201).json({
+      message: "coupen created successfully",
+      result: result,
+      status: true,
+    });
+  } catch (err) {
+    if (err.isJoi) {
+      // Validation error
+      return res
+        .status(400)
+        .json({ error: err.details[0].message, status: false });
+    }
+
+    console.error("Error executing query:", err);
+    return res.status(500).json({
+      error: "An error occurred while creating marcket product",
+      status: false,
+    });
+  }
+};
+
+exports.updateCoupen = async (req, res) => {
+  try {
+    const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
+    console.log("Request URL:", fullUrl);
+    console.log(req.body);
+
+    const coupen =
+      await MarketPriceValidate.updateCoupenValidation.validateAsync(req.body);
+    console.log(coupen);
+
+    const result = await MarketPlaceDao.updateCoupenDAO(coupen);
+    console.log("coupen creation success");
+    return res.status(201).json({
+      message: "coupen created successfully",
+      result: result,
+      status: true,
+    });
+  } catch (err) {
+    if (err.isJoi) {
+      // Validation error
+      return res
+        .status(400)
+        .json({ error: err.details[0].message, status: false });
+    }
+
+    console.error("Error executing query:", err);
+    return res.status(500).json({
+      error: "An error occurred while creating marcket product",
+      status: false,
+    });
+  }
+};
+
+exports.getInvoiceDetails = async (req, res) => {
   const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
   console.log("Request URL:", fullUrl);
 
   try {
-    const packages = await MarketPlaceDao.getLatestPackageDateByPackageIdDAO();
+    const { processOrderId } = req.params;
+    const userId = req.user.id;
 
-    console.log("Successfully fetched latest package data by packageId");
+    // Validate input
+    if (!processOrderId) {
+      return res.status(400).json({
+        success: false,
+        error: "Process order ID is required",
+      });
+    }
+
+    // First get the invoice details
+    const invoiceDetails = await MarketPlaceDao.getInvoiceDetailsDAO(
+      processOrderId
+    );
+
+    if (!invoiceDetails) {
+      return res.status(404).json({
+        success: false,
+        error: "Invoice not found",
+      });
+    }
+
+    // Then get the other details in parallel
+    const [familyPackItems, additionalItems, billingDetails] =
+      await Promise.all([
+        MarketPlaceDao.getFamilyPackItemsDAO(invoiceDetails.orderId),
+        MarketPlaceDao.getAdditionalItemsDAO(processOrderId),
+        MarketPlaceDao.getBillingDetailsDAO(processOrderId),
+      ]);
+
+    // Get pickup center details if delivery method is pickup
+    let pickupCenterDetails = null;
+    if (invoiceDetails.deliveryMethod === "PICKUP" && invoiceDetails.centerId) {
+      pickupCenterDetails = await MarketPlaceDao.getPickupCenterDetailsDAO(
+        invoiceDetails.centerId
+      );
+    }
+
+    // Get package details for each family pack item
+    const packageDetailsPromises = familyPackItems.map((item) =>
+      MarketPlaceDao.getPackageDetailsDAO(item.packageId)
+    );
+    const packageDetails = await Promise.all(packageDetailsPromises);
+
+    // Combine package details with family pack items
+    const familyPackItemsWithDetails = familyPackItems.map((item, index) => ({
+      ...item,
+      packageDetails: packageDetails[index],
+    }));
+
+    // Construct the complete response
+    const response = {
+      invoice: invoiceDetails,
+      items: {
+        familyPacks: familyPackItemsWithDetails,
+        additionalItems: additionalItems,
+      },
+      billing: billingDetails,
+      pickupCenter: pickupCenterDetails,
+    };
+
+    console.log("Successfully fetched invoice details");
     return res.status(200).json({
       success: true,
-      message: "Latest package data retrieved successfully",
-      data: packages,
+      message: "Invoice details retrieved successfully",
+      data: response,
     });
   } catch (error) {
     if (error.isJoi) {
@@ -1784,12 +2072,51 @@ exports.getLatestPackageDateByPackageId = async (req, res) => {
       });
     }
 
-    console.error("Error fetching latest package data:", error);
+    console.error("Error fetching invoice details:", error);
     return res.status(500).json({
       success: false,
-      error: "An error occurred while fetching latest package data",
+      error: "An error occurred while fetching invoice details",
       details:
         process.env.NODE_ENV === "development" ? error.message : undefined,
     });
+  }
+};
+
+exports.getAllWholesaleOrders = async (req, res) => {
+  const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
+  console.log(fullUrl);
+  try {
+    const { page, limit, status, method, searchItem, formattedDate } =
+      await MarketPriceValidate.getAllRetailOrderSchema.validateAsync(
+        req.query
+      );
+
+    const offset = (page - 1) * limit;
+
+    const { total, items } = await MarketPlaceDao.getAllWholesaleOrderDetails(
+      limit,
+      offset,
+      status,
+      method,
+      searchItem,
+      formattedDate
+    );
+
+    console.log(items);
+
+    console.log(page);
+    console.log(limit);
+    console.log(searchItem);
+    res.json({
+      items,
+      total,
+    });
+  } catch (err) {
+    if (err.isJoi) {
+      // Validation error
+      return res.status(400).json({ error: err.details[0].message });
+    }
+    console.error("Error executing query:", err);
+    res.status(500).send("An error occurred while fetching data.");
   }
 };

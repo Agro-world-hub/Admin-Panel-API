@@ -400,7 +400,7 @@ exports.uploadXLSX = async (req, res) => {
     // console.log("First row of data:", data[0]);
 
     // Insert data into the database via DAO
-    console.log("started to get data from xl");
+    console.log("started to get data from xl",data);
     const rowsAffected = await cropCalendarDao.insertXLSXData(id, data);
 
     // Respond with success

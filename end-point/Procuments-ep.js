@@ -151,12 +151,15 @@ exports.getAllProductTypes = async (req, res) => {
 };
 
 exports.getOrderDetailsById = async (req, res) => {
+  const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
+  console.log(fullUrl);
   const { id } = req.params;
   console.log(`[getOrderDetailsById] Fetching details for order ID: ${id}`);
 
   try {
     // The DAO now returns properly structured data
     const orderDetails = await procumentDao.getOrderDetailsById(id);
+    console.log('orderDetails', orderDetails);
     const additionalItems = await procumentDao.getAllOrderAdditionalItemsDao(
       id
     );
@@ -170,11 +173,17 @@ exports.getOrderDetailsById = async (req, res) => {
       });
     }
 
+    const btype = await procumentDao.getOrderTypeDao(id);
+    const excludeList = await procumentDao.getExcludeListDao(btype.userId);
+    
+
+
     console.log(`[getOrderDetailsById] Successfully fetched order details`);
     res.json({
       success: true,
       data: orderDetails,
       additionalItems: additionalItems,
+      excludeList:excludeList
     });
   } catch (err) {
     console.error("[getOrderDetailsById] Error:", err);
@@ -279,10 +288,12 @@ exports.createOrderPackageItem = async (req, res) => {
 
 exports.getAllMarketplaceItems = async (req, res) => {
   try {
-    // console.log("hello world",req.params.id);
+    console.log("hello world",req.params.id);
+
+    console.log('params', req.params.id);
 
     // const orderId = req.params.id;
-    const orderId = 309; // You shold pass processOrderId from frontend change it Ashan
+    const orderId = req.params.id; // You shold pass processOrderId from frontend change it Ashan
     const btype = await procumentDao.getOrderTypeDao(orderId);
     const marketplaceItems = await procumentDao.getAllMarketplaceItems(
       btype.buyerType,
@@ -349,13 +360,17 @@ exports.getAllOrdersWithProcessInfoCompleted = async (req, res) => {
   console.log(fullUrl);
 
   try {
-    const { page = 1, limit = 10, statusFilter, dateFilter } = req.query;
+    const { page = 1, limit = 10, statusFilter, dateFilter, searchTerm } = req.query;
     console.log(req.query);
+
+    console.log('searchTerm', searchTerm)
 
     const ordersData = await procumentDao.getAllOrdersWithProcessInfoCompleted(
       page,
       limit,
-      dateFilter
+      dateFilter,
+      searchTerm
+      
     );
     // console.log("Orders Data:", ordersData);
 
@@ -395,7 +410,9 @@ exports.getAllOrdersWithProcessInfoCompleted = async (req, res) => {
 // In your controller file
 exports.updateOrderPackagePackingStatus = async (req, res) => {
   try {
-    const { orderPackageId, status } = req.body;
+    const { orderPackageId, orderId, status } = req.body;
+
+    console.log('orderId', orderId)
 
     if (!orderPackageId || !status) {
       return res.status(400).json({
@@ -406,6 +423,7 @@ exports.updateOrderPackagePackingStatus = async (req, res) => {
 
     const result = await procumentDao.updateOrderPackagePackingStatusDao(
       orderPackageId,
+      orderId,
       status
     );
 
@@ -430,6 +448,8 @@ exports.getOrderPackageItemsById = async (req, res) => {
   try {
     const { orderId } = req.params;
 
+    console.log('orderId', orderId)
+
     if (!orderId) {
       return res.status(400).json({
         success: false,
@@ -438,6 +458,8 @@ exports.getOrderPackageItemsById = async (req, res) => {
     }
 
     const orderPackages = await procumentDao.getOrderPackagesByOrderId(orderId);
+
+    console.log('orderPackages', orderPackages)
 
     if (!orderPackages) {
       return res.status(404).json({
@@ -531,13 +553,16 @@ exports.getAllOrdersWithProcessInfoDispatched = async (req, res) => {
   console.log(fullUrl);
 
   try {
-    const { page = 1, limit = 10, statusFilter, dateFilter } = req.query;
+    const { page = 1, limit = 10, statusFilter, dateFilter, searchTerm } = req.query;
     console.log(req.query);
+
+    console.log('datefilte', dateFilter, 'searchTerm', searchTerm)
 
     const ordersData = await procumentDao.getAllOrdersWithProcessInfoDispatched(
       page,
       limit,
-      dateFilter
+      dateFilter,
+      searchTerm
     );
     // console.log("Orders Data:", ordersData);
 
@@ -570,6 +595,99 @@ exports.getAllOrdersWithProcessInfoDispatched = async (req, res) => {
       success: false,
       message: message,
       error: process.env.NODE_ENV === "development" ? err.stack : undefined,
+    });
+  }
+};
+
+exports.updateDefinePackageData = async (req, res) => {
+  const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
+  console.log(fullUrl);
+  try {
+    const { definePackageItems } = req.body;
+
+    if (!Array.isArray(definePackageItems) || definePackageItems.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid or empty definePackageItems array'
+      });
+    }
+
+    console.log('items:', definePackageItems);
+
+    const formattedData = {
+      processOrderId: definePackageItems[0].processOrderId,
+      packages: definePackageItems.map(pkg => {
+        const {
+          itemId,
+          orderpkgId,
+          packageId,
+          displayName,
+          definePkgPrice,
+          productPrice,
+          items
+        } = pkg;
+    
+        return {
+          orderpkgId,
+          packageId,
+          displayName,
+          definePkgPrice,
+          productPrice,
+          items
+        };
+      })
+    };
+
+    console.log(formattedData);
+    
+    
+
+    const updateResult = await procumentDao.updateDefinePackageItemData(formattedData);
+    console.log(formattedData);
+
+    res.json({
+      success: true,
+      message: `${formattedData.affectedRows} items updated`,
+      updatedItems: updateResult
+    });
+
+  } catch (err) {
+    console.error("Error updating packed status:", err);
+
+    res.status(500).json({
+      success: false,
+      message: 'An error occurred while updating packed status'
+    });
+  }
+};
+
+exports.getExcludedItems = async (req, res) => {
+  const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
+  console.log(fullUrl);
+
+  try {
+    const orderId = req.params.orderId; // ✅ correct usage
+    console.log('orderId', orderId);
+
+    const btype = await procumentDao.getOrderTypeDao(orderId);
+    const excludeList = await procumentDao.getExcludeListDao(btype.userId);
+
+    console.log('excludeList', excludeList);
+
+    if (!excludeList) {
+      return res.status(404).json({
+        success: false,
+        message: "Excluded items not found",
+      });
+    }
+
+    res.json(excludeList);
+  } catch (err) {
+    console.error("Error fetching order package items:", err);
+    res.status(500).json({
+      success: false,
+      message: "An error occurred while fetching order package items",
+      error: process.env.NODE_ENV === "development" ? err.message : undefined,
     });
   }
 };

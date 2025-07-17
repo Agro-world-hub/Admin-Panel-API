@@ -39,6 +39,8 @@ router.delete(
 
 router.post("/create-coupen", authMiddleware, marketPlaceEp.createCoupen);
 
+router.post("/update-coupen", authMiddleware, marketPlaceEp.updateCoupen);
+
 router.get("/get-all-coupen", authMiddleware, marketPlaceEp.getAllCoupen);
 
 router.delete(
@@ -249,7 +251,7 @@ router.get(
 );
 
 router.get(
-  "/get-order-details/:id",
+  "/get-define-package-details/:id",
   authMiddleware,
   marketPlaceEp.getOrderDetailsById
 );
@@ -267,9 +269,31 @@ router.post(
 );
 
 router.get(
-  "/get-latest-package-date/:id",
+  "/get-all-wholesale-customers",
   authMiddleware,
-  marketPlaceEp.getLatestPackageDateByPackageId
+  marketPlaceEp.getAllWholesaleCustomers
+);
+
+router.get(
+  "/get-user-orders/:userId",
+  authMiddleware,
+  marketPlaceEp.getUserOrders
+);
+
+router.get("/get-coupen/:coupenId", authMiddleware, marketPlaceEp.getCoupen);
+
+router.post("/update-coupen", authMiddleware, marketPlaceEp.updateCoupen);
+
+router.get(
+  "/invoice/:processOrderId",
+  authMiddleware,
+  marketPlaceEp.getInvoiceDetails
+);
+
+router.get(
+  "/get-all-wholesale-orders",
+  authMiddleware,
+  marketPlaceEp.getAllWholesaleOrders
 );
 
 module.exports = router;

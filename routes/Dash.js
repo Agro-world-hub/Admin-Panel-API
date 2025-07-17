@@ -79,4 +79,10 @@ router.get(
   authMiddleware,
   DashEp.getAllOrders
 )
+
+router.get(
+  "/get-dash-user-orders/:userId",
+  authMiddleware,
+  DashEp.getDashUserOrders
+);
 module.exports = router;

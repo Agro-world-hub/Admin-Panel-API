@@ -415,8 +415,8 @@ exports.GetAllCenterComplainDAO = (
         AND (oc.refNo LIKE ? OR co.empId LIKE ? OR coc.regCode LIKE ?)
       `;
       const searchQuery = `%${searchText}%`;
-      Sqlparams.push(searchQuery, searchQuery);
-      Counterparams.push(searchQuery, searchQuery);
+      Sqlparams.push(searchQuery, searchQuery, searchQuery);
+      Counterparams.push(searchQuery, searchQuery, searchQuery);
     }
 
     if (rpstatus) {
@@ -577,9 +577,9 @@ exports.getAllCenterPage = (limit, offset, district, province, searchItem) => {
             ...center,
             companies: center.companies
               ? center.companies.split("; ").map((company) => {
-                  const [id, name] = company.split(":");
-                  return { id: parseInt(id, 10), companyNameEnglish: name };
-                })
+                const [id, name] = company.split(":");
+                return { id: parseInt(id, 10), companyNameEnglish: name };
+              })
               : [],
           }));
 
@@ -848,11 +848,19 @@ exports.createCompany = async (
   foConNum,
   foEmail,
   logo,
-  favicon
+  favicon,
+  companyType
 ) => {
   return new Promise((resolve, reject) => {
-    const sql =
-      "INSERT INTO company (regNumber, companyNameEnglish, companyNameSinhala, companyNameTamil, email, oicName, oicEmail, oicConCode1, oicConNum1, oicConCode2, oicConNum2, accHolderName, accNumber, bankName, branchName, foName, foConCode, foConNum, foEmail, logo, favicon) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
+    let sql;
+    if (companyType === 'distribution') {
+      sql =
+        "INSERT INTO company (regNumber, companyNameEnglish, companyNameSinhala, companyNameTamil, email, oicName, oicEmail, oicConCode1, oicConNum1, oicConCode2, oicConNum2, accHolderName, accNumber, bankName, branchName, foName, foConCode, foConNum, foEmail, logo, favicon, isDistributed) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?, 1)";
+    } else {
+      sql =
+        "INSERT INTO company (regNumber, companyNameEnglish, companyNameSinhala, companyNameTamil, email, oicName, oicEmail, oicConCode1, oicConNum1, oicConCode2, oicConNum2, accHolderName, accNumber, bankName, branchName, foName, foConCode, foConNum, foEmail, logo, favicon, isCollection) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?, 1)";
+
+    }
     const values = [
       regNumber,
       companyNameEnglish,
@@ -889,7 +897,7 @@ exports.createCompany = async (
 
 exports.GetAllCompanyList = () => {
   return new Promise((resolve, reject) => {
-    const sql = "SELECT id, companyNameEnglish FROM company";
+    const sql = "SELECT id, companyNameEnglish FROM company WHERE company.isCollection = true";
     collectionofficer.query(sql, (err, results) => {
       if (err) {
         return reject(err);
@@ -998,6 +1006,7 @@ exports.getAllCompanyDAO = (search) => {
         collectionofficer co 
       ON 
         c.id = co.companyId
+      WHERE c.isCollection = true
     `;
     const params = [];
 
@@ -1268,7 +1277,7 @@ exports.getReseantCollectionDao = (centerId) => {
           JOIN collectionofficer COF ON RFP.collectionOfficerId = COF.id
           JOIN plant_care.cropvariety CV ON FPC.cropId = CV.id
           JOIN plant_care.cropgroup CG ON CV.cropGroupId = CG.id
-          WHERE DATE(RFP.createdAt) = '2024-12-31' 
+          WHERE DATE(RFP.createdAt) = '2025-06-11' 
           AND COF.centerId = ?
           GROUP BY CG.cropNameEnglish, CV.varietyNameEnglish, DATE(RFP.createdAt)
           ORDER BY DATE(RFP.createdAt)
@@ -1663,9 +1672,9 @@ exports.getAllCenterPageAW = (
             ...center,
             companies: center.companies
               ? center.companies.split("; ").map((company) => {
-                  const [id, name] = company.split(":");
-                  return { id: parseInt(id, 10), companyNameEnglish: name };
-                })
+                const [id, name] = company.split(":");
+                return { id: parseInt(id, 10), companyNameEnglish: name };
+              })
               : [],
           }));
 

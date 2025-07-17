@@ -269,6 +269,24 @@ const checkEmailExist = (email) => {
   });
 };
 
+const checkPhoneExist = (phoneNumber) => {
+  return new Promise((resolve, reject) => {
+    const sql = `
+      SELECT COUNT(*) AS count 
+      FROM salesagent 
+      WHERE phoneNumber1 = ? OR phoneNumber2 = ?
+    `;
+
+    marketPlace.query(sql, [phoneNumber, phoneNumber], (err, results) => {
+      if (err) {
+        return reject(err);
+      }
+      resolve(results[0].count > 0); // Return true if the phone number exists in either field
+    });
+  });
+};
+
+
 const createSalesAgent = (officerData, profileImageUrl) => {
   return new Promise(async (resolve, reject) => {
     try {
@@ -1016,6 +1034,105 @@ const sendComplainReply = (complainId, reply) => {
   });
 };
 
+const checkNICExistSaEdit = (nic, id) => {
+  return new Promise((resolve, reject) => {
+    const sql = `
+      SELECT COUNT(*) AS count 
+      FROM salesagent 
+      WHERE nic = ? AND id != ?
+    `;
+
+    marketPlace.query(sql, [nic, id], (err, results) => {
+      if (err) {
+        return reject(err);
+      }
+      resolve(results[0].count > 0); // Return true if NIC exists on a different record
+    });
+  });
+};
+
+const checkPhoneExistSaEdit = (phoneNumber, id) => {
+  return new Promise((resolve, reject) => {
+    const sql = `
+      SELECT COUNT(*) AS count 
+      FROM salesagent 
+      WHERE (phoneNumber1 = ? OR phoneNumber2 = ?) AND id != ?
+    `;
+
+    marketPlace.query(sql, [phoneNumber, phoneNumber, id], (err, results) => {
+      if (err) {
+        return reject(err);
+      }
+      resolve(results[0].count > 0); // Return true if phone number exists on another record
+    });
+  });
+};
+
+
+const checkEmailExistSaEdit = (email, id) => {
+  return new Promise((resolve, reject) => {
+    const sql = `
+      SELECT COUNT(*) AS count 
+      FROM salesagent 
+      WHERE email = ? AND id != ?
+    `;
+
+    marketPlace.query(sql, [email, id], (err, results) => {
+      if (err) {
+        return reject(err);
+      }
+      resolve(results[0].count > 0); // Return true if email exists on another record
+    });
+  });
+};
+
+const getUserOrdersDao = async (userId, status) => {
+  return new Promise((resolve, reject) => {
+    let sql = `
+      SELECT DISTINCT
+        P.id,
+        P.invNo,
+        O.sheduleType,
+        O.sheduleDate,
+        P.paymentMethod,
+        P.isPaid,
+        O.fullTotal,
+        O.isPackage
+      FROM processorders P
+      JOIN orders O ON P.orderId = O.id
+      WHERE O.userId = ? 
+    `;
+
+    console.log(status, "-------");
+
+    if (status === "Assinged") {
+      sql += " AND P.status = 'Ordered'";
+    } else if (status === "Processing") {
+      sql += " AND P.status = 'Processing'";
+    } else if (status === "Delivered") {
+      sql += " AND P.status = 'Delivered'";
+    } else if (status === "Cancelled") {
+      sql += " AND P.status = 'Cancelled'";
+    } else if (status === "Faild") {
+      sql += " AND P.status 'Faild'";
+    } else if (status === "On the way") {
+      sql += " AND P.status 'Faild'";
+    }
+
+    marketPlace.query(sql, [userId, status], (err, results) => {
+      if (err) {
+        console.log("Error", err);
+        reject(err);
+      } else {
+        resolve(results);
+        console.log("``````````result``````````", results);
+      }
+    });
+  });
+};
+
+
+
 module.exports = {
   GetAllSalesAgentComplainDAO,
   getAllSalesCustomers,
@@ -1024,6 +1141,7 @@ module.exports = {
   getForCreateId,
   checkNICExist,
   checkEmailExist,
+  checkPhoneExist,
   createSalesAgent,
   getSalesAgentDataById,
   updateSalesAgentDetails,
@@ -1033,4 +1151,8 @@ module.exports = {
   getAllOrders,
   getComplainById,
   sendComplainReply,
+  checkPhoneExistSaEdit,
+  checkNICExistSaEdit,
+  checkEmailExistSaEdit,
+  getUserOrdersDao
 };

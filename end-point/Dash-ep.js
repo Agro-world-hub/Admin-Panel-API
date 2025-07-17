@@ -140,6 +140,16 @@ exports.createSalesAgent = async (req, res) => {
   try {
     const officerData = JSON.parse(req.body.officerData);
 
+    console.log(officerData);
+
+    const isExistingPhone1 = await DashDao.checkPhoneExist(
+      officerData.phoneNumber1
+    );
+
+    const isExistingPhone2 = await DashDao.checkPhoneExist(
+      officerData.phoneNumber2
+    );
+
     const isExistingNIC = await DashDao.checkNICExist(
       officerData.nic
     );
@@ -156,6 +166,18 @@ exports.createSalesAgent = async (req, res) => {
     if (isExistingEmail) {
       return res.status(500).json({
         error: "Email already exists",
+      });
+    }
+
+    if (isExistingPhone1) {
+      return res.status(500).json({
+        error: "Phone number 01 already exists",
+      });
+    }
+
+    if (isExistingPhone2) {
+      return res.status(500).json({
+        error: "Phone number 02 already exists",
       });
     }
 
@@ -259,6 +281,45 @@ exports.updateSalesAgentDetails = async (req, res) => {
   // const qrCode = await collectionofficerDao.getQrImage(id);
   // const officerDataForImage = await DashDao.getSalesAgentDataById(id);
   console.log(officerData);
+
+  const isExistingPhone1 = await DashDao.checkPhoneExistSaEdit(
+    officerData.phoneNumber1, id
+  );
+
+  const isExistingPhone2 = await DashDao.checkPhoneExistSaEdit(
+    officerData.phoneNumber2, id
+  );
+
+  const isExistingNIC = await DashDao.checkNICExistSaEdit(
+    officerData.nic, id
+  );
+  const isExistingEmail = await DashDao.checkEmailExistSaEdit(
+    officerData.email, id
+  );
+
+  if (isExistingNIC) {
+    return res.status(500).json({
+      error: "NIC already exists",
+    });
+  }
+
+  if (isExistingEmail) {
+    return res.status(500).json({
+      error: "Email already exists",
+    });
+  }
+
+  if (isExistingPhone1) {
+    return res.status(500).json({
+      error: "Phone number 01 already exists",
+    });
+  }
+
+  if (isExistingPhone2) {
+    return res.status(500).json({
+      error: "Phone number 02 already exists",
+    });
+  }
 
 
   // let qrImageUrl;
@@ -458,5 +519,87 @@ exports.getAllOrders = async (req, res) => {
     return res
       .status(500)
       .json({ error: "An error occurred while fetching collection officers" });
+  }
+};
+
+exports.getDashUserOrders = async (req, res) => {
+  try {
+    console.log("Fetching user orders...");
+
+    const userId = req.params.userId;
+    const statusFilter = req.query.status || "Ordered";
+
+    const userOrders = await DashDao.getUserOrdersDao(
+      parseInt(userId),
+      statusFilter
+    );
+    console.log(userOrders);
+
+    if (!userOrders || userOrders.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: `No ${statusFilter.toLowerCase()} orders found for this user`,
+        statusFilter: statusFilter,
+      });
+    }
+
+    // Group orders by schedule type
+    const ordersByScheduleType = userOrders.reduce((acc, order) => {
+      const scheduleType = order.sheduleType || "unscheduled"; // Handle possible undefined
+      if (!acc[scheduleType]) {
+        acc[scheduleType] = [];
+      }
+      acc[scheduleType].push(order);
+      return acc;
+    }, {});
+
+    // Format response data
+    const responseData = {
+      success: true,
+      data: {
+        orders: userOrders,
+        ordersByScheduleType,
+        count: userOrders.length,
+        statusFilter: statusFilter,
+      },
+      metadata: {
+        userId: userId,
+        orderStatus: statusFilter,
+        retrievedAt: new Date().toISOString(),
+      },
+    };
+
+    res.json(responseData);
+  } catch (err) {
+    console.error("Error fetching user orders:", err);
+
+    // Enhanced error handling
+    let statusCode = 500;
+    let message = "An error occurred while fetching user orders.";
+
+    if (err.isJoi) {
+      statusCode = 400;
+      message = err.details[0].message;
+    } else if (
+      err.code === "ER_NO_SUCH_TABLE" ||
+      err.code === "ER_BAD_FIELD_ERROR"
+    ) {
+      statusCode = 500;
+      message = "Database configuration error";
+    } else if (err.code === "ER_ACCESS_DENIED_ERROR") {
+      statusCode = 503;
+      message = "Database service unavailable";
+    }
+
+    const errorResponse = {
+      success: false,
+      message: message,
+      ...(process.env.NODE_ENV === "development" && {
+        error: err.stack,
+        details: err.message,
+      }),
+    };
+
+    res.status(statusCode).json(errorResponse);
   }
 };
