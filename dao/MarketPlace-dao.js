@@ -2215,6 +2215,8 @@ exports.getInvoiceDetailsDAO = (processOrderId) => {
         o.buildingType,
         o.title,
         o.fullName,
+        o.phonecode1,
+        o.phone1,
         po.invNo AS invoiceNumber,
         po.paymentMethod AS paymentMethod,
         o.total AS grandTotal,
