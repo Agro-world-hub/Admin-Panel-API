@@ -2213,6 +2213,8 @@ exports.getInvoiceDetailsDAO = (processOrderId) => {
         o.createdAt AS invoiceDate,
         o.sheduleDate AS scheduledDate,
         o.buildingType,
+        o.title,
+        o.fullName,
         po.invNo AS invoiceNumber,
         po.paymentMethod AS paymentMethod,
         o.total AS grandTotal,
