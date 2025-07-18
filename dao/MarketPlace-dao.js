@@ -2174,34 +2174,6 @@ exports.getUserOrdersDao = async (userId, status) => {
   });
 };
 
-// exports.getInvoiceDetailsDAO = (processOrderId) => {
-//   return new Promise((resolve, reject) => {
-//     const sql = `
-//       SELECT
-//         o.id AS orderId,
-//         o.centerId,
-//         o.delivaryMethod AS deliveryMethod,
-//         o.discount AS orderDiscount,
-//         o.createdAt AS invoiceDate,
-//         o.sheduleDate AS scheduledDate,
-//         o.buildingType,
-//         po.invNo AS invoiceNumber,
-//         po.paymentMethod AS paymentMethod,
-//         o.total AS grandTotal
-//       FROM orders o
-//       LEFT JOIN processorders po ON o.id = po.orderId
-//       WHERE po.id = ?
-//     `;
-
-//     marketPlace.query(sql, [processOrderId], (err, results) => {
-//       if (err) {
-//         return reject(err);
-//       }
-//       resolve(results[0] || null);
-//     });
-//   });
-// };
-
 exports.getInvoiceDetailsDAO = (processOrderId) => {
   return new Promise((resolve, reject) => {
     const sql = `
@@ -2257,29 +2229,27 @@ exports.getInvoiceDetailsDAO = (processOrderId) => {
   });
 };
 
-// exports.getFamilyPackItemsDAO = (orderId) => {
-//   return new Promise((resolve, reject) => {
-//     const sql = `
-//       SELECT
-//         op.id,
-//         mp.id AS packageId,
-//         mp.displayName AS name,
-//         mp.productPrice AS unitPrice,
-//         1 AS quantity,
-//         mp.productPrice AS amount
-//       FROM orderpackage op
-//       JOIN marketplacepackages mp ON op.packageId = mp.id
-//       WHERE op.orderId = ?
-//     `;
+exports.getDeliveryChargeByCityDAO = (city) => {
+  return new Promise((resolve, reject) => {
+    const sql = `
+      SELECT 
+        id,
+        companycenterId,
+        city,
+        charge
+      FROM deliverycharge
+      WHERE city = ?
+      LIMIT 1
+    `;
 
-//     marketPlace.query(sql, [orderId], (err, results) => {
-//       if (err) {
-//         return reject(err);
-//       }
-//       resolve(results);
-//     });
-//   });
-// };
+    collectionofficer.query(sql, [city], (err, results) => {
+      if (err) {
+        return reject(err);
+      }
+      resolve(results[0] || null);
+    });
+  });
+};
 
 exports.getFamilyPackItemsDAO = (orderId) => {
   return new Promise((resolve, reject) => {

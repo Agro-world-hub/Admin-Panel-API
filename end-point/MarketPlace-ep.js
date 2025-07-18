@@ -2029,9 +2029,19 @@ exports.getInvoiceDetails = async (req, res) => {
 
     // Get pickup center details if delivery method is pickup
     let pickupCenterDetails = null;
+    let deliveryChargeDetails = null;
+
     if (invoiceDetails.deliveryMethod === "PICKUP" && invoiceDetails.centerId) {
       pickupCenterDetails = await MarketPlaceDao.getPickupCenterDetailsDAO(
         invoiceDetails.centerId
+      );
+    } else if (
+      invoiceDetails.deliveryMethod !== "PICKUP" &&
+      invoiceDetails.city
+    ) {
+      // Get delivery charge if delivery method is not PICKUP and city is available
+      deliveryChargeDetails = await MarketPlaceDao.getDeliveryChargeByCityDAO(
+        invoiceDetails.city
       );
     }
 
@@ -2056,6 +2066,7 @@ exports.getInvoiceDetails = async (req, res) => {
       },
       billing: billingDetails,
       pickupCenter: pickupCenterDetails,
+      deliveryCharge: deliveryChargeDetails, // Add delivery charge details to response
     };
 
     console.log("Successfully fetched invoice details");
