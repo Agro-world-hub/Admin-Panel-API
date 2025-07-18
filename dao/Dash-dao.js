@@ -1114,9 +1114,9 @@ const getUserOrdersDao = async (userId, status) => {
     } else if (status === "Cancelled") {
       sql += " AND P.status = 'Cancelled'";
     } else if (status === "Faild") {
-      sql += " AND P.status 'Faild'";
+      sql += " AND P.status = 'Faild'";
     } else if (status === "On the way") {
-      sql += " AND P.status 'Faild'";
+      sql += " AND P.status = 'Faild'";
     }
 
     marketPlace.query(sql, [userId, status], (err, results) => {
