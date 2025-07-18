@@ -487,8 +487,6 @@ exports.getAllOrders = async (req, res) => {
 
 
   try {
-    console.log('bla bla bla')
-
     const { page, limit, orderStatus, paymentMethod, paymentStatus, deliveryType, searchText, date } = req.query;
 
 
@@ -524,17 +522,14 @@ exports.getAllOrders = async (req, res) => {
 
 exports.getDashUserOrders = async (req, res) => {
   try {
-    console.log("Fetching user orders...");
 
     const userId = req.params.userId;
     const statusFilter = req.query.status || "Ordered";
-    console.log('statusFilter', statusFilter)
 
     const userOrders = await DashDao.getUserOrdersDao(
       parseInt(userId),
       statusFilter
     );
-    console.log('userOrders', userOrders);
 
     if (!userOrders || userOrders.length === 0) {
       return res.json({

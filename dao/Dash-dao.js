@@ -746,6 +746,7 @@ const getAllOrders = (
       JOIN marketplaceusers c ON o.userId = c.id
       JOIN salesagent sa ON c.salesAgent = sa.id
       JOIN processorders po ON o.id = po.orderId
+      WHERE o.orderApp = 'Dash'
     `;
 
     let countSql = `SELECT COUNT(*) as total ${baseSql}`;
@@ -760,7 +761,7 @@ const getAllOrders = (
         o.discount AS fullDiscount,
         o.fullTotal,
         o.delivaryMethod AS deliveryType,
-        o.createdAt,
+        po.createdAt,
         c.cusId,
         c.firstName,
         c.lastName,
@@ -794,7 +795,7 @@ const getAllOrders = (
 
     if (orderStatus) {
       console.log("Order Status:", orderStatus);
-      
+
       whereConditions.push(`po.status = ?`);
       params.push(orderStatus);
     }
@@ -822,17 +823,24 @@ const getAllOrders = (
 
     if (date) {
       whereConditions.push(`DATE(o.sheduleDate) = DATE(?)`);
-      params.push(date);
+      console.log(date);
+      let formattedDate = '';
+      const d = new Date(date);
+      formattedDate = d.toISOString().split('T')[0];
+      console.log(formattedDate);
+      params.push(formattedDate);
     }
 
     // Append WHERE conditions if any exist
     if (whereConditions.length > 0) {
-      const whereClause = " WHERE " + whereConditions.join(" AND ");
+      const whereClause = " AND " + whereConditions.join(" AND ");
       countSql += whereClause;
       dataSql += whereClause;
     }
 
-    dataSql += " ORDER BY o.createdAt DESC LIMIT ? OFFSET ?";
+    dataSql += " ORDER BY po.createdAt DESC LIMIT ? OFFSET ?";
+    console.log(dataSql);
+
 
     // Execute count query first
     marketPlace.query(countSql, params, (countErr, countResults) => {
@@ -874,7 +882,8 @@ const GetAllSalesAgentComplainDAO = (
   status,
   category,
   comCategory,
-  searchText
+  searchText,
+  replyStatus
 ) => {
   return new Promise((resolve, reject) => {
     const Sqlparams = [];
@@ -920,6 +929,21 @@ const GetAllSalesAgentComplainDAO = (
       sql += " AND dc.adminStatus = ? ";
       Sqlparams.push(status);
       Counterparams.push(status);
+    }
+
+    if (replyStatus) {
+      console.log(replyStatus);
+      
+      if (replyStatus === 'No') {
+        countSql += " AND dc.reply IS NULL ";
+        sql += " AND dc.reply IS NULL ";
+
+      } else if (replyStatus === 'Yes') {
+        countSql += " AND dc.reply IS NOT NULL ";
+        sql += " AND dc.reply IS NOT NULL ";
+
+      }
+
     }
 
     // Add filter for category (role)

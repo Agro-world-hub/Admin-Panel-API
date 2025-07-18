@@ -1982,7 +1982,11 @@ exports.createDefinePackageDao = (packageData, userId) => {
         ) VALUES (?, ?, ?)
       `;
 
-      const values = [packageData.packageId, parseFloat(packageData.price), parseInt(userId)];
+      const values = [
+        packageData.packageId,
+        parseFloat(packageData.price),
+        parseInt(userId),
+      ];
 
       // Database query
       marketPlace.query(sql, values, (err, results) => {
@@ -2173,7 +2177,7 @@ exports.getUserOrdersDao = async (userId, status) => {
 exports.getInvoiceDetailsDAO = (processOrderId) => {
   return new Promise((resolve, reject) => {
     const sql = `
-      SELECT 
+      SELECT
         o.id AS orderId,
         o.centerId,
         o.delivaryMethod AS deliveryMethod,
@@ -2181,15 +2185,64 @@ exports.getInvoiceDetailsDAO = (processOrderId) => {
         o.createdAt AS invoiceDate,
         o.sheduleDate AS scheduledDate,
         o.buildingType,
+        o.title,
+        o.fullName,
+        o.phonecode1,
+        o.phone1,
         po.invNo AS invoiceNumber,
         po.paymentMethod AS paymentMethod,
-        o.total AS grandTotal
+        o.total AS grandTotal,
+        mu.email AS userEmail,
+        CASE
+          WHEN o.buildingType = 'House' THEN oh.houseNo
+          WHEN o.buildingType = 'Apartment' THEN oa.houseNo
+          ELSE NULL
+        END AS houseNo,
+        CASE
+          WHEN o.buildingType = 'House' THEN oh.streetName
+          WHEN o.buildingType = 'Apartment' THEN oa.streetName
+          ELSE NULL
+        END AS streetName,
+        CASE
+          WHEN o.buildingType = 'House' THEN oh.city
+          WHEN o.buildingType = 'Apartment' THEN oa.city
+          ELSE NULL
+        END AS city,
+        oa.buildingNo,
+        oa.buildingName,
+        oa.unitNo,
+        oa.floorNo
       FROM orders o
       LEFT JOIN processorders po ON o.id = po.orderId
+      LEFT JOIN orderhouse oh ON o.id = oh.orderId AND o.buildingType = 'House'
+      LEFT JOIN orderapartment oa ON o.id = oa.orderId AND o.buildingType = 'Apartment'
+      LEFT JOIN marketplaceusers mu ON o.userId = mu.id  -- Add this join
       WHERE po.id = ?
     `;
 
     marketPlace.query(sql, [processOrderId], (err, results) => {
+      if (err) {
+        return reject(err);
+      }
+      resolve(results[0] || null);
+    });
+  });
+};
+
+exports.getDeliveryChargeByCityDAO = (city) => {
+  return new Promise((resolve, reject) => {
+    const sql = `
+      SELECT 
+        id,
+        companycenterId,
+        city,
+        charge
+      FROM deliverycharge
+      WHERE city = ?
+      LIMIT 1
+    `;
+
+    collectionofficer.query(sql, [city], (err, results) => {
       if (err) {
         return reject(err);
       }
@@ -2205,9 +2258,9 @@ exports.getFamilyPackItemsDAO = (orderId) => {
         op.id,
         mp.id AS packageId,
         mp.displayName AS name,
-        mp.productPrice AS unitPrice,
+        (mp.productPrice + mp.packingFee + mp.serviceFee) AS unitPrice,
         1 AS quantity,
-        mp.productPrice AS amount
+        (mp.productPrice + mp.packingFee + mp.serviceFee) AS amount
       FROM orderpackage op
       JOIN marketplacepackages mp ON op.packageId = mp.id
       WHERE op.orderId = ?
