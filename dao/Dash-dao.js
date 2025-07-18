@@ -824,7 +824,7 @@ const getAllOrders = (
     if (date) {
       whereConditions.push(`DATE(o.sheduleDate) = DATE(?)`);
       console.log(date);
-      let formattedDate='';
+      let formattedDate = '';
       const d = new Date(date);
       formattedDate = d.toISOString().split('T')[0];
       console.log(formattedDate);
@@ -882,7 +882,8 @@ const GetAllSalesAgentComplainDAO = (
   status,
   category,
   comCategory,
-  searchText
+  searchText,
+  replyStatus
 ) => {
   return new Promise((resolve, reject) => {
     const Sqlparams = [];
@@ -928,6 +929,21 @@ const GetAllSalesAgentComplainDAO = (
       sql += " AND dc.adminStatus = ? ";
       Sqlparams.push(status);
       Counterparams.push(status);
+    }
+
+    if (replyStatus) {
+      console.log(replyStatus);
+      
+      if (replyStatus === 'No') {
+        countSql += " AND dc.reply IS NULL ";
+        sql += " AND dc.reply IS NULL ";
+
+      } else if (replyStatus === 'Yes') {
+        countSql += " AND dc.reply IS NOT NULL ";
+        sql += " AND dc.reply IS NOT NULL ";
+
+      }
+
     }
 
     // Add filter for category (role)
