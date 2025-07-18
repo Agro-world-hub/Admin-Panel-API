@@ -380,7 +380,7 @@ exports.getAllCollectionOfficers = (
             FROM collectionofficer coff
             JOIN company cm ON coff.companyId = cm.id
             LEFT JOIN collectioncenter cc ON coff.centerId = cc.id
-            WHERE coff.jobRole NOT IN ('Collection Center Head', 'Driver') AND cm.id = 1
+            WHERE coff.jobRole IN ('Collection Center Manager', 'Collection Officer') AND cm.id = 1
         `;
 
     let dataSql = `
@@ -401,7 +401,7 @@ exports.getAllCollectionOfficers = (
             FROM collectionofficer coff
             JOIN company cm ON coff.companyId = cm.id
             LEFT JOIN collectioncenter cc ON coff.centerId = cc.id
-            WHERE coff.jobRole NOT IN ('Collection Center Head', 'Driver') AND cm.id = 1
+            WHERE coff.jobRole IN ('Collection Center Manager', 'Collection Officer') AND cm.id = 1
         `;
 
     const countParams = [];
@@ -712,6 +712,7 @@ exports.getAllCompanyNamesDao = (district) => {
     const sql = `
             SELECT id, companyNameEnglish
             FROM company
+            WHERE isCollection = 1;
         `;
     collectionofficer.query(sql, [district], (err, results) => {
       if (err) {
@@ -1548,8 +1549,9 @@ exports.updateCenterHeadDetails = (
 exports.getAllCenterNamesDao = (district) => {
   return new Promise((resolve, reject) => {
     const sql = `
-            SELECT id, regCode, centerName
-            FROM collectioncenter
+            SELECT CC.id, CC.regCode, CC.centerName
+            FROM collectioncenter CC, companycenter COMC, company COM
+            WHERE CC.id = COMC.centerId AND COMC.companyId = COM.id AND COM.isCollection = 1;
         `;
     collectionofficer.query(sql, [district], (err, results) => {
       if (err) {
