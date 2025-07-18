@@ -2257,6 +2257,30 @@ exports.getInvoiceDetailsDAO = (processOrderId) => {
   });
 };
 
+// exports.getFamilyPackItemsDAO = (orderId) => {
+//   return new Promise((resolve, reject) => {
+//     const sql = `
+//       SELECT
+//         op.id,
+//         mp.id AS packageId,
+//         mp.displayName AS name,
+//         mp.productPrice AS unitPrice,
+//         1 AS quantity,
+//         mp.productPrice AS amount
+//       FROM orderpackage op
+//       JOIN marketplacepackages mp ON op.packageId = mp.id
+//       WHERE op.orderId = ?
+//     `;
+
+//     marketPlace.query(sql, [orderId], (err, results) => {
+//       if (err) {
+//         return reject(err);
+//       }
+//       resolve(results);
+//     });
+//   });
+// };
+
 exports.getFamilyPackItemsDAO = (orderId) => {
   return new Promise((resolve, reject) => {
     const sql = `
@@ -2264,9 +2288,9 @@ exports.getFamilyPackItemsDAO = (orderId) => {
         op.id,
         mp.id AS packageId,
         mp.displayName AS name,
-        mp.productPrice AS unitPrice,
+        (mp.productPrice + mp.packingFee + mp.serviceFee) AS unitPrice,
         1 AS quantity,
-        mp.productPrice AS amount
+        (mp.productPrice + mp.packingFee + mp.serviceFee) AS amount
       FROM orderpackage op
       JOIN marketplacepackages mp ON op.packageId = mp.id
       WHERE op.orderId = ?
