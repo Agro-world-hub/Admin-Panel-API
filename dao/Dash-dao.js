@@ -795,7 +795,7 @@ const getAllOrders = (
 
     if (orderStatus) {
       console.log("Order Status:", orderStatus);
-      
+
       whereConditions.push(`po.status = ?`);
       params.push(orderStatus);
     }
@@ -822,8 +822,13 @@ const getAllOrders = (
     }
 
     if (date) {
-      whereConditions.push(`DATE(po.createdAt) = DATE(?)`);
-      params.push(date);
+      whereConditions.push(`DATE(o.sheduleDate) = DATE(?)`);
+      console.log(date);
+      let formattedDate='';
+      const d = new Date(date);
+      formattedDate = d.toISOString().split('T')[0];
+      console.log(formattedDate);
+      params.push(formattedDate);
     }
 
     // Append WHERE conditions if any exist
@@ -835,7 +840,7 @@ const getAllOrders = (
 
     dataSql += " ORDER BY po.createdAt DESC LIMIT ? OFFSET ?";
     console.log(dataSql);
-    
+
 
     // Execute count query first
     marketPlace.query(countSql, params, (countErr, countResults) => {
