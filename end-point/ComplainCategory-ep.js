@@ -418,7 +418,7 @@ exports.updateMarketplaceComplaintReply = async (req, res) => {
 
     // Validate reply
     if (!reply || typeof reply !== 'string' || reply.trim() === '') {
-      return res.status(400).json({ message: "Reply is required and must be a non-empty string" });
+      return res.status(400).json({ message: "Reply is required " });
     }
 
     // Update the complaint reply using the DAO function

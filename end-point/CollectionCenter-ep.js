@@ -146,7 +146,7 @@ exports.getAllComplains = async (req, res) => {
       rpstatus
     );
 
-    console.log('results', results)
+    console.log("results", results);
 
     console.log("Successfully retrieved all collection center");
     res.json({ results, total });
@@ -176,7 +176,7 @@ exports.getAllCenterComplains = async (req, res) => {
       rpstatus,
     } = req.query;
 
-    console.log('searchText', searchText)
+    console.log("searchText", searchText);
 
     const { results, total } =
       await CollectionCenterDao.GetAllCenterComplainDAO(
@@ -191,7 +191,7 @@ exports.getAllCenterComplains = async (req, res) => {
       );
 
     console.log("Successfully retrieved all collection center");
-    console.log('results', results)
+    console.log("results", results);
     res.json({ results, total });
   } catch (err) {
     if (err.isJoi) {
@@ -556,11 +556,9 @@ exports.createCompany = async (req, res) => {
   try {
     const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
     console.log("Request URL:", fullUrl);
-    const companyType = req.query.type
-    console.log('companyType:',companyType);
+    const companyType = req.query.type;
+    console.log("companyType:", companyType);
     console.log(req.body);
-    
-    
 
     // Validate the request body
     const {
@@ -586,6 +584,15 @@ exports.createCompany = async (req, res) => {
       logo,
       favicon,
     } = req.body;
+
+    const checkCompanyName =
+      await CollectionCenterDao.checkCompanyDisplayNameDao(companyNameEnglish);
+    if (checkCompanyName) {
+      return res.json({
+        status: false,
+        message: "Company Name Exists",
+      });
+    }
 
     const newsId = await CollectionCenterDao.createCompany(
       regNumber,
@@ -613,9 +620,11 @@ exports.createCompany = async (req, res) => {
     );
 
     console.log("company creation success");
-    return res
-      .status(201)
-      .json({ message: "company created successfully", id: newsId });
+    return res.status(201).json({
+      status: true,
+      message: "company created successfully",
+      id: newsId,
+    });
   } catch (err) {
     if (err.isJoi) {
       // Validation error
@@ -945,7 +954,7 @@ exports.getCenterDashbord = async (req, res) => {
     const resentCollection = await CollectionCenterDao.getReseantCollectionDao(
       id
     );
-    console.log('resentCollection', resentCollection)
+    console.log("resentCollection", resentCollection);
     const totExpences = await CollectionCenterDao.getTotExpencesDao(id);
     const difExpences = await CollectionCenterDao.differenceBetweenExpences(id);
 
@@ -1172,5 +1181,33 @@ exports.getAllCollectionCenterPageAW = async (req, res) => {
     }
     console.error("Error executing query:", err);
     res.status(500).send("An error occurred while fetching data.");
+  }
+};
+
+exports.checkCompanyDisplayNameDao = async (req, res) => {
+  try {
+    const { companyNameEnglish } = req.query;
+
+    if (!companyNameEnglish) {
+      return res.status(400).json({
+        error: "Display name is required",
+        status: false,
+      });
+    }
+
+    const exists = await CollectionCenterDao.checkCompanyDisplayNameDao(
+      companyNameEnglish
+    );
+
+    return res.status(200).json({
+      exists,
+      status: true,
+    });
+  } catch (err) {
+    console.error("Error checking company name english", err);
+    return res.status(500).json({
+      error: "An error occurred while checking company name english",
+      status: false,
+    });
   }
 };

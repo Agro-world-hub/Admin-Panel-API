@@ -506,7 +506,7 @@ exports.getAllOrders = async (req, res) => {
     );
 
     // console.log({ page, limit });
-    // console.log(result);
+    console.log('result', result);
 
     return res.status(200).json(result);
   } catch (error) {
@@ -528,15 +528,16 @@ exports.getDashUserOrders = async (req, res) => {
 
     const userId = req.params.userId;
     const statusFilter = req.query.status || "Ordered";
+    console.log('statusFilter', statusFilter)
 
     const userOrders = await DashDao.getUserOrdersDao(
       parseInt(userId),
       statusFilter
     );
-    console.log(userOrders);
+    console.log('userOrders', userOrders);
 
     if (!userOrders || userOrders.length === 0) {
-      return res.status(404).json({
+      return res.json({
         success: false,
         message: `No ${statusFilter.toLowerCase()} orders found for this user`,
         statusFilter: statusFilter,
