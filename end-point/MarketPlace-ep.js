@@ -1735,7 +1735,7 @@ exports.createDefinePackageWithItems = async (req, res) => {
     const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
     console.log("Request URL:", fullUrl);
     console.log("Request body:", req.body);
-    const userId = req.user.userId
+    const userId = req.user.userId;
 
     // Validate request body structure
     if (
@@ -1996,7 +1996,6 @@ exports.getInvoiceDetails = async (req, res) => {
 
   try {
     const { processOrderId } = req.params;
-    const userId = req.user.id;
 
     // Validate input
     if (!processOrderId) {
@@ -2010,6 +2009,8 @@ exports.getInvoiceDetails = async (req, res) => {
     const invoiceDetails = await MarketPlaceDao.getInvoiceDetailsDAO(
       processOrderId
     );
+
+    console.log("this is the invoce data", invoiceDetails);
 
     if (!invoiceDetails) {
       return res.status(404).json({

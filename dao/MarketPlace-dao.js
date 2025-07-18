@@ -1982,7 +1982,11 @@ exports.createDefinePackageDao = (packageData, userId) => {
         ) VALUES (?, ?, ?)
       `;
 
-      const values = [packageData.packageId, parseFloat(packageData.price), parseInt(userId)];
+      const values = [
+        packageData.packageId,
+        parseFloat(packageData.price),
+        parseInt(userId),
+      ];
 
       // Database query
       marketPlace.query(sql, values, (err, results) => {
@@ -2170,10 +2174,38 @@ exports.getUserOrdersDao = async (userId, status) => {
   });
 };
 
+// exports.getInvoiceDetailsDAO = (processOrderId) => {
+//   return new Promise((resolve, reject) => {
+//     const sql = `
+//       SELECT
+//         o.id AS orderId,
+//         o.centerId,
+//         o.delivaryMethod AS deliveryMethod,
+//         o.discount AS orderDiscount,
+//         o.createdAt AS invoiceDate,
+//         o.sheduleDate AS scheduledDate,
+//         o.buildingType,
+//         po.invNo AS invoiceNumber,
+//         po.paymentMethod AS paymentMethod,
+//         o.total AS grandTotal
+//       FROM orders o
+//       LEFT JOIN processorders po ON o.id = po.orderId
+//       WHERE po.id = ?
+//     `;
+
+//     marketPlace.query(sql, [processOrderId], (err, results) => {
+//       if (err) {
+//         return reject(err);
+//       }
+//       resolve(results[0] || null);
+//     });
+//   });
+// };
+
 exports.getInvoiceDetailsDAO = (processOrderId) => {
   return new Promise((resolve, reject) => {
     const sql = `
-      SELECT 
+      SELECT
         o.id AS orderId,
         o.centerId,
         o.delivaryMethod AS deliveryMethod,
@@ -2183,9 +2215,30 @@ exports.getInvoiceDetailsDAO = (processOrderId) => {
         o.buildingType,
         po.invNo AS invoiceNumber,
         po.paymentMethod AS paymentMethod,
-        o.total AS grandTotal
+        o.total AS grandTotal,
+        CASE
+          WHEN o.buildingType = 'House' THEN oh.houseNo
+          WHEN o.buildingType = 'Apartment' THEN oa.houseNo
+          ELSE NULL
+        END AS houseNo,
+        CASE
+          WHEN o.buildingType = 'House' THEN oh.streetName
+          WHEN o.buildingType = 'Apartment' THEN oa.streetName
+          ELSE NULL
+        END AS streetName,
+        CASE
+          WHEN o.buildingType = 'House' THEN oh.city
+          WHEN o.buildingType = 'Apartment' THEN oa.city
+          ELSE NULL
+        END AS city,
+        oa.buildingNo,
+        oa.buildingName,
+        oa.unitNo,
+        oa.floorNo
       FROM orders o
       LEFT JOIN processorders po ON o.id = po.orderId
+      LEFT JOIN orderhouse oh ON o.id = oh.orderId AND o.buildingType = 'House'
+      LEFT JOIN orderapartment oa ON o.id = oa.orderId AND o.buildingType = 'Apartment'
       WHERE po.id = ?
     `;
 
