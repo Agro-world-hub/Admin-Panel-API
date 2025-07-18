@@ -2220,6 +2220,7 @@ exports.getInvoiceDetailsDAO = (processOrderId) => {
         po.invNo AS invoiceNumber,
         po.paymentMethod AS paymentMethod,
         o.total AS grandTotal,
+        mu.email AS userEmail,
         CASE
           WHEN o.buildingType = 'House' THEN oh.houseNo
           WHEN o.buildingType = 'Apartment' THEN oa.houseNo
@@ -2243,6 +2244,7 @@ exports.getInvoiceDetailsDAO = (processOrderId) => {
       LEFT JOIN processorders po ON o.id = po.orderId
       LEFT JOIN orderhouse oh ON o.id = oh.orderId AND o.buildingType = 'House'
       LEFT JOIN orderapartment oa ON o.id = oa.orderId AND o.buildingType = 'Apartment'
+      LEFT JOIN marketplaceusers mu ON o.userId = mu.id  -- Add this join
       WHERE po.id = ?
     `;
 
