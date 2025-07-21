@@ -761,6 +761,8 @@ const getAllOrders = (
         o.discount AS fullDiscount,
         o.fullTotal,
         o.delivaryMethod AS deliveryType,
+        o.sheduleType,
+        o.sheduleTime,
         po.createdAt,
         c.cusId,
         c.firstName,
