@@ -792,3 +792,19 @@ exports.generateRegCode = (province, district, city, callback) => {
     callback(null, newRegCode);
   });
 };
+
+exports.GetDistributionCenterByName = (name) => {
+  return new Promise((resolve, reject) => {
+    const sql = `
+            SELECT centerName FROM distributedcenter
+            WHERE centerName = ?
+        `;
+    collectionofficer.query(sql, [name], (err, results) => {
+      if (err) {
+        return reject(err);
+      }
+      // Return all matching records (since multiple centers might have same name)
+      resolve(results);
+    });
+  });
+};
