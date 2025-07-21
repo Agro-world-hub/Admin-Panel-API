@@ -156,7 +156,11 @@ exports.checkEmailExist = (email) => {
 //   });
 // };
 
-exports.createCollectionOfficerPersonal = (officerData, profileImageUrl,lastId) => {
+exports.createCollectionOfficerPersonal = (
+  officerData,
+  profileImageUrl,
+  lastId
+) => {
   return new Promise(async (resolve, reject) => {
     try {
       // Prepare data for QR code generation
@@ -548,7 +552,9 @@ exports.getAllCollectionOfficersStatus = (
                 Coff.lastNameEnglish,
                 Ccom.companyNameEnglish,
                 Coff.empId,
+                Coff.phoneCode01,
                 Coff.phoneNumber01,
+                Coff.phoneCode02,
                 Coff.phoneNumber02,
                 Coff.nic,
                 Coff.district,
@@ -706,7 +712,6 @@ exports.getCollectionOfficerProvinceReports = (province) => {
   });
 };
 
-
 exports.getAllCompanyNamesDao = (district) => {
   return new Promise((resolve, reject) => {
     const sql = `
@@ -759,7 +764,7 @@ exports.SendGeneratedPasswordDao = async (
     // Create a buffer to hold the PDF in memory
     const pdfBuffer = [];
     doc.on("data", pdfBuffer.push.bind(pdfBuffer));
-    doc.on("end", () => { });
+    doc.on("end", () => {});
 
     const watermarkPath = path.resolve(__dirname, "../assets/bg.png");
     doc.opacity(0.2).image(watermarkPath, 100, 300, { width: 400 }).opacity(1);
@@ -866,7 +871,6 @@ exports.SendGeneratedPasswordDao = async (
     //     family: 4, // optional if you want to force IPv4
     //   },
     // });
-
 
     const mailOptions = {
       from: process.env.EMAIL_USER,
@@ -2157,7 +2161,6 @@ exports.downloadCollectionReport = (centerId, startDate, endDate, search) => {
   });
 };
 
-
 exports.getCCIDforCreateEmpIdDao = (employee) => {
   return new Promise((resolve, reject) => {
     const sql = `
@@ -2176,11 +2179,11 @@ exports.getCCIDforCreateEmpIdDao = (employee) => {
       }
 
       if (results.length === 0) {
-        if (employee === 'Collection Center Head') {
+        if (employee === "Collection Center Head") {
           return resolve("CCH00001");
-        }else if (employee === 'Collection Center Manager') {
+        } else if (employee === "Collection Center Manager") {
           return resolve("CCM00001");
-        }else if (employee === 'Collection Officer') {
+        } else if (employee === "Collection Officer") {
           return resolve("COO00001");
         }
       }
@@ -2194,7 +2197,7 @@ exports.getCCIDforCreateEmpIdDao = (employee) => {
 
       // Increment and format back to 5 digits
       const nextNumber = number + 1;
-      const nextId = `${prefix}${nextNumber.toString().padStart(5, '0')}`; // "CCM00008"
+      const nextId = `${prefix}${nextNumber.toString().padStart(5, "0")}`; // "CCM00008"
 
       resolve(nextId);
     });
