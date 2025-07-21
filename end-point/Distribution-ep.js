@@ -56,10 +56,17 @@ exports.getAllDistributionCentre = async (req, res) => {
         req.query
       );
 
-
     const offset = (page - 1) * limit;
 
-    console.log({ page, limit, district, province, company, searchItem, centerType })
+    console.log({
+      page,
+      limit,
+      district,
+      province,
+      company,
+      searchItem,
+      centerType,
+    });
 
     const { total, items } = await DistributionDao.getAllDistributionCentre(
       limit,
@@ -589,12 +596,7 @@ exports.updateDistributionCentreDetails = async (req, res) => {
     }
 
     // Validate required fields for distribution center
-    const requiredFields = [
-      "centerName",
-      "city",
-      "province",
-      "country",
-    ];
+    const requiredFields = ["centerName", "city", "province", "country"];
     const missingFields = requiredFields.filter((field) => !updateData[field]);
 
     if (missingFields.length > 0) {
@@ -673,16 +675,35 @@ exports.generateRegCode = (req, res) => {
   const { province, district, city } = req.body;
 
   // Call DAO to generate the regCode
-  DistributionDao.generateRegCode(
-    province,
-    district,
-    city,
-    (err, regCode) => {
-      if (err) {
-        return res.status(500).json({ error: "Error generating regCode" });
-      }
-
-      res.json({ regCode });
+  DistributionDao.generateRegCode(province, district, city, (err, regCode) => {
+    if (err) {
+      return res.status(500).json({ error: "Error generating regCode" });
     }
-  );
+
+    res.json({ regCode });
+  });
+};
+
+// Add this new endpoint to check name existence
+exports.checkDistributionCenterNameExists = async (req, res) => {
+  try {
+    const { name } = req.query;
+    if (!name) {
+      return res.status(400).json({
+        success: false,
+        error: "Name parameter is required",
+      });
+    }
+
+    const centers = await DistributionDao.GetDistributionCenterByName(name);
+    return res.status(200).json({
+      exists: centers && centers.length > 0,
+    });
+  } catch (err) {
+    console.error("Error checking name existence:", err);
+    return res.status(500).json({
+      success: false,
+      error: "An error occurred while checking name existence",
+    });
+  }
 };

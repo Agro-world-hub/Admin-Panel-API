@@ -105,5 +105,9 @@ router.delete(
 );
 
 router.post("/generate-regcode", distributionEp.generateRegCode);
+router.get(
+  "/check-name-exists",
+  distributionEp.checkDistributionCenterNameExists
+);
 
 module.exports = router;
