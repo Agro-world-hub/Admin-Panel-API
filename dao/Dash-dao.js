@@ -896,7 +896,7 @@ const GetAllSalesAgentComplainDAO = (
     let countSql = `
       SELECT COUNT(*) AS total
       FROM dashcomplain dc
-      LEFT JOIN plant_care.users u ON dc.saId = u.id
+      LEFT JOIN salesagent u ON dc.saId = u.id
       LEFT JOIN agro_world_admin.complaincategory cc ON dc.complainCategory = cc.id
       LEFT JOIN agro_world_admin.adminroles ar ON cc.roleId = ar.id
       WHERE 1 = 1
@@ -907,7 +907,7 @@ const GetAllSalesAgentComplainDAO = (
       SELECT 
         dc.id, 
         dc.refNo,
-        u.NICnumber AS NIC,
+        u.nic AS NIC,
         u.firstName AS firstName,
         u.lastName AS lastName,
         cc.categoryEnglish AS complainCategory,
@@ -919,7 +919,7 @@ const GetAllSalesAgentComplainDAO = (
         dc.language,
         dc.saId AS agentId
       FROM dashcomplain dc
-      LEFT JOIN plant_care.users u ON dc.saId = u.id
+      LEFT JOIN salesagent u ON dc.saId = u.id
       LEFT JOIN agro_world_admin.complaincategory cc ON dc.complainCategory = cc.id
       LEFT JOIN agro_world_admin.adminroles ar ON cc.roleId = ar.id
       WHERE 1 = 1
@@ -984,6 +984,7 @@ const GetAllSalesAgentComplainDAO = (
     // Execute count query to get total records
     marketPlace.query(countSql, Counterparams, (countErr, countResults) => {
       if (countErr) {
+        console.log(countErr);
         return reject(countErr);
       }
 
@@ -992,8 +993,11 @@ const GetAllSalesAgentComplainDAO = (
       // Execute main query to get paginated results
       marketPlace.query(sql, Sqlparams, (dataErr, results) => {
         if (dataErr) {
+          console.log(dataErr);
           return reject(dataErr);
         }
+        console.log(results);
+        
 
         resolve({ results, total });
       });
