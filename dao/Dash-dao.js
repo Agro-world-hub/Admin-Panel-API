@@ -287,7 +287,7 @@ const checkPhoneExist = (phoneNumber) => {
 };
 
 
-const createSalesAgent = (officerData, profileImageUrl) => {
+const createSalesAgent = (officerData, profileImageUrl, newSalseAgentId) => {
   return new Promise(async (resolve, reject) => {
     try {
       // Prepare data for QR code generation
@@ -328,7 +328,7 @@ const createSalesAgent = (officerData, profileImageUrl) => {
         [
           officerData.firstName,
           officerData.lastName,
-          officerData.empId,
+          newSalseAgentId,
           officerData.empType,
           officerData.phoneCode1,
           officerData.phoneNumber1,
@@ -935,7 +935,7 @@ const GetAllSalesAgentComplainDAO = (
 
     if (replyStatus) {
       console.log(replyStatus);
-      
+
       if (replyStatus === 'No') {
         countSql += " AND dc.reply IS NULL ";
         sql += " AND dc.reply IS NULL ";
@@ -1157,6 +1157,40 @@ const getUserOrdersDao = async (userId, status) => {
   });
 };
 
+const genarateNewSalesAgentIdDao = async () => {
+  return new Promise((resolve, reject) => {
+    const sql = `
+      SELECT empId 
+      FROM salesagent
+      ORDER BY 
+        CAST(SUBSTRING(empId FROM 4) AS UNSIGNED) DESC
+      LIMIT 1
+    `;
+    marketPlace.query(sql, (err, results) => {
+      if (err) {
+        return reject(err);
+      }
+
+      if (results.length === 0) {
+        return resolve("SA00001");
+      }
+
+      const highestId = results[0].empId;
+
+      // Extract the numeric part
+      const prefix = highestId.substring(0, 3);
+      const numberStr = highestId.substring(3);
+      const number = parseInt(numberStr, 10);
+
+      // Increment and format back to 5 digits
+      const nextNumber = number + 1;
+      const nextId = `${prefix}${nextNumber.toString().padStart(5, "0")}`; // "CCM00008"
+
+      resolve(nextId);
+    });
+  });
+};
+
 
 
 module.exports = {
@@ -1180,5 +1214,6 @@ module.exports = {
   checkPhoneExistSaEdit,
   checkNICExistSaEdit,
   checkEmailExistSaEdit,
-  getUserOrdersDao
+  getUserOrdersDao,
+  genarateNewSalesAgentIdDao
 };
