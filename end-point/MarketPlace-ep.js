@@ -717,6 +717,81 @@ exports.getMarketplacePackageById = async (req, res) => {
   }
 };
 
+// exports.getMarketplacePackageWithDetailsById = async (req, res) => {
+//   try {
+//     const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
+//     console.log("Request URL:", fullUrl);
+
+//     const { id } = await MarketPriceValidate.IdparamsSchema.validateAsync(
+//       req.params
+//     );
+
+//     const packageData =
+//       await MarketPlaceDao.getMarketplacePackageByIdWithDetailsDAO(id);
+
+//     // Calculate total price and product type totals
+//     const baseTotal =
+//       packageData.productPrice +
+//       packageData.packingFee +
+//       packageData.serviceFee;
+
+//     // Calculate total value of all items in package
+//     const productsTotal = packageData.packageDetails.reduce((sum, item) => {
+//       return sum + item.productType.price * item.qty;
+//     }, 0);
+
+//     // Format the response with enhanced details
+//     const formattedResponse = {
+//       ...packageData,
+//       pricingSummary: {
+//         basePrice: packageData.productPrice,
+//         packingFee: packageData.packingFee,
+//         serviceFee: packageData.serviceFee,
+//         productsTotal: productsTotal,
+//         grandTotal: baseTotal + productsTotal,
+//       },
+//       packageDetails: packageData.packageDetails.map((detail) => ({
+//         ...detail,
+//         totalPrice: detail.productType.price * detail.qty,
+//       })),
+//     };
+
+//     const response = {
+//       success: true,
+//       message: "Marketplace package retrieved successfully",
+//       data: formattedResponse,
+//     };
+
+//     res.status(200).json(response);
+//     console.log("Successfully fetched marketplace package with details");
+//   } catch (error) {
+//     console.error("Error fetching marketplace package:", error.message);
+
+//     // Handle "Package not found" error specifically
+//     if (error.message === "Package not found") {
+//       return res.status(404).json({
+//         success: false,
+//         error: error.message,
+//       });
+//     }
+
+//     // Handle validation errors
+//     if (error.isJoi) {
+//       return res.status(400).json({
+//         success: false,
+//         error: error.details[0].message,
+//       });
+//     }
+
+//     // Generic error handler
+//     res.status(500).json({
+//       success: false,
+//       error:
+//         "An internal server error occurred while fetching marketplace package",
+//     });
+//   }
+// };
+
 exports.getMarketplacePackageWithDetailsById = async (req, res) => {
   try {
     const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
@@ -726,33 +801,47 @@ exports.getMarketplacePackageWithDetailsById = async (req, res) => {
       req.params
     );
 
+    // Fetch base package and details
     const packageData =
       await MarketPlaceDao.getMarketplacePackageByIdWithDetailsDAO(id);
 
-    // Calculate total price and product type totals
+    // Fetch define package items
+    const definePackageData =
+      await MarketPlaceDao.getDefinePackageItemsByPackageIdDAO(id);
+
+    // Calculate base total from original package
     const baseTotal =
       packageData.productPrice +
       packageData.packingFee +
       packageData.serviceFee;
 
-    // Calculate total value of all items in package
+    // Calculate total value of product types
     const productsTotal = packageData.packageDetails.reduce((sum, item) => {
-      return sum + item.productType.price * item.qty;
+      return sum + (item.productType?.price || 0) * item.qty;
     }, 0);
 
-    // Format the response with enhanced details
+    // Grand total includes define package total
+    const grandTotal = baseTotal + productsTotal + definePackageData.totalPrice;
+
+    // Format the response with both packageDetails and definePackageItems
     const formattedResponse = {
       ...packageData,
+      definePackage: {
+        createdAt: definePackageData.createdAt,
+        items: definePackageData.items,
+        totalPrice: definePackageData.totalPrice,
+      },
       pricingSummary: {
         basePrice: packageData.productPrice,
         packingFee: packageData.packingFee,
         serviceFee: packageData.serviceFee,
-        productsTotal: productsTotal,
-        grandTotal: baseTotal + productsTotal,
+        productsTotal,
+        definePackageTotal: definePackageData.totalPrice,
+        grandTotal,
       },
       packageDetails: packageData.packageDetails.map((detail) => ({
         ...detail,
-        totalPrice: detail.productType.price * detail.qty,
+        totalPrice: (detail.productType?.price || 0) * detail.qty,
       })),
     };
 
@@ -767,7 +856,6 @@ exports.getMarketplacePackageWithDetailsById = async (req, res) => {
   } catch (error) {
     console.error("Error fetching marketplace package:", error.message);
 
-    // Handle "Package not found" error specifically
     if (error.message === "Package not found") {
       return res.status(404).json({
         success: false,
@@ -775,7 +863,6 @@ exports.getMarketplacePackageWithDetailsById = async (req, res) => {
       });
     }
 
-    // Handle validation errors
     if (error.isJoi) {
       return res.status(400).json({
         success: false,
@@ -783,7 +870,6 @@ exports.getMarketplacePackageWithDetailsById = async (req, res) => {
       });
     }
 
-    // Generic error handler
     res.status(500).json({
       success: false,
       error:
@@ -1668,6 +1754,11 @@ exports.getOrderDetailsById = async (req, res) => {
   }
 };
 
+
+
+
+
+
 exports.getAllMarketplaceItems = async (req, res) => {
   try {
     console.log("hello world");
@@ -2120,3 +2211,7 @@ exports.getAllWholesaleOrders = async (req, res) => {
     res.status(500).send("An error occurred while fetching data.");
   }
 };
+
+
+
+
