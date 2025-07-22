@@ -2858,7 +2858,7 @@ exports.getAllfeedackList = () => {
 exports.getUserFeedbackCount = () => {
   return new Promise((resolve, reject) => {
     const sql = `
-SELECT COUNT (*) AS Total FROM userfeedback`;
+SELECT COUNT(DISTINCT deletedUserId) AS Total FROM userfeedback`;
 
     console.log("Executing full SQL query:", sql);
 

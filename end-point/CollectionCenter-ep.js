@@ -343,11 +343,11 @@ exports.getAllCollectionCenterPage = async (req, res) => {
       searchItem
     );
 
-    console.log(items);
+    console.log('center items',items);
 
-    console.log(page);
-    console.log(limit);
-    console.log(searchItem);
+    console.log('center pages',page);
+    console.log('ceter limit',limit);
+    console.log('center serch item',searchItem);
     res.json({
       items,
       total,
