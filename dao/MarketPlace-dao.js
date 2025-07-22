@@ -2571,3 +2571,47 @@ exports.insertNewPackageDetailsItemsDao = async (id, data) => {
     });
   });
 };
+
+exports.getDefinePackageItemsByPackageIdDAO = async (packageId) => {
+  return new Promise((resolve, reject) => {
+    const sql = `
+      SELECT 
+        dpi.*, 
+        pt.shortCode,
+        dp.price AS productTypePrice,
+        mi.displayName as dN,
+        DATE_FORMAT(dp.createdAt, '%Y-%m-%d %H:%i:%s') AS packageCreatedAt
+      FROM definepackageitems dpi
+      INNER JOIN definepackage dp ON dpi.definePackageId = dp.id
+      LEFT JOIN producttypes pt ON dpi.productType = pt.id
+      LEFT JOIN marketplaceitems mi ON dpi.productId = mi.id
+      WHERE dp.id = (
+        SELECT id FROM definepackage 
+        WHERE packageId = ?
+        ORDER BY createdAt DESC
+        LIMIT 1
+      )
+    `;
+
+    marketPlace.query(sql, [packageId], (err, results) => {
+      if (err) {
+        reject(err);
+      } else if (results.length === 0) {
+        resolve({ createdAt: null, items: [], totalPrice: 0 });
+      } else {
+        const { packageCreatedAt } = results[0];
+        const items = results.map(({ packageCreatedAt, ...item }) => item);
+
+        const totalPrice = items.reduce((sum, item) => {
+          const price = parseFloat(item.price) || 0;
+          const qty = parseInt(item.qty) || 1;
+          return sum + price * qty;
+        }, 0);
+
+        resolve({ createdAt: packageCreatedAt, items, totalPrice });
+      }
+    });
+  });
+};
+
+
