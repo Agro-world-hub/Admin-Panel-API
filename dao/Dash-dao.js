@@ -287,7 +287,7 @@ const checkPhoneExist = (phoneNumber) => {
 };
 
 
-const createSalesAgent = (officerData, profileImageUrl) => {
+const createSalesAgent = (officerData, profileImageUrl, newSalseAgentId) => {
   return new Promise(async (resolve, reject) => {
     try {
       // Prepare data for QR code generation
@@ -328,7 +328,7 @@ const createSalesAgent = (officerData, profileImageUrl) => {
         [
           officerData.firstName,
           officerData.lastName,
-          officerData.empId,
+          newSalseAgentId,
           officerData.empType,
           officerData.phoneCode1,
           officerData.phoneNumber1,
@@ -896,7 +896,7 @@ const GetAllSalesAgentComplainDAO = (
     let countSql = `
       SELECT COUNT(*) AS total
       FROM dashcomplain dc
-      LEFT JOIN plant_care.users u ON dc.saId = u.id
+      LEFT JOIN salesagent u ON dc.saId = u.id
       LEFT JOIN agro_world_admin.complaincategory cc ON dc.complainCategory = cc.id
       LEFT JOIN agro_world_admin.adminroles ar ON cc.roleId = ar.id
       WHERE 1 = 1
@@ -907,7 +907,7 @@ const GetAllSalesAgentComplainDAO = (
       SELECT 
         dc.id, 
         dc.refNo,
-        u.NICnumber AS NIC,
+        u.nic AS NIC,
         u.firstName AS firstName,
         u.lastName AS lastName,
         cc.categoryEnglish AS complainCategory,
@@ -919,7 +919,7 @@ const GetAllSalesAgentComplainDAO = (
         dc.language,
         dc.saId AS agentId
       FROM dashcomplain dc
-      LEFT JOIN plant_care.users u ON dc.saId = u.id
+      LEFT JOIN salesagent u ON dc.saId = u.id
       LEFT JOIN agro_world_admin.complaincategory cc ON dc.complainCategory = cc.id
       LEFT JOIN agro_world_admin.adminroles ar ON cc.roleId = ar.id
       WHERE 1 = 1
@@ -935,7 +935,7 @@ const GetAllSalesAgentComplainDAO = (
 
     if (replyStatus) {
       console.log(replyStatus);
-      
+
       if (replyStatus === 'No') {
         countSql += " AND dc.reply IS NULL ";
         sql += " AND dc.reply IS NULL ";
@@ -984,6 +984,7 @@ const GetAllSalesAgentComplainDAO = (
     // Execute count query to get total records
     marketPlace.query(countSql, Counterparams, (countErr, countResults) => {
       if (countErr) {
+        console.log(countErr);
         return reject(countErr);
       }
 
@@ -992,8 +993,11 @@ const GetAllSalesAgentComplainDAO = (
       // Execute main query to get paginated results
       marketPlace.query(sql, Sqlparams, (dataErr, results) => {
         if (dataErr) {
+          console.log(dataErr);
           return reject(dataErr);
         }
+        console.log(results);
+        
 
         resolve({ results, total });
       });
@@ -1157,6 +1161,40 @@ const getUserOrdersDao = async (userId, status) => {
   });
 };
 
+const genarateNewSalesAgentIdDao = async () => {
+  return new Promise((resolve, reject) => {
+    const sql = `
+      SELECT empId 
+      FROM salesagent
+      ORDER BY 
+        CAST(SUBSTRING(empId FROM 4) AS UNSIGNED) DESC
+      LIMIT 1
+    `;
+    marketPlace.query(sql, (err, results) => {
+      if (err) {
+        return reject(err);
+      }
+
+      if (results.length === 0) {
+        return resolve("SA00001");
+      }
+
+      const highestId = results[0].empId;
+
+      // Extract the numeric part
+      const prefix = highestId.substring(0, 3);
+      const numberStr = highestId.substring(3);
+      const number = parseInt(numberStr, 10);
+
+      // Increment and format back to 5 digits
+      const nextNumber = number + 1;
+      const nextId = `${prefix}${nextNumber.toString().padStart(5, "0")}`; // "CCM00008"
+
+      resolve(nextId);
+    });
+  });
+};
+
 
 
 module.exports = {
@@ -1180,5 +1218,6 @@ module.exports = {
   checkPhoneExistSaEdit,
   checkNICExistSaEdit,
   checkEmailExistSaEdit,
-  getUserOrdersDao
+  getUserOrdersDao,
+  genarateNewSalesAgentIdDao
 };

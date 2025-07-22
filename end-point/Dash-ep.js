@@ -145,41 +145,44 @@ exports.createSalesAgent = async (req, res) => {
     const isExistingPhone1 = await DashDao.checkPhoneExist(
       officerData.phoneNumber1
     );
-
-    const isExistingPhone2 = await DashDao.checkPhoneExist(
-      officerData.phoneNumber2
-    );
-
-    const isExistingNIC = await DashDao.checkNICExist(
-      officerData.nic
-    );
-    const isExistingEmail = await DashDao.checkEmailExist(
-      officerData.email
-    );
-
-    if (isExistingNIC) {
-      return res.status(500).json({
-        error: "NIC already exists",
-      });
-    }
-
-    if (isExistingEmail) {
-      return res.status(500).json({
-        error: "Email already exists",
-      });
-    }
-
     if (isExistingPhone1) {
-      return res.status(500).json({
+      return res.status(400).json({
         error: "Phone number 01 already exists",
       });
     }
 
+
+    const isExistingPhone2 = await DashDao.checkPhoneExist(
+      officerData.phoneNumber2
+    );
     if (isExistingPhone2) {
-      return res.status(500).json({
+      return res.status(400).json({
         error: "Phone number 02 already exists",
       });
     }
+
+
+    const isExistingNIC = await DashDao.checkNICExist(
+      officerData.nic
+    );
+    if (isExistingNIC) {
+      return res.status(400).json({
+        error: "NIC already exists",
+      });
+    }
+
+
+    const isExistingEmail = await DashDao.checkEmailExist(
+      officerData.email
+    );
+    if (isExistingEmail) {
+      return res.status(400).json({
+        error: "Email already exists",
+      });
+    }
+    
+
+  
 
     let profileImageUrl = null; // Default to null if no image is provided
 
@@ -212,30 +215,33 @@ exports.createSalesAgent = async (req, res) => {
     }
 
 
-    //   if (req.body.file) {
-    //   const fileBuffer = req.body.file.buffer;
-    //   const fileName = req.body.file.originalname;
+      if (req.body.file) {
+      const fileBuffer = req.body.file.buffer;
+      const fileName = req.body.file.originalname;
 
-    //   profileImageUrl = await uploadFileToS3(
-    //     fileBuffer,
-    //     fileName,
-    //     "users/profile-images"
-    //   );
-    // }
-
+      profileImageUrl = await uploadFileToS3(
+        fileBuffer,
+        fileName,
+        "users/profile-images"
+      );
+    }
+    const newSalseAgentId = await DashDao.genarateNewSalesAgentIdDao()
+    console.log("newSalseAgentId:",newSalseAgentId);
+    
     // Save officer data (without image if no image is uploaded)
     console.log('got to dao', profileImageUrl);
     const resultsPersonal =
       await DashDao.createSalesAgent(
         officerData,
-        profileImageUrl
+        profileImageUrl,
+        newSalseAgentId
       );
 
     console.log("Center Head created successfully");
     return res.status(201).json({
       message: "Center Head created successfully",
       id: resultsPersonal.insertId,
-      status: true,
+      status: false,
     });
   } catch (error) {
     if (error.isJoi) {
