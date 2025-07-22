@@ -1004,12 +1004,14 @@ exports.deletePackageDetails = async (packageId) => {
   });
 };
 
+
+
 exports.getMarketplaceUsers = async (buyerType) => {
   return new Promise((resolve, reject) => {
     const sql = `
       SELECT id, firstName, email, created_at, buyerType
       FROM marketplaceusers 
-      WHERE isMarketPlaceUser = 1 AND LOWER(buyerType) = LOWER(?)
+      WHERE isSubscribe = 1 AND LOWER(buyerType) = LOWER(?)
     `;
 
     marketPlace.query(sql, [buyerType], (err, results) => {
@@ -1021,7 +1023,6 @@ exports.getMarketplaceUsers = async (buyerType) => {
     });
   });
 };
-
 
 exports.deleteMarketplaceUser = async (userId) => {
   return new Promise((resolve, reject) => {
