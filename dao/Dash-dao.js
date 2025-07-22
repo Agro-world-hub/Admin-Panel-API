@@ -917,7 +917,7 @@ const GetAllSalesAgentComplainDAO = (
         dc.reply,
         dc.complain,
         dc.language,
-        dc.saId AS agentId
+        u.empId AS agentId
       FROM dashcomplain dc
       LEFT JOIN salesagent u ON dc.saId = u.id
       LEFT JOIN agro_world_admin.complaincategory cc ON dc.complainCategory = cc.id
@@ -997,7 +997,7 @@ const GetAllSalesAgentComplainDAO = (
           return reject(dataErr);
         }
         console.log(results);
-        
+
 
         resolve({ results, total });
       });
@@ -1036,7 +1036,7 @@ const sendComplainReply = (complainId, reply) => {
 
     const sql = `
       UPDATE dashcomplain 
-      SET reply = ?, status = ?, adminStatus = ? 
+      SET reply = ?, status = ?, adminStatus = ?, replyTime = NOW()
       WHERE id = ?
     `;
 
