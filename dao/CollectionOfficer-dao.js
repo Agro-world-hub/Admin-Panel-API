@@ -156,7 +156,11 @@ exports.checkEmailExist = (email) => {
 //   });
 // };
 
-exports.createCollectionOfficerPersonal = (officerData, profileImageUrl) => {
+exports.createCollectionOfficerPersonal = (
+  officerData,
+  profileImageUrl,
+  lastId
+) => {
   return new Promise(async (resolve, reject) => {
     try {
       // Prepare data for QR code generation
@@ -206,7 +210,7 @@ exports.createCollectionOfficerPersonal = (officerData, profileImageUrl) => {
           officerData.lastNameSinhala,
           officerData.lastNameTamil,
           officerData.jobRole,
-          officerData.empId,
+          lastId, //this is latest empId
           officerData.empType,
           officerData.phoneCode01,
           officerData.phoneNumber01,
@@ -380,7 +384,7 @@ exports.getAllCollectionOfficers = (
             FROM collectionofficer coff
             JOIN company cm ON coff.companyId = cm.id
             LEFT JOIN collectioncenter cc ON coff.centerId = cc.id
-            WHERE coff.jobRole NOT IN ('Collection Center Head', 'Driver') AND cm.id = 1
+            WHERE coff.jobRole IN ('Collection Center Manager', 'Collection Officer') AND cm.id = 1
         `;
 
     let dataSql = `
@@ -401,7 +405,7 @@ exports.getAllCollectionOfficers = (
             FROM collectionofficer coff
             JOIN company cm ON coff.companyId = cm.id
             LEFT JOIN collectioncenter cc ON coff.centerId = cc.id
-            WHERE coff.jobRole NOT IN ('Collection Center Head', 'Driver') AND cm.id = 1
+            WHERE coff.jobRole IN ('Collection Center Manager', 'Collection Officer') AND cm.id = 1
         `;
 
     const countParams = [];
@@ -548,7 +552,9 @@ exports.getAllCollectionOfficersStatus = (
                 Coff.lastNameEnglish,
                 Ccom.companyNameEnglish,
                 Coff.empId,
+                Coff.phoneCode01,
                 Coff.phoneNumber01,
+                Coff.phoneCode02,
                 Coff.phoneNumber02,
                 Coff.nic,
                 Coff.district,
@@ -696,7 +702,7 @@ exports.getCollectionOfficerProvinceReports = (province) => {
       WHERE cc.province = ? AND c.companyId = 1
       GROUP BY cg.cropNameEnglish, cc.province
     `;
-    
+
     collectionofficer.query(sql, [province], (err, results) => {
       if (err) {
         return reject(err);
@@ -706,12 +712,12 @@ exports.getCollectionOfficerProvinceReports = (province) => {
   });
 };
 
-
 exports.getAllCompanyNamesDao = (district) => {
   return new Promise((resolve, reject) => {
     const sql = `
             SELECT id, companyNameEnglish
             FROM company
+            WHERE isCollection = 1;
         `;
     collectionofficer.query(sql, [district], (err, results) => {
       if (err) {
@@ -865,7 +871,6 @@ exports.SendGeneratedPasswordDao = async (
     //     family: 4, // optional if you want to force IPv4
     //   },
     // });
-    
 
     const mailOptions = {
       from: process.env.EMAIL_USER,
@@ -1548,8 +1553,9 @@ exports.updateCenterHeadDetails = (
 exports.getAllCenterNamesDao = (district) => {
   return new Promise((resolve, reject) => {
     const sql = `
-            SELECT id, regCode, centerName
-            FROM collectioncenter
+            SELECT CC.id, CC.regCode, CC.centerName
+            FROM collectioncenter CC, companycenter COMC, company COM
+            WHERE CC.id = COMC.centerId AND COMC.companyId = COM.id AND COM.isCollection = 1;
         `;
     collectionofficer.query(sql, [district], (err, results) => {
       if (err) {
@@ -2151,6 +2157,49 @@ exports.downloadCollectionReport = (centerId, startDate, endDate, search) => {
         return reject(err);
       }
       resolve(results);
+    });
+  });
+};
+
+exports.getCCIDforCreateEmpIdDao = (employee) => {
+  return new Promise((resolve, reject) => {
+    const sql = `
+      SELECT empId 
+      FROM collectionofficer
+      WHERE jobRole = ?
+      ORDER BY 
+        CAST(SUBSTRING(empId FROM 4) AS UNSIGNED) DESC
+      LIMIT 1
+    `;
+    const values = [employee];
+
+    collectionofficer.query(sql, values, (err, results) => {
+      if (err) {
+        return reject(err);
+      }
+
+      if (results.length === 0) {
+        if (employee === "Collection Center Head") {
+          return resolve("CCH00001");
+        } else if (employee === "Collection Center Manager") {
+          return resolve("CCM00001");
+        } else if (employee === "Collection Officer") {
+          return resolve("COO00001");
+        }
+      }
+
+      const highestId = results[0].empId;
+
+      // Extract the numeric part
+      const prefix = highestId.substring(0, 3); // Get "CCM"
+      const numberStr = highestId.substring(3); // Get "00007"
+      const number = parseInt(numberStr, 10); // Convert to number 7
+
+      // Increment and format back to 5 digits
+      const nextNumber = number + 1;
+      const nextId = `${prefix}${nextNumber.toString().padStart(5, "0")}`; // "CCM00008"
+
+      resolve(nextId);
     });
   });
 };

@@ -1735,7 +1735,7 @@ exports.createDefinePackageWithItems = async (req, res) => {
     const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
     console.log("Request URL:", fullUrl);
     console.log("Request body:", req.body);
-    const userId = req.user.userId
+    const userId = req.user.userId;
 
     // Validate request body structure
     if (
@@ -1996,7 +1996,6 @@ exports.getInvoiceDetails = async (req, res) => {
 
   try {
     const { processOrderId } = req.params;
-    const userId = req.user.id;
 
     // Validate input
     if (!processOrderId) {
@@ -2010,6 +2009,8 @@ exports.getInvoiceDetails = async (req, res) => {
     const invoiceDetails = await MarketPlaceDao.getInvoiceDetailsDAO(
       processOrderId
     );
+
+    console.log("this is the invoce data", invoiceDetails);
 
     if (!invoiceDetails) {
       return res.status(404).json({
@@ -2028,9 +2029,19 @@ exports.getInvoiceDetails = async (req, res) => {
 
     // Get pickup center details if delivery method is pickup
     let pickupCenterDetails = null;
+    let deliveryChargeDetails = null;
+
     if (invoiceDetails.deliveryMethod === "PICKUP" && invoiceDetails.centerId) {
       pickupCenterDetails = await MarketPlaceDao.getPickupCenterDetailsDAO(
         invoiceDetails.centerId
+      );
+    } else if (
+      invoiceDetails.deliveryMethod !== "PICKUP" &&
+      invoiceDetails.city
+    ) {
+      // Get delivery charge if delivery method is not PICKUP and city is available
+      deliveryChargeDetails = await MarketPlaceDao.getDeliveryChargeByCityDAO(
+        invoiceDetails.city
       );
     }
 
@@ -2055,6 +2066,7 @@ exports.getInvoiceDetails = async (req, res) => {
       },
       billing: billingDetails,
       pickupCenter: pickupCenterDetails,
+      deliveryCharge: deliveryChargeDetails, // Add delivery charge details to response
     };
 
     console.log("Successfully fetched invoice details");

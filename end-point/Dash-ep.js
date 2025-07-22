@@ -487,8 +487,6 @@ exports.getAllOrders = async (req, res) => {
 
 
   try {
-    console.log('bla bla bla')
-
     const { page, limit, orderStatus, paymentMethod, paymentStatus, deliveryType, searchText, date } = req.query;
 
 
@@ -506,7 +504,7 @@ exports.getAllOrders = async (req, res) => {
     );
 
     // console.log({ page, limit });
-    // console.log(result);
+    console.log('result', result);
 
     return res.status(200).json(result);
   } catch (error) {
@@ -524,7 +522,6 @@ exports.getAllOrders = async (req, res) => {
 
 exports.getDashUserOrders = async (req, res) => {
   try {
-    console.log("Fetching user orders...");
 
     const userId = req.params.userId;
     const statusFilter = req.query.status || "Ordered";
@@ -533,10 +530,9 @@ exports.getDashUserOrders = async (req, res) => {
       parseInt(userId),
       statusFilter
     );
-    console.log(userOrders);
 
     if (!userOrders || userOrders.length === 0) {
-      return res.status(404).json({
+      return res.json({
         success: false,
         message: `No ${statusFilter.toLowerCase()} orders found for this user`,
         statusFilter: statusFilter,

@@ -255,7 +255,7 @@ exports.EditComplaintCategory = async (req, res) => {
 exports.getAllSalesAgentComplains = async (req, res) => {
   try {
     console.log(req.query);
-    const { page, limit, status, category, comCategory, searchText } =
+    const { page, limit, status, category, comCategory, searchText, replyStatus } =
       req.query;
 
     const { results, total } = await DashDAO.GetAllSalesAgentComplainDAO(
@@ -264,7 +264,8 @@ exports.getAllSalesAgentComplains = async (req, res) => {
       status,
       category,
       comCategory,
-      searchText
+      searchText,
+      replyStatus
     );
 
     console.log("Successfully retrieved all collection center");
@@ -418,7 +419,7 @@ exports.updateMarketplaceComplaintReply = async (req, res) => {
 
     // Validate reply
     if (!reply || typeof reply !== 'string' || reply.trim() === '') {
-      return res.status(400).json({ message: "Reply is required and must be a non-empty string" });
+      return res.status(400).json({ message: "Reply is required " });
     }
 
     // Update the complaint reply using the DAO function

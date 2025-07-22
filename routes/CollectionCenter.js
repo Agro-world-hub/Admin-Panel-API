@@ -151,26 +151,26 @@ router.get(
 );
 
 router.get(
-  '/get-crop-category',
+  "/get-crop-category",
   authMiddleware,
   CollectionCenterEp.getAllCropCatogory
-)
+);
 
 router.post(
   "/create-daily-target",
   authMiddleware,
   CollectionCenterEp.addDailyTarget
-)
+);
 
 router.get(
   "/get-company-head",
   authMiddleware,
   CollectionCenterEp.getCompanyHead
-)
+);
 
 router.delete(
-  "/delete-company-head/:id", 
-  authMiddleware, 
+  "/delete-company-head/:id",
+  authMiddleware,
   CollectionCenterEp.deleteCompanyHead
 );
 
@@ -179,7 +179,6 @@ router.get(
   authMiddleware,
   CollectionCenterEp.GetComplainCategoriesByRole
 );
-
 
 router.get(
   "/get-all-complain-category-list-super/:appId",
@@ -199,5 +198,10 @@ router.get(
   CollectionCenterEp.getAllCollectionCenterPageAW
 );
 
+router.get(
+  "/check-company-name",
+  authMiddleware,
+  CollectionCenterEp.checkCompanyDisplayNameDao
+);
 
 module.exports = router;
