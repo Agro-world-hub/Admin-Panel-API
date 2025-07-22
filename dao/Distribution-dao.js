@@ -162,8 +162,6 @@ exports.getAllDistributionCentre = (
   });
 };
 
-
-
 exports.getAllCompanyDAO = (searchTerm, centerId) => {
   return new Promise((resolve, reject) => {
     let sql = `
@@ -225,7 +223,6 @@ exports.getAllCompanyDAO = (searchTerm, centerId) => {
     });
   });
 };
-
 
 exports.deleteCompanyById = async (id) => {
   return new Promise((resolve, reject) => {
@@ -793,5 +790,21 @@ exports.generateRegCode = (province, district, city, callback) => {
 
     // Return the new regCode
     callback(null, newRegCode);
+  });
+};
+
+exports.GetDistributionCenterByName = (name) => {
+  return new Promise((resolve, reject) => {
+    const sql = `
+            SELECT centerName FROM distributedcenter
+            WHERE centerName = ?
+        `;
+    collectionofficer.query(sql, [name], (err, results) => {
+      if (err) {
+        return reject(err);
+      }
+      // Return all matching records (since multiple centers might have same name)
+      resolve(results);
+    });
   });
 };

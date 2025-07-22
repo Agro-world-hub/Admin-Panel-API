@@ -255,7 +255,7 @@ exports.EditComplaintCategory = async (req, res) => {
 exports.getAllSalesAgentComplains = async (req, res) => {
   try {
     console.log(req.query);
-    const { page, limit, status, category, comCategory, searchText } =
+    const { page, limit, status, category, comCategory, searchText, replyStatus } =
       req.query;
 
     const { results, total } = await DashDAO.GetAllSalesAgentComplainDAO(
@@ -264,7 +264,8 @@ exports.getAllSalesAgentComplains = async (req, res) => {
       status,
       category,
       comCategory,
-      searchText
+      searchText,
+      replyStatus
     );
 
     console.log("Successfully retrieved all collection center");
