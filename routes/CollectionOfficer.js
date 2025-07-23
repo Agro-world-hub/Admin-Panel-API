@@ -170,7 +170,8 @@ router.get(
 
 
 
-
+router.get('/collection-officer/centers',  authMiddleware,
+  CollectionOfficerEp.getAllCenterNames);
 
 
 
