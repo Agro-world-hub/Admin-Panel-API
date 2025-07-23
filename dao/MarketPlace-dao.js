@@ -180,7 +180,7 @@ exports.getMarketplaceItems = (
                     JOIN plant_care.cropvariety cv ON m.varietyId = cv.id
                     JOIN plant_care.cropgroup cg ON cv.cropGroupId = cg.id`;
 
-    let dataSql = `SELECT m.id, m.displayName, m.discountedPrice, m.discount, m.startValue, m.promo,
+    let dataSql = `SELECT m.id, m.displayName, m.discountedPrice, m.discount, m.startValue, m.maxQuantity, m.promo,
                     m.unitType, m.changeby, m.normalPrice, m.category, m.displayType,
                     cg.cropNameEnglish, cv.varietyNameEnglish
                     FROM marketplaceitems m
