@@ -238,7 +238,7 @@ exports.GetAllComplainDAO = (
         u.NICnumber AS NIC,
         u.firstName AS farmerName,
         u.lastName AS lastName,
-        u.language AS language,
+        fc.language AS language,
         cc.categoryEnglish AS complainCategory,
         ar.role,
         fc.createdAt,
