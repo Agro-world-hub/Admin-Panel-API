@@ -1080,6 +1080,20 @@ exports.getNextBannerIndexWholesale = () => {
   });
 };
 
+exports.getBannerCount = async (type) => {
+  return new Promise((resolve, reject) => {
+    const sql = "SELECT COUNT(*) as count FROM banners WHERE type = ?";
+    
+    marketPlace.query(sql, [type], (err, results) => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(results[0].count);
+      }
+    });
+  });
+};
+
 exports.createBanner = async (data) => {
   return new Promise((resolve, reject) => {
     const sql =
