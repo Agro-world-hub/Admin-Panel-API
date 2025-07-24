@@ -2225,4 +2225,38 @@ exports.getAllWholesaleOrders = async (req, res) => {
 
 
 
+exports.marketDashbordDetails = async (req, res) => {
+  const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
+  console.log(fullUrl);
+  try {
+    
+    //fistRow
+    const todaySalses = await MarketPlaceDao.toDaySalesDao();
+    const yesterdaySalses = await MarketPlaceDao.yesterdaySalesDao();
+    const thisMonthSales = await MarketPlaceDao.thisMonthSalesDao();
+    const newUserCount = await MarketPlaceDao.toDayUserCountDao();
+    
+    
 
+    console.log(newUserCount);
+
+    
+    res.json({
+      message:'Data found!',
+      firstRow:{
+        todaySalses,
+        yesterdaySalses,
+        thisMonthSales,
+        newUserCount,
+
+      }
+    });
+  } catch (err) {
+    if (err.isJoi) {
+      // Validation error
+      return res.status(400).json({ error: err.details[0].message });
+    }
+    console.error("Error executing query:", err);
+    res.status(500).send("An error occurred while fetching data.");
+  }
+};
