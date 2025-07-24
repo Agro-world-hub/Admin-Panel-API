@@ -2208,6 +2208,92 @@ exports.getAllWholesaleOrders = async (req, res) => {
   }
 };
 
+exports.getMarketplacePackageBeforeDate = async (req, res) => {
+  try {
+    const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
+    console.log("Request URL:", fullUrl);
+
+    // Validate package ID
+    const { id } = await MarketPriceValidate.IdparamsSchema.validateAsync(req.params);
+
+    // Validate date query parameter
+    const { date } = req.query;
+    if (!date) {
+      return res.status(400).json({
+        success: false,
+        error: "Missing required query parameter: date",
+      });
+    }
+
+    // Fetch base package and details
+    const packageData = await MarketPlaceDao.getMarketplacePackageByIdWithDetailsDAO(id);
+
+    // Fetch package items on or before the provided date
+    const definePackageData = await MarketPlaceDao.getDefinePackageItemsBeforeDateDAO(id, date);
+
+    // Calculate base total from original package
+    const baseTotal =
+      packageData.productPrice +
+      packageData.packingFee +
+      packageData.serviceFee;
+
+    // Calculate total value of product types
+    const productsTotal = packageData.packageDetails.reduce((sum, item) => {
+      return sum + (item.productType?.price || 0) * item.qty;
+    }, 0);
+
+    // Calculate grand total including define package total
+    const grandTotal = baseTotal + productsTotal + definePackageData.totalPrice;
+
+    // Format the response
+    const formattedResponse = {
+      ...packageData,
+      definePackage: {
+        createdAt: definePackageData.createdAt,
+        items: definePackageData.items,
+        totalPrice: definePackageData.totalPrice,
+      },
+      pricingSummary: {
+        basePrice: packageData.productPrice,
+        packingFee: packageData.packingFee,
+        serviceFee: packageData.serviceFee,
+        productsTotal,
+        definePackageTotal: definePackageData.totalPrice,
+        grandTotal,
+      },
+      packageDetails: packageData.packageDetails.map((detail) => ({
+        ...detail,
+        totalPrice: (detail.productType?.price || 0) * detail.qty,
+      })),
+    };
+
+    res.status(200).json({
+      success: true,
+      message: `Marketplace package as of or before ${date} retrieved successfully`,
+      data: formattedResponse,
+    });
+
+    console.log(`Successfully fetched package with define package on or before ${date}`);
+  } catch (error) {
+    console.error("Error fetching package on or before date:", error.message);
+
+    if (error.message === "Package not found") {
+      return res.status(404).json({ success: false, error: error.message });
+    }
+
+    if (error.isJoi) {
+      return res.status(400).json({
+        success: false,
+        error: error.details[0].message,
+      });
+    }
+
+    res.status(500).json({
+      success: false,
+      error: "An internal server error occurred",
+    });
+  }
+};
 
 
 
