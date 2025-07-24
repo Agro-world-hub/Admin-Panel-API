@@ -2598,4 +2598,103 @@ exports.getDefinePackageItemsByPackageIdDAO = async (packageId) => {
   });
 };
 
+exports.toDaySalesDao = async () => {
+  return new Promise((resolve, reject) => {
+    const sql = `
+      SELECT COUNT(*) AS salesCount, SUM(O.fullTotal) AS total
+      FROM processorders PO
+      LEFT JOIN orders O ON PO.orderId = O.id
+      WHERE DATE(PO.createdAt) = CURDATE()
+    `;
 
+
+    marketPlace.query(sql, (err, results) => {
+      if (err) {
+        reject(err);
+      } else {
+        let obj = {
+          count:results[0].salesCount,
+          total:0.00
+        }
+        if(results[0].total !== null){
+          obj.total = results[0].total
+        }
+        resolve(obj);
+      }
+    });
+  });
+};
+
+exports.yesterdaySalesDao = async () => {
+  return new Promise((resolve, reject) => {
+    const sql = `
+      SELECT COUNT(*) AS salesCount, SUM(O.fullTotal) AS total
+      FROM processorders PO
+      LEFT JOIN orders O ON PO.orderId = O.id
+      WHERE DATE(PO.createdAt) = DATE_SUB(CURDATE(), INTERVAL 1 DAY)
+    `;
+
+    marketPlace.query(sql, (err, results) => {
+      if (err) {
+        reject(err);
+      } else {
+        let obj = {
+          count: results[0].salesCount,
+          total: 0.00
+        }
+        if(results[0].total !== null){
+          obj.total = results[0].total
+        }
+        resolve(obj);
+      }
+    });
+  });
+};
+
+exports.thisMonthSalesDao = async () => {
+  return new Promise((resolve, reject) => {
+    const sql = `
+      SELECT 
+        COUNT(*) AS salesCount, 
+        SUM(O.fullTotal) AS total
+      FROM processorders PO
+      LEFT JOIN orders O ON PO.orderId = O.id
+      WHERE YEAR(PO.createdAt) = YEAR(CURDATE()) AND MONTH(PO.createdAt) = MONTH(CURDATE())
+    `;
+
+    marketPlace.query(sql, (err, results) => {
+      if (err) {
+        reject(err);
+      } else {
+        let obj = {
+          count: results[0].salesCount,
+          total: 0.00,
+        };
+        if (results[0].total !== null) {
+          obj.total = results[0].total;
+        }
+        resolve(obj);
+      }
+    });
+  });
+};
+
+
+exports.toDayUserCountDao = async () => {
+  return new Promise((resolve, reject) => {
+    const sql = `
+      SELECT COUNT(*) AS userCount
+      FROM marketplaceusers
+      WHERE isMarketPlaceUser = 1 AND DATE(created_at) = CURDATE()
+    `;
+
+    marketPlace.query(sql, (err, results) => {
+      if (err) {
+        reject(err);
+      } else {
+        
+        resolve(results[0]);
+      }
+    });
+  });
+};

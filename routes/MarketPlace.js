@@ -296,6 +296,12 @@ router.get(
   marketPlaceEp.getAllWholesaleOrders
 );
 
+router.get(
+  "/market-dashbord-details",
+  authMiddleware,
+  marketPlaceEp.marketDashbordDetails
+);
+
 
 
 
