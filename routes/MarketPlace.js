@@ -296,6 +296,12 @@ router.get(
   marketPlaceEp.getAllWholesaleOrders
 );
 
+router.get(
+  "/market-dashbord-details",
+  authMiddleware,
+  marketPlaceEp.marketDashbordDetails
+);
+
 
 router.get(
   "/get-marketplace-package-before-date/:id",

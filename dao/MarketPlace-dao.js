@@ -180,7 +180,7 @@ exports.getMarketplaceItems = (
                     JOIN plant_care.cropvariety cv ON m.varietyId = cv.id
                     JOIN plant_care.cropgroup cg ON cv.cropGroupId = cg.id`;
 
-    let dataSql = `SELECT m.id, m.displayName, m.discountedPrice, m.discount, m.startValue, m.promo,
+    let dataSql = `SELECT m.id, m.displayName, m.discountedPrice, m.discount, m.startValue, m.maxQuantity, m.promo,
                     m.unitType, m.changeby, m.normalPrice, m.category, m.displayType,
                     cg.cropNameEnglish, cv.varietyNameEnglish
                     FROM marketplaceitems m
@@ -1076,6 +1076,20 @@ exports.getNextBannerIndexWholesale = () => {
       }
 
       resolve(results[0].nextOrderNumber); // Return the next order number
+    });
+  });
+};
+
+exports.getBannerCount = async (type) => {
+  return new Promise((resolve, reject) => {
+    const sql = "SELECT COUNT(*) as count FROM banners WHERE type = ?";
+    
+    marketPlace.query(sql, [type], (err, results) => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(results[0].count);
+      }
     });
   });
 };
@@ -2598,8 +2612,106 @@ exports.getDefinePackageItemsByPackageIdDAO = async (packageId) => {
   });
 };
 
+exports.toDaySalesDao = async () => {
+  return new Promise((resolve, reject) => {
+    const sql = `
+      SELECT COUNT(*) AS salesCount, SUM(O.fullTotal) AS total
+      FROM processorders PO
+      LEFT JOIN orders O ON PO.orderId = O.id
+      WHERE DATE(PO.createdAt) = CURDATE()
+    `;
 
-// DAO function to fetch package items for a packageId on or before the provided date
+
+    marketPlace.query(sql, (err, results) => {
+      if (err) {
+        reject(err);
+      } else {
+        let obj = {
+          count:results[0].salesCount,
+          total:0.00
+        }
+        if(results[0].total !== null){
+          obj.total = results[0].total
+        }
+        resolve(obj);
+      }
+    });
+  });
+};
+
+exports.yesterdaySalesDao = async () => {
+  return new Promise((resolve, reject) => {
+    const sql = `
+      SELECT COUNT(*) AS salesCount, SUM(O.fullTotal) AS total
+      FROM processorders PO
+      LEFT JOIN orders O ON PO.orderId = O.id
+      WHERE DATE(PO.createdAt) = DATE_SUB(CURDATE(), INTERVAL 1 DAY)
+    `;
+
+    marketPlace.query(sql, (err, results) => {
+      if (err) {
+        reject(err);
+      } else {
+        let obj = {
+          count: results[0].salesCount,
+          total: 0.00
+        }
+        if(results[0].total !== null){
+          obj.total = results[0].total
+        }
+        resolve(obj);
+      }
+    });
+  });
+};
+
+exports.thisMonthSalesDao = async () => {
+  return new Promise((resolve, reject) => {
+    const sql = `
+      SELECT 
+        COUNT(*) AS salesCount, 
+        SUM(O.fullTotal) AS total
+      FROM processorders PO
+      LEFT JOIN orders O ON PO.orderId = O.id
+      WHERE YEAR(PO.createdAt) = YEAR(CURDATE()) AND MONTH(PO.createdAt) = MONTH(CURDATE())
+    `;
+
+    marketPlace.query(sql, (err, results) => {
+      if (err) {
+        reject(err);
+      } else {
+        let obj = {
+          count: results[0].salesCount,
+          total: 0.00,
+        };
+        if (results[0].total !== null) {
+          obj.total = results[0].total;
+        }
+        resolve(obj);
+      }
+    });
+  });
+};
+
+
+exports.toDayUserCountDao = async () => {
+  return new Promise((resolve, reject) => {
+    const sql = `
+      SELECT COUNT(*) AS userCount
+      FROM marketplaceusers
+      WHERE isMarketPlaceUser = 1 AND DATE(created_at) = CURDATE()
+    `;
+
+    marketPlace.query(sql, (err, results) => {
+      if (err) {
+        reject(err);
+      } else {
+        
+        resolve(results[0]);
+      }
+    });
+  });
+};// DAO function to fetch package items for a packageId on or before the provided date
 exports.getDefinePackageItemsBeforeDateDAO = async (packageId, providedDate) => {
   return new Promise((resolve, reject) => {
     // Ensure the provided date includes the full day by appending 23:59:59 if no time is specified

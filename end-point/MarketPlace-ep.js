@@ -1041,8 +1041,15 @@ exports.getNextBannerIndexWholesale = async (req, res) => {
 exports.uploadBanner = async (req, res) => {
   try {
     const validatedBody = req.body;
-
     const { index, name } = validatedBody;
+
+    const currentCount = await MarketPlaceDao.getBannerCount("Retail");
+    
+    if (currentCount >= 5) {
+      return res.status(400).json({
+        error: "You have added the maximum number of banner options. If you want to add another, please delete one first."
+      });
+    }
 
     let image;
 
@@ -1065,15 +1072,15 @@ exports.uploadBanner = async (req, res) => {
 
     const result = await MarketPlaceDao.createBanner(bannerData);
 
-    console.log("PlantCare user created successfully");
+    console.log("Banner created successfully");
     return res.status(201).json({
       message: result.message,
     });
   } catch (error) {
-    console.error("Error creating PlantCare user:", error);
+    console.error("Error creating banner:", error);
     return res
       .status(500)
-      .json({ error: "An error occurred while creating PlantCare user" });
+      .json({ error: "An error occurred while creating banner" });
   }
 };
 
@@ -1082,6 +1089,14 @@ exports.uploadBannerWholesale = async (req, res) => {
     const validatedBody = req.body;
 
     const { index, name } = validatedBody;
+
+   const currentCount = await MarketPlaceDao.getBannerCount("Wholesale");
+    
+    if (currentCount >= 5) {
+      return res.status(400).json({
+        error: "You have added the maximum number of banner options. If you want to add another, please delete one first."
+      });
+    }
 
     let image;
 
@@ -2296,4 +2311,38 @@ exports.getMarketplacePackageBeforeDate = async (req, res) => {
 };
 
 
+exports.marketDashbordDetails = async (req, res) => {
+  const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
+  console.log(fullUrl);
+  try {
+    
+    //fistRow
+    const todaySalses = await MarketPlaceDao.toDaySalesDao();
+    const yesterdaySalses = await MarketPlaceDao.yesterdaySalesDao();
+    const thisMonthSales = await MarketPlaceDao.thisMonthSalesDao();
+    const newUserCount = await MarketPlaceDao.toDayUserCountDao();
+    
+    
 
+    console.log(newUserCount);
+
+    
+    res.json({
+      message:'Data found!',
+      firstRow:{
+        todaySalses,
+        yesterdaySalses,
+        thisMonthSales,
+        newUserCount,
+
+      }
+    });
+  } catch (err) {
+    if (err.isJoi) {
+      // Validation error
+      return res.status(400).json({ error: err.details[0].message });
+    }
+    console.error("Error executing query:", err);
+    res.status(500).send("An error occurred while fetching data.");
+  }
+};
