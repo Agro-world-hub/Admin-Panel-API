@@ -979,9 +979,8 @@ exports.updatePlantCareUserById = (userData, id) => {
           return reject(beginErr);
         }
 
-        // Check if phone number or NIC is already used by another user
         connection.query(
-          `SELECT id FROM users WHERE (phoneNumber = ? OR NICnumber = ?) AND id != ?`,
+          `SELECT phoneNumber, NICnumber FROM users WHERE (phoneNumber = ? OR NICnumber = ?) AND id != ?`,
           [phoneNumber, NICnumber, id],
           (checkErr, checkResults) => {
             if (checkErr) {
@@ -992,13 +991,25 @@ exports.updatePlantCareUserById = (userData, id) => {
             }
 
             if (checkResults.length > 0) {
+              const duplicateFields = [];
+              
+              // Check which fields are duplicated
+              const duplicatePhone = checkResults.some(row => row.phoneNumber === phoneNumber);
+              const duplicateNIC = checkResults.some(row => row.NICnumber === NICnumber);
+              
+              if (duplicatePhone) duplicateFields.push("Mobile Number");
+              if (duplicateNIC) duplicateFields.push("NIC");
+              
+              let errorMessage;
+              if (duplicateFields.length === 1) {
+                errorMessage = `${duplicateFields[0]} is already exists`;
+              } else {
+                errorMessage = `${duplicateFields.join(" & ")} are already exists`;
+              }
+
               return connection.rollback(() => {
                 connection.release();
-                reject(
-                  new Error(
-                    "Phone number or NIC number already exists for another user"
-                  )
-                );
+                reject(new Error(errorMessage));
               });
             }
 
@@ -1231,9 +1242,9 @@ exports.createPlantCareUser = (userData) => {
           return reject(beginErr);
         }
 
-        // Check if user exists
+        // Check if user exists with specific field checking
         connection.query(
-          `SELECT id FROM users WHERE phoneNumber = ? OR NICnumber = ?`,
+          `SELECT phoneNumber, NICnumber FROM users WHERE phoneNumber = ? OR NICnumber = ?`,
           [phoneNumber, NICnumber],
           (checkErr, checkResults) => {
             if (checkErr) {
@@ -1244,9 +1255,25 @@ exports.createPlantCareUser = (userData) => {
             }
 
             if (checkResults.length > 0) {
+              const duplicateFields = [];
+              
+              // Check which fields are duplicated
+              const duplicatePhone = checkResults.some(row => row.phoneNumber === phoneNumber);
+              const duplicateNIC = checkResults.some(row => row.NICnumber === NICnumber);
+              
+              if (duplicatePhone) duplicateFields.push("Mobile Number");
+              if (duplicateNIC) duplicateFields.push("NIC");
+              
+              let errorMessage;
+              if (duplicateFields.length === 1) {
+                errorMessage = `${duplicateFields[0]} is already exists`;
+              } else {
+                errorMessage = `${duplicateFields.join(" & ")} are already exists`;
+              }
+
               return connection.rollback(() => {
                 connection.release();
-                reject(new Error("Phone number or NIC number already exists"));
+                reject(new Error(errorMessage));
               });
             }
 
