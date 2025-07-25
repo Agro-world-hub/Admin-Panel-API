@@ -472,7 +472,6 @@ exports.UpdateStatusAndSendPassword = async (req, res) => {
       }
 
       const newTarget = await DashDao.createSalesTarget(id);
-      console.log();
       
     }
 
