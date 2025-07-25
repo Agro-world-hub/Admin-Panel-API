@@ -51,7 +51,16 @@ exports.getAllDistributionCentre = async (req, res) => {
   const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
   console.log(fullUrl);
   try {
-    const { page, limit, district, province, company, searchItem, centerType } =
+    const {
+      page,
+      limit,
+      district,
+      province,
+      company,
+      searchItem,
+      centerType,
+      city, // Add city parameter
+    } =
       await DistributionValidation.getAllDistributionCentreSchema.validateAsync(
         req.query
       );
@@ -66,6 +75,7 @@ exports.getAllDistributionCentre = async (req, res) => {
       company,
       searchItem,
       centerType,
+      city, // Log city parameter
     });
 
     const { total, items } = await DistributionDao.getAllDistributionCentre(
@@ -75,14 +85,15 @@ exports.getAllDistributionCentre = async (req, res) => {
       province,
       company,
       searchItem,
-      centerType
+      centerType,
+      city // Pass city parameter to DAO
     );
 
     console.log(items);
-
     console.log(page);
     console.log(limit);
     console.log(searchItem);
+
     res.json({
       items,
       total,
