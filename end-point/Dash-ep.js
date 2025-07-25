@@ -470,6 +470,10 @@ exports.UpdateStatusAndSendPassword = async (req, res) => {
           error: emailResult.error,
         });
       }
+
+      const newTarget = await DashDao.createSalesTarget(id);
+      console.log();
+      
     }
 
     // Return success response with empId and email
