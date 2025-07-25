@@ -100,16 +100,21 @@ exports.getAllCropGroups = async (req, res) => {
   try {
     const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
     console.log(fullUrl);
-    const { page, limit, searchText } =
+
+    // Validate request query parameters including category
+    const { page, limit, searchText, category } =
       await cropCalendarValidations.getAllCropGroupsSchema.validateAsync(
         req.query
       );
+
     const offset = (page - 1) * limit;
 
+    // Pass category to the DAO function
     const { total, items } = await cropCalendarDao.getAllCropGroups(
       limit,
       offset,
-      searchText
+      searchText,
+      category
     );
 
     console.log("Successfully fetched crop groups");
@@ -400,7 +405,7 @@ exports.uploadXLSX = async (req, res) => {
     // console.log("First row of data:", data[0]);
 
     // Insert data into the database via DAO
-    console.log("started to get data from xl",data);
+    console.log("started to get data from xl", data);
     const rowsAffected = await cropCalendarDao.insertXLSXData(id, data);
 
     // Respond with success
