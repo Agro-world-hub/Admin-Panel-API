@@ -2320,13 +2320,18 @@ exports.marketDashbordDetails = async (req, res) => {
     const todaySalses = await MarketPlaceDao.toDaySalesDao();
     const yesterdaySalses = await MarketPlaceDao.yesterdaySalesDao();
     const thisMonthSales = await MarketPlaceDao.thisMonthSalesDao();
-    const newUserCount = await MarketPlaceDao.toDayUserCountDao();
-    
-    
+    const newUserCount = await MarketPlaceDao.toDayUserCountDao(true);
 
-    console.log(newUserCount);
+    //second row
+    const salsesAnalize = await MarketPlaceDao.salesAnalyzeDao();
+    const totalSales = await MarketPlaceDao.totalMarketOrderCountDao();
+    const totUsers = await MarketPlaceDao.toDayUserCountDao(false);
 
-    
+    //thirdRow
+    const areaData = await MarketPlaceDao.areaOrderDataDao();
+    const pieData = await MarketPlaceDao.pieDataDao();
+    const orders = await MarketPlaceDao.lastFiveOrdersDao();
+
     res.json({
       message:'Data found!',
       firstRow:{
@@ -2334,8 +2339,15 @@ exports.marketDashbordDetails = async (req, res) => {
         yesterdaySalses,
         thisMonthSales,
         newUserCount,
-
-      }
+      },
+      secondRow:{
+        salsesAnalize,
+        totalSales,
+        totUsers,
+      },
+      areaData,
+      pieData,
+      orders
     });
   } catch (err) {
     if (err.isJoi) {
