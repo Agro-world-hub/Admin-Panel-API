@@ -1195,6 +1195,35 @@ const genarateNewSalesAgentIdDao = async () => {
   });
 };
 
+const createSalesTarget = (id) => {
+  return new Promise((resolve, reject) => {
+    const sql = `
+      INSERT INTO salesagentstars (salesagentId, date, target, completed, numOfStars)
+      VALUES(
+        ?,
+        CURDATE(),
+        (
+          SELECT targetValue
+          FROM target
+          WHERE DATE(createdAt) <= CURDATE()
+          ORDER BY createdAt DESC
+          LIMIT 1
+        ),
+        0,
+        0
+      )
+    `;
+
+    marketPlace.query(sql, [id], (err, results) => {
+      if (err) {
+        return reject(err);
+      }
+      // For INSERT operations, you might want to check affectedRows instead
+      resolve(results.affectedRows > 0); // Return true if the insert was successful
+    });
+  });
+};
+
 
 
 module.exports = {
@@ -1219,5 +1248,6 @@ module.exports = {
   checkNICExistSaEdit,
   checkEmailExistSaEdit,
   getUserOrdersDao,
-  genarateNewSalesAgentIdDao
+  genarateNewSalesAgentIdDao,
+  createSalesTarget
 };
