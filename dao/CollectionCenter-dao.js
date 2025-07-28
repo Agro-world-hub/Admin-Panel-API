@@ -539,8 +539,8 @@ exports.getAllCenterPage = (limit, offset, district, province, searchItem) => {
 
     if (searchItem) {
       const searchQuery = `%${searchItem}%`;
-      whereClause += " AND (C.regCode LIKE ? OR C.centerName LIKE ?)";
-      searchParams.push(searchQuery, searchQuery);
+      whereClause += " AND (C.regCode LIKE ? OR C.centerName LIKE ? OR C.city LIKE ?)";
+      searchParams.push(searchQuery, searchQuery, searchQuery);
     }
 
     if (district) {
@@ -577,9 +577,9 @@ exports.getAllCenterPage = (limit, offset, district, province, searchItem) => {
             ...center,
             companies: center.companies
               ? center.companies.split("; ").map((company) => {
-                  const [id, name] = company.split(":");
-                  return { id: parseInt(id, 10), companyNameEnglish: name };
-                })
+                const [id, name] = company.split(":");
+                return { id: parseInt(id, 10), companyNameEnglish: name };
+              })
               : [],
           }));
 
@@ -1691,9 +1691,9 @@ exports.getAllCenterPageAW = (
             ...center,
             companies: center.companies
               ? center.companies.split("; ").map((company) => {
-                  const [id, name] = company.split(":");
-                  return { id: parseInt(id, 10), companyNameEnglish: name };
-                })
+                const [id, name] = company.split(":");
+                return { id: parseInt(id, 10), companyNameEnglish: name };
+              })
               : [],
           }));
 
