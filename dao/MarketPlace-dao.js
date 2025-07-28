@@ -2952,3 +2952,52 @@ exports.toDayUserCountDao = async (isToday) => {
     });
   });
 };
+
+exports.getDefinePackageItemsBeforeDateDAO = async (packageId, providedDate) => {
+  return new Promise((resolve, reject) => {
+    // Ensure the provided date includes the full day by appending 23:59:59 if no time is specified
+    const formattedDate = providedDate.includes(" ") ? providedDate : `${providedDate} 23:59:59`;
+
+    const sql = `
+      SELECT 
+        dpi.*, 
+        pt.shortCode,
+        dp.price AS productTypePrice,
+        mi.displayName AS dN,
+        DATE_FORMAT(dp.createdAt, '%Y-%m-%d %H:%i:%s') AS packageCreatedAt
+      FROM definepackageitems dpi
+      INNER JOIN definepackage dp ON dpi.definePackageId = dp.id
+      LEFT JOIN producttypes pt ON dpi.productType = pt.id
+      LEFT JOIN marketplaceitems mi ON dpi.productId = mi.id
+      WHERE dp.id = (
+        SELECT id 
+        FROM definepackage 
+        WHERE packageId = ?
+        AND createdAt <= ?  
+        ORDER BY createdAt DESC
+        LIMIT 1
+      )
+    `;
+
+    marketPlace.query(sql, [packageId, formattedDate], (err, results) => {
+      if (err) {
+        return reject(err);
+      }
+
+      if (results.length === 0) {
+        return resolve({ createdAt: null, items: [], totalPrice: 0 });
+      }
+
+      const { packageCreatedAt } = results[0];
+      const items = results.map(({ packageCreatedAt, ...item }) => item);
+
+      const totalPrice = items.reduce((sum, item) => {
+        const price = parseFloat(item.price) || 0;
+        const qty = parseFloat(item.qty) || 1; // Use parseFloat for qty to handle decimal values
+        return sum + price * qty;
+      }, 0);
+
+      resolve({ createdAt: packageCreatedAt, items, totalPrice });
+    });
+  });
+};
