@@ -303,6 +303,11 @@ router.get(
 );
 
 
+router.get(
+  "/get-marketplace-package-before-date/:id",
+  authMiddleware,
+  marketPlaceEp.getMarketplacePackageBeforeDate
+);
 
 
 

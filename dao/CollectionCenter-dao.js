@@ -980,6 +980,53 @@ exports.generateRegCode = (province, district, city, callback) => {
 //   });
 // };
 
+// exports.getAllCompanyDAO = (search) => {
+//   return new Promise((resolve, reject) => {
+//     let sql = `
+//       SELECT 
+//         c.id,
+//         c.companyNameEnglish AS companyName,
+//         c.email AS companyEmail,
+//         c.status,
+//         SUM(CASE WHEN co.jobRole = 'Collection Center Head' THEN 1 ELSE 0 END) AS numOfHead,
+//         SUM(CASE WHEN co.jobRole = 'Collection Center Manager' THEN 1 ELSE 0 END) AS numOfManagers,
+//         SUM(CASE WHEN co.jobRole = 'Collection Officer' THEN 1 ELSE 0 END) AS numOfOfficers,
+//         SUM(CASE WHEN co.jobRole = 'Customer Officer' THEN 1 ELSE 0 END) AS numOfCustomerOfficers,
+//         (
+//           SELECT 
+//             COUNT(*) 
+//           FROM 
+//             companycenter cc 
+//           WHERE 
+//             c.id = cc.companyId
+//         ) AS numOfCenters
+//       FROM 
+//         company c
+//       LEFT JOIN 
+//         collectionofficer co 
+//       ON 
+//         c.id = co.companyId
+//       WHERE c.isCollection = true
+//     `;
+//     const params = [];
+
+//     if (search) {
+//       sql += " WHERE c.companyNameEnglish LIKE ?";
+//       const searchQuery = `%${search}%`;
+//       params.push(searchQuery);
+//     }
+
+//     sql += " GROUP BY c.id ORDER BY companyName ASC";
+
+//     collectionofficer.query(sql, params, (err, results) => {
+//       if (err) {
+//         return reject(err);
+//       }
+//       resolve(results);
+//     });
+//   });
+// };
+
 exports.getAllCompanyDAO = (search) => {
   return new Promise((resolve, reject) => {
     let sql = `
@@ -1006,14 +1053,15 @@ exports.getAllCompanyDAO = (search) => {
         collectionofficer co 
       ON 
         c.id = co.companyId
-      WHERE c.isCollection = true
+      WHERE 
+        c.isCollection = true
     `;
+
     const params = [];
 
     if (search) {
-      sql += " WHERE c.companyNameEnglish LIKE ?";
-      const searchQuery = `%${search}%`;
-      params.push(searchQuery);
+      sql += " AND c.companyNameEnglish LIKE ?";
+      params.push(`%${search}%`);
     }
 
     sql += " GROUP BY c.id ORDER BY companyName ASC";
@@ -1026,6 +1074,7 @@ exports.getAllCompanyDAO = (search) => {
     });
   });
 };
+
 
 exports.getCompanyDAO = (id) => {
   return new Promise((resolve, reject) => {

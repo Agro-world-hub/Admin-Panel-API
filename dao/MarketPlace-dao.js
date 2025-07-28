@@ -2928,3 +2928,27 @@ exports.lastFiveOrdersDao = async () => {
     });
   });
 };
+
+
+exports.toDayUserCountDao = async (isToday) => {
+  return new Promise((resolve, reject) => {
+    let sql = `
+      SELECT COUNT(*) AS userCount
+      FROM marketplaceusers
+      WHERE isMarketPlaceUser = 1 
+    `;
+
+    if (isToday) {
+      sql += ` AND DATE(created_at) = CURDATE() `
+    }
+
+    marketPlace.query(sql, (err, results) => {
+      if (err) {
+        reject(err);
+      } else {
+
+        resolve(results[0]);
+      }
+    });
+  });
+};
