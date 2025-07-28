@@ -38,36 +38,49 @@ exports.getCollectionOfficerDistrictReports = (district) => {
   });
 };
 
-exports.checkNICExist = (nic) => {
+exports.checkNICExist = async (nic, excludeId = null) => {
   return new Promise((resolve, reject) => {
-    const sql = `
-            SELECT COUNT(*) AS count 
-            FROM collectionofficer 
-            WHERE nic = ?
-        `;
-
-    collectionofficer.query(sql, [nic], (err, results) => {
-      if (err) {
-        return reject(err);
-      }
-      resolve(results[0].count > 0); // Return true if either NIC or email exists
+    let sql = `SELECT COUNT(*) as count FROM collectionofficer WHERE nic = ?`;
+    const params = [nic];
+    if (excludeId) {
+      sql += ` AND id != ?`;
+      params.push(excludeId);
+    }
+    collectionofficer.query(sql, params, (err, results) => {
+      if (err) return reject(err);
+      resolve(results[0].count > 0);
     });
   });
 };
 
-exports.checkEmailExist = (email) => {
-  return new Promise((resolve, reject) => {
-    const sql = `
-            SELECT COUNT(*) AS count 
-            FROM collectionofficer 
-            WHERE email = ?
-        `;
 
-    collectionofficer.query(sql, [email], (err, results) => {
-      if (err) {
-        return reject(err);
-      }
-      resolve(results[0].count > 0); // Return true if either NIC or email exists
+exports.checkEmailExist = async (email, excludeId = null) => {
+  return new Promise((resolve, reject) => {
+    let sql = `SELECT COUNT(*) as count FROM collectionofficer WHERE email = ?`;
+    const params = [email];
+    if (excludeId) {
+      sql += ` AND id != ?`;
+      params.push(excludeId);
+    }
+    collectionofficer.query(sql, params, (err, results) => {
+      if (err) return reject(err);
+      resolve(results[0].count > 0);
+    });
+  });
+};
+
+// Check if phone number exists, excluding the current officer
+exports.checkPhoneNumberExist = async (phoneNumber, excludeId = null) => {
+  return new Promise((resolve, reject) => {
+    let sql = `SELECT COUNT(*) as count FROM collectionofficer WHERE phoneNumber01 = ? OR phoneNumber02 = ?`;
+    const params = [phoneNumber, phoneNumber];
+    if (excludeId) {
+      sql += ` AND id != ?`;
+      params.push(excludeId);
+    }
+    collectionofficer.query(sql, params, (err, results) => {
+      if (err) return reject(err);
+      resolve(results[0].count > 0);
     });
   });
 };
@@ -155,6 +168,7 @@ exports.checkEmailExist = (email) => {
 //     }
 //   });
 // };
+
 
 exports.createCollectionOfficerPersonal = (
   officerData,
