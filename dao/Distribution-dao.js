@@ -72,7 +72,8 @@ exports.getAllDistributionCentre = (
   province,
   company,
   searchItem,
-  centerType
+  centerType,
+  city // Add city parameter
 ) => {
   return new Promise((resolve, reject) => {
     let countSql = `
@@ -113,8 +114,8 @@ exports.getAllDistributionCentre = (
     if (searchItem) {
       const searchQuery = `%${searchItem}%`;
       whereClause +=
-        " AND (dc.centerName LIKE ? OR c.companyNameEnglish LIKE ?)";
-      searchParams.push(searchQuery, searchQuery);
+        " AND (dc.centerName LIKE ? OR c.companyNameEnglish LIKE ? OR dc.city LIKE ?)"; // Added city to search
+      searchParams.push(searchQuery, searchQuery, searchQuery);
     }
 
     if (district) {
@@ -126,6 +127,13 @@ exports.getAllDistributionCentre = (
       whereClause += " AND dc.province = ?";
       searchParams.push(province);
     }
+
+    if (city) {
+      // Add city filter
+      whereClause += " AND dc.city = ?";
+      searchParams.push(city);
+    }
+
     if (company) {
       whereClause += " AND c.companyNameEnglish = ?";
       searchParams.push(company);
