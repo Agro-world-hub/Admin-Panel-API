@@ -988,22 +988,6 @@ exports.getMarketplaceUsers = async (req, res) => {
   }
 };
 
-exports.getMarketplaceUsers = async (req, res) => {
-  const buyerType = req.query.buyerType || "retail"; // default to 'retail'
-  const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
-  console.log("URL:", fullUrl);
-
-  try {
-    const result = await MarketPlaceDao.getMarketplaceUsers(buyerType);
-    console.log("Successfully fetched marketplace users");
-    return res.status(200).json(result);
-  } catch (error) {
-    console.error("Error fetching marketplace users:", error);
-    return res
-      .status(500)
-      .json({ error: "An error occurred while fetching marketplace users" });
-  }
-};
 
 exports.deleteMarketplaceUser = async (req, res) => {
   const userId = req.params.userId;
@@ -1057,8 +1041,15 @@ exports.getNextBannerIndexWholesale = async (req, res) => {
 exports.uploadBanner = async (req, res) => {
   try {
     const validatedBody = req.body;
-
     const { index, name } = validatedBody;
+
+    const currentCount = await MarketPlaceDao.getBannerCount("Retail");
+    
+    if (currentCount >= 5) {
+      return res.status(400).json({
+        error: "You have added the maximum number of banner options. If you want to add another, please delete one first."
+      });
+    }
 
     let image;
 
@@ -1081,15 +1072,15 @@ exports.uploadBanner = async (req, res) => {
 
     const result = await MarketPlaceDao.createBanner(bannerData);
 
-    console.log("PlantCare user created successfully");
+    console.log("Banner created successfully");
     return res.status(201).json({
       message: result.message,
     });
   } catch (error) {
-    console.error("Error creating PlantCare user:", error);
+    console.error("Error creating banner:", error);
     return res
       .status(500)
-      .json({ error: "An error occurred while creating PlantCare user" });
+      .json({ error: "An error occurred while creating banner" });
   }
 };
 
@@ -1098,6 +1089,14 @@ exports.uploadBannerWholesale = async (req, res) => {
     const validatedBody = req.body;
 
     const { index, name } = validatedBody;
+
+   const currentCount = await MarketPlaceDao.getBannerCount("Wholesale");
+    
+    if (currentCount >= 5) {
+      return res.status(400).json({
+        error: "You have added the maximum number of banner options. If you want to add another, please delete one first."
+      });
+    }
 
     let image;
 
@@ -2224,6 +2223,138 @@ exports.getAllWholesaleOrders = async (req, res) => {
   }
 };
 
+exports.getMarketplacePackageBeforeDate = async (req, res) => {
+  try {
+    const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
+    console.log("Request URL:", fullUrl);
+
+    // Validate package ID
+    const { id } = await MarketPriceValidate.IdparamsSchema.validateAsync(req.params);
+
+    // Validate date query parameter
+    const { date } = req.query;
+    if (!date) {
+      return res.status(400).json({
+        success: false,
+        error: "Missing required query parameter: date",
+      });
+    }
+
+    // Fetch base package and details
+    const packageData = await MarketPlaceDao.getMarketplacePackageByIdWithDetailsDAO(id);
+
+    // Fetch package items on or before the provided date
+    const definePackageData = await MarketPlaceDao.getDefinePackageItemsBeforeDateDAO(id, date);
+
+    // Calculate base total from original package
+    const baseTotal =
+      packageData.productPrice +
+      packageData.packingFee +
+      packageData.serviceFee;
+
+    // Calculate total value of product types
+    const productsTotal = packageData.packageDetails.reduce((sum, item) => {
+      return sum + (item.productType?.price || 0) * item.qty;
+    }, 0);
+
+    // Calculate grand total including define package total
+    const grandTotal = baseTotal + productsTotal + definePackageData.totalPrice;
+
+    // Format the response
+    const formattedResponse = {
+      ...packageData,
+      definePackage: {
+        createdAt: definePackageData.createdAt,
+        items: definePackageData.items,
+        totalPrice: definePackageData.totalPrice,
+      },
+      pricingSummary: {
+        basePrice: packageData.productPrice,
+        packingFee: packageData.packingFee,
+        serviceFee: packageData.serviceFee,
+        productsTotal,
+        definePackageTotal: definePackageData.totalPrice,
+        grandTotal,
+      },
+      packageDetails: packageData.packageDetails.map((detail) => ({
+        ...detail,
+        totalPrice: (detail.productType?.price || 0) * detail.qty,
+      })),
+    };
+
+    res.status(200).json({
+      success: true,
+      message: `Marketplace package as of or before ${date} retrieved successfully`,
+      data: formattedResponse,
+    });
+
+    console.log(`Successfully fetched package with define package on or before ${date}`);
+  } catch (error) {
+    console.error("Error fetching package on or before date:", error.message);
+
+    if (error.message === "Package not found") {
+      return res.status(404).json({ success: false, error: error.message });
+    }
+
+    if (error.isJoi) {
+      return res.status(400).json({
+        success: false,
+        error: error.details[0].message,
+      });
+    }
+
+    res.status(500).json({
+      success: false,
+      error: "An internal server error occurred",
+    });
+  }
+};
 
 
+exports.marketDashbordDetails = async (req, res) => {
+  const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
+  console.log(fullUrl);
+  try {
+    
+    //fistRow
+    const todaySalses = await MarketPlaceDao.toDaySalesDao();
+    const yesterdaySalses = await MarketPlaceDao.yesterdaySalesDao();
+    const thisMonthSales = await MarketPlaceDao.thisMonthSalesDao();
+    const newUserCount = await MarketPlaceDao.toDayUserCountDao(true);
 
+    //second row
+    const salsesAnalize = await MarketPlaceDao.salesAnalyzeDao();
+    const totalSales = await MarketPlaceDao.totalMarketOrderCountDao();
+    const totUsers = await MarketPlaceDao.toDayUserCountDao(false);
+
+    //thirdRow
+    const areaData = await MarketPlaceDao.areaOrderDataDao();
+    const pieData = await MarketPlaceDao.pieDataDao();
+    const orders = await MarketPlaceDao.lastFiveOrdersDao();
+
+    res.json({
+      message:'Data found!',
+      firstRow:{
+        todaySalses,
+        yesterdaySalses,
+        thisMonthSales,
+        newUserCount,
+      },
+      secondRow:{
+        salsesAnalize,
+        totalSales,
+        totUsers,
+      },
+      areaData,
+      pieData,
+      orders
+    });
+  } catch (err) {
+    if (err.isJoi) {
+      // Validation error
+      return res.status(400).json({ error: err.details[0].message });
+    }
+    console.error("Error executing query:", err);
+    res.status(500).send("An error occurred while fetching data.");
+  }
+};

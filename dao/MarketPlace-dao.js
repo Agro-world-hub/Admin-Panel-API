@@ -180,7 +180,7 @@ exports.getMarketplaceItems = (
                     JOIN plant_care.cropvariety cv ON m.varietyId = cv.id
                     JOIN plant_care.cropgroup cg ON cv.cropGroupId = cg.id`;
 
-    let dataSql = `SELECT m.id, m.displayName, m.discountedPrice, m.discount, m.startValue, m.promo,
+    let dataSql = `SELECT m.id, m.displayName, m.discountedPrice, m.discount, m.startValue, m.maxQuantity, m.promo,
                     m.unitType, m.changeby, m.normalPrice, m.category, m.displayType,
                     cg.cropNameEnglish, cv.varietyNameEnglish
                     FROM marketplaceitems m
@@ -1004,23 +1004,7 @@ exports.deletePackageDetails = async (packageId) => {
   });
 };
 
-exports.getMarketplaceUsers = async (buyerType) => {
-  return new Promise((resolve, reject) => {
-    const sql = `
-      SELECT id, firstName, email, created_at, buyerType
-      FROM marketplaceusers 
-      WHERE isMarketPlaceUser = 1 AND LOWER(buyerType) = LOWER(?)
-    `;
 
-    marketPlace.query(sql, [buyerType], (err, results) => {
-      if (err) {
-        reject(err);
-      } else {
-        resolve(results);
-      }
-    });
-  });
-};
 
 exports.getMarketplaceUsers = async (buyerType) => {
   return new Promise((resolve, reject) => {
@@ -1092,6 +1076,20 @@ exports.getNextBannerIndexWholesale = () => {
       }
 
       resolve(results[0].nextOrderNumber); // Return the next order number
+    });
+  });
+};
+
+exports.getBannerCount = async (type) => {
+  return new Promise((resolve, reject) => {
+    const sql = "SELECT COUNT(*) as count FROM banners WHERE type = ?";
+    
+    marketPlace.query(sql, [type], (err, results) => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(results[0].count);
+      }
     });
   });
 };
@@ -2614,4 +2612,387 @@ exports.getDefinePackageItemsByPackageIdDAO = async (packageId) => {
   });
 };
 
+exports.toDaySalesDao = async () => {
+  return new Promise((resolve, reject) => {
+    const sql = `
+      SELECT COUNT(*) AS salesCount, SUM(O.fullTotal) AS total
+      FROM processorders PO
+      LEFT JOIN orders O ON PO.orderId = O.id
+      WHERE DATE(PO.createdAt) = CURDATE()
+    `;
 
+
+    marketPlace.query(sql, (err, results) => {
+      if (err) {
+        reject(err);
+      } else {
+        let obj = {
+          count: results[0].salesCount,
+          total: 0.00
+        }
+        if (results[0].total !== null) {
+          obj.total = results[0].total
+        }
+        resolve(obj);
+      }
+    });
+  });
+};
+
+exports.yesterdaySalesDao = async () => {
+  return new Promise((resolve, reject) => {
+    const sql = `
+      SELECT COUNT(*) AS salesCount, SUM(O.fullTotal) AS total
+      FROM processorders PO
+      LEFT JOIN orders O ON PO.orderId = O.id
+      WHERE DATE(PO.createdAt) = DATE_SUB(CURDATE(), INTERVAL 1 DAY)
+    `;
+
+    marketPlace.query(sql, (err, results) => {
+      if (err) {
+        reject(err);
+      } else {
+        let obj = {
+          count: results[0].salesCount,
+          total: 0.00
+        }
+        if (results[0].total !== null) {
+          obj.total = results[0].total
+        }
+        resolve(obj);
+      }
+    });
+  });
+};
+
+exports.thisMonthSalesDao = async () => {
+  return new Promise((resolve, reject) => {
+    const sql = `
+      SELECT 
+        COUNT(*) AS salesCount, 
+        SUM(O.fullTotal) AS total
+      FROM processorders PO
+      LEFT JOIN orders O ON PO.orderId = O.id
+      WHERE YEAR(PO.createdAt) = YEAR(CURDATE()) AND MONTH(PO.createdAt) = MONTH(CURDATE())
+    `;
+
+    marketPlace.query(sql, (err, results) => {
+      if (err) {
+        reject(err);
+      } else {
+        let obj = {
+          count: results[0].salesCount,
+          total: 0.00,
+        };
+        if (results[0].total !== null) {
+          obj.total = results[0].total;
+        }
+        resolve(obj);
+      }
+    });
+  });
+};
+
+
+exports.toDayUserCountDao = async (isToday) => {
+  return new Promise((resolve, reject) => {
+    let sql = `
+      SELECT COUNT(*) AS userCount
+      FROM marketplaceusers
+      WHERE isMarketPlaceUser = 1 
+    `;
+
+    if (isToday) {
+      sql += ` AND DATE(created_at) = CURDATE() `
+    }
+
+    marketPlace.query(sql, (err, results) => {
+      if (err) {
+        reject(err);
+      } else {
+
+        resolve(results[0]);
+      }
+    });
+  });
+};
+
+
+exports.salesAnalyzeDao = async () => {
+  return new Promise((resolve, reject) => {
+    const sql = `
+      SELECT 
+        /* Last 30 days (0-30 days ago) */
+        SUM(CASE WHEN PO.createdAt >= DATE_SUB(CURDATE(), INTERVAL 30 DAY) 
+                 AND PO.createdAt < CURDATE() THEN O.fullTotal ELSE 0 END) AS last_30_days_total,
+                 
+        /* Previous 30-60 days */
+        SUM(CASE WHEN PO.createdAt >= DATE_SUB(CURDATE(), INTERVAL 60 DAY) 
+                 AND PO.createdAt < DATE_SUB(CURDATE(), INTERVAL 30 DAY) THEN O.fullTotal ELSE 0 END) AS previous_30_to_60_days_total,
+                 
+        /* Count of orders for last 30 days */
+        COUNT(CASE WHEN PO.createdAt >= DATE_SUB(CURDATE(), INTERVAL 30 DAY) 
+                   AND PO.createdAt < CURDATE() THEN 1 ELSE NULL END) AS last_30_days_count,
+                   
+        /* Count of orders for previous 30-60 days */
+        COUNT(CASE WHEN PO.createdAt >= DATE_SUB(CURDATE(), INTERVAL 60 DAY) 
+                   AND PO.createdAt < DATE_SUB(CURDATE(), INTERVAL 30 DAY) THEN 1 ELSE NULL END) AS previous_30_to_60_days_count
+      FROM processorders PO
+      LEFT JOIN orders O ON PO.orderId = O.id
+      WHERE PO.createdAt >= DATE_SUB(CURDATE(), INTERVAL 60 DAY)
+    `;
+
+    marketPlace.query(sql, (err, results) => {
+      if (err) {
+        reject(err);
+      } else {
+
+        if (results[0].last_30_days_total === null) results[0].last_30_days_total = 0;
+        if (results[0].previous_30_to_60_days_total === null) results[0].previous_30_to_60_days_total = 0;
+
+        let obj = {
+          amount: results[0].last_30_days_total,
+          precentage: (results[0].last_30_days_count - results[0].previous_30_to_60_days_count) / results[0].previous_30_to_60_days_count * 100
+        }
+        resolve(obj);
+      }
+    });
+  });
+};
+
+
+exports.totalMarketOrderCountDao = async () => {
+  return new Promise((resolve, reject) => {
+    const sql = `
+      SELECT COUNT(*) AS count
+      FROM processorders PO
+      LEFT JOIN orders O ON PO.orderId = O.id
+      WHERE O.orderApp = 'Marketplace'
+    `;
+
+    marketPlace.query(sql, (err, results) => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(results[0]);
+      }
+    });
+  });
+};
+
+
+exports.areaOrderDataDao = async () => {
+  return new Promise((resolve, reject) => {
+    const sql = `
+      SELECT 
+        DATE_FORMAT(PO.createdAt, '%b') AS month,
+        MONTH(PO.createdAt) AS monthNum,
+        COUNT(*) AS salesCount, 
+        SUM(O.fullTotal) AS total
+      FROM processorders PO
+      LEFT JOIN orders O ON PO.orderId = O.id
+      WHERE PO.createdAt >= DATE_SUB(DATE_FORMAT(NOW(), '%Y-%m-01'), INTERVAL 12 MONTH)
+        AND PO.createdAt < DATE_FORMAT(NOW(), '%Y-%m-01')
+      GROUP BY monthNum, month
+      ORDER BY monthNum
+    `;
+
+    marketPlace.query(sql, (err, results) => {
+      if (err) {
+        reject(err);
+      } else {
+        const allMonths = ["Jan", "Feb", "Mar", "Apr", "May", "Jun",
+          "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+
+        // Get current month (1-12)
+        const currentMonth = new Date().getMonth() + 1;
+
+        // Initialize with zeros
+        const monthlyData = {
+          months: [],
+          salesCount: [],
+          total: []
+        };
+
+        // Only include months up to previous month
+        allMonths.forEach((month, index) => {
+          const monthNumber = index + 1;
+          if (monthNumber < currentMonth) {
+            monthlyData.months.push(month);
+
+            // Find data for this month
+            const monthData = results.find(r => r.monthNum === monthNumber);
+            monthlyData.salesCount.push(monthData ? monthData.salesCount : 0);
+            monthlyData.total.push(monthData ? monthData.total : 0);
+          }
+        });
+
+        resolve(monthlyData);
+      }
+    });
+  });
+};
+
+exports.pieDataDao = async () => {
+  return new Promise((resolve, reject) => {
+    const sql = `
+      SELECT category, SUM(count) as count
+      FROM (
+        -- Count from order package items
+        SELECT G.category, COUNT(DISTINCT PO.id) as count
+        FROM processorders PO
+        LEFT JOIN orders O ON PO.orderId = O.id
+        LEFT JOIN orderpackage OP ON OP.orderId = O.id
+        LEFT JOIN orderpackageitems OPI ON OPI.orderPackageId = OP.id
+        LEFT JOIN marketplaceitems MPI1 ON OPI.productId = MPI1.id
+        LEFT JOIN plant_care.cropvariety V1 ON MPI1.varietyId = V1.id
+        LEFT JOIN plant_care.cropgroup G ON V1.cropGroupId = G.id
+        WHERE G.category IS NOT NULL
+        GROUP BY G.category
+
+        UNION ALL
+
+        -- Count from additional items
+        SELECT G.category, COUNT(DISTINCT PO.id) as count
+        FROM processorders PO
+        LEFT JOIN orders O ON PO.orderId = O.id
+        LEFT JOIN orderadditionalitems OAI ON O.id = OAI.orderId
+        LEFT JOIN marketplaceitems MPI2 ON OAI.productId = MPI2.id
+        LEFT JOIN plant_care.cropvariety V2 ON MPI2.varietyId = V2.id
+        LEFT JOIN plant_care.cropgroup G ON V2.cropGroupId = G.id
+        WHERE G.category IS NOT NULL
+        GROUP BY G.category
+      ) combined
+      GROUP BY category;
+    `;
+
+    marketPlace.query(sql, (err, results) => {
+      if (err) {
+        reject(err);
+      } else {
+        // Define the desired category order
+        const categoryOrder = ["Vegetables", "Grain", "Fruit", "Mushrooms"];
+        
+        // Create a map for quick lookup
+        const resultMap = {};
+        results.forEach(item => {
+          resultMap[item.category] = parseInt(item.count);
+        });
+        
+        // Build the ordered arrays
+        const orderedResponse = {
+          category: [],
+          count: []
+        };
+        
+        categoryOrder.forEach(cat => {
+          if (resultMap.hasOwnProperty(cat)) {
+            orderedResponse.category.push(cat);
+            orderedResponse.count.push(resultMap[cat]);
+          }
+        });
+        
+        resolve(orderedResponse);
+      }
+    });
+  });
+};
+
+
+exports.lastFiveOrdersDao = async () => {
+  return new Promise((resolve, reject) => {
+    const sql = `
+      SELECT 
+        PO.id,
+        PO.invNo,
+        PO.createdAt,
+        PO.paymentMethod,
+        PO.status,
+        O.fullTotal,
+        U.firstName,
+        U.lastName
+      FROM processorders PO
+      LEFT JOIN orders O ON PO.orderId = O.id
+      LEFT JOIN marketplaceusers U ON O.userId = U.id
+      WHERE O.orderApp = 'Marketplace'
+      ORDER BY PO.createdAt DESC
+      LIMIT 5
+    `;
+
+    marketPlace.query(sql, (err, results) => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(results);
+      }
+    });
+  });
+};
+
+
+exports.toDayUserCountDao = async () => {
+  return new Promise((resolve, reject) => {
+    const sql = `
+      SELECT COUNT(*) AS userCount
+      FROM marketplaceusers
+      WHERE isMarketPlaceUser = 1 AND DATE(created_at) = CURDATE()
+    `;
+
+    marketPlace.query(sql, (err, results) => {
+      if (err) {
+        reject(err);
+      } else {
+        
+        resolve(results[0]);
+      }
+    });
+  });
+};// DAO function to fetch package items for a packageId on or before the provided date
+exports.getDefinePackageItemsBeforeDateDAO = async (packageId, providedDate) => {
+  return new Promise((resolve, reject) => {
+    // Ensure the provided date includes the full day by appending 23:59:59 if no time is specified
+    const formattedDate = providedDate.includes(" ") ? providedDate : `${providedDate} 23:59:59`;
+
+    const sql = `
+      SELECT 
+        dpi.*, 
+        pt.shortCode,
+        dp.price AS productTypePrice,
+        mi.displayName AS dN,
+        DATE_FORMAT(dp.createdAt, '%Y-%m-%d %H:%i:%s') AS packageCreatedAt
+      FROM definepackageitems dpi
+      INNER JOIN definepackage dp ON dpi.definePackageId = dp.id
+      LEFT JOIN producttypes pt ON dpi.productType = pt.id
+      LEFT JOIN marketplaceitems mi ON dpi.productId = mi.id
+      WHERE dp.id = (
+        SELECT id 
+        FROM definepackage 
+        WHERE packageId = ?
+        AND createdAt <= ?  
+        ORDER BY createdAt DESC
+        LIMIT 1
+      )
+    `;
+
+    marketPlace.query(sql, [packageId, formattedDate], (err, results) => {
+      if (err) {
+        return reject(err);
+      }
+
+      if (results.length === 0) {
+        return resolve({ createdAt: null, items: [], totalPrice: 0 });
+      }
+
+      const { packageCreatedAt } = results[0];
+      const items = results.map(({ packageCreatedAt, ...item }) => item);
+
+      const totalPrice = items.reduce((sum, item) => {
+        const price = parseFloat(item.price) || 0;
+        const qty = parseFloat(item.qty) || 1; // Use parseFloat for qty to handle decimal values
+        return sum + price * qty;
+      }, 0);
+
+      resolve({ createdAt: packageCreatedAt, items, totalPrice });
+    });
+  });
+};

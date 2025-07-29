@@ -65,7 +65,8 @@ exports.getAllCollectionOfficersSchema = Joi.object({
     limit: Joi.number().integer().min(1).max(100).default(10).optional(),
     centerStatus: Joi.string().optional(),
     status: Joi.string().optional(),
-    nic: Joi.string().allow('').optional(),
+    nic: Joi.string().allow('').optional(), // Allow empty NIC
+  centerName: Joi.string().allow('').optional(), // Allow empty centerName
     company: Joi.number().optional(),
     role: Joi.string().optional(),
     centerId: Joi.number().optional(),

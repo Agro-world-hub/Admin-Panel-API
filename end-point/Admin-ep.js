@@ -1379,14 +1379,13 @@ exports.createPlantCareUser = async (req, res) => {
 
     console.log("PlantCare user created successfully");
     return res.status(201).json({
-      message: result.message, // Use the message from DAO
-      id: result.userId, // Use the userId from DAO
-      // Optionally include bank details creation status
+      message: result.message, 
+      id: result.userId, 
+
       bankDetailsCreated: !!accNumber && !!accHolderName && !!bankName,
     });
   } catch (error) {
-    if (error.message === "Phone number or NIC number already exists") {
-      // Handle validation error for duplicate phoneNumber or NICnumber
+    if (error.message && error.message.includes("already exists")) {
       return res.status(400).json({ error: error.message });
     }
 
