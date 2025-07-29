@@ -262,11 +262,14 @@ exports.createDistributionHead = async (req, res) => {
       }
     }
 
+    const newEmpId = await DistributionDao.getDistributedIdforCreateEmpIdDao(officerData.jobRole)
+
     // Save officer data (without image if no image is uploaded)
     const resultsPersonal =
       await DistributionDao.createDistributionHeadPersonal(
         officerData,
-        profileImageUrl
+        profileImageUrl,
+        newEmpId
       );
 
     console.log("Distribution Head created successfully");

@@ -2072,6 +2072,8 @@ exports.getAllWholesaleCustomersDao = (limit, offset, searchText) => {
         A.floorNo,
         A.houseNo AS AparthouseNo,
         A.streetName AS ApartstreetName,
+        MP.companyPhoneCode,
+        MP.companyPhone,
         A.city AS Apartcity,
         (
             SELECT COUNT(*)

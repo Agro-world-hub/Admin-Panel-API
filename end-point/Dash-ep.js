@@ -239,7 +239,7 @@ exports.createSalesAgent = async (req, res) => {
 
     console.log("Center Head created successfully");
     return res.status(201).json({
-      message: "Center Head created successfully",
+      message: "Sales Agent created successfully",
       id: resultsPersonal.insertId,
       status: false,
     });
@@ -250,7 +250,7 @@ exports.createSalesAgent = async (req, res) => {
 
     console.error("Error creating Center Head:", error);
     return res.status(500).json({
-      error: "An error occurred while creating the Center Head",
+      error: "An error occurred while creating the Sales Agent",
     });
   }
 };
