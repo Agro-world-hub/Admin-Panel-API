@@ -1083,7 +1083,7 @@ exports.getNextBannerIndexWholesale = () => {
 exports.getBannerCount = async (type) => {
   return new Promise((resolve, reject) => {
     const sql = "SELECT COUNT(*) as count FROM banners WHERE type = ?";
-    
+
     marketPlace.query(sql, [type], (err, results) => {
       if (err) {
         reject(err);
@@ -2930,24 +2930,29 @@ exports.lastFiveOrdersDao = async () => {
 };
 
 
-exports.toDayUserCountDao = async () => {
+exports.toDayUserCountDao = async (isToday) => {
   return new Promise((resolve, reject) => {
-    const sql = `
+    let sql = `
       SELECT COUNT(*) AS userCount
       FROM marketplaceusers
-      WHERE isMarketPlaceUser = 1 AND DATE(created_at) = CURDATE()
+      WHERE isMarketPlaceUser = 1 
     `;
+
+    if (isToday) {
+      sql += ` AND DATE(created_at) = CURDATE() `
+    }
 
     marketPlace.query(sql, (err, results) => {
       if (err) {
         reject(err);
       } else {
-        
+
         resolve(results[0]);
       }
     });
   });
-};// DAO function to fetch package items for a packageId on or before the provided date
+};
+
 exports.getDefinePackageItemsBeforeDateDAO = async (packageId, providedDate) => {
   return new Promise((resolve, reject) => {
     // Ensure the provided date includes the full day by appending 23:59:59 if no time is specified
