@@ -345,7 +345,7 @@ exports.getCompanyDetails = () => {
   });
 };
 
-exports.createDistributionHeadPersonal = (officerData, profileImageUrl) => {
+exports.createDistributionHeadPersonal = (officerData, profileImageUrl, newEmpId) => {
   return new Promise(async (resolve, reject) => {
     try {
       const imageUrl = profileImageUrl || null;
@@ -368,7 +368,8 @@ exports.createDistributionHeadPersonal = (officerData, profileImageUrl) => {
           officerData.firstNameEnglish,
           officerData.lastNameEnglish,
           officerData.jobRole,
-          officerData.empId,
+          // officerData.empId,
+          newEmpId,
           officerData.empType,
           officerData.phoneCode01,
           officerData.phoneNumber01,
@@ -813,6 +814,49 @@ exports.GetDistributionCenterByName = (name) => {
       }
       // Return all matching records (since multiple centers might have same name)
       resolve(results);
+    });
+  });
+};
+
+exports.getDistributedIdforCreateEmpIdDao = (employee) => {
+  return new Promise((resolve, reject) => {
+    const sql = `
+      SELECT empId 
+      FROM collectionofficer
+      WHERE jobRole = ?
+      ORDER BY 
+        CAST(SUBSTRING(empId FROM 4) AS UNSIGNED) DESC
+      LIMIT 1
+    `;
+    const values = [employee];
+
+    collectionofficer.query(sql, values, (err, results) => {
+      if (err) {
+        return reject(err);
+      }
+
+      if (results.length === 0) {
+        if (employee === "Distribution Center Head") {
+          return resolve("DCH00001");
+        } else if (employee === "Distribution Center Manager") {
+          return resolve("DCM00001");
+        } else if (employee === "Distribution Officer") {
+          return resolve("CIO00001");
+        }
+      }
+
+      const highestId = results[0].empId;
+
+      // Extract the numeric part
+      const prefix = highestId.substring(0, 3); // Get "CCM"
+      const numberStr = highestId.substring(3); // Get "00007"
+      const number = parseInt(numberStr, 10); // Convert to number 7
+
+      // Increment and format back to 5 digits
+      const nextNumber = number + 1;
+      const nextId = `${prefix}${nextNumber.toString().padStart(5, "0")}`; // "CCM00008"
+
+      resolve(nextId);
     });
   });
 };
