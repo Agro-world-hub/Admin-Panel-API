@@ -501,7 +501,6 @@ exports.updateCropVariety = (id, updates) => {
 
 exports.getAllCropCalendars = (limit, offset, searchText, category) => {
   return new Promise((resolve, reject) => {
-    // 🔹 Ensure JOINs are included in COUNT query
     let countSql = `
       SELECT COUNT(*) AS total 
       FROM cropcalender
@@ -524,32 +523,20 @@ exports.getAllCropCalendars = (limit, offset, searchText, category) => {
       LEFT JOIN cropgroup ON cropvariety.cropGroupId = cropgroup.id
     `;
 
-    const countParams = [];
-    const dataParams = [];
+    const conditions = [];
+    const params = [];
 
     if (searchText) {
-      const searchCondition = `
-          WHERE (
-              cropgroup.cropNameEnglish LIKE ?
-              OR cropvariety.varietyNameEnglish LIKE ?
-              OR cropgroup.category LIKE ?
-              OR cropcalender.method LIKE ?
-              OR cropcalender.natOfCul LIKE ?
-              OR cropcalender.cropDuration LIKE ?
-          )
-      `;
-      countSql += searchCondition; // 🔹 Add WHERE condition to COUNT query
-      dataSql += searchCondition;
+      conditions.push(`(
+        cropgroup.cropNameEnglish LIKE ?
+        OR cropvariety.varietyNameEnglish LIKE ?
+        OR cropgroup.category LIKE ?
+        OR cropcalender.method LIKE ?
+        OR cropcalender.natOfCul LIKE ?
+        OR cropcalender.cropDuration LIKE ?
+      )`);
       const searchValue = `%${searchText}%`;
-      countParams.push(
-        searchValue,
-        searchValue,
-        searchValue,
-        searchValue,
-        searchValue,
-        searchValue
-      );
-      dataParams.push(
+      params.push(
         searchValue,
         searchValue,
         searchValue,
@@ -560,26 +547,24 @@ exports.getAllCropCalendars = (limit, offset, searchText, category) => {
     }
 
     if (category) {
-      const searchCondition = `
-          WHERE (
-              cropgroup.category = ?
-          )
-      `;
-      countSql += searchCondition; // 🔹 Add WHERE condition to COUNT query
-      dataSql += searchCondition;
-      const crop = `%${category}%`;
-      countParams.push(crop);
-      dataParams.push(crop);
+      conditions.push(`cropgroup.category = ?`);
+      params.push(category);
     }
 
-    // 🔹 Ensure limit & offset are integers
-    limit = parseInt(limit, 10) || 10; // Default limit to 10 if not provided
-    offset = parseInt(offset, 10) || 0; // Default offset to 0 if not provided
+    if (conditions.length > 0) {
+      const whereClause = " WHERE " + conditions.join(" AND ");
+      countSql += whereClause;
+      dataSql += whereClause;
+    }
+
+    // Ensure limit & offset are integers
+    limit = parseInt(limit, 10) || 10;
+    offset = parseInt(offset, 10) || 0;
 
     dataSql += " ORDER BY cropcalender.createdAt DESC LIMIT ? OFFSET ?";
-    dataParams.push(limit, offset);
+    const dataParams = [...params, limit, offset];
 
-    plantcare.query(countSql, countParams, (countErr, countResults) => {
+    plantcare.query(countSql, params, (countErr, countResults) => {
       if (countErr) {
         reject(countErr);
       } else {
@@ -770,21 +755,25 @@ exports.checkCropVerity = (id, engName) => {
 exports.checkExistanceCropCalander = async (
   id,
   cultivationMethod,
-  natureOfCultivation
+  natureOfCultivation,
+  excludeId // Pass this during update
 ) => {
   return new Promise((resolve, reject) => {
-    const sql =
-      "SELECT * FROM cropcalender WHERE cropVarietyId = ? AND method = ? AND natOfCul = ? ";
-    plantcare.query(
-      sql,
-      [id, cultivationMethod, natureOfCultivation],
-      (err, results) => {
-        if (err) {
-          reject(err);
-        } else {
-          resolve(results);
-        }
+    let sql =
+      "SELECT * FROM cropcalender WHERE cropVarietyId = ? AND method = ? AND natOfCul = ?";
+    const params = [id, cultivationMethod, natureOfCultivation];
+
+    if (excludeId) {
+      sql += " AND id != ?";
+      params.push(excludeId);
+    }
+
+    plantcare.query(sql, params, (err, results) => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(results);
       }
-    );
+    });
   });
 };

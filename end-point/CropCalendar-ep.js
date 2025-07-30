@@ -1,3 +1,5 @@
+// Check for duplicate crop calendar entry
+
 const jwt = require("jsonwebtoken");
 const db = require("../startup/database");
 const bodyParser = require("body-parser");
@@ -95,7 +97,52 @@ exports.createCropGroup = async (req, res) => {
       .json({ error: "An error occurred while creating crop group" });
   }
 };
+exports.checkDuplicateCropCalendar = async (req, res) => {
+  try {
+    const { varietyId, cultivationMethod, natureOfCultivation, excludeId } = req.query;
 
+    if (!cultivationMethod || !natureOfCultivation) {
+      return res.status(400).json({ error: 'Missing required query parameters: cultivationMethod and natureOfCultivation are required.' });
+    }
+
+    // Normalize inputs to avoid case sensitivity or whitespace issues
+    const normalizedVarietyId = varietyId ? varietyId.trim() : null;
+    const normalizedCultivationMethod = cultivationMethod.trim().toLowerCase();
+    const normalizedNatureOfCultivation = natureOfCultivation.trim().toLowerCase();
+    const parsedExcludeId = excludeId ? parseInt(excludeId) : undefined;
+
+    console.log('Checking duplicate with params:', {
+      varietyId: normalizedVarietyId,
+      cultivationMethod: normalizedCultivationMethod,
+      natureOfCultivation: normalizedNatureOfCultivation,
+      excludeId: parsedExcludeId,
+    });
+
+    const checkExist = await cropCalendarDao.checkExistanceCropCalander(
+      normalizedVarietyId,
+      normalizedCultivationMethod,
+      normalizedNatureOfCultivation,
+      parsedExcludeId
+    );
+
+    if (checkExist.length > 0) {
+      return res.json({
+        message: 'This crop calendar already exists!',
+        status: false,
+        exists: true,
+      });
+    } else {
+      return res.json({
+        message: 'No duplicate found.',
+        status: true,
+        exists: false,
+      });
+    }
+  } catch (err) {
+    console.error('Error checking duplicate crop calendar:', err);
+    return res.status(500).json({ error: 'An error occurred while checking duplicate crop calendar.' });
+  }
+};
 exports.getAllCropGroups = async (req, res) => {
   try {
     const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
@@ -300,7 +347,7 @@ exports.createCropCallender = async (req, res) => {
     );
     if (checkExist.length > 0) {
       return res.json({
-        message: "This crop calander allready exist !",
+        message: "This crop calander already exist !",
         status: false,
       });
     }
