@@ -607,6 +607,18 @@ exports.deleteMarketplacePackages = async (req, res) => {
   }
 };
 
+exports.getMarketplacePackagesByDate = async (req, res) => {
+  try {
+    const { date } = req.query; // expect 'YYYY-MM-DD'
+    const data = await MarketPlaceDao.getMarketplacePackagesByDateDAO(date);
+    res.status(200).json({ success: true, data });
+  } catch (error) {
+    console.error("Error in getMarketplacePackagesByDate:", error);
+    res.status(500).json({ success: false, message: "Internal Server Error" });
+  }
+};
+
+
 exports.updateMarketplacePackage = async (req, res) => {
   try {
     const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;

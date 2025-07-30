@@ -692,6 +692,95 @@ exports.getAllMarketplacePackagesDAO = (searchText, date) => {
   });
 };
 
+exports.getMarketplacePackagesByDateDAO = (date) => {
+  return new Promise((resolve, reject) => {
+    const sqlParams = [];
+
+    let sql = `
+      SELECT
+        MP.id,
+        MP.displayName,
+        (MP.productPrice + MP.packingFee + MP.serviceFee) AS total,
+        MP.status,
+        (
+          SELECT DP.createdAt
+          FROM definepackage DP
+          WHERE DP.packageId = MP.id
+          ORDER BY DP.createdAt DESC
+          LIMIT 1
+        ) AS defineDate,
+        (
+          SELECT U.userName
+          FROM agro_world_admin.adminusers U
+          WHERE U.id = (
+            SELECT DP.adminId
+            FROM definepackage DP
+            WHERE DP.packageId = MP.id
+            ORDER BY DP.createdAt DESC
+            LIMIT 1
+          )
+        ) AS adminUser
+      FROM marketplacepackages MP
+      WHERE (
+        SELECT DATE(DP.createdAt)
+        FROM definepackage DP
+        WHERE DP.packageId = MP.id
+        ORDER BY DP.createdAt DESC
+        LIMIT 1
+      ) = ?
+      ORDER BY MP.status ASC, MP.displayName ASC
+    `;
+
+    sqlParams.push(date); // format: 'YYYY-MM-DD'
+
+    marketPlace.query(sql, sqlParams, (err, results) => {
+      if (err) return reject(err);
+
+      const groupedData = {};
+
+      results.forEach((pkg) => {
+        const {
+          status,
+          id,
+          displayName,
+          image,
+          description,
+          total,
+          discount,
+          subtotal,
+          defineDate,
+          adminUser,
+          created_at,
+        } = pkg;
+
+        if (!groupedData[status]) {
+          groupedData[status] = {
+            status,
+            packages: [],
+          };
+        }
+
+        groupedData[status].packages.push({
+          id,
+          displayName,
+          image,
+          description,
+          total,
+          status,
+          discount,
+          subtotal,
+          defineDate,
+          adminUser,
+          createdAt: created_at,
+        });
+      });
+
+      resolve(Object.values(groupedData));
+    });
+  });
+};
+
+
 exports.deleteMarketplacePckages = async (id) => {
   return new Promise((resolve, reject) => {
     const sql = "DELETE FROM marketplacepackages WHERE id = ?";
