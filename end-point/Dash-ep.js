@@ -139,68 +139,42 @@ exports.createSalesAgent = async (req, res) => {
 
   try {
     const officerData = JSON.parse(req.body.officerData);
-
     console.log(officerData);
 
-    const isExistingPhone1 = await DashDao.checkPhoneExist(
-      officerData.phoneNumber1
-    );
+    // Check if phone numbers, NIC, or email already exist
+    const isExistingPhone1 = await DashDao.checkPhoneExist(officerData.phoneNumber1);
     if (isExistingPhone1) {
-      return res.status(400).json({
-        error: "Phone number 01 already exists",
-      });
+      return res.status(400).json({ error: "Phone number 01 already exists" });
     }
 
-
-    const isExistingPhone2 = await DashDao.checkPhoneExist(
-      officerData.phoneNumber2
-    );
+    const isExistingPhone2 = await DashDao.checkPhoneExist(officerData.phoneNumber2);
     if (isExistingPhone2) {
-      return res.status(400).json({
-        error: "Phone number 02 already exists",
-      });
+      return res.status(400).json({ error: "Phone number 02 already exists" });
     }
 
-
-    const isExistingNIC = await DashDao.checkNICExist(
-      officerData.nic
-    );
+    const isExistingNIC = await DashDao.checkNICExist(officerData.nic);
     if (isExistingNIC) {
-      return res.status(400).json({
-        error: "NIC already exists",
-      });
+      return res.status(400).json({ error: "NIC already exists" });
     }
 
-
-    const isExistingEmail = await DashDao.checkEmailExist(
-      officerData.email
-    );
+    const isExistingEmail = await DashDao.checkEmailExist(officerData.email);
     if (isExistingEmail) {
-      return res.status(400).json({
-        error: "Email already exists",
-      });
+      return res.status(400).json({ error: "Email already exists" });
     }
-    
 
-  
+    let profileImageUrl = null;
 
-    let profileImageUrl = null; // Default to null if no image is provided
-
-    // Check if an image file is provided
+    // Handle Base64 Image Upload (if provided)
     if (req.body.file) {
       try {
-        const base64String = req.body.file.split(",")[1]; // Extract the Base64 content
-        const mimeType = req.body.file.match(/data:(.*?);base64,/)[1]; // Extract MIME type
-        const fileBuffer = Buffer.from(base64String, "base64"); // Decode Base64 to buffer
+        const base64String = req.body.file.split(",")[1];
+        const mimeType = req.body.file.match(/data:(.*?);base64,/)[1];
+        const fileBuffer = Buffer.from(base64String, "base64");
+        
+        const fileExtension = mimeType.split("/")[1];
+        const fileName = `${officerData.firstName || 'user'}_${officerData.lastName || 'image'}.${fileExtension}`;
 
-
-
-        const fileExtension = mimeType.split("/")[1]; // Extract file extension from MIME type
-        const fileName = `${officerData.firstName}_${officerData.lastName}.${fileExtension}`;
-
-        // Upload image to S3
-
-        console.log('go to s3');
+        console.log('Uploading to S3...');
         profileImageUrl = await uploadFileToS3(
           fileBuffer,
           fileName,
@@ -208,38 +182,24 @@ exports.createSalesAgent = async (req, res) => {
         );
       } catch (err) {
         console.error("Error processing image file:", err);
-        return res
-          .status(400)
-          .json({ error: "Invalid file format or file upload error" });
+        return res.status(400).json({ error: "Invalid file format or file upload error" });
       }
     }
 
+    // Generate a new Sales Agent ID
+    const newSalseAgentId = await DashDao.genarateNewSalesAgentIdDao();
+    console.log("New Sales Agent ID:", newSalseAgentId);
 
-      if (req.body.file) {
-      const fileBuffer = req.body.file.buffer;
-      const fileName = req.body.file.originalname;
+    // Save sales agent data
+    const resultsPersonal = await DashDao.createSalesAgent(
+      officerData,
+      profileImageUrl,
+      newSalseAgentId
+    );
 
-      profileImageUrl = await uploadFileToS3(
-        fileBuffer,
-        fileName,
-        "users/profile-images"
-      );
-    }
-    const newSalseAgentId = await DashDao.genarateNewSalesAgentIdDao()
-    console.log("newSalseAgentId:",newSalseAgentId);
-    
-    // Save officer data (without image if no image is uploaded)
-    console.log('got to dao', profileImageUrl);
-    const resultsPersonal =
-      await DashDao.createSalesAgent(
-        officerData,
-        profileImageUrl,
-        newSalseAgentId
-      );
-
-    console.log("Center Head created successfully");
+    console.log("Sales Agent created successfully");
     return res.status(201).json({
-      message: "Center Head created successfully",
+      message: "Sales Agent created successfully",
       id: resultsPersonal.insertId,
       status: false,
     });
@@ -248,9 +208,9 @@ exports.createSalesAgent = async (req, res) => {
       return res.status(400).json({ error: error.details[0].message });
     }
 
-    console.error("Error creating Center Head:", error);
+    console.error("Error creating Sales Agent:", error);
     return res.status(500).json({
-      error: "An error occurred while creating the Center Head",
+      error: "An error occurred while creating the Sales Agent",
     });
   }
 };

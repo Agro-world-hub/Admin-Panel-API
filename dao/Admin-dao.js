@@ -249,7 +249,7 @@ exports.getAllNews = async (limit, offset, status, createdAt) => {
       const formattedCreatedAt = new Date(createdAt)
         .toISOString()
         .split("T")[0];
-      whereClauses.push("DATE(createdAt) = ?");
+      whereClauses.push("DATE(publishDate) = ?");
       queryParams.push(formattedCreatedAt);
     }
 
