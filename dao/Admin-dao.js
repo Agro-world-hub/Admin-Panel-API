@@ -1277,10 +1277,10 @@ exports.createPlantCareUser = (userData) => {
               });
             }
 
-            // Insert user
+            // Insert user with activeStatus set to 'inactive'
             connection.query(
-              `INSERT INTO users (firstName, lastName, phoneNumber, NICnumber, district, membership,language, profileImage)
-               VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+              `INSERT INTO users (firstName, lastName, phoneNumber, NICnumber, district, membership, language, profileImage, activeStatus)
+               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
               [
                 firstName,
                 lastName,
@@ -1290,6 +1290,7 @@ exports.createPlantCareUser = (userData) => {
                 membership,
                 language,
                 profileImageUrl,
+                'inactive'
               ],
               (insertUserErr, insertUserResults) => {
                 if (insertUserErr) {
