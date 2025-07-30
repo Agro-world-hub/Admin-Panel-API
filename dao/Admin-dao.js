@@ -658,6 +658,8 @@ exports.getOngoingCultivationsById = (id) => {
       ongoingcultivationscrops.id AS ongoingcultivationscropsid, 
       ongoingcultivationscrops.ongoingCultivationId,
       ongoingcultivationscrops.cropCalendar,
+      ongoingcultivationscrops.startedAt,
+      ongoingcultivationscrops.extentac,
       cropgroup.cropNameEnglish AS cropName,
       cropvariety.varietyNameEnglish AS variety,
       cropcalender.method AS cultivationMethod,
