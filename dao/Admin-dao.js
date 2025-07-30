@@ -3383,3 +3383,19 @@ exports.updateAdminRoleById = (id, role, email) => {
     });
   });
 };
+
+exports.deleteOngoingCultivationsById = (id) => {
+  const sql = `
+    DELETE FROM ongoingcultivationscrops
+    WHERE ongoingCultivationId = ?`;
+
+  return new Promise((resolve, reject) => {
+    plantcare.query(sql, [id], (err, results) => {
+      if (err) {
+        reject("Error deleting cultivation crops by ID: " + err);
+      } else {
+        resolve(results);
+      }
+    });
+  });
+};
