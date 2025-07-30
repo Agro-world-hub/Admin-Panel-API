@@ -252,7 +252,7 @@ exports.getAllDistributionCentreHead = (
   searchText
 ) => {
   return new Promise((resolve, reject) => {
-    let countSql = `SELECT COUNT(*) AS total FROM collectionofficer WHERE companyId = ? AND jobRole = 'Distribution Center Head'`;
+    let countSql = `SELECT COUNT(*) AS total FROM collectionofficer co WHERE co.companyId = ? AND co.jobRole = 'Distribution Center Head'`;
     let dataSql = `SELECT 
         co.id,
         co.empId,
@@ -267,6 +267,7 @@ exports.getAllDistributionCentreHead = (
         co.createdAt FROM collectionofficer co WHERE co.companyId = ? AND co.jobRole = 'Distribution Center Head'`;
     const countParams = [companyId];
     const dataParams = [companyId];
+
     if (searchText) {
       const searchCondition = ` AND (co.firstNameEnglish LIKE ? OR co.lastNameEnglish LIKE ? OR co.email LIKE ?)`;
       countSql += searchCondition;
@@ -275,6 +276,7 @@ exports.getAllDistributionCentreHead = (
       countParams.push(searchValue, searchValue, searchValue);
       dataParams.push(searchValue, searchValue, searchValue);
     }
+
     limit = parseInt(limit, 10) || 10;
     offset = parseInt(offset, 10) || 0;
 
