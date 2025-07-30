@@ -13,7 +13,6 @@ const xlsx = require("xlsx");
 const router = express.Router();
 
 const uploadfile = multer({
-  
   fileFilter: function (req, file, callback) {
     var ext = path.extname(file.originalname);
     if (ext !== ".xlsx" && ext !== ".xls") {
@@ -23,16 +22,12 @@ const uploadfile = multer({
   },
 });
 
-
-
 router.post(
   "/create-plant-care-user",
   authMiddleware,
   upload.single("image"),
   AdminEp.createPlantCareUser
 );
-
-
 
 router.post("/login", AdminEp.loginAdmin);
 
@@ -340,6 +335,12 @@ router.put(
   "/update-role-permission",
   authMiddleware,
   AdminEp.updateAdminRoleById
+);
+
+router.delete(
+  "/ongoing-cultivations/:id",
+  authMiddleware,
+  AdminEp.deleteOngoingCultivationsById
 );
 
 module.exports = router;
