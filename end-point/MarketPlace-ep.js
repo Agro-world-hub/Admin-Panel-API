@@ -1940,15 +1940,15 @@ exports.getUserOrders = async (req, res) => {
       parseInt(userId),
       statusFilter
     );
-    console.log(userOrders);
+    // console.log(userOrders);
 
-    if (!userOrders || userOrders.length === 0) {
-      return res.status(404).json({
-        success: false,
-        message: `No ${statusFilter.toLowerCase()} orders found for this user`,
-        statusFilter: statusFilter,
-      });
-    }
+    // if (!userOrders || userOrders.length === 0) {
+    //   return res.status(404).json({
+    //     success: false,
+    //     message: `No ${statusFilter.toLowerCase()} orders found for this user`,
+    //     statusFilter: statusFilter,
+    //   });
+    // }
 
     // Group orders by schedule type
     const ordersByScheduleType = userOrders.reduce((acc, order) => {
