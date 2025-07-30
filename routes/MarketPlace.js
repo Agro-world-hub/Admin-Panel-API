@@ -86,6 +86,12 @@ router.get(
   marketPlaceEp.getAllMarketplacePackages
 );
 
+router.get(
+  "/get-all-package-list-date",
+  authMiddleware,
+  marketPlaceEp.getMarketplacePackagesByDate
+);
+
 router.delete(
   "/delete-packages/:id",
   // authMiddleware,
