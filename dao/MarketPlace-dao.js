@@ -2229,7 +2229,9 @@ exports.getUserOrdersDao = async (userId, status) => {
         O.sheduleDate,
         P.paymentMethod,
         P.isPaid,
-        O.fullTotal
+        O.fullTotal,
+        P.createdAt,
+        P.status
       FROM processorders P
       JOIN orders O ON P.orderId = O.id
       WHERE O.userId = ? 
@@ -2238,17 +2240,17 @@ exports.getUserOrdersDao = async (userId, status) => {
     console.log(status, "-------");
 
     if (status === "Assinged") {
-      sql += " AND P.status = 'Ordered'";
+      sql += " AND P.status = 'Ordered' ";
     } else if (status === "Processing") {
-      sql += " AND P.status = 'Processing'";
+      sql += " AND P.status = 'Processing' ";
     } else if (status === "Delivered") {
-      sql += " AND P.status = 'Delivered'";
+      sql += " AND P.status = 'Delivered' ";
     } else if (status === "Cancelled") {
-      sql += " AND P.status = 'Cancelled'";
+      sql += " AND P.status = 'Cancelled' ";
     } else if (status === "Faild") {
-      sql += " AND P.status 'Faild'";
+      sql += " AND P.status = 'Faild' ";
     } else if (status === "On the way") {
-      sql += " AND P.status 'Faild'";
+      sql += " AND P.status = 'On the way' ";
     }
 
     marketPlace.query(sql, [userId, status], (err, results) => {
@@ -2257,7 +2259,7 @@ exports.getUserOrdersDao = async (userId, status) => {
         reject(err);
       } else {
         resolve(results);
-        console.log("``````````result``````````", results);
+        // console.log("``````````result``````````", results);
       }
     });
   });
