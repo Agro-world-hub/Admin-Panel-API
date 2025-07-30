@@ -122,21 +122,25 @@ exports.getAllUsers = (limit, offset, searchItem, regStatus, district) => {
 
     // Add search condition for NICnumber, firstName, lastName, or phoneNumber if provided
     if (searchItem) {
-      whereConditions.push("(users.NICnumber LIKE ? OR users.firstName LIKE ? OR users.lastName LIKE ? OR users.phoneNumber LIKE ?)");
+      whereConditions.push(
+        "(users.NICnumber LIKE ? OR users.firstName LIKE ? OR users.lastName LIKE ? OR users.phoneNumber LIKE ?)"
+      );
       const searchQuery = `%${searchItem}%`;
       countParams.push(searchQuery, searchQuery, searchQuery, searchQuery);
       dataParams.push(searchQuery, searchQuery, searchQuery, searchQuery);
     }
 
     // Add registration status condition if provided
-// Add registration status condition if provided
-if (regStatus === "Registered") {
-  console.log('Hit 01');
-  whereConditions.push("LENGTH(users.farmerQr) > 0");
-} else if (regStatus === "Unregistered") {
-  console.log('Hit 01');
-  whereConditions.push("LENGTH(users.farmerQr) = 0 OR users.farmerQr IS NULL");
-}
+    // Add registration status condition if provided
+    if (regStatus === "Registered") {
+      console.log("Hit 01");
+      whereConditions.push("LENGTH(users.farmerQr) > 0");
+    } else if (regStatus === "Unregistered") {
+      console.log("Hit 01");
+      whereConditions.push(
+        "LENGTH(users.farmerQr) = 0 OR users.farmerQr IS NULL"
+      );
+    }
     // Add district condition if provided
     if (district) {
       whereConditions.push("users.district LIKE ?");
@@ -551,55 +555,55 @@ exports.editMarketPrice = (id, data) => {
 
 exports.getAllOngoingCultivations = (searchItem, limit, offset) => {
   return new Promise((resolve, reject) => {
+    // Count query now uses DISTINCT to count unique cultivations
     let countSql = `
-            SELECT 
-                COUNT(*) as total 
-            FROM 
-                ongoingcultivations OC , users U , ongoingcultivationscrops OCC
-            WHERE 
-                OC.userId = U.id AND OC.id = OCC.ongoingCultivationId
-        `;
+      SELECT COUNT(DISTINCT OC.id) as total 
+      FROM ongoingcultivations OC
+      JOIN users U ON OC.userId = U.id
+      JOIN ongoingcultivationscrops OCC ON OC.id = OCC.ongoingCultivationId
+    `;
+
+    // Data query remains similar but with explicit JOINs for clarity
     let dataSql = `
-            SELECT 
-                OC.id AS cultivationId, 
-                U.id,
-                U.firstName, 
-                U.lastName, 
-                U.NICnumber,
-                COUNT(OCC.cropCalendar) AS CropCount
-            FROM 
-                ongoingcultivations OC , users U , ongoingcultivationscrops OCC
-            WHERE 
-                OC.userId = U.id AND OC.id = OCC.ongoingCultivationId
-            
-        `;
-    const params = [];
+      SELECT 
+        OC.id AS cultivationId, 
+        U.id,
+        U.firstName, 
+        U.lastName, 
+        U.NICnumber,
+        COUNT(OCC.cropCalendar) AS CropCount
+      FROM ongoingcultivations OC
+      JOIN users U ON OC.userId = U.id
+      JOIN ongoingcultivationscrops OCC ON OC.id = OCC.ongoingCultivationId
+    `;
+
+    const countParams = [];
+    const dataParams = [];
 
     if (searchItem) {
-      countSql += `
-        AND (
-          U.NICnumber LIKE ? OR 
-          U.firstName LIKE ? OR 
-          U.lastName LIKE ?
-        )
-      `;
-      dataSql += `
-        AND (
-          U.NICnumber LIKE ? OR 
-          U.firstName LIKE ? OR 
-          U.lastName LIKE ?
-        )
-      `;
       const searchQuery = `%${searchItem}%`;
-      params.push(searchQuery, searchQuery, searchQuery);
+      const searchCondition = `
+        AND (
+          U.NICnumber LIKE ? OR 
+          U.firstName LIKE ? OR 
+          U.lastName LIKE ?
+        )
+      `;
+      countSql += searchCondition;
+      dataSql += searchCondition;
+      countParams.push(searchQuery, searchQuery, searchQuery);
+      dataParams.push(searchQuery, searchQuery, searchQuery);
     }
 
-    dataSql +=
-      "GROUP BY OC.id, U.id, U.firstName, U.lastName, U.NICnumber ORDER BY OC.createdAt DESC LIMIT ? OFFSET ?";
-    params.push(limit, offset);
+    dataSql += `
+      GROUP BY OC.id, U.id, U.firstName, U.lastName, U.NICnumber 
+      ORDER BY OC.createdAt DESC 
+      LIMIT ? OFFSET ?
+    `;
+    dataParams.push(limit, offset);
 
     // Fetch total count
-    plantcare.query(countSql, params.slice(0, -2), (countErr, countResults) => {
+    plantcare.query(countSql, countParams, (countErr, countResults) => {
       if (countErr) {
         return reject(countErr);
       }
@@ -607,11 +611,19 @@ exports.getAllOngoingCultivations = (searchItem, limit, offset) => {
       const total = countResults[0].total;
 
       // Fetch paginated data
-      plantcare.query(dataSql, params, (dataErr, dataResults) => {
+      plantcare.query(dataSql, dataParams, (dataErr, dataResults) => {
         if (dataErr) {
           return reject(dataErr);
         }
-        resolve({ total, items: dataResults });
+        resolve({
+          total,
+          items: dataResults,
+          // Optional: include total crops count if needed
+          totalCrops: dataResults.reduce(
+            (sum, item) => sum + item.CropCount,
+            0
+          ),
+        });
       });
     });
   });
@@ -992,19 +1004,25 @@ exports.updatePlantCareUserById = (userData, id) => {
 
             if (checkResults.length > 0) {
               const duplicateFields = [];
-              
+
               // Check which fields are duplicated
-              const duplicatePhone = checkResults.some(row => row.phoneNumber === phoneNumber);
-              const duplicateNIC = checkResults.some(row => row.NICnumber === NICnumber);
-              
+              const duplicatePhone = checkResults.some(
+                (row) => row.phoneNumber === phoneNumber
+              );
+              const duplicateNIC = checkResults.some(
+                (row) => row.NICnumber === NICnumber
+              );
+
               if (duplicatePhone) duplicateFields.push("Mobile Number");
               if (duplicateNIC) duplicateFields.push("NIC");
-              
+
               let errorMessage;
               if (duplicateFields.length === 1) {
                 errorMessage = `${duplicateFields[0]} is already exists`;
               } else {
-                errorMessage = `${duplicateFields.join(" & ")} are already exists`;
+                errorMessage = `${duplicateFields.join(
+                  " & "
+                )} are already exists`;
               }
 
               return connection.rollback(() => {
@@ -1032,7 +1050,7 @@ exports.updatePlantCareUserById = (userData, id) => {
               NICnumber,
               district,
               membership,
-              language
+              language,
             ];
 
             if (profileImageUrl) {
@@ -1256,19 +1274,25 @@ exports.createPlantCareUser = (userData) => {
 
             if (checkResults.length > 0) {
               const duplicateFields = [];
-              
+
               // Check which fields are duplicated
-              const duplicatePhone = checkResults.some(row => row.phoneNumber === phoneNumber);
-              const duplicateNIC = checkResults.some(row => row.NICnumber === NICnumber);
-              
+              const duplicatePhone = checkResults.some(
+                (row) => row.phoneNumber === phoneNumber
+              );
+              const duplicateNIC = checkResults.some(
+                (row) => row.NICnumber === NICnumber
+              );
+
               if (duplicatePhone) duplicateFields.push("Mobile Number");
               if (duplicateNIC) duplicateFields.push("NIC");
-              
+
               let errorMessage;
               if (duplicateFields.length === 1) {
                 errorMessage = `${duplicateFields[0]} is already exists`;
               } else {
-                errorMessage = `${duplicateFields.join(" & ")} are already exists`;
+                errorMessage = `${duplicateFields.join(
+                  " & "
+                )} are already exists`;
               }
 
               return connection.rollback(() => {
@@ -1435,7 +1459,6 @@ exports.countSuperAdmins = () => {
     });
   });
 };
-
 
 exports.createAdmin = (adminData, hashedPassword) => {
   return new Promise((resolve, reject) => {
@@ -2421,7 +2444,6 @@ WHERE
   });
 };
 
-
 exports.getFarmerCropListReportDate = (id) => {
   return new Promise((resolve, reject) => {
     const dataSql = `
@@ -2442,7 +2464,6 @@ WHERE
     });
   });
 };
-
 
 exports.getReportfarmerDetails = (userId) => {
   return new Promise((resolve, reject) => {
