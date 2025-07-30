@@ -1776,13 +1776,9 @@ exports.getAllUsersTaskByCropId = async (req, res) => {
     console.log("cropId:", cropId);
     console.log("userId:", userId);
 
-    // Fetch total and paginated tasks from the DAO
-    const { total, items } = await adminDao.getAllUserTaskByCropId(
-      cropId,
-      userId,
-      limit,
-      offset
-    );
+    // Fetch total, first starting date, and paginated tasks from the DAO
+    const { total, firstStartingDate, items } =
+      await adminDao.getAllUserTaskByCropId(cropId, userId, limit, offset);
 
     console.log("Successfully fetched user tasks for crop ID:", cropId);
 
@@ -1793,9 +1789,10 @@ exports.getAllUsersTaskByCropId = async (req, res) => {
 
     console.log(formattedItems);
 
-    // Send response with paginated tasks and total count
+    // Send response with paginated tasks, total count, and first starting date
     res.json({
       total,
+      firstStartingDate,
       items: formattedItems,
     });
   } catch (error) {

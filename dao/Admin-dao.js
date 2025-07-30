@@ -1673,6 +1673,11 @@ exports.getAllUserTaskByCropId = (cropId, userId, limit, offset) => {
       FROM slavecropcalendardays 
       WHERE cropCalendarId = ? AND userId = ?`;
 
+    const firstDateSql = `
+      SELECT MIN(startingDate) as firstStartingDate
+      FROM slavecropcalendardays
+      WHERE cropCalendarId = ? AND userId = ?`;
+
     const dataSql = `
       SELECT 
           slavecropcalendardays.id AS slavecropcalendardaysId,
@@ -1707,18 +1712,30 @@ exports.getAllUserTaskByCropId = (cropId, userId, limit, offset) => {
         return reject(countErr);
       }
 
-      // Next, query the task data with pagination (limit and offset)
-      plantcare.query(dataSql, values, (dataErr, dataResults) => {
-        if (dataErr) {
-          return reject(dataErr);
-        }
+      // Query the first starting date
+      plantcare.query(
+        firstDateSql,
+        [cropId, userId],
+        (dateErr, dateResults) => {
+          if (dateErr) {
+            return reject(dateErr);
+          }
 
-        // Resolve with total count and paginated items
-        resolve({
-          total: countResults[0].total, // The total count of tasks
-          items: dataResults, // The list of tasks for the user
-        });
-      });
+          // Next, query the task data with pagination (limit and offset)
+          plantcare.query(dataSql, values, (dataErr, dataResults) => {
+            if (dataErr) {
+              return reject(dataErr);
+            }
+
+            // Resolve with total count, first starting date, and paginated items
+            resolve({
+              total: countResults[0].total, // The total count of tasks
+              firstStartingDate: dateResults[0].firstStartingDate, // The first starting date
+              items: dataResults, // The list of tasks for the user
+            });
+          });
+        }
+      );
     });
   });
 };
