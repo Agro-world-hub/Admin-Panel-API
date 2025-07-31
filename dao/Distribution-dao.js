@@ -65,6 +65,8 @@ exports.createDistributionCenter = (data) => {
   });
 };
 
+
+
 exports.getAllDistributionCentre = (
   limit,
   offset,
@@ -438,6 +440,66 @@ exports.checkEmailExist = (email) => {
     });
   });
 };
+
+exports.checkPhoneExist = (phoneNumber) => {
+  return new Promise((resolve, reject) => {
+    const sql = `
+      SELECT COUNT(*) AS count 
+      FROM collectionofficer 
+      WHERE phoneNumber01 = ? OR phoneNumber02 = ?
+    `;
+
+    collectionofficer.query(sql, [phoneNumber, phoneNumber], (err, results) => {
+      if (err) {
+        return reject(err);
+      }
+      resolve(results[0].count > 0); // Return true if the phone number exists in either column
+    });
+  });
+};
+
+exports.checkNICExistExceptId = (nic, id) => {
+  return new Promise((resolve, reject) => {
+    const sql = `
+      SELECT COUNT(*) AS count 
+      FROM collectionofficer 
+      WHERE nic = ? AND id != ?
+    `;
+    collectionofficer.query(sql, [nic, id], (err, results) => {
+      if (err) return reject(err);
+      resolve(results[0].count > 0);
+    });
+  });
+};
+
+exports.checkEmailExistExceptId = (email, id) => {
+  return new Promise((resolve, reject) => {
+    const sql = `
+      SELECT COUNT(*) AS count 
+      FROM collectionofficer 
+      WHERE email = ? AND id != ?
+    `;
+    collectionofficer.query(sql, [email, id], (err, results) => {
+      if (err) return reject(err);
+      resolve(results[0].count > 0);
+    });
+  });
+};
+
+exports.checkPhoneExistExceptId = (phone, id) => {
+  return new Promise((resolve, reject) => {
+    const sql = `
+      SELECT COUNT(*) AS count 
+      FROM collectionofficer 
+      WHERE (phoneNumber01 = ? OR phoneNumber02 = ?) AND id != ?
+    `;
+    collectionofficer.query(sql, [phone, phone, id], (err, results) => {
+      if (err) return reject(err);
+      resolve(results[0].count > 0);
+    });
+  });
+};
+
 
 exports.GetAllCompanyList = () => {
   return new Promise((resolve, reject) => {

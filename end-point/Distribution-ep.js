@@ -236,6 +236,20 @@ exports.createDistributionHead = async (req, res) => {
       });
     }
 
+
+const isExistingPhone1 = await DistributionDao.checkPhoneExist(officerData.phoneNumber01);
+    if (isExistingPhone1) {
+      return res.status(500).json({ error: "Phone number 1 already exists" });
+    }
+
+    // ✅ Optional: Check Phone Number 2
+    if (officerData.phoneNumber02) {
+      const isExistingPhone2 = await DistributionDao.checkPhoneExist(officerData.phoneNumber02);
+      if (isExistingPhone2) {
+        return res.status(500).json({ error: "Phone number 2 already exists" });
+      }
+    }
+
     let profileImageUrl = null; // Default to null if no image is provided
 
     // Check if an image file is provided
@@ -441,6 +455,55 @@ exports.getDistributionHeadDetailsById = async (req, res) => {
   }
 };
 
+// exports.updateCollectionOfficerDetails = async (req, res) => {
+//   try {
+//     const { id } = req.params;
+//     const updateData = req.body;
+
+//     if (!id) {
+//       return res.status(400).json({
+//         success: false,
+//         error: "Distribution Head ID is required",
+//       });
+//     }
+
+//     if (!updateData || Object.keys(updateData).length === 0) {
+//       return res.status(400).json({
+//         success: false,
+//         error: "Update data is required",
+//       });
+//     }
+
+//     const result = await DistributionDao.UpdateDistributionHeadDao(
+//       id,
+//       updateData
+//     );
+
+//     if (result.affectedRows === 0) {
+//       return res.status(404).json({
+//         success: false,
+//         error: "Distribution Head not found or no changes made",
+//       });
+//     }
+
+//     console.log("Successfully updated Distribution Head details");
+//     res.json({
+//       success: true,
+//       message: "Distribution Head details updated successfully",
+//       data: {
+//         id: id,
+//         affectedRows: result.affectedRows,
+//       },
+//     });
+//   } catch (err) {
+//     console.error("Error updating distribution head details:", err);
+//     res.status(500).json({
+//       success: false,
+//       error: "An error occurred while updating distribution head details",
+//     });
+//   }
+// };
+
 exports.updateCollectionOfficerDetails = async (req, res) => {
   try {
     const { id } = req.params;
@@ -460,10 +523,41 @@ exports.updateCollectionOfficerDetails = async (req, res) => {
       });
     }
 
-    const result = await DistributionDao.UpdateDistributionHeadDao(
-      id,
-      updateData
-    );
+    // Check for NIC duplication in another record
+    if (updateData.nic) {
+      const nicExists = await DistributionDao.checkNICExistExceptId(updateData.nic, id);
+      if (nicExists) {
+        return res.status(409).json({
+          success: false,
+          error: "NIC already exists for another user",
+        });
+      }
+    }
+
+    // Check for email duplication in another record
+    if (updateData.email) {
+      const emailExists = await DistributionDao.checkEmailExistExceptId(updateData.email, id);
+      if (emailExists) {
+        return res.status(409).json({
+          success: false,
+          error: "Email already exists for another user",
+        });
+      }
+    }
+
+    // Check for phone number duplication in another record
+    const phoneNumbers = [updateData.phoneNumber01, updateData.phoneNumber02].filter(Boolean);
+    for (const phone of phoneNumbers) {
+      const phoneExists = await DistributionDao.checkPhoneExistExceptId(phone, id);
+      if (phoneExists) {
+        return res.status(409).json({
+          success: false,
+          error: `Phone number ${phone} already exists for another user`,
+        });
+      }
+    }
+
+    const result = await DistributionDao.UpdateDistributionHeadDao(id, updateData);
 
     if (result.affectedRows === 0) {
       return res.status(404).json({
@@ -489,6 +583,7 @@ exports.updateCollectionOfficerDetails = async (req, res) => {
     });
   }
 };
+
 
 exports.getDistributionCentreById = async (req, res) => {
   const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
