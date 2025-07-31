@@ -835,3 +835,15 @@ exports.updateVariety = async (req, res) => {
     res.status(500).send("An error occurred while updating the crop group.");
   }
 };
+
+
+exports.getCropGroupsForFilter = async (req, res) => {
+  try {
+    const crop = await cropCalendarDao.cropGroupsDao();
+  
+    res.json({items: crop});
+  } catch (err) {
+    console.error("Error updating crop variety:", err);
+    res.status(500).send("An error occurred while updating the crop variety.");
+  }
+};

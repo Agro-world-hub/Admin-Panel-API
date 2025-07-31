@@ -777,3 +777,17 @@ exports.checkExistanceCropCalander = async (
     });
   });
 };
+
+
+exports.cropGroupsDao = async (id) => {
+  return new Promise((resolve, reject) => {
+    const sql = "SELECT id, cropNameEnglish FROM cropgroup";
+    plantcare.query(sql, (err, results) => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(results);
+      }
+    });
+  });
+};
