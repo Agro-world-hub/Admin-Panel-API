@@ -95,6 +95,7 @@ exports.getAllDistributionCentre = (
             dc.country,
             dc.longitude,
             dc.latitude,
+            dc.regCode,
             c.companyNameEnglish AS companyName
             FROM collection_officer.distributedcenter dc
             LEFT JOIN collection_officer.distributedcompanycenter dcc ON dc.id = dcc.centerId
