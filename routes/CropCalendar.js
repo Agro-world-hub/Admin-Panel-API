@@ -1,3 +1,5 @@
+// Route to check for duplicate crop calendar
+
 const express = require('express');
 const authMiddleware = require('../middlewares/authMiddleware');
 const cropCalendarEp = require('../end-point/CropCalendar-ep');
@@ -37,6 +39,11 @@ router.get(
     "/get-all-crop-groups", 
     authMiddleware, 
     cropCalendarEp.getAllCropGroups
+);
+router.post(
+  "/check-duplicate-crop-calendar",
+  authMiddleware,
+  cropCalendarEp.checkDuplicateCropCalendar
 );
 
 router.delete(
