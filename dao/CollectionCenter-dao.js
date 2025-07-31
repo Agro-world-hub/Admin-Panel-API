@@ -910,7 +910,7 @@ exports.GetAllCompanyList = () => {
 exports.GetAllManagerList = (companyId, centerId) => {
   return new Promise((resolve, reject) => {
     const sql =
-      "SELECT id, firstNameEnglish, lastNameEnglish FROM collectionofficer WHERE companyId=? AND centerId=?";
+      "SELECT id, firstNameEnglish, lastNameEnglish FROM collectionofficer WHERE companyId = ? AND centerId = ?";
     collectionofficer.query(sql, [companyId, centerId], (err, results) => {
       if (err) {
         return reject(err);
