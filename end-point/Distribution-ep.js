@@ -5,6 +5,7 @@ const DistributionValidation = require("../validations/distribution-validation")
 exports.createDistributionCenter = async (req, res) => {
   const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
   console.log(fullUrl);
+  console.log('request body', req.body);
   try {
     // Validate input with Joi
     const data =
@@ -14,14 +15,20 @@ exports.createDistributionCenter = async (req, res) => {
 
     console.log(data);
 
-    // Check for existing NIC or unique field
-    // const existing = await DistributionDao.findByName(data.name);
-    // if (existing) {
-    //   return res.status(409).json({
-    //     success: false,
-    //     error: "A distribution center with this name already exists."
-    //   });
-    // }
+    // Check for existing records
+    const existingChecks = await DistributionDao.checkExistingDistributionCenter({
+      name: data.name,
+      regCode: data.regCode,
+      contact01: data.contact1,
+      excludeId: null // For create operation, no ID to exclude
+    });
+
+    if (existingChecks.exists) {
+      return res.status(409).json({
+        success: false,
+        error: existingChecks.message
+      });
+    }
 
     // Proceed to create
     const result = await DistributionDao.createDistributionCenter(data);
@@ -687,6 +694,25 @@ exports.updateDistributionCentreDetails = async (req, res) => {
     console.log("Received update request for ID:", id);
     console.log("Update data:", updateData);
 
+    // Validate input with Joi
+    const data = await DistributionValidation.getDistributionCenterDetailsSchema.validateAsync(updateData);
+
+    // Check for existing records excluding current center
+    const existingChecks = await DistributionDao.checkExistingDistributionCenter({
+      name: data.name,
+      regCode: data.regCode,
+      contact01: data.contact1,
+      excludeId: id // Exclude current center from check
+    });
+
+    if (existingChecks.exists) {
+      return res.status(409).json({
+        success: false,
+        error: existingChecks.message,
+        conflictingRecord: existingChecks.conflictingRecord
+      });
+    }
+
     // Validate required fields
     if (!id) {
       console.log("Validation failed: Missing ID");
@@ -696,31 +722,11 @@ exports.updateDistributionCentreDetails = async (req, res) => {
       });
     }
 
-    if (!updateData || Object.keys(updateData).length === 0) {
-      console.log("Validation failed: Missing update data");
-      return res.status(400).json({
-        success: false,
-        error: "Update data is required",
-      });
-    }
-
-    // Validate required fields for distribution center
-    const requiredFields = ["centerName", "city", "province", "country"];
-    const missingFields = requiredFields.filter((field) => !updateData[field]);
-
-    if (missingFields.length > 0) {
-      console.log("Validation failed: Missing required fields:", missingFields);
-      return res.status(400).json({
-        success: false,
-        error: `Missing required fields: ${missingFields.join(", ")}`,
-      });
-    }
-
     // Update the distribution center
     console.log("Calling DAO to update distribution center");
     const updatedCentre = await DistributionDao.updateDistributionCentreById(
       id,
-      updateData
+      data
     );
 
     if (!updatedCentre) {
@@ -741,6 +747,14 @@ exports.updateDistributionCentreDetails = async (req, res) => {
     });
   } catch (err) {
     console.error("Error updating distribution centre details:", err);
+    
+    if (err.isJoi) {
+      return res.status(400).json({
+        success: false,
+        error: err.details[0].message,
+      });
+    }
+
     res.status(500).json({
       success: false,
       error: "An error occurred while updating distribution centre details",
