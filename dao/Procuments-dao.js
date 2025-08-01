@@ -565,9 +565,56 @@ exports.getOrderDetailsById = (orderId) => {
   console.log(`[getOrderDetailsById] Fetching details for orderId: ${orderId}`);
 
   return new Promise((resolve, reject) => {
-    const sql = `
+//     const sql = `
       
-    SELECT 
+//     SELECT 
+//     po.invNo,
+//     po.id AS processOrderId,
+//     o.id AS orderId,
+//     mpp.id AS packageId,
+//     op.id AS orderpkgId,
+//     mpp.displayName,
+//     CAST(mpp.productPrice AS DECIMAL(10,2)) AS productPrice,
+//     df.id AS definePkgId,
+//     CAST(df.price AS DECIMAL(10,2)) AS definePkgPrice,
+//     JSON_ARRAYAGG(
+//         JSON_OBJECT(
+//             'itemId', dfi.id,
+//             'productTypeId', dfi.productType,
+//             'productTypeShortCode', pt.shortCode,
+//             'productId', dfi.productId,
+//             'productName', mpi.displayName,
+//             'qty', dfi.qty,
+//             'price', dfi.price,
+//             'dicountedPrice', mpi.discountedPrice 
+//         )
+//     ) AS items
+// FROM 
+//     market_place.processorders po
+// JOIN 
+//     market_place.orders o ON po.orderId = o.id
+// LEFT JOIN 
+//     market_place.orderpackage op ON po.id = op.orderId
+// LEFT JOIN 
+//     market_place.marketplacepackages mpp ON op.packageId = mpp.id
+// LEFT JOIN 
+//     market_place.definepackage df ON mpp.id = df.packageId
+// LEFT JOIN
+//     market_place.definepackageitems dfi ON df.id = dfi.definePackageId
+// JOIN 
+//     market_place.producttypes pt ON pt.id = dfi.productType
+// JOIN 
+//     market_place.marketplaceitems mpi ON mpi.id = dfi.productId
+// WHERE 
+//     po.id = ?
+// GROUP BY 
+//     po.invNo, po.id, o.id, op.id, mpp.id, mpp.displayName, mpp.productPrice, df.id
+
+
+//     `;
+
+const sql = `
+SELECT 
     po.invNo,
     po.id AS processOrderId,
     o.id AS orderId,
@@ -597,8 +644,15 @@ LEFT JOIN
     market_place.orderpackage op ON po.id = op.orderId
 LEFT JOIN 
     market_place.marketplacepackages mpp ON op.packageId = mpp.id
-LEFT JOIN 
-    market_place.definepackage df ON mpp.id = df.packageId
+LEFT JOIN (
+    SELECT dp1.*
+    FROM market_place.definepackage dp1
+    INNER JOIN (
+        SELECT packageId, MAX(createdAt) AS max_createdAt
+        FROM market_place.definepackage
+        GROUP BY packageId
+    ) dp2 ON dp1.packageId = dp2.packageId AND dp1.createdAt = dp2.max_createdAt
+) df ON mpp.id = df.packageId
 LEFT JOIN
     market_place.definepackageitems dfi ON df.id = dfi.definePackageId
 JOIN 
@@ -609,9 +663,7 @@ WHERE
     po.id = ?
 GROUP BY 
     po.invNo, po.id, o.id, op.id, mpp.id, mpp.displayName, mpp.productPrice, df.id
-
-
-    `;
+`;
 
     try {
       marketPlace.query(sql, [orderId], (err, results) => {
