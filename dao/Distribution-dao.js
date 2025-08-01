@@ -418,7 +418,11 @@ exports.getCompanyDetails = () => {
   });
 };
 
-exports.createDistributionHeadPersonal = (officerData, profileImageUrl, newEmpId) => {
+exports.createDistributionHeadPersonal = (
+  officerData,
+  profileImageUrl,
+  newEmpId
+) => {
   return new Promise(async (resolve, reject) => {
     try {
       const imageUrl = profileImageUrl || null;
