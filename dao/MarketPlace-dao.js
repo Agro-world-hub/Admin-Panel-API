@@ -3089,3 +3089,23 @@ exports.getDefinePackageItemsBeforeDateDAO = async (packageId, providedDate) => 
     });
   });
 };
+
+exports.getCouponByCodeDao = async (code) => {
+  return new Promise((resolve, reject) => {
+    const sql = `
+      SELECT code
+      FROM coupon
+      WHERE code = ?
+    `;
+
+    // Assuming 'marketPlace' is your database connection pool
+    marketPlace.query(sql, [code], (err, results) => {
+      if (err) {
+        reject(err);
+      } else {
+        // Return the first matching coupon (or null if not found)
+        resolve(results[0] || null);
+      }
+    });
+  });
+};
