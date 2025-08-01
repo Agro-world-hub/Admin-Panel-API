@@ -33,6 +33,19 @@ exports.getAllSystemApplications = async (req, res) => {
       .json({ error: "An error occurred while fetching collection officers" });
   }
 };
+exports.getApplicationName = async (req, res) => {
+  const { id } = req.params;
+  try {
+    const appName = await ComplainCategoryDAO.getApplicationNameById(id);
+    if (!appName) {
+      return res.status(404).json({ message: 'Application not found' });
+    }
+    res.status(200).json({ appName });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+};
 
 exports.getComplainCategoriesByAppId = async (req, res) => {
   const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
@@ -62,68 +75,83 @@ exports.getComplainCategoriesByAppId = async (req, res) => {
   }
 };
 
+
+
 exports.postNewApplication = async (req, res) => {
   const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
   console.log(fullUrl);
   try {
-    // console.log("going to validate");
-
     const validatedQuery =
       await ComplainCategoryValidate.addNewApplicationSchema.validateAsync({
         applicationName: req.params.applicationName,
       });
     const { applicationName } = validatedQuery;
-    // const applicationName = req.params.applicationName;
     console.log("this is", applicationName);
 
-    const result = await ComplainCategoryDAO.addNewApplicationData(
-      applicationName
-    );
+    // Check for duplicate
+    const exists = await ComplainCategoryDAO.checkApplicationExists(applicationName);
+    if (exists) {
+      return res.status(409).json({
+        status: false,
+        message: "Application name already exists",
+      });
+    }
+
+    const result = await ComplainCategoryDAO.addNewApplicationData(applicationName);
     console.log(result);
 
     if (!result) {
-      return res
-        .status(404)
-        .json({ message: "application did not added successfully" });
+      return res.status(500).json({ message: "Application was not added successfully" });
     }
 
-    res.status(200).json({ message: "application added successfully", result });
+    res.status(200).json({ message: "Application added successfully", result });
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: "Internal server error" });
   }
 };
 
+
+
+
+
 exports.editApplication = async (req, res) => {
   const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
   console.log(fullUrl);
-  try {
-    // console.log("going to validate");
 
+  try {
     const validatedQuery =
       await ComplainCategoryValidate.editApplicationSchema.validateAsync(
         req.query
       );
     const { systemAppId, applicationName } = validatedQuery;
-    // const { systemAppId, applicationName} = req.query;
-    // const { applicationName } = req.body;
-    console.log("this is", systemAppId, applicationName);
+
+    // 🔒 Check for duplicate name
+    const exists = await ComplainCategoryDAO.checkApplicationNameExists(
+      applicationName,
+      systemAppId
+    );
+
+    if (exists) {
+      return res.status(409).json({
+        message: "An application with this name already exists",
+      });
+    }
 
     const result = await ComplainCategoryDAO.editApplicationData(
       systemAppId,
       applicationName
     );
-    console.log(result);
 
-    if (!result) {
+    if (result.affectedRows === 0) {
       return res
         .status(404)
-        .json({ message: "application did not edited successfully" });
+        .json({ message: "Application was not updated" });
     }
 
     res
       .status(200)
-      .json({ message: "application edited successfully", result });
+      .json({ message: "Application edited successfully", result });
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: "Internal server error" });
@@ -183,7 +211,11 @@ exports.AddNewComplaintCategory = async (req, res) => {
       );
 
     // Check if the category already exists
-    const exists = await ComplainCategoryDAO.CheckCategoryEnglishExists(complainCategory.categoryEnglish);
+   const exists = await ComplainCategoryDAO.CheckCategoryEnglishExists(
+  complainCategory.categoryEnglish,
+  complainCategory.appId
+);
+
     if (exists) {
       return res.status(409).json({
         status: false,
