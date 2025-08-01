@@ -474,13 +474,13 @@ exports.getAllOrdersWithProcessInfo = (
         po.createdAt AS processCreatedAt,
         op.packingStatus
         FROM processorders po, orders o, orderpackage op
-        WHERE op.packingStatus = 'Todo' AND po.orderId = o.id AND po.id = op.orderId 
+        WHERE op.packingStatus = 'Todo' AND po.status = 'Processing' AND po.orderId = o.id AND po.id = op.orderId 
       `;
     countSql = `
       SELECT 
         COUNT(po.id) AS total
         FROM processorders po, orders o, orderpackage op
-        WHERE op.packingStatus = 'Todo' AND po.orderId = o.id AND po.id = op.orderId
+        WHERE op.packingStatus = 'Todo' AND po.status = 'Processing' AND po.orderId = o.id AND po.id = op.orderId
       `;
     if (statusFilter) {
       if (statusFilter === "Paid") {
