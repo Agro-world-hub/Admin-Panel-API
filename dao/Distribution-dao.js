@@ -8,6 +8,74 @@ const { error } = require("console");
 const Joi = require("joi");
 const path = require("path");
 
+exports.checkExistingDistributionCenter = (checkData) => {
+  return new Promise((resolve, reject) => {
+    const { name, regCode, contact01, excludeId } = checkData;
+    
+    let sql = `
+      SELECT 
+        id,
+        centerName,
+        regCode,
+        contact01,
+        CASE 
+          WHEN centerName = ? THEN 'name'
+          WHEN regCode = ? THEN 'regCode'
+          WHEN contact01 = ? THEN 'contact'
+        END as conflictType
+      FROM distributedcenter 
+      WHERE (centerName = ? OR regCode = ? OR contact01 = ?)
+    `;
+    
+    const values = [name, regCode, contact01, name, regCode, contact01];
+    
+    // Add exclusion for update operations
+    if (excludeId) {
+      sql += ` AND id != ?`;
+      values.push(excludeId);
+    }
+    
+    sql += ` LIMIT 1`;
+
+    collectionofficer.query(sql, values, (err, results) => {
+      if (err) {
+        console.error("Error checking existing distribution center:", err);
+        return reject(err);
+      }
+
+      if (results.length > 0) {
+        const conflict = results[0];
+        let message = "";
+        
+        switch (conflict.conflictType) {
+          case 'name':
+            message = "A distribution center with this name already exists.";
+            break;
+          case 'regCode':
+            message = "A distribution center with this registration code already exists.";
+            break;
+          case 'contact':
+            message = "A distribution center with this contact number already exists.";
+            break;
+          default:
+            message = "A distribution center with these details already exists.";
+        }
+
+        resolve({
+          exists: true,
+          message: message,
+          conflictingRecord: conflict
+        });
+      } else {
+        resolve({
+          exists: false,
+          message: null
+        });
+      }
+    });
+  });
+};
+
 exports.createDistributionCenter = (data) => {
   return new Promise((resolve, reject) => {
     const sql1 = `
@@ -350,7 +418,11 @@ exports.getCompanyDetails = () => {
   });
 };
 
-exports.createDistributionHeadPersonal = (officerData, profileImageUrl, newEmpId) => {
+exports.createDistributionHeadPersonal = (
+  officerData,
+  profileImageUrl,
+  newEmpId
+) => {
   return new Promise(async (resolve, reject) => {
     try {
       const imageUrl = profileImageUrl || null;
