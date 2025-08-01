@@ -13,8 +13,9 @@ exports.getRecievedOrdersQuantity = (page, limit, filterType, date, search) => {
 
     // Base query
     let baseJoinSql = `
-      FROM market_place.orderpackage op 
-      JOIN market_place.orders o ON op.orderId = o.id
+      FROM market_place.processorders po
+      JOIN market_place.orders o ON po.orderId = o.id
+      JOIN market_place.orderpackage op ON op.orderId = po.id
       JOIN market_place.orderadditionalitems oai ON oai.orderId = o.id
       JOIN market_place.marketplaceitems mpi ON oai.productId = mpi.id
       JOIN plant_care.cropvariety cv ON mpi.varietyId = cv.id
@@ -54,31 +55,31 @@ exports.getRecievedOrdersQuantity = (page, limit, filterType, date, search) => {
     }
 
     // Count Query
-    const countSql = `SELECT COUNT(*) AS total ${baseJoinSql} ${whereSql}`;
+    const countSql = `SELECT COUNT(DISTINCT CONCAT(cg.cropNameEnglish, cv.varietyNameEnglish)) AS total ${baseJoinSql} ${whereSql}`;
 
-    // Data Query
+    // Data Query - Modified to properly handle GROUP BY
     let dataSql = `
-  SELECT 
-    o.createdAt, 
-    op.orderId, 
-    o.sheduleDate, 
-    oai.productId, 
-    ROUND(
-      CASE 
-        WHEN oai.unit = 'g' THEN oai.qty / 1000
-        ELSE oai.qty 
-      END, 3
-    ) AS quantity,
-    oai.unit,
-    cg.cropNameEnglish, 
-    cv.varietyNameEnglish,
-    DATE_SUB(o.sheduleDate, INTERVAL 2 DAY) AS toCollectionCentre,
-    DATE_SUB(o.sheduleDate, INTERVAL 1 DAY) AS toDispatchCenter
-  ${baseJoinSql}
-  ${whereSql}
-  ORDER BY o.createdAt DESC, cg.cropNameEnglish ASC, cv.varietyNameEnglish ASC
-  LIMIT ? OFFSET ?
-`;
+      SELECT 
+        po.createdAt,
+        o.sheduleDate,
+        ROUND(
+          SUM(
+            CASE 
+              WHEN oai.unit = 'g' THEN oai.qty / 1000
+              ELSE oai.qty 
+            END
+          ), 3
+        ) AS quantity,
+        cg.cropNameEnglish, 
+        cv.varietyNameEnglish,
+        MAX(DATE_SUB(o.sheduleDate, INTERVAL 2 DAY)) AS toCollectionCentre,
+        MAX(DATE_SUB(o.sheduleDate, INTERVAL 1 DAY)) AS toDispatchCenter
+      ${baseJoinSql}
+      ${whereSql}
+      GROUP BY cg.cropNameEnglish, cv.varietyNameEnglish, po.createdAt, o.sheduleDate
+      ORDER BY MAX(o.createdAt) DESC, cg.cropNameEnglish ASC, cv.varietyNameEnglish ASC
+      LIMIT ? OFFSET ?
+    `;
 
     const dataParams = [...queryParams, Number(limit), Number(offset)];
 
@@ -98,11 +99,15 @@ exports.getRecievedOrdersQuantity = (page, limit, filterType, date, search) => {
           return reject(dataErr);
         }
 
-        dataResults.forEach((item) => {
-          item.quantity = parseFloat(item.quantity.toString()); // This removes trailing zeros
-        });
+        // Process results
+        const processedResults = dataResults.map(item => ({
+          ...item,
+          quantity: parseFloat(item.quantity),
+          orderIds: item.orderIds ? item.orderIds.split(',') : [],
+          productIds: item.productIds ? item.productIds.split(',') : []
+        }));
 
-        resolve({ items: dataResults, total });
+        resolve({ items: processedResults, total });
       });
     });
   });
