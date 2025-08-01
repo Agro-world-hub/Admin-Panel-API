@@ -1403,3 +1403,15 @@ exports.getExcludeListDao = async (id) => {
     });
   });
 };
+
+exports.productCategoryDao = async () => {
+  return new Promise((resolve, reject) => {
+    const sql = "SELECT * FROM producttypes ORDER BY typeName";
+    marketPlace.query(sql, (err, results) => {
+      if (err) {
+        return reject(err);
+      }
+      resolve(results);
+    });
+  });
+};
