@@ -929,13 +929,13 @@ exports.getAllOrdersWithProcessInfoCompleted = (page, limit, dateFilter, searchT
         po.createdAt AS processCreatedAt,
         op.packingStatus
         FROM processorders po, orders o, orderpackage op
-        WHERE packingStatus = 'Completed' AND po.orderId = o.id AND po.id = op.orderId 
+        WHERE packingStatus = 'Completed' AND po.status = 'Processing' AND po.orderId = o.id AND po.id = op.orderId 
       `;
     countSql = `
       SELECT 
         COUNT(po.id) AS total
         FROM processorders po, orders o, orderpackage op
-        WHERE packingStatus = 'Completed' AND po.orderId = o.id AND po.id = op.orderId
+        WHERE packingStatus = 'Completed' AND po.status = 'Processing' AND po.orderId = o.id AND po.id = op.orderId
       `;
 
     if (dateFilter) {
@@ -1180,13 +1180,13 @@ exports.getAllOrdersWithProcessInfoDispatched = (page, limit, dateFilter, search
         po.createdAt AS processCreatedAt,
         op.packingStatus
         FROM processorders po, orders o, orderpackage op
-        WHERE packingStatus = 'Dispatch' AND po.orderId = o.id AND po.id = op.orderId 
+        WHERE packingStatus = 'Dispatch' AND po.status = 'Processing'  AND po.orderId = o.id AND po.id = op.orderId 
       `;
     countSql = `
       SELECT 
         COUNT(po.id) AS total
         FROM processorders po, orders o, orderpackage op
-        WHERE packingStatus = 'Dispatch' AND po.orderId = o.id AND po.id = op.orderId
+        WHERE packingStatus = 'Dispatch' AND po.status = 'Processing' AND po.orderId = o.id AND po.id = op.orderId
       `;
 
     if (dateFilter) {
