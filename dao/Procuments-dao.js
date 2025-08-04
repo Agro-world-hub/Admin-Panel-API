@@ -7,11 +7,116 @@ const {
   dash,
 } = require("../startup/database");
 
+// exports.getRecievedOrdersQuantity = (page, limit, filterType, date, search) => {
+//   return new Promise((resolve, reject) => {
+//     const offset = (page - 1) * limit;
+
+//     // Base query
+//     let baseJoinSql = `
+//       FROM market_place.processorders po
+//       JOIN market_place.orders o ON po.orderId = o.id
+//       JOIN market_place.orderpackage op ON op.orderId = po.id
+//       JOIN market_place.orderadditionalitems oai ON oai.orderId = o.id
+//       JOIN market_place.marketplaceitems mpi ON oai.productId = mpi.id
+//       JOIN plant_care.cropvariety cv ON mpi.varietyId = cv.id
+//       JOIN plant_care.cropgroup cg ON cv.cropGroupId = cg.id
+//     `;
+
+//     let whereSql = ` WHERE 1=1 `;
+//     const queryParams = [];
+
+//     // Apply filterType + date
+//     if (filterType && date) {
+//       switch (filterType) {
+//         case "OrderDate":
+//           whereSql += ` AND DATE(o.createdAt) = ?`;
+//           queryParams.push(date);
+//           break;
+//         case "scheduleDate":
+//           whereSql += ` AND DATE(o.sheduleDate) = ?`;
+//           queryParams.push(date);
+//           break;
+//         case "toCollectionCenter":
+//           whereSql += ` AND DATE(DATE_SUB(o.sheduleDate, INTERVAL 2 DAY)) = ?`;
+//           queryParams.push(date);
+//           break;
+//         case "toDispatchCenter":
+//           whereSql += ` AND DATE(DATE_SUB(o.sheduleDate, INTERVAL 1 DAY)) = ?`;
+//           queryParams.push(date);
+//           break;
+//       }
+//     }
+
+//     // Apply search on crop and variety name
+//     if (search) {
+//       whereSql += ` AND (cv.varietyNameEnglish LIKE ? OR cg.cropNameEnglish LIKE ?)`;
+//       const likeSearch = `%${search}%`;
+//       queryParams.push(likeSearch, likeSearch);
+//     }
+
+//     // Count Query
+//     const countSql = `SELECT COUNT(DISTINCT CONCAT(cg.cropNameEnglish, cv.varietyNameEnglish)) AS total ${baseJoinSql} ${whereSql}`;
+
+//     // Data Query - Modified to properly handle GROUP BY
+//     let dataSql = `
+//       SELECT 
+//         po.createdAt,
+//         o.sheduleDate,
+//         ROUND(
+//           SUM(
+//             CASE 
+//               WHEN oai.unit = 'g' THEN oai.qty / 1000
+//               ELSE oai.qty 
+//             END
+//           ), 3
+//         ) AS quantity,
+//         cg.cropNameEnglish, 
+//         cv.varietyNameEnglish,
+//         MAX(DATE_SUB(o.sheduleDate, INTERVAL 2 DAY)) AS toCollectionCentre,
+//         MAX(DATE_SUB(o.sheduleDate, INTERVAL 1 DAY)) AS toDispatchCenter
+//       ${baseJoinSql}
+//       ${whereSql}
+//       GROUP BY cg.cropNameEnglish, cv.varietyNameEnglish, po.createdAt, o.sheduleDate
+//       ORDER BY MAX(o.createdAt) DESC, cg.cropNameEnglish ASC, cv.varietyNameEnglish ASC
+//       LIMIT ? OFFSET ?
+//     `;
+
+//     const dataParams = [...queryParams, Number(limit), Number(offset)];
+
+//     // Execute count query
+//     marketPlace.query(countSql, queryParams, (countErr, countResults) => {
+//       if (countErr) {
+//         console.error("Error in count query:", countErr);
+//         return reject(countErr);
+//       }
+
+//       const total = countResults[0].total;
+
+//       // Execute data query
+//       marketPlace.query(dataSql, dataParams, (dataErr, dataResults) => {
+//         if (dataErr) {
+//           console.error("Error in data query:", dataErr);
+//           return reject(dataErr);
+//         }
+
+//         // Process results
+//         const processedResults = dataResults.map(item => ({
+//           ...item,
+//           quantity: parseFloat(item.quantity),
+//           orderIds: item.orderIds ? item.orderIds.split(',') : [],
+//           productIds: item.productIds ? item.productIds.split(',') : []
+//         }));
+
+//         resolve({ items: processedResults, total });
+//       });
+//     });
+//   });
+// };
+
 exports.getRecievedOrdersQuantity = (page, limit, filterType, date, search) => {
   return new Promise((resolve, reject) => {
     const offset = (page - 1) * limit;
 
-    // Base query
     let baseJoinSql = `
       FROM market_place.processorders po
       JOIN market_place.orders o ON po.orderId = o.id
@@ -23,9 +128,12 @@ exports.getRecievedOrdersQuantity = (page, limit, filterType, date, search) => {
     `;
 
     let whereSql = ` WHERE 1=1 `;
+
+    // ✅ Correct filter: only processing orders from `processorders` table
+    whereSql += ` AND po.status = 'processing'`;
+
     const queryParams = [];
 
-    // Apply filterType + date
     if (filterType && date) {
       switch (filterType) {
         case "OrderDate":
@@ -47,7 +155,6 @@ exports.getRecievedOrdersQuantity = (page, limit, filterType, date, search) => {
       }
     }
 
-    // Apply search on crop and variety name
     if (search) {
       whereSql += ` AND (cv.varietyNameEnglish LIKE ? OR cg.cropNameEnglish LIKE ?)`;
       const likeSearch = `%${search}%`;
@@ -55,13 +162,24 @@ exports.getRecievedOrdersQuantity = (page, limit, filterType, date, search) => {
     }
 
     // Count Query
-    const countSql = `SELECT COUNT(DISTINCT CONCAT(cg.cropNameEnglish, cv.varietyNameEnglish)) AS total ${baseJoinSql} ${whereSql}`;
+    const countSql = `
+      SELECT COUNT(*) AS total FROM (
+        SELECT 1
+        ${baseJoinSql}
+        ${whereSql}
+        GROUP BY 
+          cg.cropNameEnglish, 
+          cv.varietyNameEnglish, 
+          DATE(po.createdAt), 
+          DATE(o.sheduleDate)
+      ) AS grouped
+    `;
 
-    // Data Query - Modified to properly handle GROUP BY
-    let dataSql = `
+    // Data Query
+    const dataSql = `
       SELECT 
-        po.createdAt,
-        o.sheduleDate,
+        DATE(po.createdAt) AS createdAt,
+        DATE(o.sheduleDate) AS sheduleDate,
         ROUND(
           SUM(
             CASE 
@@ -76,14 +194,20 @@ exports.getRecievedOrdersQuantity = (page, limit, filterType, date, search) => {
         MAX(DATE_SUB(o.sheduleDate, INTERVAL 1 DAY)) AS toDispatchCenter
       ${baseJoinSql}
       ${whereSql}
-      GROUP BY cg.cropNameEnglish, cv.varietyNameEnglish, po.createdAt, o.sheduleDate
-      ORDER BY MAX(o.createdAt) DESC, cg.cropNameEnglish ASC, cv.varietyNameEnglish ASC
+      GROUP BY 
+        cg.cropNameEnglish, 
+        cv.varietyNameEnglish, 
+        DATE(po.createdAt), 
+        DATE(o.sheduleDate)
+      ORDER BY 
+        MAX(o.createdAt) DESC, 
+        cg.cropNameEnglish ASC, 
+        cv.varietyNameEnglish ASC
       LIMIT ? OFFSET ?
     `;
 
     const dataParams = [...queryParams, Number(limit), Number(offset)];
 
-    // Execute count query
     marketPlace.query(countSql, queryParams, (countErr, countResults) => {
       if (countErr) {
         console.error("Error in count query:", countErr);
@@ -92,19 +216,15 @@ exports.getRecievedOrdersQuantity = (page, limit, filterType, date, search) => {
 
       const total = countResults[0].total;
 
-      // Execute data query
       marketPlace.query(dataSql, dataParams, (dataErr, dataResults) => {
         if (dataErr) {
           console.error("Error in data query:", dataErr);
           return reject(dataErr);
         }
 
-        // Process results
         const processedResults = dataResults.map(item => ({
           ...item,
           quantity: parseFloat(item.quantity),
-          orderIds: item.orderIds ? item.orderIds.split(',') : [],
-          productIds: item.productIds ? item.productIds.split(',') : []
         }));
 
         resolve({ items: processedResults, total });
@@ -112,6 +232,7 @@ exports.getRecievedOrdersQuantity = (page, limit, filterType, date, search) => {
     });
   });
 };
+
 
 // if (searchText) {
 //     const searchCondition = `

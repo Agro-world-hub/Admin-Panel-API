@@ -44,8 +44,8 @@ router.get("/download-order-quantity-report", async (req, res) => {
       "Total Quantity (Kg)": item.quantity,
       "Order Date": item.createdAt,
       "Schedule Date": item.scheduleDate,
-      "To Collection Center": item.toCollectionCenter,
-      "To Dispatch Center": item.toDispatchCenter,
+      "To Collection Centre": item.toCollectionCenter,
+      "To Dispatch Centre": item.toDispatchCenter,
     }));
 
     // Create worksheet and workbook
