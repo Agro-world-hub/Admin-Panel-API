@@ -158,6 +158,7 @@ exports.getOrderDetailsById = async (req, res) => {
 
   try {
     // The DAO now returns properly structured data
+    
     const orderDetails = await procumentDao.getOrderDetailsById(id);
     console.log('orderDetails', orderDetails);
     const additionalItems = await procumentDao.getAllOrderAdditionalItemsDao(
@@ -175,6 +176,7 @@ exports.getOrderDetailsById = async (req, res) => {
 
     const btype = await procumentDao.getOrderTypeDao(id);
     const excludeList = await procumentDao.getExcludeListDao(btype.userId);
+    const category = await procumentDao.productCategoryDao();
     
 
 
@@ -183,7 +185,8 @@ exports.getOrderDetailsById = async (req, res) => {
       success: true,
       data: orderDetails,
       additionalItems: additionalItems,
-      excludeList:excludeList
+      excludeList:excludeList,
+      category
     });
   } catch (err) {
     console.error("[getOrderDetailsById] Error:", err);

@@ -692,6 +692,95 @@ exports.getAllMarketplacePackagesDAO = (searchText, date) => {
   });
 };
 
+exports.getMarketplacePackagesByDateDAO = (date) => {
+  return new Promise((resolve, reject) => {
+    const sqlParams = [];
+
+    let sql = `
+      SELECT
+        MP.id,
+        MP.displayName,
+        (MP.productPrice + MP.packingFee + MP.serviceFee) AS total,
+        MP.status,
+        (
+          SELECT DP.createdAt
+          FROM definepackage DP
+          WHERE DP.packageId = MP.id
+          ORDER BY DP.createdAt DESC
+          LIMIT 1
+        ) AS defineDate,
+        (
+          SELECT U.userName
+          FROM agro_world_admin.adminusers U
+          WHERE U.id = (
+            SELECT DP.adminId
+            FROM definepackage DP
+            WHERE DP.packageId = MP.id
+            ORDER BY DP.createdAt DESC
+            LIMIT 1
+          )
+        ) AS adminUser
+      FROM marketplacepackages MP
+      WHERE (
+        SELECT DATE(DP.createdAt)
+        FROM definepackage DP
+        WHERE DP.packageId = MP.id
+        ORDER BY DP.createdAt DESC
+        LIMIT 1
+      ) = ?
+      ORDER BY MP.status ASC, MP.displayName ASC
+    `;
+
+    sqlParams.push(date); // format: 'YYYY-MM-DD'
+
+    marketPlace.query(sql, sqlParams, (err, results) => {
+      if (err) return reject(err);
+
+      const groupedData = {};
+
+      results.forEach((pkg) => {
+        const {
+          status,
+          id,
+          displayName,
+          image,
+          description,
+          total,
+          discount,
+          subtotal,
+          defineDate,
+          adminUser,
+          created_at,
+        } = pkg;
+
+        if (!groupedData[status]) {
+          groupedData[status] = {
+            status,
+            packages: [],
+          };
+        }
+
+        groupedData[status].packages.push({
+          id,
+          displayName,
+          image,
+          description,
+          total,
+          status,
+          discount,
+          subtotal,
+          defineDate,
+          adminUser,
+          createdAt: created_at,
+        });
+      });
+
+      resolve(Object.values(groupedData));
+    });
+  });
+};
+
+
 exports.deleteMarketplacePckages = async (id) => {
   return new Promise((resolve, reject) => {
     const sql = "DELETE FROM marketplacepackages WHERE id = ?";
@@ -2140,7 +2229,9 @@ exports.getUserOrdersDao = async (userId, status) => {
         O.sheduleDate,
         P.paymentMethod,
         P.isPaid,
-        O.fullTotal
+        O.fullTotal,
+        P.createdAt,
+        P.status
       FROM processorders P
       JOIN orders O ON P.orderId = O.id
       WHERE O.userId = ? 
@@ -2149,17 +2240,17 @@ exports.getUserOrdersDao = async (userId, status) => {
     console.log(status, "-------");
 
     if (status === "Assinged") {
-      sql += " AND P.status = 'Ordered'";
+      sql += " AND P.status = 'Ordered' ";
     } else if (status === "Processing") {
-      sql += " AND P.status = 'Processing'";
+      sql += " AND P.status = 'Processing' ";
     } else if (status === "Delivered") {
-      sql += " AND P.status = 'Delivered'";
+      sql += " AND P.status = 'Delivered' ";
     } else if (status === "Cancelled") {
-      sql += " AND P.status = 'Cancelled'";
+      sql += " AND P.status = 'Cancelled' ";
     } else if (status === "Faild") {
-      sql += " AND P.status 'Faild'";
+      sql += " AND P.status = 'Faild' ";
     } else if (status === "On the way") {
-      sql += " AND P.status 'Faild'";
+      sql += " AND P.status = 'On the way' ";
     }
 
     marketPlace.query(sql, [userId, status], (err, results) => {
@@ -2168,7 +2259,7 @@ exports.getUserOrdersDao = async (userId, status) => {
         reject(err);
       } else {
         resolve(results);
-        console.log("``````````result``````````", results);
+        // console.log("``````````result``````````", results);
       }
     });
   });
@@ -3000,6 +3091,26 @@ exports.getDefinePackageItemsBeforeDateDAO = async (packageId, providedDate) => 
       }, 0);
 
       resolve({ createdAt: packageCreatedAt, items, totalPrice });
+    });
+  });
+};
+
+exports.getCouponByCodeDao = async (code) => {
+  return new Promise((resolve, reject) => {
+    const sql = `
+      SELECT code
+      FROM coupon
+      WHERE code = ?
+    `;
+
+    // Assuming 'marketPlace' is your database connection pool
+    marketPlace.query(sql, [code], (err, results) => {
+      if (err) {
+        reject(err);
+      } else {
+        // Return the first matching coupon (or null if not found)
+        resolve(results[0] || null);
+      }
     });
   });
 };

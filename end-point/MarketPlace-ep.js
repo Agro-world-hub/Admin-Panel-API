@@ -202,14 +202,24 @@ exports.createCoupen = async (req, res) => {
   try {
     const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
     console.log("Request URL:", fullUrl);
-    // console.log(req.body);
 
-    const coupen =
-      await MarketPriceValidate.CreateCoupenValidation.validateAsync(req.body);
+    // Validate the request body
+    const coupen = await MarketPriceValidate.CreateCoupenValidation.validateAsync(req.body);
     console.log(coupen);
 
+    // First check if coupon with this code already exists
+    const existingCoupon = await MarketPlaceDao.getCouponByCodeDao(coupen.code);
+    if (existingCoupon) {
+      return res.status(409).json({
+        error: "Coupon with this code already exists",
+        status: false
+      });
+    }
+
+    // If coupon doesn't exist, proceed with creation
     const result = await MarketPlaceDao.createCoupenDAO(coupen);
     console.log("coupen creation success");
+    
     return res.status(201).json({
       message: "coupen created successfully",
       result: result,
@@ -225,7 +235,7 @@ exports.createCoupen = async (req, res) => {
 
     console.error("Error executing query:", err);
     return res.status(500).json({
-      error: "An error occurred while creating marcket product",
+      error: "An error occurred while creating coupon",
       status: false,
     });
   }
@@ -606,6 +616,18 @@ exports.deleteMarketplacePackages = async (req, res) => {
       .json({ error: "An error occurred while deleting the marketplace item" });
   }
 };
+
+exports.getMarketplacePackagesByDate = async (req, res) => {
+  try {
+    const { date } = req.query; // expect 'YYYY-MM-DD'
+    const data = await MarketPlaceDao.getMarketplacePackagesByDateDAO(date);
+    res.status(200).json({ success: true, data });
+  } catch (error) {
+    console.error("Error in getMarketplacePackagesByDate:", error);
+    res.status(500).json({ success: false, message: "Internal Server Error" });
+  }
+};
+
 
 exports.updateMarketplacePackage = async (req, res) => {
   try {
@@ -1940,15 +1962,15 @@ exports.getUserOrders = async (req, res) => {
       parseInt(userId),
       statusFilter
     );
-    console.log(userOrders);
+    // console.log(userOrders);
 
-    if (!userOrders || userOrders.length === 0) {
-      return res.status(404).json({
-        success: false,
-        message: `No ${statusFilter.toLowerCase()} orders found for this user`,
-        statusFilter: statusFilter,
-      });
-    }
+    // if (!userOrders || userOrders.length === 0) {
+    //   return res.status(404).json({
+    //     success: false,
+    //     message: `No ${statusFilter.toLowerCase()} orders found for this user`,
+    //     statusFilter: statusFilter,
+    //   });
+    // }
 
     // Group orders by schedule type
     const ordersByScheduleType = userOrders.reduce((acc, order) => {

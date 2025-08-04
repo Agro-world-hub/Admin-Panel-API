@@ -433,3 +433,7 @@ exports.createfeedback = Joi.object({
   feedbackSinahala: Joi.required(),
   feedbackTamil: Joi.required(),
 });
+
+exports.deleteAdminUserSchema = Joi.object({
+  id: Joi.number().integer().required().label("Admin User ID"),
+});
