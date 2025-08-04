@@ -2134,7 +2134,7 @@ exports.getInvoiceDetails = async (req, res) => {
     // Then get the other details in parallel
     const [familyPackItems, additionalItems, billingDetails] =
       await Promise.all([
-        MarketPlaceDao.getFamilyPackItemsDAO(invoiceDetails.orderId),
+        MarketPlaceDao.getFamilyPackItemsDAO(processOrderId),
         MarketPlaceDao.getAdditionalItemsDAO(processOrderId),
         MarketPlaceDao.getBillingDetailsDAO(processOrderId),
       ]);
@@ -2143,12 +2143,12 @@ exports.getInvoiceDetails = async (req, res) => {
     let pickupCenterDetails = null;
     let deliveryChargeDetails = null;
 
-    if (invoiceDetails.deliveryMethod === "PICKUP" && invoiceDetails.centerId) {
+    if (invoiceDetails.deliveryMethod === "Pickup" && invoiceDetails.centerId) {
       pickupCenterDetails = await MarketPlaceDao.getPickupCenterDetailsDAO(
         invoiceDetails.centerId
       );
     } else if (
-      invoiceDetails.deliveryMethod !== "PICKUP" &&
+      invoiceDetails.deliveryMethod !== "Pickup" &&
       invoiceDetails.city
     ) {
       // Get delivery charge if delivery method is not PICKUP and city is available

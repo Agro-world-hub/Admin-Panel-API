@@ -2282,7 +2282,7 @@ exports.getInvoiceDetailsDAO = (processOrderId) => {
         o.phone1,
         po.invNo AS invoiceNumber,
         po.paymentMethod AS paymentMethod,
-        o.total AS grandTotal,
+        o.fullTotal AS grandTotal,
         mu.email AS userEmail,
         CASE
           WHEN o.buildingType = 'House' THEN oh.houseNo
@@ -2349,8 +2349,6 @@ exports.getFamilyPackItemsDAO = (orderId) => {
         op.id,
         mp.id AS packageId,
         mp.displayName AS name,
-        (mp.productPrice + mp.packingFee + mp.serviceFee) AS unitPrice,
-        1 AS quantity,
         (mp.productPrice + mp.packingFee + mp.serviceFee) AS amount
       FROM orderpackage op
       JOIN marketplacepackages mp ON op.packageId = mp.id
