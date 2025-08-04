@@ -202,14 +202,24 @@ exports.createCoupen = async (req, res) => {
   try {
     const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
     console.log("Request URL:", fullUrl);
-    // console.log(req.body);
 
-    const coupen =
-      await MarketPriceValidate.CreateCoupenValidation.validateAsync(req.body);
+    // Validate the request body
+    const coupen = await MarketPriceValidate.CreateCoupenValidation.validateAsync(req.body);
     console.log(coupen);
 
+    // First check if coupon with this code already exists
+    const existingCoupon = await MarketPlaceDao.getCouponByCodeDao(coupen.code);
+    if (existingCoupon) {
+      return res.status(409).json({
+        error: "Coupon with this code already exists",
+        status: false
+      });
+    }
+
+    // If coupon doesn't exist, proceed with creation
     const result = await MarketPlaceDao.createCoupenDAO(coupen);
     console.log("coupen creation success");
+    
     return res.status(201).json({
       message: "coupen created successfully",
       result: result,
@@ -225,7 +235,7 @@ exports.createCoupen = async (req, res) => {
 
     console.error("Error executing query:", err);
     return res.status(500).json({
-      error: "An error occurred while creating marcket product",
+      error: "An error occurred while creating coupon",
       status: false,
     });
   }
