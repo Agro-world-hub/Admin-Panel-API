@@ -358,7 +358,9 @@ exports.GetAllCenterComplainDAO = (
         oc.id, 
         oc.refNo,
         co.empId AS empId,
-        co.firstNameEnglish AS officerName,
+        CONCAT (co.firstNameEnglish, ' ', co.lastNameEnglish) AS officerName,
+        CONCAT (co.firstNameSinhala, ' ', co.lastNameSinhala) AS officerNameSinhala,
+        CONCAT (co.firstNameTamil, ' ', co.lastNameTamil) AS officerNameTamil,
         c.companyNameEnglish AS companyName,
         cc.categoryEnglish AS complainCategory,
         ar.role,
@@ -366,7 +368,8 @@ exports.GetAllCenterComplainDAO = (
         oc.complain,
         oc.AdminStatus AS status,
         oc.reply,
-        coc.regCode
+        coc.regCode,
+        oc.language
       FROM officercomplains oc
      LEFT JOIN collectionofficer co ON oc.officerId = co.id
       LEFT JOIN agro_world_admin.complaincategory cc ON oc.complainCategory = cc.id
