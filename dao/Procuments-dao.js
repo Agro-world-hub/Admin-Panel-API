@@ -13,8 +13,9 @@ exports.getRecievedOrdersQuantity = (page, limit, filterType, date, search) => {
 
     // Base query
     let baseJoinSql = `
-      FROM market_place.orderpackage op 
-      JOIN market_place.orders o ON op.orderId = o.id
+      FROM market_place.processorders po
+      JOIN market_place.orders o ON po.orderId = o.id
+      JOIN market_place.orderpackage op ON op.orderId = po.id
       JOIN market_place.orderadditionalitems oai ON oai.orderId = o.id
       JOIN market_place.marketplaceitems mpi ON oai.productId = mpi.id
       JOIN plant_care.cropvariety cv ON mpi.varietyId = cv.id
@@ -54,31 +55,31 @@ exports.getRecievedOrdersQuantity = (page, limit, filterType, date, search) => {
     }
 
     // Count Query
-    const countSql = `SELECT COUNT(*) AS total ${baseJoinSql} ${whereSql}`;
+    const countSql = `SELECT COUNT(DISTINCT CONCAT(cg.cropNameEnglish, cv.varietyNameEnglish)) AS total ${baseJoinSql} ${whereSql}`;
 
-    // Data Query
+    // Data Query - Modified to properly handle GROUP BY
     let dataSql = `
-  SELECT 
-    o.createdAt, 
-    op.orderId, 
-    o.sheduleDate, 
-    oai.productId, 
-    ROUND(
-      CASE 
-        WHEN oai.unit = 'g' THEN oai.qty / 1000
-        ELSE oai.qty 
-      END, 3
-    ) AS quantity,
-    oai.unit,
-    cg.cropNameEnglish, 
-    cv.varietyNameEnglish,
-    DATE_SUB(o.sheduleDate, INTERVAL 2 DAY) AS toCollectionCentre,
-    DATE_SUB(o.sheduleDate, INTERVAL 1 DAY) AS toDispatchCenter
-  ${baseJoinSql}
-  ${whereSql}
-  ORDER BY o.createdAt DESC, cg.cropNameEnglish ASC, cv.varietyNameEnglish ASC
-  LIMIT ? OFFSET ?
-`;
+      SELECT 
+        po.createdAt,
+        o.sheduleDate,
+        ROUND(
+          SUM(
+            CASE 
+              WHEN oai.unit = 'g' THEN oai.qty / 1000
+              ELSE oai.qty 
+            END
+          ), 3
+        ) AS quantity,
+        cg.cropNameEnglish, 
+        cv.varietyNameEnglish,
+        MAX(DATE_SUB(o.sheduleDate, INTERVAL 2 DAY)) AS toCollectionCentre,
+        MAX(DATE_SUB(o.sheduleDate, INTERVAL 1 DAY)) AS toDispatchCenter
+      ${baseJoinSql}
+      ${whereSql}
+      GROUP BY cg.cropNameEnglish, cv.varietyNameEnglish, po.createdAt, o.sheduleDate
+      ORDER BY MAX(o.createdAt) DESC, cg.cropNameEnglish ASC, cv.varietyNameEnglish ASC
+      LIMIT ? OFFSET ?
+    `;
 
     const dataParams = [...queryParams, Number(limit), Number(offset)];
 
@@ -98,11 +99,15 @@ exports.getRecievedOrdersQuantity = (page, limit, filterType, date, search) => {
           return reject(dataErr);
         }
 
-        dataResults.forEach((item) => {
-          item.quantity = parseFloat(item.quantity.toString()); // This removes trailing zeros
-        });
+        // Process results
+        const processedResults = dataResults.map(item => ({
+          ...item,
+          quantity: parseFloat(item.quantity),
+          orderIds: item.orderIds ? item.orderIds.split(',') : [],
+          productIds: item.productIds ? item.productIds.split(',') : []
+        }));
 
-        resolve({ items: dataResults, total });
+        resolve({ items: processedResults, total });
       });
     });
   });
@@ -474,13 +479,13 @@ exports.getAllOrdersWithProcessInfo = (
         po.createdAt AS processCreatedAt,
         op.packingStatus
         FROM processorders po, orders o, orderpackage op
-        WHERE op.packingStatus = 'Todo' AND po.orderId = o.id AND po.id = op.orderId 
+        WHERE op.packingStatus = 'Todo' AND po.status = 'Processing' AND po.orderId = o.id AND po.id = op.orderId 
       `;
     countSql = `
       SELECT 
         COUNT(po.id) AS total
         FROM processorders po, orders o, orderpackage op
-        WHERE op.packingStatus = 'Todo' AND po.orderId = o.id AND po.id = op.orderId
+        WHERE op.packingStatus = 'Todo' AND po.status = 'Processing' AND po.orderId = o.id AND po.id = op.orderId
       `;
     if (statusFilter) {
       if (statusFilter === "Paid") {
@@ -565,9 +570,56 @@ exports.getOrderDetailsById = (orderId) => {
   console.log(`[getOrderDetailsById] Fetching details for orderId: ${orderId}`);
 
   return new Promise((resolve, reject) => {
-    const sql = `
+//     const sql = `
       
-    SELECT 
+//     SELECT 
+//     po.invNo,
+//     po.id AS processOrderId,
+//     o.id AS orderId,
+//     mpp.id AS packageId,
+//     op.id AS orderpkgId,
+//     mpp.displayName,
+//     CAST(mpp.productPrice AS DECIMAL(10,2)) AS productPrice,
+//     df.id AS definePkgId,
+//     CAST(df.price AS DECIMAL(10,2)) AS definePkgPrice,
+//     JSON_ARRAYAGG(
+//         JSON_OBJECT(
+//             'itemId', dfi.id,
+//             'productTypeId', dfi.productType,
+//             'productTypeShortCode', pt.shortCode,
+//             'productId', dfi.productId,
+//             'productName', mpi.displayName,
+//             'qty', dfi.qty,
+//             'price', dfi.price,
+//             'dicountedPrice', mpi.discountedPrice 
+//         )
+//     ) AS items
+// FROM 
+//     market_place.processorders po
+// JOIN 
+//     market_place.orders o ON po.orderId = o.id
+// LEFT JOIN 
+//     market_place.orderpackage op ON po.id = op.orderId
+// LEFT JOIN 
+//     market_place.marketplacepackages mpp ON op.packageId = mpp.id
+// LEFT JOIN 
+//     market_place.definepackage df ON mpp.id = df.packageId
+// LEFT JOIN
+//     market_place.definepackageitems dfi ON df.id = dfi.definePackageId
+// JOIN 
+//     market_place.producttypes pt ON pt.id = dfi.productType
+// JOIN 
+//     market_place.marketplaceitems mpi ON mpi.id = dfi.productId
+// WHERE 
+//     po.id = ?
+// GROUP BY 
+//     po.invNo, po.id, o.id, op.id, mpp.id, mpp.displayName, mpp.productPrice, df.id
+
+
+//     `;
+
+const sql = `
+SELECT 
     po.invNo,
     po.id AS processOrderId,
     o.id AS orderId,
@@ -597,8 +649,15 @@ LEFT JOIN
     market_place.orderpackage op ON po.id = op.orderId
 LEFT JOIN 
     market_place.marketplacepackages mpp ON op.packageId = mpp.id
-LEFT JOIN 
-    market_place.definepackage df ON mpp.id = df.packageId
+LEFT JOIN (
+    SELECT dp1.*
+    FROM market_place.definepackage dp1
+    INNER JOIN (
+        SELECT packageId, MAX(createdAt) AS max_createdAt
+        FROM market_place.definepackage
+        GROUP BY packageId
+    ) dp2 ON dp1.packageId = dp2.packageId AND dp1.createdAt = dp2.max_createdAt
+) df ON mpp.id = df.packageId
 LEFT JOIN
     market_place.definepackageitems dfi ON df.id = dfi.definePackageId
 JOIN 
@@ -609,9 +668,7 @@ WHERE
     po.id = ?
 GROUP BY 
     po.invNo, po.id, o.id, op.id, mpp.id, mpp.displayName, mpp.productPrice, df.id
-
-
-    `;
+`;
 
     try {
       marketPlace.query(sql, [orderId], (err, results) => {
@@ -877,13 +934,13 @@ exports.getAllOrdersWithProcessInfoCompleted = (page, limit, dateFilter, searchT
         po.createdAt AS processCreatedAt,
         op.packingStatus
         FROM processorders po, orders o, orderpackage op
-        WHERE packingStatus = 'Completed' AND po.orderId = o.id AND po.id = op.orderId 
+        WHERE packingStatus = 'Completed' AND po.status = 'Processing' AND po.orderId = o.id AND po.id = op.orderId 
       `;
     countSql = `
       SELECT 
         COUNT(po.id) AS total
         FROM processorders po, orders o, orderpackage op
-        WHERE packingStatus = 'Completed' AND po.orderId = o.id AND po.id = op.orderId
+        WHERE packingStatus = 'Completed' AND po.status = 'Processing' AND po.orderId = o.id AND po.id = op.orderId
       `;
 
     if (dateFilter) {
@@ -1128,13 +1185,13 @@ exports.getAllOrdersWithProcessInfoDispatched = (page, limit, dateFilter, search
         po.createdAt AS processCreatedAt,
         op.packingStatus
         FROM processorders po, orders o, orderpackage op
-        WHERE packingStatus = 'Dispatch' AND po.orderId = o.id AND po.id = op.orderId 
+        WHERE packingStatus = 'Dispatch' AND po.status = 'Processing'  AND po.orderId = o.id AND po.id = op.orderId 
       `;
     countSql = `
       SELECT 
         COUNT(po.id) AS total
         FROM processorders po, orders o, orderpackage op
-        WHERE packingStatus = 'Dispatch' AND po.orderId = o.id AND po.id = op.orderId
+        WHERE packingStatus = 'Dispatch' AND po.status = 'Processing' AND po.orderId = o.id AND po.id = op.orderId
       `;
 
     if (dateFilter) {
@@ -1348,6 +1405,18 @@ exports.getExcludeListDao = async (id) => {
       } else {
         resolve(results);
       }
+    });
+  });
+};
+
+exports.productCategoryDao = async () => {
+  return new Promise((resolve, reject) => {
+    const sql = "SELECT * FROM producttypes ORDER BY typeName";
+    marketPlace.query(sql, (err, results) => {
+      if (err) {
+        return reject(err);
+      }
+      resolve(results);
     });
   });
 };
