@@ -2134,7 +2134,7 @@ exports.getInvoiceDetails = async (req, res) => {
     // Then get the other details in parallel
     const [familyPackItems, additionalItems, billingDetails] =
       await Promise.all([
-        MarketPlaceDao.getFamilyPackItemsDAO(invoiceDetails.orderId),
+        MarketPlaceDao.getFamilyPackItemsDAO(processOrderId),
         MarketPlaceDao.getAdditionalItemsDAO(processOrderId),
         MarketPlaceDao.getBillingDetailsDAO(processOrderId),
       ]);
