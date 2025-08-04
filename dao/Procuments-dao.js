@@ -458,7 +458,8 @@ exports.getAllOrdersWithProcessInfo = (
   limit,
   statusFilter,
   dateFilter,
-  dateFilter1
+  dateFilter1,
+  searchText
 ) => {
   return new Promise((resolve, reject) => {
     const offset = (page - 1) * limit;
@@ -516,6 +517,15 @@ exports.getAllOrdersWithProcessInfo = (
       countSql += ` AND DATE(po.createdAt) = ? `;
       params.push(dateFilter1);
       countParams.push(dateFilter1);
+    }
+
+    if (searchText) {
+      console.log("searchText", searchText);
+
+      dataSql += ` AND po.invNo LIKE ? `;
+      countSql += ` AND po.invNo LIKE ? `;
+      params.push(`%${searchText}%`);
+      countParams.push(`%${searchText}%`);
     }
 
     dataSql += ` 

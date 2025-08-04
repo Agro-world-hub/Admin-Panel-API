@@ -92,7 +92,7 @@ exports.getAllOrdersWithProcessInfo = async (req, res) => {
       statusFilter,
       dateFilter,
       dateFilter1,
-      search,
+      searchText,
     } = req.query;
     console.log(req.query);
 
@@ -101,7 +101,8 @@ exports.getAllOrdersWithProcessInfo = async (req, res) => {
       limit,
       statusFilter,
       dateFilter,
-      dateFilter1
+      dateFilter1,
+      searchText
     );
     // console.log("Orders Data:", ordersData);
 
