@@ -358,7 +358,9 @@ exports.GetAllCenterComplainDAO = (
         oc.id, 
         oc.refNo,
         co.empId AS empId,
-        co.firstNameEnglish AS officerName,
+        CONCAT (co.firstNameEnglish, ' ', co.lastNameEnglish) AS officerName,
+        CONCAT (co.firstNameSinhala, ' ', co.lastNameSinhala) AS officerNameSinhala,
+        CONCAT (co.firstNameTamil, ' ', co.lastNameTamil) AS officerNameTamil,
         c.companyNameEnglish AS companyName,
         cc.categoryEnglish AS complainCategory,
         ar.role,
@@ -366,7 +368,8 @@ exports.GetAllCenterComplainDAO = (
         oc.complain,
         oc.AdminStatus AS status,
         oc.reply,
-        coc.regCode
+        coc.regCode,
+        oc.language
       FROM officercomplains oc
      LEFT JOIN collectionofficer co ON oc.officerId = co.id
       LEFT JOIN agro_world_admin.complaincategory cc ON oc.complainCategory = cc.id
@@ -478,7 +481,24 @@ exports.getComplainById = (id) => {
 exports.getCenterComplainById = (id) => {
   return new Promise((resolve, reject) => {
     const sql = ` 
-    SELECT oc.id, oc.refNo, oc.createdAt, oc.language, oc.complain, oc.complainCategory, oc.reply, cof.firstNameEnglish AS firstName, cof.lastNameEnglish AS lastName, cof.phoneCode01, cof.phoneNumber01,  cc.categoryEnglish AS complainCategory, cof.empId AS empId, cof.jobRole AS jobRole
+    SELECT 
+      oc.id, 
+      oc.refNo, 
+      oc.createdAt, 
+      oc.language, 
+      oc.complain, 
+      oc.complainCategory, 
+      oc.reply, 
+      cof.firstNameEnglish AS firstName, 
+      cof.lastNameEnglish AS lastName, 
+      cof.phoneCode01, 
+      cof.phoneNumber01,  
+      cc.categoryEnglish AS complainCategory, 
+      cof.empId AS empId, 
+      cof.jobRole AS jobRole,
+      CONCAT (cof.firstNameEnglish, ' ', cof.lastNameEnglish) AS officerName,
+      CONCAT (cof.firstNameSinhala, ' ', cof.lastNameSinhala) AS officerNameSinhala,
+      CONCAT (cof.firstNameTamil, ' ', cof.lastNameTamil) AS officerNameTamil
     FROM officercomplains oc
     LEFT JOIN collectionofficer cof ON oc.officerId = cof.id
     LEFT JOIN agro_world_admin.complaincategory cc ON oc.complainCategory = cc.id
