@@ -553,16 +553,40 @@ exports.updateCollectionOfficerDetails = async (req, res) => {
     }
 
     // Check for phone number duplication in another record
-    const phoneNumbers = [updateData.phoneNumber01, updateData.phoneNumber02].filter(Boolean);
-    for (const phone of phoneNumbers) {
-      const phoneExists = await DistributionDao.checkPhoneExistExceptId(phone, id);
-      if (phoneExists) {
-        return res.status(409).json({
-          success: false,
-          error: `Phone number ${phone} already exists for another user`,
-        });
-      }
-    }
+// Check for phone number duplication in another record
+const phoneNumberMap = {
+  phoneNumber01: updateData.phoneNumber01,
+  phoneNumber02: updateData.phoneNumber02,
+};
+
+const existingPhones = [];
+
+for (const [field, phone] of Object.entries(phoneNumberMap)) {
+  if (!phone) continue;
+
+  const phoneExists = await DistributionDao.checkPhoneExistExceptId(phone, id);
+  if (phoneExists) {
+    existingPhones.push(field);
+  }
+}
+
+if (existingPhones.length > 0) {
+  let errorMessage = '';
+
+  if (existingPhones.length === 2) {
+    errorMessage = 'Both Phone Number - 1 and Phone Number - 2 already exist for other users';
+  } else if (existingPhones[0] === 'phoneNumber01') {
+    errorMessage = 'Phone Number - 1 already exists for another user';
+  } else {
+    errorMessage = 'Phone Number - 2 already exists for another user';
+  }
+
+  return res.status(409).json({
+    success: false,
+    error: errorMessage,
+  });
+}
+
 
     const result = await DistributionDao.UpdateDistributionHeadDao(id, updateData);
 
