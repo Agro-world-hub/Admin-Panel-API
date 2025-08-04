@@ -8,6 +8,74 @@ const { error } = require("console");
 const Joi = require("joi");
 const path = require("path");
 
+exports.checkExistingDistributionCenter = (checkData) => {
+  return new Promise((resolve, reject) => {
+    const { name, regCode, contact01, excludeId } = checkData;
+    
+    let sql = `
+      SELECT 
+        id,
+        centerName,
+        regCode,
+        contact01,
+        CASE 
+          WHEN centerName = ? THEN 'name'
+          WHEN regCode = ? THEN 'regCode'
+          WHEN contact01 = ? THEN 'contact'
+        END as conflictType
+      FROM distributedcenter 
+      WHERE (centerName = ? OR regCode = ? OR contact01 = ?)
+    `;
+    
+    const values = [name, regCode, contact01, name, regCode, contact01];
+    
+    // Add exclusion for update operations
+    if (excludeId) {
+      sql += ` AND id != ?`;
+      values.push(excludeId);
+    }
+    
+    sql += ` LIMIT 1`;
+
+    collectionofficer.query(sql, values, (err, results) => {
+      if (err) {
+        console.error("Error checking existing distribution center:", err);
+        return reject(err);
+      }
+
+      if (results.length > 0) {
+        const conflict = results[0];
+        let message = "";
+        
+        switch (conflict.conflictType) {
+          case 'name':
+            message = "A distribution center with this name already exists.";
+            break;
+          case 'regCode':
+            message = "A distribution center with this registration code already exists.";
+            break;
+          case 'contact':
+            message = "A distribution center with this contact number already exists.";
+            break;
+          default:
+            message = "A distribution center with these details already exists.";
+        }
+
+        resolve({
+          exists: true,
+          message: message,
+          conflictingRecord: conflict
+        });
+      } else {
+        resolve({
+          exists: false,
+          message: null
+        });
+      }
+    });
+  });
+};
+
 exports.createDistributionCenter = (data) => {
   return new Promise((resolve, reject) => {
     const sql1 = `
@@ -65,6 +133,8 @@ exports.createDistributionCenter = (data) => {
   });
 };
 
+
+
 exports.getAllDistributionCentre = (
   limit,
   offset,
@@ -95,6 +165,7 @@ exports.getAllDistributionCentre = (
             dc.country,
             dc.longitude,
             dc.latitude,
+            dc.regCode,
             c.companyNameEnglish AS companyName
             FROM collection_officer.distributedcenter dc
             LEFT JOIN collection_officer.distributedcompanycenter dcc ON dc.id = dcc.centerId
@@ -252,7 +323,7 @@ exports.getAllDistributionCentreHead = (
   searchText
 ) => {
   return new Promise((resolve, reject) => {
-    let countSql = `SELECT COUNT(*) AS total FROM collectionofficer WHERE companyId = ? AND jobRole = 'Distribution Center Head'`;
+    let countSql = `SELECT COUNT(*) AS total FROM collectionofficer co WHERE co.companyId = ? AND co.jobRole = 'Distribution Center Head'`;
     let dataSql = `SELECT 
         co.id,
         co.empId,
@@ -267,6 +338,7 @@ exports.getAllDistributionCentreHead = (
         co.createdAt FROM collectionofficer co WHERE co.companyId = ? AND co.jobRole = 'Distribution Center Head'`;
     const countParams = [companyId];
     const dataParams = [companyId];
+
     if (searchText) {
       const searchCondition = ` AND (co.firstNameEnglish LIKE ? OR co.lastNameEnglish LIKE ? OR co.email LIKE ?)`;
       countSql += searchCondition;
@@ -275,6 +347,7 @@ exports.getAllDistributionCentreHead = (
       countParams.push(searchValue, searchValue, searchValue);
       dataParams.push(searchValue, searchValue, searchValue);
     }
+
     limit = parseInt(limit, 10) || 10;
     offset = parseInt(offset, 10) || 0;
 
@@ -345,7 +418,11 @@ exports.getCompanyDetails = () => {
   });
 };
 
-exports.createDistributionHeadPersonal = (officerData, profileImageUrl, newEmpId) => {
+exports.createDistributionHeadPersonal = (
+  officerData,
+  profileImageUrl,
+  newEmpId
+) => {
   return new Promise(async (resolve, reject) => {
     try {
       const imageUrl = profileImageUrl || null;
@@ -438,6 +515,66 @@ exports.checkEmailExist = (email) => {
     });
   });
 };
+
+exports.checkPhoneExist = (phoneNumber) => {
+  return new Promise((resolve, reject) => {
+    const sql = `
+      SELECT COUNT(*) AS count 
+      FROM collectionofficer 
+      WHERE phoneNumber01 = ? OR phoneNumber02 = ?
+    `;
+
+    collectionofficer.query(sql, [phoneNumber, phoneNumber], (err, results) => {
+      if (err) {
+        return reject(err);
+      }
+      resolve(results[0].count > 0); // Return true if the phone number exists in either column
+    });
+  });
+};
+
+exports.checkNICExistExceptId = (nic, id) => {
+  return new Promise((resolve, reject) => {
+    const sql = `
+      SELECT COUNT(*) AS count 
+      FROM collectionofficer 
+      WHERE nic = ? AND id != ?
+    `;
+    collectionofficer.query(sql, [nic, id], (err, results) => {
+      if (err) return reject(err);
+      resolve(results[0].count > 0);
+    });
+  });
+};
+
+exports.checkEmailExistExceptId = (email, id) => {
+  return new Promise((resolve, reject) => {
+    const sql = `
+      SELECT COUNT(*) AS count 
+      FROM collectionofficer 
+      WHERE email = ? AND id != ?
+    `;
+    collectionofficer.query(sql, [email, id], (err, results) => {
+      if (err) return reject(err);
+      resolve(results[0].count > 0);
+    });
+  });
+};
+
+exports.checkPhoneExistExceptId = (phone, id) => {
+  return new Promise((resolve, reject) => {
+    const sql = `
+      SELECT COUNT(*) AS count 
+      FROM collectionofficer 
+      WHERE (phoneNumber01 = ? OR phoneNumber02 = ?) AND id != ?
+    `;
+    collectionofficer.query(sql, [phone, phone, id], (err, results) => {
+      if (err) return reject(err);
+      resolve(results[0].count > 0);
+    });
+  });
+};
+
 
 exports.GetAllCompanyList = () => {
   return new Promise((resolve, reject) => {

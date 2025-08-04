@@ -45,6 +45,9 @@ router.post(
   ComplainCategoryEP.postNewApplication
 );
 
+router.get('/get-application-name/:id',   authMiddleware,ComplainCategoryEP.getApplicationName);
+
+
 router.post(
   "/edit-application",
   authMiddleware,

@@ -752,7 +752,7 @@ const getAllOrders = (
     let countSql = `SELECT COUNT(*) as total ${baseSql}`;
     let dataSql = `
       SELECT
-        o.id,
+        po.id,
         po.InvNo AS invNo,
         po.status AS orderStatus,
         o.sheduleDate AS scheduleDate,

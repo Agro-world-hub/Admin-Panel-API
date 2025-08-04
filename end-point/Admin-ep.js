@@ -17,7 +17,10 @@ const SECRET_KEY = "agroworldadmin";
 const CryptoJS = require("crypto-js");
 
 function encryptResponse(data, secretKey) {
-  const encrypted = CryptoJS.AES.encrypt(JSON.stringify(data), secretKey).toString();
+  const encrypted = CryptoJS.AES.encrypt(
+    JSON.stringify(data),
+    secretKey
+  ).toString();
   return { data: encrypted };
 }
 
@@ -26,7 +29,6 @@ exports.loginAdmin = async (req, res) => {
   console.log(fullUrl);
 
   try {
-
     const encrypted = req.body.data;
     if (!encrypted) {
       return res.status(400).json({ error: "Missing encrypted data" });
@@ -89,8 +91,6 @@ exports.loginAdmin = async (req, res) => {
 
     const encryptedResponse = encryptResponse(data, SECRET_KEY);
     res.json(encryptedResponse);
-
-   
   } catch (err) {
     console.error("Error during login:", err);
 
@@ -224,11 +224,17 @@ exports.getAllUsers = async (req, res) => {
   try {
     console.log(req.query);
 
-    const { page, limit, nic, regStatus, district} =
+    const { page, limit, nic, regStatus, district } =
       await ValidateSchema.getAllUsersSchema.validateAsync(req.query);
     const offset = (page - 1) * limit;
 
-    const { total, items } = await adminDao.getAllUsers(limit, offset, nic, regStatus, district);
+    const { total, items } = await adminDao.getAllUsers(
+      limit,
+      offset,
+      nic,
+      regStatus,
+      district
+    );
 
     console.log("Successfully fetched users");
     res.json({
@@ -779,16 +785,14 @@ exports.getAllOngoingCultivations = async (req, res) => {
         req.query
       );
 
-    console.log('queryParams', queryParams)
+    console.log("queryParams", queryParams);
 
     const page = queryParams.page;
     const limit = queryParams.limit;
     const offset = (page - 1) * limit;
     const searchNIC = queryParams.nic || "";
 
-    console.log('page', page, 'limit', limit, 'searchNIC', searchNIC)
-
-
+    console.log("page", page, "limit", limit, "searchNIC", searchNIC);
 
     // Call DAO to fetch the cultivations
     const { total, items } = await adminDao.getAllOngoingCultivations(
@@ -797,7 +801,7 @@ exports.getAllOngoingCultivations = async (req, res) => {
       offset
     );
 
-    console.log('items', items)
+    console.log("items", items);
 
     console.log("Successfully fetched ongoing cultivations");
     res.json({
@@ -1379,8 +1383,8 @@ exports.createPlantCareUser = async (req, res) => {
 
     console.log("PlantCare user created successfully");
     return res.status(201).json({
-      message: result.message, 
-      id: result.userId, 
+      message: result.message,
+      id: result.userId,
 
       bankDetailsCreated: !!accNumber && !!accHolderName && !!bankName,
     });
@@ -1506,7 +1510,6 @@ exports.createAdmin = async (req, res) => {
       .json({ error: "An error occurred while creating admin user" });
   }
 };
-
 
 // exports.getTotalFixedAssetValue = (req, res) => {
 //     const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
@@ -1773,13 +1776,9 @@ exports.getAllUsersTaskByCropId = async (req, res) => {
     console.log("cropId:", cropId);
     console.log("userId:", userId);
 
-    // Fetch total and paginated tasks from the DAO
-    const { total, items } = await adminDao.getAllUserTaskByCropId(
-      cropId,
-      userId,
-      limit,
-      offset
-    );
+    // Fetch total, first starting date, and paginated tasks from the DAO
+    const { total, firstStartingDate, items } =
+      await adminDao.getAllUserTaskByCropId(cropId, userId, limit, offset);
 
     console.log("Successfully fetched user tasks for crop ID:", cropId);
 
@@ -1790,9 +1789,10 @@ exports.getAllUsersTaskByCropId = async (req, res) => {
 
     console.log(formattedItems);
 
-    // Send response with paginated tasks and total count
+    // Send response with paginated tasks, total count, and first starting date
     res.json({
       total,
+      firstStartingDate,
       items: formattedItems,
     });
   } catch (error) {
@@ -2964,5 +2964,39 @@ exports.updateAdminRoleById = async (req, res) => {
       status: false,
       message: "Internal server error",
     });
+  }
+};
+
+exports.deleteOngoingCultivationsById = async (req, res) => {
+  const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
+  console.log("Request URL:", fullUrl);
+
+  try {
+    // Validate the request parameters (id)
+    const { id } = await ValidateSchema.deleteAdminUserSchema.validateAsync(
+      req.params
+    );
+
+    // Delete ongoing cultivation by id from DAO
+    const results = await adminDao.deleteOngoingCultivationsById(id);
+
+    if (results.affectedRows === 0) {
+      return res.status(404).json({ message: "Ongoing cultivation not found" });
+    }
+
+    console.log("Ongoing cultivation deleted successfully");
+    return res
+      .status(200)
+      .json({ message: "Ongoing cultivation deleted successfully" });
+  } catch (err) {
+    if (err.isJoi) {
+      // Validation error
+      return res.status(400).json({ error: err.details[0].message });
+    }
+
+    console.error("Error deleting ongoing cultivation:", err);
+    return res
+      .status(500)
+      .json({ error: "An error occurred while deleting ongoing cultivation" });
   }
 };

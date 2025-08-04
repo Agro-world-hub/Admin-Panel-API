@@ -81,10 +81,21 @@ exports.getSystemApplicationDao = () => {
   });
 };
 
-exports.CheckCategoryEnglishExists = (categoryEnglish) => {
+// exports.CheckCategoryEnglishExists = (categoryEnglish) => {
+//   return new Promise((resolve, reject) => {
+//     const sql = `SELECT id FROM complaincategory WHERE categoryEnglish = ? LIMIT 1`;
+//     admin.query(sql, [categoryEnglish], (err, results) => {
+//       if (err) {
+//         return reject(err);
+//       }
+//       resolve(results.length > 0);
+//     });
+//   });
+// };
+exports.CheckCategoryEnglishExists = (categoryEnglish, appId) => {
   return new Promise((resolve, reject) => {
-    const sql = `SELECT id FROM complaincategory WHERE categoryEnglish = ? LIMIT 1`;
-    admin.query(sql, [categoryEnglish], (err, results) => {
+    const sql = `SELECT id FROM complaincategory WHERE categoryEnglish = ? AND appId = ? LIMIT 1`;
+    admin.query(sql, [categoryEnglish, appId], (err, results) => {
       if (err) {
         return reject(err);
       }
@@ -146,6 +157,44 @@ exports.editApplicationData = (systemAppId, applicationName) => {
       });
   });
 };
+
+exports.checkApplicationNameExists = (applicationName, excludeId) => {
+  return new Promise((resolve, reject) => {
+    const sql = `SELECT id FROM systemapplications WHERE appName = ? AND id != ? LIMIT 1`;
+    admin.query(sql, [applicationName, excludeId], (err, results) => {
+      if (err) {
+        return reject(err);
+      }
+      resolve(results.length > 0);
+    });
+  });
+};
+
+exports.checkApplicationExists = (applicationName) => {
+  return new Promise((resolve, reject) => {
+    const sql = `SELECT id FROM systemapplications WHERE LOWER(appName) = LOWER(?) LIMIT 1`;
+    admin.query(sql, [applicationName], (err, results) => {
+      if (err) return reject(err);
+      resolve(results.length > 0);
+    });
+  });
+};
+
+// DAO - Get application name by ID
+exports.getApplicationNameById = (id) => {
+  return new Promise((resolve, reject) => {
+    const sql = `SELECT appName FROM systemapplications WHERE id = ? LIMIT 1`;
+    admin.query(sql, [id], (err, results) => {
+      if (err) return reject(err);
+      if (results.length > 0) {
+        resolve(results[0].appName);
+      } else {
+        resolve(null);
+      }
+    });
+  });
+};
+
 
 exports.deleteApplicationData = (systemAppId) => {
   return new Promise((resolve, reject) => {
