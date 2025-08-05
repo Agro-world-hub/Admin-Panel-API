@@ -1646,7 +1646,9 @@ exports.getAllDeliveryCharges = (searchItem, city) => {
       sql += " WHERE " + whereConditions.join(" AND ");
     }
 
-    sql += " ORDER BY createdAt DESC";
+    // Changed from ORDER BY createdAt DESC to ORDER BY city ASC for A-Z ordering
+    sql += " ORDER BY city ASC";
+    
     collectionofficer.query(sql, params, (err, results) => {
       if (err) {
         return reject(err);
