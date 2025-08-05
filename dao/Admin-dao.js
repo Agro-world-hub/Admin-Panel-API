@@ -1843,8 +1843,20 @@ exports.editUserTask = (
 exports.getAllPostReplyDao = (postid) => {
   return new Promise((resolve, reject) => {
     const sql =
-      "SELECT p.id, p.replyMessage, p.createdAt, u.firstName, u.lastName FROM publicforumreplies p LEFT JOIN users u ON p.replyId = u.id WHERE p.chatId = ?";
-    const values = [postid];
+      `SELECT 
+        p.id,
+        p.replyStaffId,
+        p.replyMessage, 
+        p.createdAt, 
+        u.firstName, 
+        u.lastName,
+        fs.firstName AS staffFirstName,
+        fs.lastName AS staffLastName
+      FROM publicforumreplies p 
+      LEFT JOIN users u ON p.replyId = u.id
+      LEFT JOIN farmstaff fs ON p.replyStaffId = fs.id
+      WHERE p.chatId = ?`;
+    const values = [parseInt(postid)];
 
     plantcare.query(sql, values, (err, results) => {
       if (err) {
