@@ -1683,8 +1683,8 @@ exports.uploadDeliveryCharges = async (fileBuffer) => {
         );
       }
 
-      // Process data and remove duplicates
-      const chargesToInsert = [];
+      // Process data and remove duplicates within the file
+      const chargesToProcess = [];
       const cityMap = new Map();
 
       for (const row of data) {
@@ -1697,55 +1697,101 @@ exports.uploadDeliveryCharges = async (fileBuffer) => {
 
         // Check if city already exists in this batch
         if (!cityMap.has(city.toLowerCase())) {
-          cityMap.set(city.toLowerCase(), true);
-          chargesToInsert.push({ city, charge });
+          cityMap.set(city.toLowerCase(), { city, charge });
         }
       }
 
-      if (chargesToInsert.length === 0) {
+      if (cityMap.size === 0) {
         return resolve({
           inserted: 0,
+          updated: 0,
           duplicates: 0,
-          message: "No valid data to insert",
+          message: "No valid data to process",
         });
       }
 
-      // Check against existing database entries
+      // Get existing cities with their current charges
       const existingCities = await new Promise((resolve, reject) => {
-        const sql =
-          "SELECT LOWER(city) as city FROM deliverycharge WHERE city IN (?)";
-        const cities = chargesToInsert.map((c) => c.city);
-        collectionofficer.query(sql, [cities], (err, results) => {
+        const sql = "SELECT city, charge FROM deliverycharge";
+        collectionofficer.query(sql, (err, results) => {
           if (err) return reject(err);
-          resolve(results.map((r) => r.city));
+          resolve(results);
         });
       });
 
-      // Filter out duplicates that exist in database
-      const finalCharges = chargesToInsert.filter(
-        (charge) => !existingCities.includes(charge.city.toLowerCase())
-      );
+      // Separate into inserts and updates
+      const chargesToInsert = [];
+      const chargesToUpdate = [];
 
-      if (finalCharges.length === 0) {
-        return resolve({
-          inserted: 0,
-          duplicates: chargesToInsert.length,
-          message: "All cities already exist in database",
+      // Create a map of existing cities for easy lookup
+      const existingCityMap = new Map();
+      existingCities.forEach(c => {
+        existingCityMap.set(c.city.toLowerCase(), c);
+      });
+
+      // Process each city from the Excel file
+      cityMap.forEach((excelCityData, lowercaseCity) => {
+        const existingCity = existingCityMap.get(lowercaseCity);
+
+        if (existingCity) {
+          // City exists, check if charge is different
+          if (existingCity.charge !== excelCityData.charge) {
+            chargesToUpdate.push(excelCityData);
+          }
+        } else {
+          // City doesn't exist, needs to be inserted
+          chargesToInsert.push(excelCityData);
+        }
+      });
+
+      let insertedCount = 0;
+      let updatedCount = 0;
+
+      // Process inserts if any
+      if (chargesToInsert.length > 0) {
+        const insertSql = "INSERT INTO deliverycharge (city, charge) VALUES ?";
+        const insertValues = chargesToInsert.map((charge) => [
+          charge.city,
+          charge.charge,
+        ]);
+
+        insertedCount = await new Promise((resolve, reject) => {
+          collectionofficer.query(
+            insertSql,
+            [insertValues],
+            (err, result) => {
+              if (err) return reject(err);
+              resolve(result.affectedRows);
+            }
+          );
         });
       }
 
-      // Insert non-duplicate records
-      const sql = "INSERT INTO deliverycharge (city, charge) VALUES ?";
-      const values = finalCharges.map((charge) => [charge.city, charge.charge]);
-
-      collectionofficer.query(sql, [values], (err, result) => {
-        if (err) return reject(err);
-
-        resolve({
-          inserted: result.affectedRows,
-          duplicates: chargesToInsert.length - finalCharges.length,
-          message: "Delivery charges uploaded successfully",
+      // Process updates if any - using batch update
+      if (chargesToUpdate.length > 0) {
+        const updatePromises = chargesToUpdate.map((charge) => {
+          return new Promise((resolve, reject) => {
+            const updateSql = "UPDATE deliverycharge SET charge = ? WHERE LOWER(city) = ?";
+            collectionofficer.query(
+              updateSql,
+              [charge.charge, charge.city.toLowerCase()],
+              (err, result) => {
+                if (err) return reject(err);
+                resolve(result.affectedRows);
+              }
+            );
+          });
         });
+
+        updatedCount = await Promise.all(updatePromises)
+          .then(results => results.reduce((sum, count) => sum + count, 0));
+      }
+
+      resolve({
+        inserted: insertedCount,
+        updated: updatedCount,
+        duplicates: cityMap.size - chargesToInsert.length - chargesToUpdate.length,
+        message: "Delivery charges processed successfully",
       });
     } catch (error) {
       reject(error);
