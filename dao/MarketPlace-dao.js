@@ -606,6 +606,7 @@ exports.getAllMarketplacePackagesDAO = (searchText, date) => {
           )
         ) AS adminUser
       FROM marketplacepackages MP
+      WHERE MP.isValid = 1
     `;
 
     // Array to hold WHERE conditions
@@ -3151,6 +3152,23 @@ exports.getCouponByCodeDao = async (code) => {
       } else {
         // Return the first matching coupon (or null if not found)
         resolve(results[0] || null);
+      }
+    });
+  });
+};
+
+
+exports.removeMarketplacePckages = async (id) => {
+  return new Promise((resolve, reject) => {
+    const sql = `
+          UPDATE marketplacepackages 
+          SET isValid = 0
+          WHERE id = ?`;
+    marketPlace.query(sql, [id], (err, results) => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(results.affectedRows);
       }
     });
   });
