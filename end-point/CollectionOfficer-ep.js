@@ -1196,18 +1196,3 @@ exports.getCollectionReport = async (req, res) => {
   }
 };
 
-exports.getAllCenterNames = async (req, res) => {
-  try {
-    const centers = await collectionofficerDao.getAllCenterNamesDao();
-    res.status(200).json({
-      success: true,
-      data: centers,
-    });
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: 'Failed to fetch center names',
-      error: error.message,
-    });
-  }
-};
