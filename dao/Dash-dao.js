@@ -967,10 +967,10 @@ const GetAllSalesAgentComplainDAO = (
     // Add search functionality
     if (searchText) {
       countSql += `
-        AND (dc.refNo LIKE ? OR u.firstName LIKE ? OR u.lastName LIKE ? OR u.NICnumber LIKE ?)
+        AND (dc.refNo LIKE ? OR u.firstName LIKE ? OR u.lastName LIKE ? OR cc.categoryEnglish LIKE ?)
       `;
       sql += `
-        AND (dc.refNo LIKE ? OR u.firstName LIKE ? OR u.lastName LIKE ? OR u.NICnumber LIKE ?)
+        AND (dc.refNo LIKE ? OR u.firstName LIKE ? OR u.lastName LIKE ? OR cc.categoryEnglish LIKE ?)
       `;
       const searchQuery = `%${searchText}%`;
       Sqlparams.push(searchQuery, searchQuery, searchQuery, searchQuery);
