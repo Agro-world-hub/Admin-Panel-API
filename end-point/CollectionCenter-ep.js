@@ -1,5 +1,6 @@
 const CollectionCenterDao = require("../dao/CollectionCenter-dao");
 const ValidateSchema = require("../validations/CollectionCenter-validation");
+const XLSX = require('xlsx');
 
 exports.getAllCollectionCenter = async (req, res) => {
   try {
@@ -1209,5 +1210,104 @@ exports.checkCompanyDisplayNameDao = async (req, res) => {
       error: "An error occurred while checking company name english",
       status: false,
     });
+  }
+};
+
+exports.getAllCenterPayments = async (req, res) => {
+  const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
+  try {
+    const validatedQuery = await ValidateSchema.getAllCenterPaymentsSchema.validateAsync(req.query);
+
+    const { page, limit, fromDate, toDate, centerId, searchText } = validatedQuery;
+
+    const { items, total } = await CollectionCenterDao.getAllCenterPaymentsDAO(
+      page, limit, fromDate, toDate, centerId, searchText,
+    );
+
+    return res.status(200).json({ items, total });
+  } catch (error) {
+    if (error.isJoi) {
+      return res.status(400).json({ error: error.details[0].message });
+    }
+
+    console.error("Error fetching collection officers:", error);
+    return res.status(500).json({ error: "An error occurred while fetching collection officers" });
+  }
+};
+
+exports.downloadAllCenterPayments = async (req, res) => {
+  const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
+  try {
+    const validatedQuery = await ValidateSchema.downloadAllCenterPaymentsSchema.validateAsync(req.query);
+
+    const { fromDate, toDate, centerId, searchText } = validatedQuery;
+
+    const data = await CollectionCenterDao.downloadCenterPaymentReport(
+      fromDate,
+      toDate,
+      centerId,
+      searchText,
+
+    );
+
+    // Format data for Excel
+    const formattedData = data.flatMap(item => [
+      {
+        'GRN': item.invNo || 'N/A',
+        'Amount': item.totalAmount !== null && item.totalAmount !== undefined ? item.totalAmount : 'N/A',
+        'Center Reg Code': item.centerCode || 'N/A',
+        'Center Name': item.centerName || 'N/A',
+        'Farmer NIC': item.nic || 'N/A',
+        'Farmer Name': `${item.firstName || ''} ${item.lastName || ''}`.trim() || 'N/A',
+        'Farmer contact': item.phoneNumber || 'N/A',
+        'Account holder name': item.accHolderName || 'N/A',
+        'Account Number': item.accNumber || 'N/A',
+        'Bank Name': item.bankName || 'N/A',
+        'Branch Name': item.branchName || 'N/A',
+        'Officer EMP ID': item.empId || 'N/A',
+        'Collected time': item.createdAt || 'N/A'
+      }
+    ]);
+    
+    // Create a worksheet and workbook
+    const worksheet = XLSX.utils.json_to_sheet(formattedData);
+    
+    // Format columns with proper widths
+    worksheet['!cols'] = [
+      { wch: 25 }, // GRN
+      { wch: 15 }, // Amount
+      { wch: 20 }, // Center Reg Code
+      { wch: 25 }, // Center Name
+      { wch: 18 }, // Farmer NIC
+      { wch: 25 }, // Farmer Name
+      { wch: 15 }, // Farmer Contact
+      { wch: 25 }, // Account Holder Name
+      { wch: 20 }, // Account Number
+      { wch: 20 }, // Bank Name
+      { wch: 20 }, // Branch Name
+      { wch: 15 }, // Officer EMP ID
+      { wch: 15 }  // Collected Time
+    ];
+
+
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'Farmer Payement Template');
+
+    // Write the workbook to a buffer
+    const excelBuffer = XLSX.write(workbook, { type: 'buffer', bookType: 'xlsx' });
+
+    // Set headers for file download
+    res.setHeader('Content-Disposition', 'attachment; filename="Farmer Payement Template.xlsx"');
+    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+
+    // Send the file to the client
+    res.send(excelBuffer);
+  } catch (error) {
+    if (error.isJoi) {
+      return res.status(400).json({ error: error.details[0].message });
+    }
+
+    console.error("Error fetching collection officers:", error);
+    return res.status(500).json({ error: "An error occurred while fetching collection officers" });
   }
 };

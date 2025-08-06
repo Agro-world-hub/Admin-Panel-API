@@ -204,4 +204,16 @@ router.get(
   CollectionCenterEp.checkCompanyDisplayNameDao
 );
 
+router.get(
+  "/get-all-center-payments",
+  authMiddleware,
+  CollectionCenterEp.getAllCenterPayments
+)
+
+router.get(
+  "/download-center-payment-report",
+  authMiddleware,
+  CollectionCenterEp.downloadAllCenterPayments
+)
+
 module.exports = router;

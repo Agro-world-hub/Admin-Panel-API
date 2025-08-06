@@ -42,3 +42,20 @@ exports.getAWCentersSchema = Joi.object({
     province: Joi.string().allow(''),
     searchItem: Joi.string().allow(''),
 });
+
+exports.getAllCenterPaymentsSchema = Joi.object({
+    page: Joi.number().integer().min(1).default(1).optional(),
+    limit: Joi.number().integer().min(1).max(100).default(10).optional(),
+    fromDate: Joi.string().allow('').optional(),
+    toDate: Joi.string().allow('').optional(),
+    centerId: Joi.number().integer().required(),
+    searchText: Joi.string().allow('').optional(),
+    
+});
+
+exports.downloadAllCenterPaymentsSchema = Joi.object({
+    fromDate: Joi.string().allow('').optional(),
+    toDate: Joi.string().allow('').optional(),
+    centerId: Joi.number().integer().required(),
+    searchText: Joi.string().allow('').optional(),
+});

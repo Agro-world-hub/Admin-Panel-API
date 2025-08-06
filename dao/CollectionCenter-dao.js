@@ -1775,3 +1775,188 @@ exports.getAllCenterPageAW = (
     );
   });
 };
+
+exports.getAllCenterPaymentsDAO = (page, limit, fromDate, toDate, centerId, searchText) => {
+    return new Promise((resolve, reject) => {
+        const offset = (page - 1) * limit;
+
+        let countSql = `
+            SELECT COUNT(DISTINCT rfp.invNo) AS total
+            FROM collection_officer.registeredfarmerpayments rfp
+            LEFT JOIN collection_officer.farmerpaymentscrops fpc ON rfp.id = fpc.registerFarmerId
+            LEFT JOIN collection_officer.collectionofficer co ON co.id = rfp.collectionOfficerId
+            LEFT JOIN collection_officer.collectioncenter cc ON cc.id = co.centerId
+            LEFT JOIN plant_care.users u ON u.id = rfp.userId
+            WHERE co.centerId = ? AND DATE(rfp.createdAt) BETWEEN ? AND ?
+            `;
+
+        let dataSql = `
+            SELECT 
+                rfp.createdAt,
+                rfp.invNo,
+                cc.RegCode AS centerCode,
+                cc.centerName,
+                co.firstNameEnglish,
+                u.NICnumber AS nic,
+                co.companyId,
+                SUM(IFNULL(fpc.gradeAprice, 0)) AS gradeAprice,
+                SUM(IFNULL(fpc.gradeAquan, 0)) AS gradeAquan,
+                SUM(IFNULL(fpc.gradeBprice, 0)) AS gradeBprice,
+                SUM(IFNULL(fpc.gradeBquan, 0)) AS gradeBquan,
+                SUM(IFNULL(fpc.gradeCprice, 0)) AS gradeCprice,
+                SUM(IFNULL(fpc.gradeCquan, 0)) AS gradeCquan,
+                SUM(
+                    IFNULL(fpc.gradeAprice, 0) * IFNULL(fpc.gradeAquan, 0) +
+                    IFNULL(fpc.gradeBprice, 0) * IFNULL(fpc.gradeBquan, 0) +
+                    IFNULL(fpc.gradeCprice, 0) * IFNULL(fpc.gradeCquan, 0)
+                ) AS totalAmount
+            FROM collection_officer.registeredfarmerpayments rfp
+            LEFT JOIN collection_officer.farmerpaymentscrops fpc ON rfp.id = fpc.registerFarmerId
+            LEFT JOIN collection_officer.collectionofficer co ON co.id = rfp.collectionOfficerId
+            LEFT JOIN collection_officer.collectioncenter cc ON cc.id = co.centerId
+            LEFT JOIN plant_care.users u ON u.id = rfp.userId
+            WHERE co.centerId = ? AND DATE(rfp.createdAt) BETWEEN ? AND ?
+            `;
+
+        const countParams = [centerId, fromDate, toDate];
+        const dataParams = [centerId, fromDate, toDate];
+
+        if (searchText) {
+            const searchCondition = `
+                AND (
+                    rfp.invNo LIKE ?
+                    OR rfp.createdAt LIKE ?
+                    OR cc.RegCode LIKE ?
+                    OR u.NICnumber LIKE ?
+                )
+                `;
+            countSql += searchCondition;
+            dataSql += searchCondition;
+            const searchValue = `%${searchText}%`;
+            countParams.push(searchValue, searchValue, searchValue, searchValue);
+            dataParams.push(searchValue, searchValue, searchValue, searchValue);
+        }
+
+        // Modified GROUP BY clause to include all non-aggregated columns
+        dataSql += `
+            GROUP BY 
+                rfp.invNo,
+                rfp.createdAt,
+                cc.RegCode,
+                cc.centerName,
+                co.firstNameEnglish,
+                u.NICnumber,
+                co.companyId
+            `;
+            
+        // Add pagination to the data query
+        dataSql += " LIMIT ? OFFSET ?";
+        dataParams.push(limit, offset);
+
+        // Execute count query
+        collectionofficer.query(countSql, countParams, (countErr, countResults) => {
+            if (countErr) {
+                console.error('Error in count query:', countErr);
+                return reject(countErr);
+            }
+
+            const total = countResults[0].total;
+
+            // Execute data query
+            collectionofficer.query(dataSql, dataParams, (dataErr, dataResults) => {
+                if (dataErr) {
+                    console.error('Error in data query:', dataErr);
+                    return reject(dataErr);
+                }
+
+                resolve({ items: dataResults, total });
+            });
+        });
+    });
+};
+
+exports.downloadCenterPaymentReport = (fromDate, toDate, centerId, searchText) => {
+    return new Promise((resolve, reject) => {
+        let dataSql = `
+        SELECT 
+                rfp.createdAt,
+                rfp.invNo,
+                cc.RegCode AS centerCode,
+                cc.centerName,
+                co.firstNameEnglish,
+                u.NICnumber AS nic,
+                co.companyId,
+                SUM(IFNULL(fpc.gradeAprice, 0)) AS gradeAprice,
+                SUM(IFNULL(fpc.gradeAquan, 0)) AS gradeAquan,
+                SUM(IFNULL(fpc.gradeBprice, 0)) AS gradeBprice,
+                SUM(IFNULL(fpc.gradeBquan, 0)) AS gradeBquan,
+                SUM(IFNULL(fpc.gradeCprice, 0)) AS gradeCprice,
+                SUM(IFNULL(fpc.gradeCquan, 0)) AS gradeCquan,
+                ROUND(
+                    SUM(
+                        IFNULL(fpc.gradeAprice, 0) * IFNULL(fpc.gradeAquan, 0) +
+                        IFNULL(fpc.gradeBprice, 0) * IFNULL(fpc.gradeBquan, 0) +
+                        IFNULL(fpc.gradeCprice, 0) * IFNULL(fpc.gradeCquan, 0)
+                    ), 2
+                ) AS totalAmount,
+                u.firstName,
+                u.lastName,
+                u.phoneNumber AS phoneNumber,
+                ub.accHolderName AS accHolderName,
+                ub.accNumber AS accNumber,
+                ub.bankName AS bankName,
+                ub.branchName AS branchName,
+                co.empId
+            FROM collection_officer.registeredfarmerpayments rfp
+            LEFT JOIN collection_officer.farmerpaymentscrops fpc ON rfp.id = fpc.registerFarmerId
+            LEFT JOIN collection_officer.collectionofficer co ON co.id = rfp.collectionOfficerId
+            LEFT JOIN collection_officer.collectioncenter cc ON cc.id = co.centerId
+            LEFT JOIN plant_care.users u ON u.id = rfp.userId
+            LEFT JOIN plant_care.userbankdetails ub ON u.id = ub.userId
+            WHERE co.centerId = ? AND DATE(rfp.createdAt) BETWEEN ? AND ?
+        `;
+        const dataParams = [centerId, fromDate, toDate];
+
+        if (searchText) {
+            const searchCondition = `
+                AND (
+                    rfp.invNo LIKE ?
+                    OR rfp.createdAt LIKE ?
+                    OR cc.RegCode LIKE ?
+                    OR u.NICnumber LIKE ?
+                )
+            `;
+            dataSql += searchCondition;
+            const searchValue = `%${searchText}%`;
+            dataParams.push(searchValue, searchValue, searchValue, searchValue);
+        }
+
+        dataSql += ` 
+            GROUP BY 
+                rfp.invNo,
+                rfp.createdAt,
+                cc.RegCode,
+                cc.centerName,
+                co.firstNameEnglish,
+                u.NICnumber,
+                co.companyId,
+                u.firstName,
+                u.lastName,
+                u.phoneNumber,
+                ub.accHolderName,
+                ub.accNumber,
+                ub.bankName,
+                ub.branchName,
+                co.empId
+        `;
+
+        collectionofficer.query(dataSql, dataParams, (err, results) => {
+            if (err) {
+                console.error('Error in download report query:', err);
+                return reject(err);
+            }
+            resolve(results);
+            console.log(results);
+        });
+    });
+};
