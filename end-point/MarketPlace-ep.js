@@ -219,7 +219,7 @@ exports.createCoupen = async (req, res) => {
     // If coupon doesn't exist, proceed with creation
     const result = await MarketPlaceDao.createCoupenDAO(coupen);
     console.log("coupen creation success");
-    
+
     return res.status(201).json({
       message: "coupen created successfully",
       result: result,
@@ -364,6 +364,7 @@ exports.createPackage = async (req, res) => {
     console.log(package);
 
     let profileImageUrl = null;
+
 
     if (req.body.file) {
       try {
@@ -1028,7 +1029,7 @@ exports.uploadBanner = async (req, res) => {
     const { index, name } = validatedBody;
 
     const currentCount = await MarketPlaceDao.getBannerCount("Retail");
-    
+
     if (currentCount >= 5) {
       return res.status(400).json({
         error: "You have added the maximum number of banner options. If you want to add another, please delete one first."
@@ -1074,8 +1075,8 @@ exports.uploadBannerWholesale = async (req, res) => {
 
     const { index, name } = validatedBody;
 
-   const currentCount = await MarketPlaceDao.getBannerCount("Wholesale");
-    
+    const currentCount = await MarketPlaceDao.getBannerCount("Wholesale");
+
     if (currentCount >= 5) {
       return res.status(400).json({
         error: "You have added the maximum number of banner options. If you want to add another, please delete one first."
@@ -1309,6 +1310,12 @@ exports.editPackage = async (req, res) => {
     console.log("packageItems---->", packageItems);
 
     let profileImageUrl = null;
+    // if (id) {
+    //   return res.json({
+    //     status: false,
+    //     message: "Package ID is required",
+    //   })
+    // }
 
     const exists = await MarketPlaceDao.checkPackageDisplayNameExistsDao(
       package.displayName,
@@ -1359,39 +1366,57 @@ exports.editPackage = async (req, res) => {
     console.log(profileImageUrl);
 
     // Update main package
-    const results = await MarketPlaceDao.editPackageDAO(
+    // const results = await MarketPlaceDao.editPackageDAO(
+    //   package,
+    //   profileImageUrl,
+    //   id
+    // );
+    //new update logic
+    const packageId = await MarketPlaceDao.creatPackageDAO(
       package,
-      profileImageUrl,
-      id
+      profileImageUrl
     );
 
-    if (!results) {
+    if (!packageId || packageId <= 0) {
       return res.status(500).json({
-        message: "Package update failed",
+        message: "Package Edit failed",
         status: false,
       });
     }
 
+    const removepackage = await MarketPlaceDao.removeMarketplacePckages(id);
+    if (removepackage === 0) {
+      return res.status(404).json({ status: false, message: "Marketplace item not found" });
+    }
+
+    // for (let i = 0; i < packageItems.length; i++) {
+    //   if (packageItems[i].id !== null && packageItems[i].qty !== 0) {
+    //     await MarketPlaceDao.editPackageDetailsDAO(packageItems[i]);
+    //   }
+
+    //   if (packageItems[i].id !== null && packageItems[i].qty === 0) {
+    //     await MarketPlaceDao.deletePackageDetailsItemsDao(packageItems[i]);
+    //   }
+
+    //   if (packageItems[i].id === null && packageItems[i].qty !== 0) {
+    //     await MarketPlaceDao.insertNewPackageDetailsItemsDao(
+    //       id,
+    //       packageItems[i]
+    //     );
+    //   }
+    // }
+
     for (let i = 0; i < packageItems.length; i++) {
-      if (packageItems[i].id !== null && packageItems[i].qty !== 0) {
-        await MarketPlaceDao.editPackageDetailsDAO(packageItems[i]);
-      }
+      if (packageItems[i].productTypeId !== null && packageItems[i].qty !== 0 && packageItems[i].qty !== null) {
+        const itemData = {
+          productTypeId: parseInt(packageItems[i].productTypeId),
+          qty: parseInt(packageItems[i].qty),
+        };
+        await MarketPlaceDao.creatPackageDetailsDAO(itemData, packageId);
 
-      if (packageItems[i].id !== null && packageItems[i].qty === 0) {
-        await MarketPlaceDao.deletePackageDetailsItemsDao(packageItems[i]);
-      }
-
-      if (packageItems[i].id === null && packageItems[i].qty !== 0) {
-        await MarketPlaceDao.insertNewPackageDetailsItemsDao(
-          id,
-          packageItems[i]
-        );
       }
     }
 
-    //     await MarketPlaceDao.editPackageDetailsDAO(itemData, id);
-    //     await MarketPlaceDao.deletePackageDetailsItemsDao(itemData, id);
-    //     await MarketPlaceDao.insertNewPackageDetailsItemsDao(itemData, id);
 
     return res.status(200).json({
       message: "Package updated successfully",
@@ -2299,7 +2324,7 @@ exports.marketDashbordDetails = async (req, res) => {
   const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
   console.log(fullUrl);
   try {
-    
+
     //fistRow
     const todaySalses = await MarketPlaceDao.toDaySalesDao();
     const yesterdaySalses = await MarketPlaceDao.yesterdaySalesDao();
@@ -2317,14 +2342,14 @@ exports.marketDashbordDetails = async (req, res) => {
     const orders = await MarketPlaceDao.lastFiveOrdersDao();
 
     res.json({
-      message:'Data found!',
-      firstRow:{
+      message: 'Data found!',
+      firstRow: {
         todaySalses,
         yesterdaySalses,
         thisMonthSales,
         newUserCount,
       },
-      secondRow:{
+      secondRow: {
         salsesAnalize,
         totalSales,
         totUsers,

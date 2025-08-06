@@ -631,7 +631,7 @@ exports.getAllMarketplacePackagesDAO = (searchText, date) => {
 
     // Combine WHERE conditions if any exist
     if (whereConditions.length > 0) {
-      sql += ` WHERE ` + whereConditions.join(" AND ");
+      sql += ` AND ` + whereConditions.join(" AND ");
     }
 
     // Order by status A-Z first, then by package name A-Z
@@ -1826,7 +1826,7 @@ exports.checkPackageDisplayNameExistsDao = async (displayName, id) => {
     const sqlParams = [displayName];
 
     if (id) {
-      sql += " AND id != ? ";
+      sql += " AND id != ? AND isValid = 1";
       sqlParams.push(id);
     }
     marketPlace.query(sql, sqlParams, (err, results) => {
