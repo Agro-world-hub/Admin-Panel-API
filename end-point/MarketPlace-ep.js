@@ -510,44 +510,6 @@ exports.editMarketProduct = async (req, res) => {
   }
 };
 
-// exports.getAllMarketplacePackages = async (req, res) => {
-//   const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
-//   console.log("Request URL:", fullUrl);
-
-//   try {
-//     const { searchText } =
-//       await MarketPriceValidate.getAllPackageSchema.validateAsync(req.query);
-//     console.log("Search Text:", searchText);
-
-//     const packages = await MarketPlaceDao.getAllMarketplacePackagesDAO(
-//       searchText
-//     );
-
-//     console.log("Successfully fetched marketplace packages");
-//     return res.status(200).json({
-//       success: true,
-//       message: "Marketplace packages retrieved successfully",
-//       data: packages,
-//     });
-//   } catch (error) {
-//     if (error.isJoi) {
-//       // Handle validation error
-//       return res.status(400).json({
-//         success: false,
-//         error: error.details[0].message,
-//       });
-//     }
-
-//     console.error("Error fetching marketplace packages:", error);
-//     return res.status(500).json({
-//       success: false,
-//       error: "An error occurred while fetching marketplace packages",
-//       details:
-//         process.env.NODE_ENV === "development" ? error.message : undefined,
-//     });
-//   }
-// };
-
 exports.getAllMarketplacePackages = async (req, res) => {
   const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
   console.log("Request URL:", fullUrl);
@@ -598,7 +560,7 @@ exports.deleteMarketplacePackages = async (req, res) => {
     // Extract id from request parameters
     const { id } = req.params;
 
-    const affectedRows = await MarketPlaceDao.deleteMarketplacePckages(id);
+    const affectedRows = await MarketPlaceDao.removeMarketplacePckages(id);
 
     if (affectedRows === 0) {
       return res.status(404).json({ message: "Marketplace item not found" });
