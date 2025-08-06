@@ -2332,20 +2332,5 @@ exports.getCCIDforCreateEmpIdDao = (employee) => {
   });
 };
 
-exports.getAllCenterNamesDao = () => {
-  return new Promise((resolve, reject) => {
-    const sql = `
-      SELECT centerName
-      FROM collectioncenter
-    `;
 
-    collectionofficer.query(sql, (err, results) => {
-      if (err) {
-        return reject(err);
-      }
-
-      resolve(results);
-    });
-  });
-};
 
