@@ -631,7 +631,7 @@ exports.getAllMarketplacePackagesDAO = (searchText, date) => {
 
     // Combine WHERE conditions if any exist
     if (whereConditions.length > 0) {
-      sql += ` WHERE ` + whereConditions.join(" AND ");
+      sql += ` AND ` + whereConditions.join(" AND ");
     }
 
     // Order by status A-Z first, then by package name A-Z
@@ -1523,7 +1523,7 @@ exports.getAllRetailOrderDetails = (
     `;
 
     let sql = `
-      SELECT o.id, o.fullName AS customerName, o.delivaryMethod AS method, 
+      SELECT o.id, po.id AS orderId, o.fullName AS customerName, o.delivaryMethod AS method, 
              po.amount, po.invNo, po.status, o.createdAt AS orderdDate 
       FROM market_place.orders o
       LEFT JOIN market_place.processorders po ON o.id = po.orderId
@@ -1826,7 +1826,7 @@ exports.checkPackageDisplayNameExistsDao = async (displayName, id) => {
     const sqlParams = [displayName];
 
     if (id) {
-      sql += " AND id != ? ";
+      sql += " AND id != ? AND isValid = 1";
       sqlParams.push(id);
     }
     marketPlace.query(sql, sqlParams, (err, results) => {
@@ -2612,7 +2612,7 @@ exports.getAllWholesaleOrderDetails = (
     `;
 
     let sql = `
-      SELECT o.id, o.fullName AS customerName, o.delivaryMethod AS method, 
+      SELECT o.id, po.id AS orderId, o.fullName AS customerName, o.delivaryMethod AS method, 
              po.amount, po.invNo, po.status, o.createdAt AS orderdDate 
       FROM market_place.orders o
       LEFT JOIN market_place.processorders po ON o.id = po.orderId
