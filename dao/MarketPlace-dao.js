@@ -2422,6 +2422,7 @@ exports.getAdditionalItemsDAO = (processOrderId) => {
         oai.unit, 
         oai.price AS unitPrice,
         oai.qty AS quantity,
+        oai.normalPrice,
         (oai.price * oai.qty) AS amount,
         oai.discount AS itemDiscount,
         pc.image AS image
