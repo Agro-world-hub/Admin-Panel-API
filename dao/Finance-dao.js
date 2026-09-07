@@ -1590,7 +1590,7 @@ exports.getAllPublishedProjectsDAO = (searchText) => {
       LEFT JOIN agro_world_admin.adminusers au ON ir.publishBy = au.id
       LEFT JOIN approvedinvestmentrequest air ON ir.id = air.reqId
       WHERE ir.reqStatus = 'Approved'
-      AND ir.publishStatus = 'Published';
+      AND ir.publishStatus = 'Published'
     `;
 
     const params = [];
