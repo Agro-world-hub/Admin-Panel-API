@@ -5417,3 +5417,18 @@ exports.deleteMultipleBlockWords = (ids) => {
     });
   });
 };
+
+exports.checkBlockWord = (word) => {
+  return new Promise((resolve, reject) => {
+    const sql = `SELECT * FROM blockwords WHERE word = ?`;
+    plantcare.query(sql, [word], (err, results) => {
+      if (err) {
+        return reject(err);
+      }
+      if (results.length === 0) {
+        return resolve(null);
+      }
+      resolve(results);
+    });
+  });
+};
