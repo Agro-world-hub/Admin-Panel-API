@@ -1625,7 +1625,7 @@ exports.getFieldAudits = async (searchTerm, connection) => {
       fo.empId as officerEmpId,
       fo.JobRole as officerJobRole,
       au.userName,
-      CONCAT(fo2.firstName, ' ', fo2.lastName) as assignedByCFO
+      fo2.empId as assignedByCFO
     FROM feildaudits fa
     LEFT JOIN certificationpayment cp ON fa.paymentId = cp.id
     LEFT JOIN users u ON cp.userId = u.id
