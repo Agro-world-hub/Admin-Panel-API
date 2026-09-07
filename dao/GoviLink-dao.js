@@ -915,8 +915,7 @@ exports.getFieldAuditHistoryResponseByIdDAO = (jobId) => {
         cp.payType,
         sqi.qEnglish,
         sqi.type,
-        sqi.uploadImage,
-        sqi.officerUploadImage,
+        sqi.OfficerUploadImage AS uploadImage,
         sqi.officerTickResult,
         sq.id AS slaveQId,
         COALESCE(f.regCode, f2.regCode) AS farmId
@@ -959,7 +958,6 @@ exports.getFieldAuditHistoryResponseByIdDAO = (jobId) => {
           qEnglish: row.qEnglish,
           type: row.type,
           uploadImage: row.uploadImage,
-          officerUploadImage: row.officerUploadImage,
           officerTickResult: row.officerTickResult,
           slaveQId: row.slaveQId,
           problem: null,
@@ -977,7 +975,6 @@ exports.getFieldAuditHistoryResponseByIdDAO = (jobId) => {
               qEnglish: row.qEnglish,
               type: row.type,
               uploadImage: row.uploadImage,
-              officerUploadImage: row.officerUploadImage,
               officerTickResult: row.officerTickResult,
               slaveQId: row.slaveQId,
               problem: rowSuggestions[0]?.problem ?? null,
@@ -1211,8 +1208,7 @@ exports.getFieldAuditHistoryClusterResponseByIdDAO = (jobId) => {
         f.regCode,
         sqi.qEnglish,
         sqi.type,
-        sqi.uploadImage,
-        sqi.officerUploadImage,
+        sqi.OfficerUploadImage AS uploadImage,
         sqi.officerTickResult,
         sq.id AS slaveQId,
         (
@@ -1266,7 +1262,6 @@ exports.getFieldAuditHistoryClusterResponseByIdDAO = (jobId) => {
           qEnglish: row.qEnglish,
           type: row.type,
           uploadImage: row.uploadImage,
-          officerUploadImage: row.officerUploadImage,
           officerTickResult: row.officerTickResult,
           slaveQId: row.slaveQId
         });
