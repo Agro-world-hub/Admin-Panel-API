@@ -1846,8 +1846,29 @@ exports.getOfficersByDistrictAndRoleDAO = (district, jobRole, scheduleDate) => {
         fo.distrct as district,
         (
           SELECT COUNT(*)
-          FROM feildaudits fa 
-          WHERE fa.assignOfficerId = fo.id AND DATE(fa.sheduleDate) = ? 
+          FROM jobassignofficer ja
+          INNER JOIN govilinkjobs gj ON gj.id = ja.jobId
+          WHERE ja.officerId = fo.id
+            AND ja.isActive = 1
+            AND DATE(gj.sheduleDate) = DATE(?)
+        )
+        +
+        (
+          SELECT COUNT(*)
+          FROM feildaudits fa
+          WHERE fa.assignOfficerId = fo.id
+            AND fa.propose = 'Cluster'
+            AND fa.status IN ('Pending', 'Ongoing')
+            AND DATE(fa.sheduleDate) = DATE(?)
+        )
+        +
+        (
+          SELECT COUNT(*)
+          FROM feildaudits fa2
+          WHERE fa2.assignOfficerId = fo.id
+            AND fa2.propose = 'Individual'
+            AND fa2.status IN ('Pending', 'Ongoing')
+            AND DATE(fa2.sheduleDate) = DATE(?)
         ) AS jobCount
       FROM 
         feildofficer fo
@@ -1858,9 +1879,7 @@ exports.getOfficersByDistrictAndRoleDAO = (district, jobRole, scheduleDate) => {
       ORDER BY 
         fo.firstName, fo.lastName
     `;
-
-    const params = [scheduleDate, `%${district}%`, jobRole];
-
+    const params = [scheduleDate, scheduleDate, scheduleDate, `%${district}%`, jobRole];
     plantcare.query(sql, params, (err, results) => {
       if (err) return reject(err);
       resolve(results);
