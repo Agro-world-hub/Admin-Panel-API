@@ -977,6 +977,7 @@ exports.getFieldAuditHistoryResponseByIdDAO = (jobId) => {
               qEnglish: row.qEnglish,
               type: row.type,
               uploadImage: row.uploadImage,
+              officerUploadImage: row.officerUploadImage,
               officerTickResult: row.officerTickResult,
               slaveQId: row.slaveQId,
               problem: rowSuggestions[0]?.problem ?? null,
