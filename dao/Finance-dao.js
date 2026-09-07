@@ -2,7 +2,6 @@ const {
   admin,
   plantcare,
   collectionofficer,
-  goviShop,
 } = require("../startup/database");
 const bcrypt = require("bcryptjs");
 const { Upload } = require("@aws-sdk/lib-storage");
@@ -2562,7 +2561,7 @@ exports.getGocicareAllInvestmentUsersDao = (
 // ───────────────────────────────────────────── Daos for the finance dashboard ─────────────────────────────────────────────
 
 exports.getAllFinanceDashboardDataDao = () => {
-  console.log("goviShop connection:", goviShop);
+  console.log("goviShop connection:", plantcare);
   return new Promise((resolve, reject) => {
     // ── Count Cards ──────────────────────────────────────────────────────────
 
@@ -2681,7 +2680,7 @@ exports.getAllFinanceDashboardDataDao = () => {
     plantcare.query(pensionCountSql, (err1, pensionResult) => {
       if (err1) return reject("Error in pension count query: " + err1);
 
-      goviShop.query(supplierUpgradeSql, (err2, supplierResult) => {
+      plantcare.query(supplierUpgradeSql, (err2, supplierResult) => {
         if (err2)
           return reject("Error in supplier upgrade count query: " + err2);
 
@@ -2736,7 +2735,7 @@ exports.getAllFinanceDashboardDataDao = () => {
                                     err10,
                                   );
 
-                                goviShop.query(
+                                plantcare.query(
                                   goviShopPremiumIncomeSql,
                                   (err11, premiumResult) => {
                                     if (err11)
@@ -3070,7 +3069,7 @@ exports.getTransactionOrdersDao = (id) => {
       WHERE dt.id = ? AND po.status = 'Delivered' AND po.paymentMethod = 'Cash' AND po.isPaid = 1;
     `;
 
-    goviShop.query(sql, [id], (err, results) => {
+    plantcare.query(sql, [id], (err, results) => {
       if (err) {
         reject(err);
       } else {
