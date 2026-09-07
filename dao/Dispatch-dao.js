@@ -1,8 +1,7 @@
 const {
   admin,
   plantcare,
-  collectionofficer,
-  investment,
+  collectionofficer
 } = require("../startup/database");
 
 exports.getPreMadePackages = (page, limit, packageStatus, date, search) => {

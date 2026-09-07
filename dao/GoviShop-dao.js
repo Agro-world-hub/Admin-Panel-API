@@ -2,7 +2,6 @@ const {
   admin,
   plantcare,
   collectionofficer,
-  investment,
   goviShop,
 } = require("../startup/database");
 const nodemailer = require("nodemailer");

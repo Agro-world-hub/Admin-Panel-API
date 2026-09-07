@@ -1,7 +1,6 @@
 const {
   plantcare,
-  collectionofficer,
-  investment,
+  collectionofficer
 } = require("../startup/database");
 const { error } = require("console");
 const Joi = require("joi");

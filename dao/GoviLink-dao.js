@@ -2,7 +2,6 @@ const {
   admin,
   plantcare,
   collectionofficer,
-  investment,
 } = require("../startup/database");
 
 exports.saveOfficerService = (englishName, tamilName, sinhalaName, srvFee) => {
@@ -1322,7 +1321,7 @@ exports.getDashbordServiceCountDao = () => {
       SELECT SUM(count) AS total_count
       FROM (
         SELECT COUNT(*) AS count
-        FROM investments.investmentrequest ir
+        FROM plant_care.investmentrequest ir
         WHERE DATE(ir.auditedDate) = CURDATE() AND ir.officerStatus = 'Completed'
         
         UNION ALL

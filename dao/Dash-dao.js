@@ -2,7 +2,6 @@ const {
   admin,
   plantcare,
   collectionofficer,
-  investment,
 } = require("../startup/database");
 
 const QRCode = require("qrcode");

@@ -2,7 +2,6 @@ const {
   admin,
   plantcare,
   collectionofficer,
-  investment,
   goviShop,
 } = require("../startup/database");
 const bcrypt = require("bcryptjs");
@@ -1358,7 +1357,7 @@ exports.GetAllInvestmentRequestsDAO = (filters = {}) => {
     // Order by most recent first
     sql += ` ORDER BY ir.id`;
 
-    investment.query(sql, params, (err, results) => {
+    plantcare.query(sql, params, (err, results) => {
       if (err) {
         return reject(err);
       }
@@ -1390,7 +1389,7 @@ exports.GetInvestmentRequestByIdDAO = (requestId) => {
       LIMIT 1
     `;
 
-    investment.query(sql, [requestId], (err, results) => {
+    plantcare.query(sql, [requestId], (err, results) => {
       if (err) {
         return reject(err);
       }
@@ -1424,7 +1423,7 @@ exports.GetApprovedInvestmentRequestByIdDAO = (requestId) => {
       LIMIT 1
     `;
 
-    investment.query(sql, [requestId], (err, results) => {
+    plantcare.query(sql, [requestId], (err, results) => {
       if (err) {
         return reject(err);
       }
@@ -1442,7 +1441,7 @@ exports.assignOfficerToInvestmentRequestDAO = (
     let connection;
 
     try {
-      connection = await investment.promise().getConnection();
+      connection = await plantcare.promise().getConnection();
       await connection.beginTransaction();
 
       // Check if investment request exists
@@ -1551,7 +1550,7 @@ exports.getOfficersByDistrictAndRoleForInvestmentDAO = (
 
     const params = [Farmer_ID, jobRole];
 
-    investment.query(sql, params, (err, results) => {
+    plantcare.query(sql, params, (err, results) => {
       if (err) return reject(err);
       resolve(results);
     });
@@ -1609,7 +1608,7 @@ exports.getAllPublishedProjectsDAO = (searchText) => {
       params.push(searchValue, searchValue, searchValue);
     }
 
-    investment.query(sql, params, (err, results) => {
+    plantcare.query(sql, params, (err, results) => {
       if (err) return reject(err);
       resolve(results);
     });
@@ -1648,8 +1647,8 @@ exports.GetAllRejectedInvestmentRequestsDAO = (filters = {}) => {
     u.NICnumber,
     cg.cropNameEnglish,
     au.userName AS rejectedBy
-FROM investments.investmentrequest ir
-LEFT JOIN investments.rejectinvestmentrequest rir ON ir.id = rir.reqId
+FROM plant_care.investmentrequest ir
+LEFT JOIN plant_care.rejectinvestmentrequest rir ON ir.id = rir.reqId
 LEFT JOIN plant_care.users u ON ir.farmerId = u.id
 LEFT JOIN plant_care.cropgroup cg ON ir.cropId = cg.id
 LEFT JOIN agro_world_admin.adminusers au ON rir.rejectedBy = au.id
@@ -1668,7 +1667,7 @@ WHERE ir.reqStatus = 'Rejected'
     // Order by most recent rejection first
     sql += ` ORDER BY rir.createdAt DESC`;
 
-    investment.query(sql, params, (err, results) => {
+    plantcare.query(sql, params, (err, results) => {
       if (err) {
         return reject(err);
       }
@@ -1755,7 +1754,7 @@ exports.GetAllApprovedInvestmentRequestsDAO = (filters = {}) => {
     // Order by most recent approval first
     sql += ` ORDER BY ir.createdAt DESC`;
 
-    investment.query(sql, params, (err, results) => {
+    plantcare.query(sql, params, (err, results) => {
       if (err) {
         return reject(err);
       }
@@ -1774,7 +1773,7 @@ exports.UpdateInvestmentRequestPublishStatusDAO = (requestId, publishBy) => {
       WHERE id = ?
     `;
 
-    investment.query(sql, [publishBy, requestId], (err, result) => {
+    plantcare.query(sql, [publishBy, requestId], (err, result) => {
       if (err) {
         return reject(err);
       }
@@ -1817,7 +1816,7 @@ exports.GetProjectInvesmentDAO = (filters = {}) => {
 
     sql += ` ORDER BY cg.cropNameEnglish, (fillShares/ai.defineShares) DESC`;
 
-    investment.query(sql, params, (err, results) => {
+    plantcare.query(sql, params, (err, results) => {
       if (err) {
         return reject(err);
       }
@@ -1870,7 +1869,7 @@ exports.getAllInvestmentsDao = (id, status, search) => {
 
     dataSql += " ORDER BY i.createdAt DESC";
 
-    investment.query(dataSql, params, (dataErr, dataResults) => {
+    plantcare.query(dataSql, params, (dataErr, dataResults) => {
       if (dataErr) {
         console.error("Error in data query:", dataErr);
         return reject(dataErr);
@@ -1890,7 +1889,7 @@ exports.approveInvestmentRequestDao = (id) => {
       WHERE id = ?
     `;
 
-    investment.query(sql, [id], (err, result) => {
+    plantcare.query(sql, [id], (err, result) => {
       if (err) {
         return reject(err);
       }
@@ -1907,7 +1906,7 @@ exports.RejectInvestmentRequestDao = (id) => {
       WHERE id = ?
     `;
 
-    investment.query(sql, [id], (err, result) => {
+    plantcare.query(sql, [id], (err, result) => {
       if (err) {
         return reject(err);
       }
@@ -1973,7 +1972,7 @@ exports.getInspectionDerailsDao = async (id) => {
     let completedQueries = 0;
 
     queries.forEach((query, index) => {
-      investment.query(query.sql, [id], (err, queryResult) => {
+      plantcare.query(query.sql, [id], (err, queryResult) => {
         if (err) {
           return reject(err);
         }
@@ -2006,7 +2005,7 @@ exports.GetAllAuditedInvestmentRequestsDAO = (filters = {}) => {
         ir.nicBack AS NIC_Back_Image,
         co.empId,
         ir.auditedDate AS reqCahangeTime
-    FROM investments.investmentrequest ir
+    FROM plant_care.investmentrequest ir
     INNER JOIN plant_care.users u 
         ON ir.farmerId = u.id
     LEFT JOIN plant_care.feildofficer co 
@@ -2032,7 +2031,7 @@ exports.GetAllAuditedInvestmentRequestsDAO = (filters = {}) => {
     // Order by most recent approval first
     sql += ` ORDER BY ir.createdAt DESC`;
 
-    investment.query(sql, params, (err, results) => {
+    plantcare.query(sql, params, (err, results) => {
       if (err) {
         return reject(err);
       }
@@ -2053,15 +2052,15 @@ exports.getDetailsForDivideShareDao = (id) => {
     CONCAT(fo.phoneCode1, ' ',fo.phoneNumber1) AS officerPhone,
     (COALESCE(cg.costFeild, 0)* ( ir.extentac + COALESCE(ir.extentha, 0)*2.47105 + COALESCE(extentp, 0)/160 )) AS totalValue,
     air.totValue, air.defineShares, air.maxShare, air.minShare
-  FROM investments.investmentrequest ir
+  FROM plant_care.investmentrequest ir
   LEFT JOIN plant_care.cropgroup cg ON ir.cropId = cg.id
   LEFT JOIN plant_care.users u ON ir.farmerId = u.id
   LEFT JOIN plant_care.feildofficer fo ON ir.officerId = fo.id
-  LEFT JOIN investments.approvedinvestmentrequest air ON air.reqId = ir.id
+  LEFT JOIN plant_care.approvedinvestmentrequest air ON air.reqId = ir.id
       WHERE ir.id = ?
     `;
 
-    investment.query(sql, [id], (err, result) => {
+    plantcare.query(sql, [id], (err, result) => {
       if (err) {
         return reject(err);
       }
@@ -2073,7 +2072,7 @@ exports.getDetailsForDivideShareDao = (id) => {
 exports.devideSharesDao = (sharesData, adminId) => {
   return new Promise((resolve, reject) => {
     const sql = `
-      INSERT INTO investments.approvedinvestmentrequest
+      INSERT INTO plant_care.approvedinvestmentrequest
       (reqId, totValue, defineShares, minShare, maxShare, defineBy)
       VALUES (?, ?, ?, ?, ?, ?)
     `;
@@ -2087,7 +2086,7 @@ exports.devideSharesDao = (sharesData, adminId) => {
       adminId,
     ];
 
-    investment.query(sql, values, (err, result) => {
+    plantcare.query(sql, values, (err, result) => {
       if (err) {
         return reject(err);
       }
@@ -2104,7 +2103,7 @@ exports.ApproveRequestDao = (id, adminId) => {
       WHERE ir.id = ?
     `;
 
-    investment.query(sql, [adminId, id], (err, result) => {
+    plantcare.query(sql, [adminId, id], (err, result) => {
       if (err) {
         return reject(err);
       }
@@ -2116,12 +2115,12 @@ exports.ApproveRequestDao = (id, adminId) => {
 exports.updateRejectReasonDao = (id, reason, adminId) => {
   return new Promise((resolve, reject) => {
     const sql = `
-      INSERT INTO investments.rejectinvestmentrequest
+      INSERT INTO plant_care.rejectinvestmentrequest
       (reqId, reason, rejectedBy)
       VALUES (?, ?, ?)
     `;
 
-    investment.query(sql, [id, reason, adminId], (err, result) => {
+    plantcare.query(sql, [id, reason, adminId], (err, result) => {
       if (err) {
         return reject(err);
       }
@@ -2138,7 +2137,7 @@ exports.rejectRequestDao = (id) => {
       WHERE ir.id = ?
     `;
 
-    investment.query(sql, [id], (err, result) => {
+    plantcare.query(sql, [id], (err, result) => {
       if (err) {
         return reject(err);
       }
@@ -2150,7 +2149,7 @@ exports.rejectRequestDao = (id) => {
 exports.editDevideSharesDao = (sharesData, adminId) => {
   return new Promise((resolve, reject) => {
     const sql = `
-      UPDATE investments.approvedinvestmentrequest
+      UPDATE plant_care.approvedinvestmentrequest
       SET totValue = ?, defineShares = ?, minShare = ?, maxShare = ?, defineBy = ?, createdAt = NOW()
       WHERE reqId = ?
     `;
@@ -2164,7 +2163,7 @@ exports.editDevideSharesDao = (sharesData, adminId) => {
       sharesData.id,
     ];
 
-    investment.query(sql, values, (err, result) => {
+    plantcare.query(sql, values, (err, result) => {
       if (err) {
         return reject(err);
       }
@@ -2530,7 +2529,7 @@ exports.getGocicareAllInvestmentUsersDao = (
     }
 
     // Execute count query first
-    investment.query(countSql, params, (countErr, countResults) => {
+    plantcare.query(countSql, params, (countErr, countResults) => {
       if (countErr) {
         console.error("Error in count query:", countErr);
         return reject(countErr);
@@ -2545,7 +2544,7 @@ exports.getGocicareAllInvestmentUsersDao = (
       }
 
       // Execute data query with pagination
-      investment.query(dataSql, dataParams, (dataErr, dataResults) => {
+      plantcare.query(dataSql, dataParams, (dataErr, dataResults) => {
         if (dataErr) {
           console.error("Error in data query:", dataErr);
           return reject(dataErr);
@@ -2686,11 +2685,11 @@ exports.getAllFinanceDashboardDataDao = () => {
         if (err2)
           return reject("Error in supplier upgrade count query: " + err2);
 
-        investment.query(projectRequestSql, (err3, projectResult) => {
+        plantcare.query(projectRequestSql, (err3, projectResult) => {
           if (err3)
             return reject("Error in project request count query: " + err3);
 
-          investment.query(publishedProjectSql, (err4, publishedResult) => {
+          plantcare.query(publishedProjectSql, (err4, publishedResult) => {
             if (err4)
               return reject("Error in published project count query: " + err4);
 

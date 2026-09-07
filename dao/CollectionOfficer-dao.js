@@ -1,7 +1,6 @@
 const {
   plantcare,
   collectionofficer,
-  investment,
 } = require("../startup/database");
 const QRCode = require("qrcode");
 const nodemailer = require("nodemailer");

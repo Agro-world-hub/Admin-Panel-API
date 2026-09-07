@@ -1,7 +1,6 @@
 const {
   plantcare,
   collectionofficer,
-  investment,
 } = require("../startup/database");
 const Joi = require("joi");
 const path = require("path");
