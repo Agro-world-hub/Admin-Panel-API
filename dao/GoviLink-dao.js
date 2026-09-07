@@ -2,7 +2,6 @@ const {
   admin,
   plantcare,
   collectionofficer,
-  investment,
 } = require("../startup/database");
 
 exports.saveOfficerService = (englishName, tamilName, sinhalaName, srvFee) => {
@@ -915,8 +914,7 @@ exports.getFieldAuditHistoryResponseByIdDAO = (jobId) => {
         cp.payType,
         sqi.qEnglish,
         sqi.type,
-        sqi.uploadImage,
-        sqi.officerUploadImage,
+        sqi.OfficerUploadImage AS uploadImage,
         sqi.officerTickResult,
         sq.id AS slaveQId,
         COALESCE(f.regCode, f2.regCode) AS farmId
@@ -959,7 +957,6 @@ exports.getFieldAuditHistoryResponseByIdDAO = (jobId) => {
           qEnglish: row.qEnglish,
           type: row.type,
           uploadImage: row.uploadImage,
-          officerUploadImage: row.officerUploadImage,
           officerTickResult: row.officerTickResult,
           slaveQId: row.slaveQId,
           problem: null,
@@ -1210,8 +1207,7 @@ exports.getFieldAuditHistoryClusterResponseByIdDAO = (jobId) => {
         f.regCode,
         sqi.qEnglish,
         sqi.type,
-        sqi.uploadImage,
-        sqi.officerUploadImage,
+        sqi.OfficerUploadImage AS uploadImage,
         sqi.officerTickResult,
         sq.id AS slaveQId,
         (
@@ -1265,7 +1261,6 @@ exports.getFieldAuditHistoryClusterResponseByIdDAO = (jobId) => {
           qEnglish: row.qEnglish,
           type: row.type,
           uploadImage: row.uploadImage,
-          officerUploadImage: row.officerUploadImage,
           officerTickResult: row.officerTickResult,
           slaveQId: row.slaveQId
         });
@@ -1322,7 +1317,7 @@ exports.getDashbordServiceCountDao = () => {
       SELECT SUM(count) AS total_count
       FROM (
         SELECT COUNT(*) AS count
-        FROM investments.investmentrequest ir
+        FROM plant_care.investmentrequest ir
         WHERE DATE(ir.auditedDate) = CURDATE() AND ir.officerStatus = 'Completed'
         
         UNION ALL
