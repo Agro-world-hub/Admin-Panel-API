@@ -252,17 +252,35 @@ exports.getOfficersByJobRoleDAO = (jobRole, scheduleDate, jobId) => {
           INNER JOIN govilinkjobs gj2 ON gj2.id = ja2.jobId
           WHERE ja2.officerId = fo.id
             AND ja2.isActive = 1
-            AND gj2.sheduleDate = ?
+            AND DATE(gj2.sheduleDate) = DATE(?)
+        )
+        +
+        (
+          SELECT COUNT(*)
+          FROM feildaudits fa2
+          WHERE fa2.assignOfficerId = fo.id
+            AND fa2.propose = 'Cluster'
+            AND fa2.status IN ('Pending', 'Ongoing')
+            AND DATE(fa2.sheduleDate) = DATE(?)
+        )
+        +
+        (
+          SELECT COUNT(*)
+          FROM feildaudits fa3
+          WHERE fa3.assignOfficerId = fo.id
+            AND fa3.propose = 'Individual'
+            AND fa3.status IN ('Pending', 'Ongoing')
+            AND DATE(fa3.sheduleDate) = DATE(?)
         ) AS activeJobCount
       FROM feildofficer fo
       INNER JOIN govilinkjobs gj_filter ON gj_filter.id = ?
       INNER JOIN farms f ON f.id = gj_filter.farmId
       WHERE fo.JobRole = ?
-      AND FIND_IN_SET(f.district, fo.assignDistrict) > 0
+        AND FIND_IN_SET(f.district, fo.assignDistrict) > 0
       ORDER BY activeJobCount ASC, fo.firstName, fo.lastName
     `;
 
-    const params = [scheduleDate, jobId, jobRole];
+    const params = [scheduleDate, scheduleDate, scheduleDate, jobId, jobRole];
 
     plantcare.query(sql, params, (err, results) => {
       if (err) return reject(err);
@@ -641,7 +659,7 @@ exports.getFieldAuditDetails = (filters = {}, search = {}) => {
         gj.status AS status,
         gj.assignBy AS assignBy,
         au.userName AS assignedByName,
-        concat(fo1.firstName, ' ', fo1.lastName) AS assignedOfficer,
+        fo1.empId AS assignedOfficer,
         'Requested Service' AS visitPurpose,
         jao.createdAt AS assignedOn,
         'no' AS onScreenTime
@@ -670,7 +688,7 @@ exports.getFieldAuditDetails = (filters = {}, search = {}) => {
         fa.status AS status,
         fa.assignBy AS assignBy,
         au.userName AS assignedByName,
-        CONCAT(fo1.firstName, ' ', fo1.lastName) AS assignedOfficer,
+        fo1.empId AS assignedOfficer,
         fa.propose AS visitPurpose,
         fa.assignDate AS assignedOn,
         fa.onScreenTime AS onScreenTime
@@ -702,7 +720,7 @@ exports.getFieldAuditDetails = (filters = {}, search = {}) => {
     ) cpc_filtered ON cp.id = cpc_filtered.paymentId
     LEFT JOIN plant_care.farms f3 ON cpc_filtered.farmId = f3.id
       
-    LEFT JOIN plant_care.feildofficer fo1 ON fa.assignOfficerId = fo1.id
+    LEFT JOIN plant_care.feildofficer fo1 ON fa.assignByCFO = fo1.id
 
 
 
@@ -898,6 +916,7 @@ exports.getFieldAuditHistoryResponseByIdDAO = (jobId) => {
         sqi.qEnglish,
         sqi.type,
         sqi.uploadImage,
+        sqi.officerUploadImage,
         sqi.officerTickResult,
         sq.id AS slaveQId,
         COALESCE(f.regCode, f2.regCode) AS farmId
@@ -940,6 +959,7 @@ exports.getFieldAuditHistoryResponseByIdDAO = (jobId) => {
           qEnglish: row.qEnglish,
           type: row.type,
           uploadImage: row.uploadImage,
+          officerUploadImage: row.officerUploadImage,
           officerTickResult: row.officerTickResult,
           slaveQId: row.slaveQId,
           problem: null,
@@ -1191,6 +1211,7 @@ exports.getFieldAuditHistoryClusterResponseByIdDAO = (jobId) => {
         sqi.qEnglish,
         sqi.type,
         sqi.uploadImage,
+        sqi.officerUploadImage,
         sqi.officerTickResult,
         sq.id AS slaveQId,
         (
@@ -1244,6 +1265,7 @@ exports.getFieldAuditHistoryClusterResponseByIdDAO = (jobId) => {
           qEnglish: row.qEnglish,
           type: row.type,
           uploadImage: row.uploadImage,
+          officerUploadImage: row.officerUploadImage,
           officerTickResult: row.officerTickResult,
           slaveQId: row.slaveQId
         });
