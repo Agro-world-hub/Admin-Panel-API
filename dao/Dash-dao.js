@@ -522,7 +522,7 @@ const getAllSalesCustomers = (page, limit, searchText, ratingFilter, agentFilter
 
     let dataSql = `
       SELECT
-        CUS.id, CUS.cusId, CUS.phoneNumber, CUS.title,
+        CUS.id, CUS.cusId, CUS.phoneNumber, CUS.title,CUS.nearesCity,
         CUS.firstName, CUS.lastName, CUS.email, CUS.rateofCus,
         SA.empId, SA.firstName AS salesAgentFirstName, SA.lastName AS salesAgentLastName,
         CUS.created_at,
