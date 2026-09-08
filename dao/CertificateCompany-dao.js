@@ -21,8 +21,8 @@ exports.createCertificateCompany = (
     `;
     const values = [
       companyName,
-      regNumber,
-      taxId,
+      regNumber || null,
+      taxId || null,
       phoneCode1,
       phoneNumber1,
       phoneCode2 || null,
