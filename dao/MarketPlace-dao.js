@@ -2223,6 +2223,7 @@ exports.getAllWholesaleCustomersDao = (limit, offset, searchText, ratingFilter) 
         MP.companyPhoneCode,
         MP.companyPhone,
         MP.rateofCus,
+        MP.nearesCity,
         MP.creditLimit,
         (
           SELECT COUNT(*)
@@ -2253,6 +2254,7 @@ exports.getAllWholesaleCustomersDao = (limit, offset, searchText, ratingFilter) 
           OR MP.lastName     LIKE ?
           OR MP.phoneNumber  LIKE ?
           OR MP.cusId        LIKE ?
+          OR MP.nearesCity   LIKE ?
           OR CONCAT(MP.phoneCode, ' - ', MP.phoneNumber) LIKE ?
           OR CONCAT(MP.phoneCode, '-',   MP.phoneNumber) LIKE ?
           OR CONCAT(MP.phoneCode,        MP.phoneNumber) LIKE ?
@@ -2267,7 +2269,7 @@ exports.getAllWholesaleCustomersDao = (limit, offset, searchText, ratingFilter) 
       const searchWithoutSpaces = `%${searchText.replace(/\s/g, '')}%`;
       const searchArgs = [
         search, search, search, search, search,
-        search, search,
+        search, search, search,
         searchWithoutSpaces, searchWithoutSpaces, searchWithoutSpaces,
       ];
 
