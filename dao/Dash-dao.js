@@ -539,14 +539,14 @@ const getAllSalesCustomers = (page, limit, searchText, ratingFilter, agentFilter
       const searchCondition = `
         AND (
           CUS.firstName LIKE ? OR CUS.lastName LIKE ? OR
-          CUS.phoneNumber LIKE ? OR CUS.cusId LIKE ? OR SA.empId LIKE ?
+          CUS.phoneNumber LIKE ? OR CUS.cusId LIKE ? OR SA.empId LIKE ? OR CUS.nearesCity LIKE ?
         )
       `;
       const v = `%${searchText}%`;
       countSql += searchCondition;
       dataSql  += searchCondition;
-      countParams.push(v, v, v, v, v);
-      dataParams .push(v, v, v, v, v);
+      countParams.push(v, v, v, v, v, v);
+      dataParams .push(v, v, v, v, v, v);
     }
 
     if (ratingFilter) {
