@@ -1634,7 +1634,7 @@ exports.GetAllRejectedInvestmentRequestsDAO = (filters = {}) => {
     (ir.extentac + ir.extentha * 2.47105 + ir.extentp / 160) AS extentac,
     ir.investment,
     ir.expectedYield,
-    ir.startDate,
+    DATE(ir.startDate) AS startDate,
     ir.nicFront,
     ir.nicBack,
     ir.assignDate,
