@@ -76,12 +76,15 @@ exports.getAllCropGroups = (limit, offset, searchText, category) => {
     let dataSql = `
         SELECT 
           cg.*,
+          au.userName AS AdminmodifyBy,
           COUNT(cv.id) as varietyCount,
           GROUP_CONCAT(DISTINCT cv.varietyNameEnglish) as varietyList
         FROM 
           cropgroup cg
         LEFT JOIN 
           cropvariety cv ON cg.id = cv.cropGroupId
+        LEFT JOIN
+          agro_world_admin.adminusers au ON cg.modifyBy = au.id
       `;
 
     const whereConditions = [];
@@ -372,8 +375,21 @@ exports.insertXLSXData = (cropId, data) => {
 
 exports.getAllVarietyByGroup = (cropGroupId) => {
   return new Promise((resolve, reject) => {
-    const sql = "SELECT * FROM cropvariety WHERE cropGroupId = ?";
-
+    const sql = `SELECT 
+    cv.cropGroupId,
+    cv.varietyNameEnglish,
+    cv.varietyNameSinhala,
+    cv.varietyNameTamil,
+    cv.descriptionEnglish,
+    cv.descriptionSinhala,
+    cv.descriptionTamil,
+    cv.image,
+    cv.bgColor,
+    au.userName AS modifyBy,
+    cv.modifyAt 
+    FROM cropvariety cv
+    LEFT JOIN agro_world_admin.adminusers au ON cv.modifyBy = au.id
+    WHERE cv.cropGroupId = ?`;
     plantcare.query(sql, [cropGroupId], (err, results) => {
       if (err) {
         return reject(err);
@@ -381,7 +397,6 @@ exports.getAllVarietyByGroup = (cropGroupId) => {
       const processedDataResults = results.map((variety) => {
         return variety;
       });
-
       resolve(processedDataResults);
     });
   });

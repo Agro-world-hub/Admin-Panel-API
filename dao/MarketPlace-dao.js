@@ -1877,6 +1877,7 @@ exports.getAllRetailCustomersDao = (limit, offset, searchText, ratingFilter) => 
         MP.email,
         MP.created_at,
         MP.rateofCus,
+        MP.nearesCity,
         (
           SELECT COUNT(*)
           FROM orders O
@@ -1897,6 +1898,7 @@ exports.getAllRetailCustomersDao = (limit, offset, searchText, ratingFilter) => 
           OR MP.lastName    LIKE ?
           OR MP.phoneNumber LIKE ?
           OR MP.cusId       LIKE ?
+          OR MP.nearesCity  LIKE ? 
           OR CONCAT(MP.phoneCode, ' - ', MP.phoneNumber) LIKE ?
           OR CONCAT(MP.phoneCode, '-',   MP.phoneNumber) LIKE ?
           OR CONCAT(MP.phoneCode,        MP.phoneNumber) LIKE ?
@@ -1911,7 +1913,7 @@ exports.getAllRetailCustomersDao = (limit, offset, searchText, ratingFilter) => 
       const searchWithoutSpaces = `%${searchText.replace(/\s/g, '')}%`;
       const searchParms = [
         search, search, search, search, search,
-        search, search,
+        search, search, search,
         searchWithoutSpaces, searchWithoutSpaces, searchWithoutSpaces,
       ];
       countParms.push(...searchParms);
@@ -2223,6 +2225,7 @@ exports.getAllWholesaleCustomersDao = (limit, offset, searchText, ratingFilter) 
         MP.companyPhoneCode,
         MP.companyPhone,
         MP.rateofCus,
+        MP.nearesCity,
         MP.creditLimit,
         (
           SELECT COUNT(*)
@@ -2253,6 +2256,7 @@ exports.getAllWholesaleCustomersDao = (limit, offset, searchText, ratingFilter) 
           OR MP.lastName     LIKE ?
           OR MP.phoneNumber  LIKE ?
           OR MP.cusId        LIKE ?
+          OR MP.nearesCity   LIKE ?
           OR CONCAT(MP.phoneCode, ' - ', MP.phoneNumber) LIKE ?
           OR CONCAT(MP.phoneCode, '-',   MP.phoneNumber) LIKE ?
           OR CONCAT(MP.phoneCode,        MP.phoneNumber) LIKE ?
@@ -2267,7 +2271,7 @@ exports.getAllWholesaleCustomersDao = (limit, offset, searchText, ratingFilter) 
       const searchWithoutSpaces = `%${searchText.replace(/\s/g, '')}%`;
       const searchArgs = [
         search, search, search, search, search,
-        search, search,
+        search, search, search,
         searchWithoutSpaces, searchWithoutSpaces, searchWithoutSpaces,
       ];
 
