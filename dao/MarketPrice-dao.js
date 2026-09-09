@@ -340,6 +340,7 @@ exports.getAllMarketPriceAgroDAO = (crop, grade, search, centerId, companyId) =>
     cg.cropNameEnglish AS cropName,
     cv.varietyNameEnglish AS varietyName,
     m.grade,
+    m.averagePrice,
     ms.price,
     ms.updatedPrice,
     ms.updateAt,
