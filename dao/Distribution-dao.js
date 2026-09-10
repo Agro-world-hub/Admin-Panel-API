@@ -1,7 +1,6 @@
 const {
   plantcare,
-  collectionofficer,
-  investment,
+  collectionofficer
 } = require("../startup/database");
 const { error } = require("console");
 const Joi = require("joi");
@@ -3288,7 +3287,7 @@ exports.getAllTodaysDeliveries = (searchParams = {}) => {
       LEFT JOIN 
         collection_officer.distributedcenter dc2 ON dcc.centerId = dc2.id
       WHERE 
-       1=1
+       DATE(po.sheduleDate) = CURDATE()
       `;
     // DATE(o.sheduleDate) = CURDATE()
     // Add search conditions if search parameters are provided

@@ -4232,3 +4232,32 @@ exports.deleteMultipleBlockWords = async (req, res) => {
     });
   }
 };
+
+exports.checkBlockWord = async (req, res) => {
+  const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
+  console.log("Request URL:", fullUrl);
+
+  try {
+    const { word } = req.params;
+
+    if (!word) {
+      return res.status(400).json({ error: "Word is required." });
+    }
+
+    const results = await adminDao.checkBlockWord(word);
+
+    if (!results || results.length === 0) {
+      return res.status(404).json({ error: "No block word found." });
+    }
+
+    res.json(results);
+  } catch (error) {
+    if (error.isJoi) {
+      return res.status(400).json({ error: error.details[0].message });
+    }
+    console.error("Error checking block word:", error);
+    return res.status(500).json({
+      error: "An error occurred while checking block word.",
+    });
+  }
+};
